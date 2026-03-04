@@ -1,0 +1,5 @@
+{
+  "name": "Vitalis CRM",
+  "description": "A minimalist hospital CRM system with secure authentication and patient management.",
+  "requestFramePermissions": []
+}
