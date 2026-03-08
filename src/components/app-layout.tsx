@@ -2,7 +2,8 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import Lottie from "lottie-react";
-import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, Search, User, UserPen, Users } from "lucide-react";
+import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, User, UserPen, Users } from "lucide-react";
+import { PatientSearch } from "./ui/patient-search";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -89,14 +90,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Header */}
         <header className="h-14 bg-surface border-b border-border flex items-center justify-between px-6 sticky top-0 z-10 w-full">
           <div className="flex items-center gap-3 flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <input
-                type="text"
-                placeholder="Search patients, records..."
-                className="w-full bg-surface-secondary border border-border rounded-md py-1.5 pl-9 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-              />
-            </div>
+            <PatientSearch />
           </div>
 
           <div className="flex items-center gap-4">
@@ -104,16 +98,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <Bell className="w-[18px] h-[18px]" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-danger-500 rounded-full"></span>
             </button>
-            <div className="h-6 w-px bg-border"></div>
-            <div className="flex items-center gap-2.5">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-text-primary leading-tight">{user.first_name}</p>
-                <p className="text-[11px] text-text-muted">{roleName}</p>
-              </div>
-              <div className="w-8 h-8 bg-surface-secondary rounded-full flex items-center justify-center border border-border overflow-hidden">
-                <User className="w-4 h-4 text-text-muted" />
-              </div>
-            </div>
           </div>
         </header>
 

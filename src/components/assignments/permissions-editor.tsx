@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { Can } from "@/components/ui/can";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -207,14 +208,16 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
             </p>
             <p className="text-xs text-text-muted mt-0.5">{loadingRoutes ? "Loading..." : `${totalChecked} / ${totalEndpoints} endpoints enabled`}</p>
           </div>
-          <button
-            onClick={() => savePermissions()}
-            disabled={!dirty || saving}
-            className="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+          <Can method="PUT" path="/api/roles/:id/permissions">
+            <button
+              onClick={() => savePermissions()}
+              disabled={!dirty || saving}
+              className="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </Can>
         </div>
 
         {/* Loading routes */}

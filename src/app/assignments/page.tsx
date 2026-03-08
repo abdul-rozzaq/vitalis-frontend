@@ -4,6 +4,7 @@ import { AssignmentForm, type AssignmentFormValues } from "@/components/assignme
 import { PermissionsEditor } from "@/components/assignments/permissions-editor";
 import { RoleForm } from "@/components/assignments/role-form";
 import { RoomForm } from "@/components/assignments/room-form";
+import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
@@ -336,26 +337,30 @@ export default function AssignmentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setRoleSheet({ open: true, editing: row.original })}
-              className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
-              title="Edit Role"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                if (confirm(`Delete role "${row.original.name}"?`)) {
-                  setDeletingId(row.original.id);
-                  deleteRole(row.original.id);
-                }
-              }}
-              disabled={deletingRole && deletingId === row.original.id}
-              className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-              title="Delete Role"
-            >
-              {deletingRole && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
+            <Can method="PATCH" path="/api/roles/:id">
+              <button
+                onClick={() => setRoleSheet({ open: true, editing: row.original })}
+                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                title="Edit Role"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </Can>
+            <Can method="DELETE" path="/api/roles/:id">
+              <button
+                onClick={() => {
+                  if (confirm(`Delete role "${row.original.name}"?`)) {
+                    setDeletingId(row.original.id);
+                    deleteRole(row.original.id);
+                  }
+                }}
+                disabled={deletingRole && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title="Delete Role"
+              >
+                {deletingRole && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
@@ -413,26 +418,30 @@ export default function AssignmentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setRoomSheet({ open: true, editing: row.original })}
-              className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
-              title="Edit Room"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                if (confirm("Delete this room?")) {
-                  setDeletingId(row.original.id);
-                  deleteRoom(row.original.id);
-                }
-              }}
-              disabled={deletingRoom && deletingId === row.original.id}
-              className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-              title="Delete Room"
-            >
-              {deletingRoom && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
+            <Can method="PATCH" path="/api/rooms/:id">
+              <button
+                onClick={() => setRoomSheet({ open: true, editing: row.original })}
+                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                title="Edit Room"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </Can>
+            <Can method="DELETE" path="/api/rooms/:id">
+              <button
+                onClick={() => {
+                  if (confirm("Delete this room?")) {
+                    setDeletingId(row.original.id);
+                    deleteRoom(row.original.id);
+                  }
+                }}
+                disabled={deletingRoom && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title="Delete Room"
+              >
+                {deletingRoom && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
@@ -547,26 +556,30 @@ export default function AssignmentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setAssignSheet({ open: true, editing: row.original })}
-              className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
-              title="Edit Assignment"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                if (confirm("Delete this assignment?")) {
-                  setDeletingId(row.original.id);
-                  deleteAssignment(row.original.id);
-                }
-              }}
-              disabled={deletingAssignment && deletingId === row.original.id}
-              className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-              title="Delete Assignment"
-            >
-              {deletingAssignment && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
+            <Can method="PATCH" path="/api/assignments/:id">
+              <button
+                onClick={() => setAssignSheet({ open: true, editing: row.original })}
+                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                title="Edit Assignment"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </Can>
+            <Can method="DELETE" path="/api/assignments/:id">
+              <button
+                onClick={() => {
+                  if (confirm("Delete this assignment?")) {
+                    setDeletingId(row.original.id);
+                    deleteAssignment(row.original.id);
+                  }
+                }}
+                disabled={deletingAssignment && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title="Delete Assignment"
+              >
+                {deletingAssignment && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
@@ -589,31 +602,37 @@ export default function AssignmentsPage() {
 
         {/* Add button per tab */}
         {tab === "rooms" && (
-          <button
-            onClick={() => setRoomSheet({ open: true, editing: null })}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Room
-          </button>
+          <Can method="POST" path="/api/rooms">
+            <button
+              onClick={() => setRoomSheet({ open: true, editing: null })}
+              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Room
+            </button>
+          </Can>
         )}
         {tab === "roles" && (
-          <button
-            onClick={() => setRoleSheet({ open: true, editing: null })}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Role
-          </button>
+          <Can method="POST" path="/api/roles">
+            <button
+              onClick={() => setRoleSheet({ open: true, editing: null })}
+              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Role
+            </button>
+          </Can>
         )}
         {tab === "assignments" && (
-          <button
-            onClick={() => setAssignSheet({ open: true, editing: null })}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Assignment
-          </button>
+          <Can method="POST" path="/api/assignments">
+            <button
+              onClick={() => setAssignSheet({ open: true, editing: null })}
+              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Assignment
+            </button>
+          </Can>
         )}
       </motion.div>
 

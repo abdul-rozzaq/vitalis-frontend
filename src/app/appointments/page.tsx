@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
+import { Can } from "@/components/ui/can";
 import { APPOINTMENTS_MOCK_DATA } from "@/lib/mock-data";
 import { Plus, Download, Filter, Calendar as CalendarIcon } from "lucide-react";
 import { motion } from "motion/react";
@@ -102,10 +103,12 @@ export default function AppointmentsPage() {
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
-          <button className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
-            <Plus className="w-3.5 h-3.5" />
-            New Appointment
-          </button>
+          <Can method="POST" path="/api/appointments">
+            <button className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+              <Plus className="w-3.5 h-3.5" />
+              New Appointment
+            </button>
+          </Can>
         </div>
       </motion.div>
 

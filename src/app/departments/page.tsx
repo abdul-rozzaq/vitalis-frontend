@@ -1,6 +1,7 @@
 "use client";
 
 import { DepartmentForm } from "@/components/departments/department-form";
+import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
@@ -236,21 +237,25 @@ export default function DepartmentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => handleEditDepartment(row.original)}
-              className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
-              title="Edit Department"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleDeleteDepartment(row.original.id)}
-              disabled={isDeleting && deletingId === row.original.id}
-              className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-              title="Delete Department"
-            >
-              {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
+            <Can method="PATCH" path="/api/departments/:id">
+              <button
+                onClick={() => handleEditDepartment(row.original)}
+                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                title="Edit Department"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </Can>
+            <Can method="DELETE" path="/api/departments/:id">
+              <button
+                onClick={() => handleDeleteDepartment(row.original.id)}
+                disabled={isDeleting && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title="Delete Department"
+              >
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
@@ -276,13 +281,15 @@ export default function DepartmentsPage() {
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
-          <button
-            onClick={handleAddDepartment}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Department
-          </button>
+          <Can method="POST" path="/api/departments">
+            <button
+              onClick={handleAddDepartment}
+              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Department
+            </button>
+          </Can>
         </div>
       </motion.div>
 

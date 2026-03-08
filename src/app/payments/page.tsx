@@ -1,6 +1,7 @@
 "use client";
 
 import { PaymentForm } from "@/components/payments/payment-form";
+import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
@@ -341,21 +342,25 @@ export default function PaymentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <button
-              onClick={() => handleEdit(row.original)}
-              className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
-              title="Edit Payment"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleDelete(row.original.id)}
-              disabled={isDeleting && deletingId === row.original.id}
-              className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-              title="Delete Payment"
-            >
-              {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            </button>
+            <Can method="PATCH" path="/api/payments/:id">
+              <button
+                onClick={() => handleEdit(row.original)}
+                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                title="Edit Payment"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </Can>
+            <Can method="DELETE" path="/api/payments/:id">
+              <button
+                onClick={() => handleDelete(row.original.id)}
+                disabled={isDeleting && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title="Delete Payment"
+              >
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
@@ -380,13 +385,15 @@ export default function PaymentsPage() {
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
-          <button
-            onClick={handleAdd}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Payment
-          </button>
+          <Can method="POST" path="/api/payments">
+            <button
+              onClick={handleAdd}
+              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Payment
+            </button>
+          </Can>
         </div>
       </motion.div>
 

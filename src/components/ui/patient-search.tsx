@@ -1,0 +1,134 @@
+"use client";
+
+import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Search } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  gender: "male" | "female";
+}
+
+export function PatientSearch() {
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Debounce query by 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    setIsOpen(debouncedQuery.length >= 2);
+  }, [debouncedQuery]);
+
+  // Focus input when "/" is pressed outside of any input/textarea
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const { data: results = [], isLoading } = useQuery<Patient[]>({
+    queryKey: ["patient-search", debouncedQuery],
+    queryFn: () => api.get("/patients", { params: { search: debouncedQuery } }).then((r) => r.data),
+    enabled: debouncedQuery.length >= 2,
+    staleTime: 30 * 1000,
+  });
+
+  const showDropdown = isOpen && debouncedQuery.length >= 2;
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => {
+          if (debouncedQuery.length >= 2) setIsOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setIsOpen(false);
+            inputRef.current?.blur();
+          }
+        }}
+        placeholder="Search patients..."
+        className="w-full bg-surface-secondary border border-border rounded-md py-1.5 pl-9 pr-8 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+      />
+      {!query && (
+        <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-text-muted bg-surface border border-border rounded px-1 py-0.5 font-mono leading-none">
+          /
+        </kbd>
+      )}
+
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+          {isLoading ? (
+            <div className="flex items-center gap-2 px-4 py-3 text-sm text-text-muted">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Searching...
+            </div>
+          ) : results.length === 0 ? (
+            <p className="px-4 py-3 text-sm text-text-muted">No patients found.</p>
+          ) : (
+            <ul className="divide-y divide-border max-h-72 overflow-y-auto">
+              {results.map((patient) => (
+                <li key={patient.id}>
+                  <Link
+                    href={`/patients/${patient.id}`}
+                    onClick={() => {
+                      setIsOpen(false);
+                      setQuery("");
+                    }}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
+                      {patient.first_name[0]}
+                      {patient.last_name[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-text-primary">
+                        {patient.first_name} {patient.last_name}
+                      </p>
+                      <p className="text-xs text-text-muted font-mono">{patient.phone_number}</p>
+                    </div>
+                    <span className="ml-auto text-xs text-text-muted capitalize shrink-0">{patient.gender}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
