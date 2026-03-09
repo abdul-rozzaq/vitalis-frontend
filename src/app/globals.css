@@ -1,44 +1,110 @@
 @import "tailwindcss";
 
+/* ─── Static tokens: fixed brand shades & radius ─────────────────────────────
+   These never change between light and dark mode.
+───────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* ─── Brand Colors ─── */
-  --color-primary-50: #ecfdf5;
-  --color-primary-100: #d1fae5;
-  --color-primary-500: #10b981;
-  --color-primary-600: #059669;
   --color-primary-700: #047857;
 
-  --color-danger-50: #fef2f2;
-  --color-danger-100: #fee2e2;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
 
-  --color-warning-50: #fffbeb;
   --color-warning-600: #d97706;
 
-  --color-info-50: #eff6ff;
   --color-info-600: #2563eb;
 
-  /* ─── Surface / Background ─── */
-  --color-surface: #ffffff;
-  --color-surface-secondary: #f9fafb;
-  --color-surface-hover: #f4f4f5;
-  --color-surface-dark: #18181b;
-
-  /* ─── Border ─── */
-  --color-border: #e4e4e7;
-  --color-border-light: #f4f4f5;
-
-  /* ─── Text ─── */
-  --color-text-primary: #18181b;
-  --color-text-secondary: #71717a;
-  --color-text-muted: #a1a1aa;
-
-  /* ─── Border Radius Scale ─── */
+  /* Border radius scale */
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 10px;
   --radius-full: 9999px;
+}
+
+/* ─── Semantic tokens: runtime-overrideable via CSS custom properties ─────────
+   @theme inline creates utility classes that resolve through CSS variables,
+   allowing @layer base to swap values for dark mode without any dark: variants.
+───────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Surfaces */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-dark: var(--surface-dark);
+
+  /* Borders */
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+
+  /* Text */
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-secondary: var(--secondary);
+
+  /* Brand */
+  --color-primary: var(--primary);
+  --color-primary-500: var(--primary-500);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-accent: var(--accent);
+
+  /* Status (light tints change between themes) */
+  --color-danger-50: var(--danger-50);
+  --color-danger-100: var(--danger-100);
+  --color-warning-50: var(--warning-50);
+  --color-info-50: var(--info-50);
+}
+
+/* ─── Light / dark values ──────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --background: #f9fafb;
+    --surface: #ffffff;
+    --surface-hover: #f4f4f5;
+    --surface-dark: #18181b;
+
+    --border: #e4e4e7;
+    --border-light: #f4f4f5;
+
+    --text: #18181b;
+    --text-muted: #a1a1aa;
+    --secondary: #71717a;
+
+    --primary: #059669;
+    --primary-500: #10b981;
+    --primary-50: #ecfdf5;
+    --primary-100: #d1fae5;
+    --accent: #10b981;
+
+    --danger-50: #fef2f2;
+    --danger-100: #fee2e2;
+    --warning-50: #fffbeb;
+    --info-50: #eff6ff;
+  }
+
+  .dark {
+    --background: #09090b;
+    --surface: #18181b;
+    --surface-hover: #27272a;
+    --surface-dark: #27272a;
+
+    --border: #27272a;
+    --border-light: #3f3f46;
+
+    --text: #fafafa;
+    --text-muted: #52525b;
+    --secondary: #a1a1aa;
+
+    --primary: #10b981;
+    --primary-500: #10b981;
+    --primary-50: #022c22;
+    --primary-100: #064e3b;
+    --accent: #059669;
+
+    --danger-50: #2d0c0c;
+    --danger-100: #450a0a;
+    --warning-50: #1c1100;
+    --info-50: #0c1a2e;
+  }
 }

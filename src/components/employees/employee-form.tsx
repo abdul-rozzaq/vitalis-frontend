@@ -43,34 +43,34 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             First Name
           </label>
           <input
             {...register("first_name")}
             placeholder="John"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.first_name && <p className="text-xs text-danger-600 font-medium">{errors.first_name.message}</p>}
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             Last Name
           </label>
           <input
             {...register("last_name")}
             placeholder="Doe"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.last_name && <p className="text-xs text-danger-600 font-medium">{errors.last_name.message}</p>}
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Mail className="w-4 h-4 text-primary-500" />
           Email
         </label>
@@ -78,14 +78,14 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
           {...register("email")}
           type="email"
           placeholder="employee@vitalis.uz"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
         {errors.email && <p className="text-xs text-danger-600 font-medium">{errors.email.message}</p>}
       </div>
 
       {!isEditing && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary-500" />
             Password
           </label>
@@ -93,20 +93,20 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
             {...register("password")}
             type="password"
             placeholder="••••••••"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.password && <p className="text-xs text-danger-600 font-medium">{errors.password.message}</p>}
         </div>
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Shield className="w-4 h-4 text-primary-500" />
           Role
         </label>
         <select
           {...register("roleId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select role...</option>
           {roles.map((r) => (
@@ -122,13 +122,13 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           {isEditing ? "Update Employee" : "Add Employee"}
         </button>

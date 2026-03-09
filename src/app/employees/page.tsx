@@ -104,7 +104,7 @@ export default function EmployeesPage() {
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
-          return <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
         },
       },
       {
@@ -121,14 +121,14 @@ export default function EmployeesPage() {
                 .toUpperCase()
                 .slice(0, 2)}
             </div>
-            <span className="font-medium text-text-primary">{info.getValue() as string}</span>
+            <span className="font-medium text-text">{info.getValue() as string}</span>
           </div>
         ),
       },
       {
         accessorKey: "email",
         header: "Email",
-        cell: (info: any) => <span className="text-text-secondary text-sm font-mono">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="text-secondary text-sm font-mono">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "role",
@@ -144,7 +144,7 @@ export default function EmployeesPage() {
         accessorKey: "createdAt",
         header: "Joined",
         cell: (info: any) => (
-          <span className="text-text-secondary text-sm">
+          <span className="text-secondary text-sm">
             {new Date(info.getValue()).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
@@ -161,13 +161,13 @@ export default function EmployeesPage() {
             <Can method="PATCH" path="/api/users/:id">
               <button
                 onClick={() => handleEditEmployee(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Employee"
               >
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <button className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer">
+            <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
               <MoreVertical className="w-4 h-4" />
             </button>
           </div>
@@ -182,23 +182,23 @@ export default function EmployeesPage() {
       {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Employees</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Manage staff accounts and roles.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Employees</h2>
+          <p className="text-secondary text-sm mt-0.5">Manage staff accounts and roles.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
             Filter
           </button>
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
           <Can method="POST" path="/api/users">
             <button
               onClick={handleAddEmployee}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Employee

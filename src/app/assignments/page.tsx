@@ -75,8 +75,8 @@ const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
 // ─── Shared button styles ──────────────────────────────────────────────────────
 
 const TAB_BASE = "px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer";
-const TAB_ACTIVE = "bg-primary-600 text-white shadow-sm shadow-primary-600/20";
-const TAB_IDLE = "text-text-secondary hover:bg-surface-hover hover:text-text-primary";
+const TAB_ACTIVE = "bg-primary text-white shadow-sm shadow-primary-600/20";
+const TAB_IDLE = "text-secondary hover:bg-surface-hover hover:text-text";
 
 // ─── Tabs ──────────────────────────────────────────────────────────────────────
 
@@ -122,7 +122,7 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
         {days.map((d) => (
           <div
             key={d}
-            className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-text-secondary bg-surface-secondary"}`}
+            className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-secondary bg-background"}`}
           >
             {fullDayLabels[d]}
           </div>
@@ -131,7 +131,7 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
 
       <div className={`grid grid-cols-7 divide-x divide-border min-h-[320px]`}>
         {days.map((d) => (
-          <div key={d} className={`p-2 space-y-1.5 ${d >= 6 ? "bg-surface-secondary/40" : ""}`}>
+          <div key={d} className={`p-2 space-y-1.5 ${d >= 6 ? "bg-background/40" : ""}`}>
             {byDay[d].length === 0 && (
               <div className="h-full flex items-center justify-center">
                 <span className="text-xs text-text-muted">—</span>
@@ -303,7 +303,7 @@ export default function AssignmentsPage() {
         accessorKey: "id",
         header: "#",
         cell: ({ row, table }) => (
-          <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">
+          <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
           </span>
         ),
@@ -316,20 +316,20 @@ export default function AssignmentsPage() {
             <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-purple-600" />
             </div>
-            <p className="font-medium text-text-primary text-sm">{row.original.name}</p>
+            <p className="font-medium text-text text-sm">{row.original.name}</p>
           </div>
         ),
       },
       {
         accessorKey: "description",
         header: "Description",
-        cell: (info: any) => <span className="text-text-secondary text-sm">{info.getValue() ?? <span className="text-text-muted italic">—</span>}</span>,
+        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ?? <span className="text-text-muted italic">—</span>}</span>,
       },
       {
         accessorKey: "createdAt",
         header: "Created",
         cell: (info: any) => (
-          <span className="text-text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+          <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
@@ -340,7 +340,7 @@ export default function AssignmentsPage() {
             <Can method="PATCH" path="/api/roles/:id">
               <button
                 onClick={() => setRoleSheet({ open: true, editing: row.original })}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Role"
               >
                 <Edit className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function AssignmentsPage() {
                   }
                 }}
                 disabled={deletingRole && deletingId === row.original.id}
-                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Role"
               >
                 {deletingRole && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -376,7 +376,7 @@ export default function AssignmentsPage() {
         accessorKey: "id",
         header: "#",
         cell: ({ row, table }) => (
-          <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">
+          <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
           </span>
         ),
@@ -390,8 +390,8 @@ export default function AssignmentsPage() {
               <DoorOpen className="w-4 h-4 text-cyan-600" />
             </div>
             <div>
-              <p className="font-medium text-text-primary text-sm">{row.original.name}</p>
-              {row.original.description && <p className="text-xs text-text-secondary truncate max-w-[180px]">{row.original.description}</p>}
+              <p className="font-medium text-text text-sm">{row.original.name}</p>
+              {row.original.description && <p className="text-xs text-secondary truncate max-w-[180px]">{row.original.description}</p>}
             </div>
           </div>
         ),
@@ -400,7 +400,7 @@ export default function AssignmentsPage() {
         accessorKey: "capacity",
         header: "Capacity",
         cell: (info: any) => (
-          <div className="flex items-center gap-1.5 text-text-secondary text-sm">
+          <div className="flex items-center gap-1.5 text-secondary text-sm">
             <BedDouble className="w-3.5 h-3.5" />
             <span>{info.getValue()}</span>
           </div>
@@ -410,7 +410,7 @@ export default function AssignmentsPage() {
         accessorKey: "createdAt",
         header: "Created",
         cell: (info: any) => (
-          <span className="text-text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+          <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
@@ -421,7 +421,7 @@ export default function AssignmentsPage() {
             <Can method="PATCH" path="/api/rooms/:id">
               <button
                 onClick={() => setRoomSheet({ open: true, editing: row.original })}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Room"
               >
                 <Edit className="w-4 h-4" />
@@ -436,7 +436,7 @@ export default function AssignmentsPage() {
                   }
                 }}
                 disabled={deletingRoom && deletingId === row.original.id}
-                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Room"
               >
                 {deletingRoom && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -456,7 +456,7 @@ export default function AssignmentsPage() {
         accessorKey: "id",
         header: "#",
         cell: ({ row, table }) => (
-          <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">
+          <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
           </span>
         ),
@@ -475,7 +475,7 @@ export default function AssignmentsPage() {
                 {u.last_name[0]}
               </div>
               <div>
-                <p className="font-medium text-text-primary text-sm">
+                <p className="font-medium text-text text-sm">
                   {u.first_name} {u.last_name}
                 </p>
                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${style.bg} ${style.text}`}>{u.role.name}</span>
@@ -488,7 +488,7 @@ export default function AssignmentsPage() {
         id: "department",
         header: "Department",
         cell: ({ row }) => (
-          <div className="flex items-center gap-1.5 text-text-secondary text-sm">
+          <div className="flex items-center gap-1.5 text-secondary text-sm">
             <Building2 className="w-3.5 h-3.5 shrink-0" />
             {row.original.department?.name ?? "—"}
           </div>
@@ -498,7 +498,7 @@ export default function AssignmentsPage() {
         id: "room",
         header: "Room",
         cell: ({ row }) => (
-          <div className="flex items-center gap-1.5 text-text-secondary text-sm">
+          <div className="flex items-center gap-1.5 text-secondary text-sm">
             <DoorOpen className="w-3.5 h-3.5 shrink-0" />
             {row.original.room?.name ?? <span className="text-text-muted italic">Not assigned</span>}
           </div>
@@ -545,7 +545,7 @@ export default function AssignmentsPage() {
           const start = new Date(row.original.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
           const end = row.original.endDate ? new Date(row.original.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "ongoing";
           return (
-            <span className="text-text-secondary text-xs">
+            <span className="text-secondary text-xs">
               {start} → {end}
             </span>
           );
@@ -559,7 +559,7 @@ export default function AssignmentsPage() {
             <Can method="PATCH" path="/api/assignments/:id">
               <button
                 onClick={() => setAssignSheet({ open: true, editing: row.original })}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Assignment"
               >
                 <Edit className="w-4 h-4" />
@@ -574,7 +574,7 @@ export default function AssignmentsPage() {
                   }
                 }}
                 disabled={deletingAssignment && deletingId === row.original.id}
-                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Assignment"
               >
                 {deletingAssignment && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -596,8 +596,8 @@ export default function AssignmentsPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Assignments</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Manage staff assignments, rooms and weekly schedules.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Assignments</h2>
+          <p className="text-secondary text-sm mt-0.5">Manage staff assignments, rooms and weekly schedules.</p>
         </div>
 
         {/* Add button per tab */}
@@ -605,7 +605,7 @@ export default function AssignmentsPage() {
           <Can method="POST" path="/api/rooms">
             <button
               onClick={() => setRoomSheet({ open: true, editing: null })}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Room
@@ -616,7 +616,7 @@ export default function AssignmentsPage() {
           <Can method="POST" path="/api/roles">
             <button
               onClick={() => setRoleSheet({ open: true, editing: null })}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Role
@@ -627,7 +627,7 @@ export default function AssignmentsPage() {
           <Can method="POST" path="/api/assignments">
             <button
               onClick={() => setAssignSheet({ open: true, editing: null })}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               New Assignment

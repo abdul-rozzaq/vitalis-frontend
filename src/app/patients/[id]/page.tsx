@@ -160,7 +160,7 @@ const FILE_ICONS = {
 };
 
 const TYPE_DOT: Record<string, { bg: string; icon: React.ElementType; iconColor: string }> = {
-  visit: { bg: "bg-primary-100", icon: Building2, iconColor: "text-primary-600" },
+  visit: { bg: "bg-primary-100", icon: Building2, iconColor: "text-primary" },
   payment: { bg: "bg-green-100", icon: CreditCard, iconColor: "text-green-600" },
   file: { bg: "bg-slate-100", icon: Paperclip, iconColor: "text-slate-600" },
 };
@@ -187,14 +187,14 @@ function AttachFileButton({ visitId }: { visitId: string }) {
     <div className="flex items-center gap-2">
       <input ref={inputRef} type="file" className="hidden" onChange={handleFile} />
       {attached ? (
-        <span className="text-xs text-primary-600 font-medium flex items-center gap-1 bg-primary-50 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-primary font-medium flex items-center gap-1 bg-primary-50 px-2 py-0.5 rounded-full">
           <Paperclip className="w-3 h-3" />
           {attached}
         </span>
       ) : null}
       <button
         onClick={() => inputRef.current?.click()}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-text-secondary bg-surface border border-border hover:bg-surface-hover hover:text-primary-600 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-secondary bg-surface border border-border hover:bg-surface-hover hover:text-primary transition-colors cursor-pointer"
         title="Attach file to this visit"
       >
         <Upload className="w-3 h-3" />
@@ -219,8 +219,8 @@ function VisitCard({ event }: { event: TimelineEvent }) {
       </div>
       {/* Title + description */}
       <div>
-        <p className="font-medium text-text-primary text-sm">{event.title}</p>
-        {event.description && <p className="text-xs text-text-secondary leading-relaxed mt-1">{event.description}</p>}
+        <p className="font-medium text-text text-sm">{event.title}</p>
+        {event.description && <p className="text-xs text-secondary leading-relaxed mt-1">{event.description}</p>}
       </div>
       {/* Attach file */}
       <div className="pt-1 border-t border-border">
@@ -267,7 +267,7 @@ function FileCard({ event }: { event: TimelineEvent }) {
           <FileIcon className={`w-4 h-4 ${ft.color}`} />
         </div>
         <div>
-          <p className="text-sm font-medium text-text-primary">{event.file_name}</p>
+          <p className="text-sm font-medium text-text">{event.file_name}</p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-text-muted">{event.file_size}</span>
             <span className="w-1 h-1 rounded-full bg-border" />
@@ -275,7 +275,7 @@ function FileCard({ event }: { event: TimelineEvent }) {
           </div>
         </div>
       </div>
-      <button className="p-1.5 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer" title="Download">
+      <button className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Download">
         <Download className="w-4 h-4" />
       </button>
     </div>
@@ -298,14 +298,14 @@ function AddVisitForm({ onCancel }: { onCancel: () => void }) {
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           Department
         </label>
         <select
           value={selectedDept}
           onChange={(e) => setSelectedDept(e.target.value)}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select department...</option>
           {MOCK_DEPARTMENTS.map((d) => (
@@ -317,18 +317,18 @@ function AddVisitForm({ onCancel }: { onCancel: () => void }) {
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
           Visit Date
         </label>
         <input
           type="datetime-local"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary-500" />
           Notes
         </label>
@@ -337,12 +337,12 @@ function AddVisitForm({ onCancel }: { onCancel: () => void }) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Describe the visit, diagnosis, or treatment..."
           rows={4}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm resize-none"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Paperclip className="w-4 h-4 text-primary-500" />
           Attach Files (optional)
         </label>
@@ -357,13 +357,13 @@ function AddVisitForm({ onCancel }: { onCancel: () => void }) {
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="button"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           Save Visit
         </button>
@@ -379,57 +379,57 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             First Name
           </label>
           <input
             defaultValue={patient.first_name}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             Last Name
           </label>
           <input
             defaultValue={patient.last_name}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           Phone Number
         </label>
         <input
           defaultValue={patient.phone_number}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
           Birth Date
         </label>
         <input
           type="date"
           defaultValue={patient.birth_date ?? ""}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary">Gender</label>
+        <label className="text-sm font-medium text-text">Gender</label>
         <div className="flex gap-4">
           {["male", "female"].map((g) => (
             <label key={g} className="flex items-center gap-2 cursor-pointer group">
               <input type="radio" name="gender" value={g} defaultChecked={patient.gender === g} className="w-4 h-4 accent-primary-600 cursor-pointer" />
-              <span className="text-sm text-text-secondary capitalize">{g}</span>
+              <span className="text-sm text-secondary capitalize">{g}</span>
             </label>
           ))}
         </div>
@@ -439,13 +439,13 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="button"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           Save Changes
         </button>
@@ -495,7 +495,7 @@ export default function PatientDetailPage() {
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
       {/* Back link */}
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
-        <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors group">
+        <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Back to Patients
         </Link>
@@ -511,7 +511,7 @@ export default function PatientDetailPage() {
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
               <div>
-                <h1 className="text-lg font-bold text-text-primary leading-tight">{fullName}</h1>
+                <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
                 <span className="text-xs text-text-muted capitalize">{patient.gender}</span>
               </div>
             </div>
@@ -522,12 +522,12 @@ export default function PatientDetailPage() {
             {/* Details */}
             <div className="space-y-2.5">
               {patient.birth_date && (
-                <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+                <div className="flex items-center gap-2.5 text-sm text-secondary">
                   <Calendar className="w-4 h-4 text-text-muted shrink-0" />
                   {new Date(patient.birth_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                 </div>
               )}
-              <div className="flex items-center gap-2.5 text-sm text-text-secondary">
+              <div className="flex items-center gap-2.5 text-sm text-secondary">
                 <Phone className="w-4 h-4 text-text-muted shrink-0" />
                 <span className="font-mono">{patient.phone_number}</span>
               </div>
@@ -539,15 +539,15 @@ export default function PatientDetailPage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
-                <p className="text-lg font-bold text-text-primary">{visitCount}</p>
+                <p className="text-lg font-bold text-text">{visitCount}</p>
                 <p className="text-[11px] text-text-muted">Visits</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-text-primary">${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })}</p>
+                <p className="text-lg font-bold text-text">${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })}</p>
                 <p className="text-[11px] text-text-muted">Paid</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-text-primary">{fileCount}</p>
+                <p className="text-lg font-bold text-text">{fileCount}</p>
                 <p className="text-[11px] text-text-muted">Files</p>
               </div>
             </div>
@@ -560,7 +560,7 @@ export default function PatientDetailPage() {
             <Can method="POST" path="/api/appointments">
               <button
                 onClick={() => setSheetMode("visit")}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary-700 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
               >
                 <Plus className="w-4 h-4" />
                 New Department Visit
@@ -570,7 +570,7 @@ export default function PatientDetailPage() {
             <Can method="PATCH" path="/api/patients/:id">
               <button
                 onClick={() => setSheetMode("edit")}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary text-sm font-medium transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
               >
                 <Edit className="w-4 h-4" />
                 Edit Patient Info
@@ -578,13 +578,13 @@ export default function PatientDetailPage() {
             </Can>
 
             <Can method="POST" path="/api/payments">
-              <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary text-sm font-medium transition-colors cursor-pointer">
+              <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
                 <CreditCard className="w-4 h-4" />
                 Record Payment
               </button>
             </Can>
 
-            <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary text-sm font-medium transition-colors cursor-pointer">
+            <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
               <Upload className="w-4 h-4" />
               Upload File
             </button>
@@ -610,11 +610,11 @@ export default function PatientDetailPage() {
         {/* ── RIGHT TIMELINE ─────────────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text-primary">Activity Timeline</h2>
+            <h2 className="text-base font-semibold text-text">Activity Timeline</h2>
             <Can method="POST" path="/api/appointments">
               <button
                 onClick={() => setSheetMode("visit")}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Visit
@@ -624,7 +624,7 @@ export default function PatientDetailPage() {
 
           {groupedEntries.length === 0 ? (
             <div className="bg-surface border border-border rounded-xl p-12 text-center">
-              <p className="text-text-secondary text-sm">No activity recorded yet.</p>
+              <p className="text-secondary text-sm">No activity recorded yet.</p>
             </div>
           ) : (
             groupedEntries.map(([day, events], groupIdx) => (
@@ -633,7 +633,7 @@ export default function PatientDetailPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center gap-2 bg-surface border border-border rounded-full px-3 py-1">
                     <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                    <span className="text-xs font-medium text-text-secondary">{formatDate(events[0].date)}</span>
+                    <span className="text-xs font-medium text-secondary">{formatDate(events[0].date)}</span>
                   </div>
                   <div className="flex-1 h-px bg-border" />
                 </div>

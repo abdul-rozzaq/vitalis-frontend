@@ -34,32 +34,32 @@ export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFo
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           Department Name
         </label>
         <input
           {...register("name")}
           placeholder="e.g. Cardiology"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
         {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
           Department Head
         </label>
         <input
           {...register("head_name")}
           placeholder="e.g. Dr. John Smith"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <AlignLeft className="w-4 h-4 text-primary-500" />
           Description
         </label>
@@ -67,7 +67,7 @@ export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFo
           {...register("description")}
           placeholder="Brief description of this department..."
           rows={4}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm resize-none"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
       </div>
 
@@ -75,13 +75,13 @@ export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFo
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           {isEditing ? "Update Department" : "Add Department"}
         </button>

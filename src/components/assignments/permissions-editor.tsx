@@ -159,7 +159,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
     return (
       <div className="flex flex-col items-center justify-center h-48 gap-3 text-center">
         <Shield className="w-8 h-8 text-text-muted" />
-        <p className="text-text-secondary text-sm">No roles found. Create a role first from the Roles tab.</p>
+        <p className="text-secondary text-sm">No roles found. Create a role first from the Roles tab.</p>
       </div>
     );
   }
@@ -170,7 +170,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
     <div className="flex gap-5 items-start">
       {/* ── Left: Role list ─────────────────────────────────────────────────── */}
       <div className="w-52 shrink-0 bg-surface border border-border rounded-lg overflow-hidden">
-        <div className="px-3 py-2.5 border-b border-border bg-surface-secondary">
+        <div className="px-3 py-2.5 border-b border-border bg-background">
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Roles</p>
         </div>
         <div className="flex flex-col">
@@ -182,11 +182,11 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                 setSelectedRoleId(role.id);
               }}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors cursor-pointer border-b border-border last:border-b-0 ${
-                selectedRoleId === role.id ? "bg-primary-50 text-primary-700" : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                selectedRoleId === role.id ? "bg-primary-50 text-primary-700" : "text-secondary hover:bg-surface-hover hover:text-text"
               }`}
             >
-              <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${selectedRoleId === role.id ? "bg-primary-100" : "bg-surface-secondary"}`}>
-                <Shield className={`w-3.5 h-3.5 ${selectedRoleId === role.id ? "text-primary-600" : "text-text-muted"}`} />
+              <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${selectedRoleId === role.id ? "bg-primary-100" : "bg-background"}`}>
+                <Shield className={`w-3.5 h-3.5 ${selectedRoleId === role.id ? "text-primary" : "text-text-muted"}`} />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{role.name}</p>
@@ -202,9 +202,9 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-sm font-medium text-text-primary flex items-center gap-1.5">
+            <p className="text-sm font-medium text-text flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5 text-text-muted" />
-              Permissions for <span className="text-primary-600 font-semibold">{selectedRole?.name ?? "—"}</span>
+              Permissions for <span className="text-primary font-semibold">{selectedRole?.name ?? "—"}</span>
             </p>
             <p className="text-xs text-text-muted mt-0.5">{loadingRoutes ? "Loading..." : `${totalChecked} / ${totalEndpoints} endpoints enabled`}</p>
           </div>
@@ -212,7 +212,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
             <button
               onClick={() => savePermissions()}
               disabled={!dirty || saving}
-              className="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               {saving ? "Saving..." : "Save Changes"}
@@ -228,9 +228,9 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
         ) : routes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 bg-surface border border-border rounded-lg gap-2">
             <KeyRound className="w-7 h-7 text-text-muted" />
-            <p className="text-sm text-text-secondary">No available routes returned from the server.</p>
+            <p className="text-sm text-secondary">No available routes returned from the server.</p>
             <p className="text-xs text-text-muted">
-              Make sure <code className="font-mono bg-surface-secondary px-1 rounded">GET /api/permissions/available-routes</code> is implemented.
+              Make sure <code className="font-mono bg-background px-1 rounded">GET /api/permissions/available-routes</code> is implemented.
             </p>
           </div>
         ) : (
@@ -247,7 +247,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                     <div className={`flex items-center justify-between px-3 py-2 border-b border-border ${colorStyle.header}`}>
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${colorStyle.dot}`} />
-                        <span className="text-sm font-semibold text-text-primary">{groupName}</span>
+                        <span className="text-sm font-semibold text-text">{groupName}</span>
                         <span className="text-[11px] text-text-muted">
                           ({groupRoutes.filter((r) => checked.has(permKey(r.method, r.path))).length}/{groupRoutes.length})
                         </span>
@@ -285,7 +285,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                               {route.method}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-xs text-text-secondary font-mono truncate">{route.path}</p>
+                              <p className="text-xs text-secondary font-mono truncate">{route.path}</p>
                               {route.description && <p className="text-[11px] text-text-muted truncate mt-0.5">{route.description}</p>}
                             </div>
                           </label>

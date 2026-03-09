@@ -1,8 +1,9 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import Lottie from "lottie-react";
-import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, User, UserPen, Users } from "lucide-react";
+import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, User, UserPen, Users, Sun, Moon } from "lucide-react";
 import { PatientSearch } from "./ui/patient-search";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,12 +24,13 @@ const IGNORE_PATHS = ["/login"];
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   if (IGNORE_PATHS.includes(pathname)) return <>{children}</>;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Lottie animationData={require("@/animations/loading.json")} loop={true} autoplay={true} style={{ width: 120, height: 120 }} />
       </div>
     );
@@ -39,16 +41,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const roleName = user.role?.name;
 
   return (
-    <div className="min-h-screen bg-surface-secondary flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside className="w-60 bg-surface border-r border-border flex flex-col">
         <div className="px-5 py-4 border-b border-border">
           <Link href="/">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary-600 rounded-md flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                 <Activity className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-text-primary text-[15px] tracking-tight">Vitalis</span>
+              <span className="font-semibold text-text text-[15px] tracking-tight">Vitalis</span>
             </div>
           </Link>
         </div>
@@ -65,11 +67,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* User info + Logout */}
         <div className="px-3 py-3 border-t border-border space-y-1">
           <div className="flex items-center gap-2.5 px-3 py-1.5">
-            <div className="w-7 h-7 bg-surface-secondary rounded-full flex items-center justify-center border border-border shrink-0">
+            <div className="w-7 h-7 bg-background rounded-full flex items-center justify-center border border-border shrink-0">
               <User className="w-3.5 h-3.5 text-text-muted" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-text-primary leading-tight truncate">
+              <p className="text-sm font-medium text-text leading-tight truncate">
                 {user.first_name} {user.last_name}
               </p>
               <p className="text-[11px] text-text-muted truncate">{roleName}</p>
@@ -77,7 +79,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <button
             onClick={() => logout()}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-md transition-colors group cursor-pointer text-sm"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-md transition-colors group cursor-pointer text-sm"
           >
             <LogOut className="w-4 h-4" />
             <span className="font-medium">Sign Out</span>
@@ -94,9 +96,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="relative p-1.5 text-text-muted hover:text-text-primary transition-colors cursor-pointer">
+            <button className="relative p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
               <Bell className="w-[18px] h-[18px]" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-danger-500 rounded-full"></span>
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer"
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              {theme === "dark" ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
           </div>
         </header>
@@ -115,7 +124,7 @@ function NavItem({ icon: Icon, label, active = false, href }: { icon: any; label
     <Link href={href}>
       <button
         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${
-          active ? "bg-primary-50 text-primary-600" : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+          active ? "bg-primary-50 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text"
         }`}
       >
         <Icon className="w-[18px] h-[18px]" />

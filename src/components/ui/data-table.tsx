@@ -24,7 +24,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
       <div className="bg-surface rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-surface-secondary border-b border-border text-text-secondary text-xs font-medium">
+            <thead className="bg-background border-b border-border text-secondary text-xs font-medium">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -35,7 +35,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-border-light text-text-primary">
+            <tbody className="divide-y divide-border-light text-text">
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <tr key={row.id} className="hover:bg-surface-hover transition-colors">
@@ -58,22 +58,22 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-surface-secondary">
-          <div className="text-xs text-text-secondary">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-background">
+          <div className="text-xs text-secondary">
             Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
             {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getPrePaginationRowModel().rows.length)} of{" "}
             {table.getPrePaginationRowModel().rows.length} entries
           </div>
           <div className="flex items-center gap-1.5">
             <button
-              className="p-1.5 border border-border rounded-md text-text-muted hover:bg-surface hover:text-text-primary disabled:opacity-40 transition-colors cursor-pointer"
+              className="p-1.5 border border-border rounded-md text-text-muted hover:bg-surface hover:text-text disabled:opacity-40 transition-colors cursor-pointer"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
-              className="p-1.5 border border-border rounded-md text-text-muted hover:bg-surface hover:text-text-primary disabled:opacity-40 transition-colors cursor-pointer"
+              className="p-1.5 border border-border rounded-md text-text-muted hover:bg-surface hover:text-text disabled:opacity-40 transition-colors cursor-pointer"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

@@ -82,7 +82,7 @@ export function PatientSearch() {
           }
         }}
         placeholder="Search patients..."
-        className="w-full bg-surface-secondary border border-border rounded-md py-1.5 pl-9 pr-8 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+        className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-8 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
       />
       {!query && (
         <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-text-muted bg-surface border border-border rounded px-1 py-0.5 font-mono leading-none">
@@ -116,7 +116,7 @@ export function PatientSearch() {
                       {patient.last_name[0]}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-text-primary">
+                      <p className="text-sm font-medium text-text">
                         {patient.first_name} {patient.last_name}
                       </p>
                       <p className="text-xs text-text-muted font-mono">{patient.phone_number}</p>

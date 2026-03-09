@@ -169,8 +169,8 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; 
         <Icon className="w-4.5 h-4.5" />
       </div>
       <div>
-        <p className="text-xs text-text-secondary font-medium">{label}</p>
-        <p className="text-base font-semibold text-text-primary leading-tight">{value}</p>
+        <p className="text-xs text-secondary font-medium">{label}</p>
+        <p className="text-base font-semibold text-text leading-tight">{value}</p>
         {sub && <p className="text-[11px] text-text-muted">{sub}</p>}
       </div>
     </div>
@@ -260,7 +260,7 @@ export default function PaymentsPage() {
         header: "#",
         cell: ({ row, table }) => {
           const idx = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1;
-          return <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">{idx}</span>;
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{idx}</span>;
         },
       },
       {
@@ -278,7 +278,7 @@ export default function PaymentsPage() {
                   .toUpperCase()
                   .slice(0, 2)}
               </div>
-              <span className="font-medium text-text-primary text-sm">{name}</span>
+              <span className="font-medium text-text text-sm">{name}</span>
             </div>
           );
         },
@@ -287,7 +287,7 @@ export default function PaymentsPage() {
         accessorKey: "department_name",
         header: "Department",
         cell: ({ row }) => (
-          <div className="flex items-center gap-1.5 text-text-secondary text-sm">
+          <div className="flex items-center gap-1.5 text-secondary text-sm">
             <Building2 className="w-3.5 h-3.5 shrink-0" />
             {row.original.department_name || "—"}
           </div>
@@ -297,7 +297,7 @@ export default function PaymentsPage() {
         accessorKey: "amount",
         header: "Amount",
         cell: (info: any) => (
-          <span className="font-semibold text-text-primary text-sm">
+          <span className="font-semibold text-text text-sm">
             ${Number(info.getValue()).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         ),
@@ -334,7 +334,7 @@ export default function PaymentsPage() {
         accessorKey: "createdAt",
         header: "Date",
         cell: (info: any) => (
-          <span className="text-text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+          <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
@@ -345,7 +345,7 @@ export default function PaymentsPage() {
             <Can method="PATCH" path="/api/payments/:id">
               <button
                 onClick={() => handleEdit(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Payment"
               >
                 <Edit className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function PaymentsPage() {
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
-                className="p-1 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Payment"
               >
                 {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -373,22 +373,22 @@ export default function PaymentsPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Payments</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Track patient billing across departments.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Payments</h2>
+          <p className="text-secondary text-sm mt-0.5">Track patient billing across departments.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
             Filter
           </button>
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
           <Can method="POST" path="/api/payments">
             <button
               onClick={handleAdd}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               New Payment
@@ -407,7 +407,7 @@ export default function PaymentsPage() {
           color="bg-green-100 text-green-600"
         />
         <SummaryCard label="Total Payments" value={String(payments.length)} sub="All records" icon={CreditCard} color="bg-blue-100 text-blue-600" />
-        <SummaryCard label="Paid" value={String(paidCount)} sub="Completed" icon={Users} color="bg-primary-100 text-primary-600" />
+        <SummaryCard label="Paid" value={String(paidCount)} sub="Completed" icon={Users} color="bg-primary-100 text-primary" />
         <SummaryCard label="Pending" value={String(pendingCount)} sub="Awaiting payment" icon={Building2} color="bg-amber-100 text-amber-600" />
       </motion.div>
 

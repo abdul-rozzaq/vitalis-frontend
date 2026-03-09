@@ -16,7 +16,7 @@ const stats = [
     label: "Appointments Today",
     value: "42",
     icon: Calendar,
-    color: "text-primary-600",
+    color: "text-primary",
     bg: "bg-primary-50",
   },
   { label: "Critical Cases", value: "7", icon: Activity, color: "text-danger-600", bg: "bg-danger-50" },
@@ -37,10 +37,10 @@ export default function HomePage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Dashboard</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Welcome back, {user.first_name}. Here&apos;s what&apos;s happening today.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Dashboard</h2>
+          <p className="text-secondary text-sm mt-0.5">Welcome back, {user.first_name}. Here&apos;s what&apos;s happening today.</p>
         </div>
-        <button className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+        <button className="bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
           <Plus className="w-4 h-4" />
           New Patient
         </button>
@@ -60,10 +60,10 @@ export default function HomePage() {
               <div className={`${stat.bg} ${stat.color} p-2 rounded-md`}>
                 <stat.icon className="w-4 h-4" />
               </div>
-              <span className="text-[11px] font-semibold text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">+12%</span>
+              <span className="text-[11px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded">+12%</span>
             </div>
-            <p className="text-text-secondary text-xs font-medium">{stat.label}</p>
-            <h3 className="text-2xl font-semibold text-text-primary mt-0.5">{stat.value}</h3>
+            <p className="text-secondary text-xs font-medium">{stat.label}</p>
+            <h3 className="text-2xl font-semibold text-text mt-0.5">{stat.value}</h3>
           </motion.div>
         ))}
       </div>
@@ -72,18 +72,18 @@ export default function HomePage() {
         {/* Recent Patients */}
         <div className="lg:col-span-2 bg-surface rounded-lg border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text-primary">Recent Patients</h3>
-            <button className="text-primary-600 text-xs font-medium hover:underline cursor-pointer">View All</button>
+            <h3 className="text-sm font-semibold text-text">Recent Patients</h3>
+            <button className="text-primary text-xs font-medium hover:underline cursor-pointer">View All</button>
           </div>
           <div className="divide-y divide-border-light">
             {recentPatients.map((patient) => (
               <div key={patient.id} className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-surface-secondary rounded-md flex items-center justify-center text-text-muted text-sm font-semibold group-hover:bg-surface transition-colors">
+                  <div className="w-9 h-9 bg-background rounded-md flex items-center justify-center text-text-muted text-sm font-semibold group-hover:bg-surface transition-colors">
                     {patient.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-primary">{patient.name}</p>
+                    <p className="text-sm font-medium text-text">{patient.name}</p>
                     <p className="text-[11px] text-text-muted">{patient.id}</p>
                   </div>
                 </div>
@@ -95,7 +95,7 @@ export default function HomePage() {
                           ? "bg-info-50 text-info-600"
                           : patient.status === "Follow-up"
                             ? "bg-warning-50 text-warning-600"
-                            : "bg-surface-secondary text-text-muted"
+                            : "bg-background text-text-muted"
                       }`}
                     >
                       {patient.status}
@@ -105,7 +105,7 @@ export default function HomePage() {
                       {patient.time}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text-primary transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
                 </div>
               </div>
             ))}

@@ -17,18 +17,18 @@ export default function AppointmentsPage() {
         accessorKey: "id",
         header: "Apt. ID",
         cell: (info) => (
-          <span className="font-mono text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs font-medium">{info.getValue() as string}</span>
+          <span className="font-mono text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs font-medium">{info.getValue() as string}</span>
         ),
       },
       {
         accessorKey: "patientName",
         header: "Patient",
-        cell: (info) => <span className="font-medium text-text-primary">{info.getValue() as string}</span>,
+        cell: (info) => <span className="font-medium text-text">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "doctorName",
         header: "Doctor",
-        cell: (info) => <span className="text-text-secondary">{info.getValue() as string}</span>,
+        cell: (info) => <span className="text-secondary">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "department",
@@ -39,7 +39,7 @@ export default function AppointmentsPage() {
         accessorKey: "date",
         header: "Date",
         cell: (info) => (
-          <div className="flex items-center gap-1.5 text-text-secondary text-xs">
+          <div className="flex items-center gap-1.5 text-secondary text-xs">
             <CalendarIcon className="w-3 h-3 text-text-muted" />
             {info.getValue() as string}
           </div>
@@ -48,12 +48,12 @@ export default function AppointmentsPage() {
       {
         accessorKey: "time",
         header: "Time",
-        cell: (info) => <span className="font-mono text-xs text-text-secondary">{info.getValue() as string}</span>,
+        cell: (info) => <span className="font-mono text-xs text-secondary">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "type",
         header: "Type",
-        cell: (info) => <span className="text-xs text-text-secondary">{info.getValue() as string}</span>,
+        cell: (info) => <span className="text-xs text-secondary">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "status",
@@ -64,7 +64,7 @@ export default function AppointmentsPage() {
             <span
               className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                 status === "Confirmed"
-                  ? "bg-primary-50 text-primary-600"
+                  ? "bg-primary-50 text-primary"
                   : status === "Pending"
                     ? "bg-warning-50 text-warning-600"
                     : status === "Cancelled"
@@ -90,21 +90,21 @@ export default function AppointmentsPage() {
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
       >
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Appointments</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Schedule and manage patient bookings.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Appointments</h2>
+          <p className="text-secondary text-sm mt-0.5">Schedule and manage patient bookings.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
             Filter
           </button>
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
           <Can method="POST" path="/api/appointments">
-            <button className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+            <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
               <Plus className="w-3.5 h-3.5" />
               New Appointment
             </button>

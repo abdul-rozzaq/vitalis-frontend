@@ -82,14 +82,14 @@ export default function PatientsPage() {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
 
-          return <span className="font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
         },
       },
       {
         accessorFn: (row: Patient) => `${row.first_name} ${row.last_name}`,
         id: "name",
         header: "Name",
-        cell: (info: any) => <span className="font-medium text-text-primary">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="font-medium text-text">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "gender",
@@ -99,12 +99,12 @@ export default function PatientsPage() {
       {
         accessorKey: "birth_date",
         header: "Birth Date",
-        cell: (info: any) => <span className="text-text-secondary text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "N/A"}</span>,
+        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "N/A"}</span>,
       },
       {
         accessorKey: "phone_number",
         header: "Phone Number",
-        cell: (info: any) => <span className="text-text-secondary font-mono text-xs">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="text-secondary font-mono text-xs">{info.getValue() as string}</span>,
       },
       {
         id: "actions",
@@ -113,7 +113,7 @@ export default function PatientsPage() {
           <div className="flex justify-end gap-2">
             <Can method="GET" path={`/api/patients/:id`}>
               <Link href={`/patients/${row.original.id}`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer" title="View Patient">
+                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="View Patient">
                   <Eye className="w-4 h-4" />
                 </button>
               </Link>
@@ -121,14 +121,14 @@ export default function PatientsPage() {
             <Can method="PUT" path={`/api/patients/:id`}>
               <button
                 onClick={() => handleEditPatient(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Patient"
               >
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
             <Can method="DELETE" path={`/api/patients/:id`}>
-              <button className="p-1 rounded-md hover:bg-surface-hover text-text-secondary transition-colors cursor-pointer">
+              <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
                 <MoreVertical className="w-4 h-4" />
               </button>
             </Can>
@@ -144,23 +144,23 @@ export default function PatientsPage() {
       {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary tracking-tight">Patients</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Manage and view your patient directory.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">Patients</h2>
+          <p className="text-secondary text-sm mt-0.5">Manage and view your patient directory.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
             Filter
           </button>
-          <button className="bg-surface border border-border text-text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
             Export
           </button>
           <Can method="POST" path={`/api/patients`}>
             <button
               onClick={handleAddPatient}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Patient

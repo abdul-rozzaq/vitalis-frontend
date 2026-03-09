@@ -17,14 +17,14 @@ export default function NotFound() {
           <HeartPulse className="w-8 h-8 text-danger-500 relative z-10" />
         </div>
 
-        <h1 className="text-3xl font-semibold text-text-primary tracking-tight mb-2">404</h1>
+        <h1 className="text-3xl font-semibold text-text tracking-tight mb-2">404</h1>
 
-        <p className="text-text-secondary text-sm mb-6">
+        <p className="text-secondary text-sm mb-6">
           The page or record you are looking for seems to have gone missing from our clinical charts.
         </p>
 
         <Link href="/">
-          <button className="bg-text-primary hover:bg-zinc-800 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button className="bg-text text-background hover:opacity-90 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-opacity cursor-pointer">
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </button>

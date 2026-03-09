@@ -83,13 +83,13 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Employee */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
           Employee
         </label>
         <select
           {...register("userId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select employee...</option>
           {users.map((u) => (
@@ -103,13 +103,13 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
 
       {/* Department */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           Department
         </label>
         <select
           {...register("departmentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select department...</option>
           {departments.map((d) => (
@@ -123,13 +123,13 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
 
       {/* Room (optional) */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <DoorOpen className="w-4 h-4 text-primary-500" />
           Room <span className="text-text-muted font-normal">(optional)</span>
         </label>
         <select
           {...register("roomId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">No room assigned</option>
           {rooms.map((r) => (
@@ -143,27 +143,27 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary-500" />
             Start Date
           </label>
           <input
             {...register("startDate")}
             type="date"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.startDate && <p className="text-xs text-danger-600 font-medium">{errors.startDate.message}</p>}
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary-500" />
             End Date <span className="text-text-muted font-normal">(opt.)</span>
           </label>
           <input
             {...register("endDate")}
             type="date"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
         </div>
       </div>
@@ -171,7 +171,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       {/* isActive */}
       <div className="flex items-center gap-3">
         <input {...register("isActive")} type="checkbox" id="isActive" className="w-4 h-4 accent-primary-600 cursor-pointer rounded" />
-        <label htmlFor="isActive" className="text-sm font-medium text-text-primary cursor-pointer">
+        <label htmlFor="isActive" className="text-sm font-medium text-text cursor-pointer">
           Active assignment
         </label>
       </div>
@@ -179,14 +179,14 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       {/* Schedules */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <Clock className="w-4 h-4 text-primary-500" />
             Weekly Schedule
           </label>
           <button
             type="button"
             onClick={() => append({ dayOfWeek: 1, startTime: "09:00", endTime: "18:00" })}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
           >
             <Plus className="w-3 h-3" />
             Add day
@@ -196,7 +196,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         {fields.length > 0 && (
           <div className="space-y-2 rounded-lg border border-border overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_90px_90px_32px] gap-2 px-3 py-2 bg-surface-secondary text-xs font-medium text-text-muted">
+            <div className="grid grid-cols-[1fr_90px_90px_32px] gap-2 px-3 py-2 bg-background text-xs font-medium text-text-muted">
               <span>Day</span>
               <span>Start</span>
               <span>End</span>
@@ -206,7 +206,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
               <div key={field.id} className="grid grid-cols-[1fr_90px_90px_32px] gap-2 px-3 py-2 items-center border-t border-border">
                 <select
                   {...register(`schedules.${idx}.dayOfWeek`)}
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
+                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
                 >
                   {Object.entries(DAY_LABELS).map(([val, label]) => (
                     <option key={val} value={val}>
@@ -217,12 +217,12 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
                 <input
                   {...register(`schedules.${idx}.startTime`)}
                   type="time"
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <input
                   {...register(`schedules.${idx}.endTime`)}
                   type="time"
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <button type="button" onClick={() => remove(idx)} className="p-1 rounded hover:bg-red-50 text-text-muted hover:text-red-600 transition-colors cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />
@@ -241,14 +241,14 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           {isLoading ? "Saving..." : isEditing ? "Update" : "Create Assignment"}
         </button>

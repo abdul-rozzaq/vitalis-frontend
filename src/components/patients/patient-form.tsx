@@ -40,34 +40,34 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             First Name
           </label>
           <input
             {...register("first_name")}
             placeholder="John"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.first_name && <p className="text-xs text-danger-600 font-medium">{errors.first_name.message}</p>}
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             Last Name
           </label>
           <input
             {...register("last_name")}
             placeholder="Doe"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.last_name && <p className="text-xs text-danger-600 font-medium">{errors.last_name.message}</p>}
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           Phone Number
         </label>
@@ -75,14 +75,14 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
           <input
             {...register("phone_number")}
             placeholder="+1 234 567 890"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm pl-4"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm pl-4"
           />
         </div>
         {errors.phone_number && <p className="text-xs text-danger-600 font-medium">{errors.phone_number.message}</p>}
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Heart className="w-4 h-4 text-primary-500" />
           Gender
         </label>
@@ -90,7 +90,7 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
           {["male", "female"].map((gender) => (
             <label key={gender} className="flex items-center gap-2 cursor-pointer group">
               <input type="radio" value={gender} {...register("gender")} className="w-4 h-4 accent-primary-600 cursor-pointer" />
-              <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors capitalize">{gender}</span>
+              <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">{gender}</span>
             </label>
           ))}
         </div>
@@ -98,19 +98,19 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
           Birth Date
         </label>
         <input
           type="date"
           {...register("birth_date")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
 
       {/* <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary-500" />
           Address
         </label>
@@ -118,7 +118,7 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
           {...register("address")}
           placeholder="Enter patient home address"
           rows={3}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm resize-none"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
       </div> */}
 
@@ -126,13 +126,13 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           {initialData ? "Update Patient" : "Add Patient"}
         </button>

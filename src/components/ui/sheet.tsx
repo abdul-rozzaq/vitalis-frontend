@@ -57,10 +57,10 @@ export function Sheet({ isOpen, onClose, title, description, children, footer, c
               {/* Header */}
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div>
-                  {title && <h2 className="text-xl font-semibold text-text-primary tracking-tight">{title}</h2>}
-                  {description && <p className="text-sm text-text-secondary mt-1">{description}</p>}
+                  {title && <h2 className="text-xl font-semibold text-text tracking-tight">{title}</h2>}
+                  {description && <p className="text-sm text-secondary mt-1">{description}</p>}
                 </div>
-                <button onClick={onClose} className="p-1.5 rounded-md hover:bg-surface-hover text-text-secondary transition-colors transition-colors cursor-pointer">
+                <button onClick={onClose} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors transition-colors cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -69,7 +69,7 @@ export function Sheet({ isOpen, onClose, title, description, children, footer, c
               <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">{children}</div>
 
               {/* Footer */}
-              {footer && <div className="p-6 border-t border-border bg-surface-secondary">{footer}</div>}
+              {footer && <div className="p-6 border-t border-border bg-background">{footer}</div>}
             </motion.div>
           </motion.div>
         </>

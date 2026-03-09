@@ -34,15 +34,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-sm">
         <div className="bg-surface rounded-lg border border-border p-6 md:p-8">
           <div className="flex flex-col items-center mb-8">
             <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-3">
-              <Stethoscope className="w-6 h-6 text-primary-600" />
+              <Stethoscope className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-xl font-semibold text-text-primary tracking-tight">Vitalis CRM</h1>
-            <p className="text-text-secondary text-sm mt-0.5">Hospital Management Portal</p>
+            <h1 className="text-xl font-semibold text-text tracking-tight">Vitalis CRM</h1>
+            <p className="text-secondary text-sm mt-0.5">Hospital Management Portal</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -54,7 +54,7 @@ export default function LoginPage() {
                   {...register("email")}
                   type="email"
                   placeholder="admin@hospital.com"
-                  className="w-full bg-surface-secondary border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full bg-background border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
                 />
               </div>
               {errors.email && <p className="text-danger-600 text-xs mt-1 ml-0.5">{errors.email.message}</p>}
@@ -68,7 +68,7 @@ export default function LoginPage() {
                   {...register("password")}
                   type="password"
                   placeholder="••••••••"
-                  className="w-full bg-surface-secondary border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="w-full bg-background border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
                 />
               </div>
               {errors.password && <p className="text-danger-600 text-xs mt-1 ml-0.5">{errors.password.message}</p>}
@@ -81,7 +81,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full bg-text-primary hover:bg-zinc-800 text-white font-medium py-2.5 rounded-md transition-colors flex items-center justify-center gap-2 mt-1 disabled:opacity-70 cursor-pointer"
+              className="w-full bg-text text-background hover:opacity-90 font-medium py-2.5 rounded-md transition-opacity flex items-center justify-center gap-2 mt-1 disabled:opacity-70 cursor-pointer"
             >
               {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
             </button>

@@ -67,13 +67,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Patient */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Users className="w-4 h-4 text-primary-500" />
           Patient
         </label>
         <select
           {...register("patient_id")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select a patient...</option>
           {patients.map((p) => (
@@ -87,13 +87,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
 
       {/* Department */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           Department
         </label>
         <select
           {...register("department_id")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">Select a department...</option>
           {departments.map((d) => (
@@ -107,7 +107,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
 
       {/* Amount */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-primary-500" />
           Amount
         </label>
@@ -119,7 +119,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             min="0"
             step="0.01"
             placeholder="0.00"
-            className="w-full bg-surface border border-border rounded-md pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
         </div>
         {errors.amount && <p className="text-xs text-danger-600 font-medium">{errors.amount.message}</p>}
@@ -128,13 +128,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
       {/* Payment Method + Status side by side */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-primary-500" />
             Method
           </label>
           <select
             {...register("payment_method")}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
             {PAYMENT_METHODS.map((m) => (
               <option key={m.value} value={m.value}>
@@ -145,13 +145,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary-500" />
             Status
           </label>
           <select
             {...register("status")}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
             {PAYMENT_STATUSES.map((s) => (
               <option key={s.value} value={s.value}>
@@ -164,7 +164,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
 
       {/* Description */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-primary flex items-center gap-2">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary-500" />
           Notes (optional)
         </label>
@@ -172,7 +172,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
           {...register("description")}
           placeholder="Additional notes about this payment..."
           rows={3}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm resize-none"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
       </div>
 
@@ -180,13 +180,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
           {isEditing ? "Update Payment" : "Record Payment"}
         </button>
