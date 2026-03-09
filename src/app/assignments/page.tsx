@@ -38,9 +38,7 @@ interface Assignment {
   departmentId: string;
   roomId?: string;
   isActive: boolean;
-  startDate: string;
-  endDate?: string;
-  user?: { id: string; first_name: string; last_name: string; role: Role };
+  user?:{ id: string; first_name: string; last_name: string; role: Role };
   department?: { id: string; name: string };
   room?: { id: string; name: string };
   schedules?: Schedule[];
@@ -539,19 +537,6 @@ export default function AssignmentsPage() {
           ),
       },
       {
-        id: "startDate",
-        header: "Period",
-        cell: ({ row }) => {
-          const start = new Date(row.original.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-          const end = row.original.endDate ? new Date(row.original.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "ongoing";
-          return (
-            <span className="text-secondary text-xs">
-              {start} → {end}
-            </span>
-          );
-        },
-      },
-      {
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
@@ -747,8 +732,6 @@ export default function AssignmentsPage() {
                   userId: assignSheet.editing.userId,
                   departmentId: assignSheet.editing.departmentId,
                   roomId: assignSheet.editing.roomId,
-                  startDate: assignSheet.editing.startDate?.slice(0, 10),
-                  endDate: assignSheet.editing.endDate?.slice(0, 10),
                   isActive: assignSheet.editing.isActive,
                   schedules: assignSheet.editing.schedules?.map((s) => ({
                     dayOfWeek: s.dayOfWeek,

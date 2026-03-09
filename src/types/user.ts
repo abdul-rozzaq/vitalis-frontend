@@ -3,7 +3,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  isSuperuser: boolean;
+  isSuperUser: boolean;
   role: {
     id: string;
     name: string;

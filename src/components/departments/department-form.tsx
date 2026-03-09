@@ -1,25 +1,33 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, Building2, User } from "lucide-react";
+import { AlignLeft, Building2, DollarSign, GitBranch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const departmentSchema = z.object({
   name: z.string().min(2, "Department name is too short"),
   description: z.string().optional(),
-  head_name: z.string().optional(),
+  parentId: z.string().optional(),
+  price: z.coerce.number().min(0, "Price must be 0 or more").optional(),
 });
 
 type DepartmentFormValues = z.infer<typeof departmentSchema>;
 
+interface Department {
+  id: string;
+  name: string;
+}
+
 interface DepartmentFormProps {
   initialData?: Partial<DepartmentFormValues>;
+  departments?: Department[];
+  currentId?: string;
   onSubmit: (data: DepartmentFormValues) => void;
   onCancel: () => void;
 }
 
-export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFormProps) {
+export function DepartmentForm({ initialData, departments = [], currentId, onSubmit, onCancel }: DepartmentFormProps) {
   const {
     register,
     handleSubmit,
@@ -30,6 +38,9 @@ export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFo
   });
 
   const isEditing = !!initialData;
+
+  // exclude self from parent options
+  const parentOptions = departments.filter((d) => d.id !== currentId);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -48,14 +59,36 @@ export function DepartmentForm({ initialData, onSubmit, onCancel }: DepartmentFo
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
-          <User className="w-4 h-4 text-primary-500" />
-          Department Head
+          <GitBranch className="w-4 h-4 text-primary-500" />
+          Parent Department
+        </label>
+        <select
+          {...register("parentId")}
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
+        >
+          <option value="">None (top-level)</option>
+          {parentOptions.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-primary-500" />
+          Price
         </label>
         <input
-          {...register("head_name")}
-          placeholder="e.g. Dr. John Smith"
+          {...register("price")}
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
+        {errors.price && <p className="text-xs text-danger-600 font-medium">{errors.price.message}</p>}
       </div>
 
       <div className="space-y-1.5">

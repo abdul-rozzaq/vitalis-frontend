@@ -1,11 +1,12 @@
 "use client";
 
+import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, CreditCard, Download, Edit, FileText, ImageIcon, Paperclip, Phone, Plus, Upload, User, XCircle } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, CreditCard, Download, Edit, FileText, ImageIcon, MapPin, Paperclip, Phone, Plus, Upload, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -20,6 +21,7 @@ interface Patient {
   phone_number: string;
   gender: "male" | "female";
   birth_date: string | null;
+  address?: string;
 }
 
 interface TimelineEvent {
@@ -40,15 +42,6 @@ interface TimelineEvent {
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
 
-const MOCK_DEPARTMENTS = [
-  { id: "d1", name: "Cardiology", color: "bg-blue-100 text-blue-700" },
-  { id: "d2", name: "Neurology", color: "bg-purple-100 text-purple-700" },
-  { id: "d3", name: "Pediatrics", color: "bg-green-100 text-green-700" },
-  { id: "d4", name: "Orthopedics", color: "bg-amber-100 text-amber-700" },
-  { id: "d5", name: "Emergency", color: "bg-rose-100 text-rose-700" },
-  { id: "d6", name: "Radiology", color: "bg-cyan-100 text-cyan-700" },
-];
-
 const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
   default: [
     {
@@ -56,7 +49,7 @@ const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
       type: "visit",
       date: "2026-02-25T09:00:00.000Z",
       department: "Cardiology",
-      department_color: "bg-blue-100 text-blue-700",
+      department_color: "bg-info-50 text-info-600",
       title: "Cardiology Consultation",
       description: "Routine cardiac checkup. ECG performed. No abnormalities detected.",
     },
@@ -83,7 +76,7 @@ const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
       type: "visit",
       date: "2026-02-10T11:00:00.000Z",
       department: "Radiology",
-      department_color: "bg-cyan-100 text-cyan-700",
+      department_color: "bg-info-50 text-info-600",
       title: "MRI Scan — Radiology",
       description: "Brain MRI scan ordered by neurologist. Results pending review.",
     },
@@ -119,7 +112,7 @@ const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
       type: "visit",
       date: "2026-01-18T14:00:00.000Z",
       department: "Orthopedics",
-      department_color: "bg-amber-100 text-amber-700",
+      department_color: "bg-warning-50 text-warning-600",
       title: "Orthopedics — Knee Examination",
       description: "Patient reported knee pain. X-ray ordered. Prescribed physiotherapy for 4 weeks.",
     },
@@ -147,22 +140,22 @@ const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 const STATUS_STYLES = {
-  PAID: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", icon: CheckCircle2, dot: "bg-green-500" },
-  PENDING: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", icon: Clock, dot: "bg-amber-500" },
-  CANCELLED: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", icon: XCircle, dot: "bg-red-500" },
+  PAID: { bg: "bg-primary-50", border: "border-primary-100", text: "text-primary", icon: CheckCircle2, dot: "bg-primary" },
+  PENDING: { bg: "bg-warning-50", border: "border-amber-200", text: "text-warning-600", icon: Clock, dot: "bg-amber-500" },
+  CANCELLED: { bg: "bg-danger-50", border: "border-danger-100", text: "text-danger-600", icon: XCircle, dot: "bg-danger-500" },
 };
 
 const FILE_ICONS = {
-  pdf: { icon: FileText, color: "text-red-500", bg: "bg-red-50" },
-  image: { icon: ImageIcon, color: "text-blue-500", bg: "bg-blue-50" },
-  doc: { icon: FileText, color: "text-blue-600", bg: "bg-blue-50" },
-  other: { icon: Paperclip, color: "text-gray-500", bg: "bg-gray-50" },
+  pdf: { icon: FileText, color: "text-danger-500", bg: "bg-danger-50" },
+  image: { icon: ImageIcon, color: "text-info-600", bg: "bg-info-50" },
+  doc: { icon: FileText, color: "text-info-600", bg: "bg-info-50" },
+  other: { icon: Paperclip, color: "text-secondary", bg: "bg-surface-hover" },
 };
 
 const TYPE_DOT: Record<string, { bg: string; icon: React.ElementType; iconColor: string }> = {
   visit: { bg: "bg-primary-100", icon: Building2, iconColor: "text-primary" },
-  payment: { bg: "bg-green-100", icon: CreditCard, iconColor: "text-green-600" },
-  file: { bg: "bg-slate-100", icon: Paperclip, iconColor: "text-slate-600" },
+  payment: { bg: "bg-primary-100", icon: CreditCard, iconColor: "text-primary" },
+  file: { bg: "bg-surface-hover", icon: Paperclip, iconColor: "text-secondary" },
 };
 
 function formatDate(iso: string) {
@@ -211,7 +204,7 @@ function VisitCard({ event }: { event: TimelineEvent }) {
     <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${event.department_color || "bg-gray-100 text-gray-700"}`}>
+        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${event.department_color || "bg-surface-hover text-secondary"}`}>
           <Building2 className="w-3 h-3" />
           {event.department}
         </span>
@@ -289,88 +282,6 @@ function EventCard({ event }: { event: TimelineEvent }) {
   return null;
 }
 
-// ─── Add Visit Sheet ───────────────────────────────────────────────────────────
-
-function AddVisitForm({ onCancel }: { onCancel: () => void }) {
-  const [selectedDept, setSelectedDept] = useState("");
-  const [notes, setNotes] = useState("");
-
-  return (
-    <div className="space-y-5">
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-primary-500" />
-          Department
-        </label>
-        <select
-          value={selectedDept}
-          onChange={(e) => setSelectedDept(e.target.value)}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">Select department...</option>
-          {MOCK_DEPARTMENTS.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary-500" />
-          Visit Date
-        </label>
-        <input
-          type="datetime-local"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary-500" />
-          Notes
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Describe the visit, diagnosis, or treatment..."
-          rows={4}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Paperclip className="w-4 h-4 text-primary-500" />
-          Attach Files (optional)
-        </label>
-        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-surface-hover transition-colors">
-          <Upload className="w-5 h-5 text-text-muted mb-1" />
-          <span className="text-xs text-text-muted">Click to upload or drag & drop</span>
-          <input type="file" multiple className="hidden" />
-        </label>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
-        >
-          Save Visit
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // ─── Edit Patient Form ─────────────────────────────────────────────────────────
 
@@ -445,7 +356,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         </button>
         <button
           type="button"
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
         >
           Save Changes
         </button>
@@ -459,12 +370,33 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
 
+  const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<"visit" | "edit" | null>(null);
 
   const { data: patientData } = useQuery({
     queryKey: ["patient", id],
     queryFn: () => api.get(`/patients/${id}`).then((res) => res.data),
     refetchOnWindowFocus: false,
+  });
+
+  const { data: departmentsData = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: usersData = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => api.get("/users").then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const { mutateAsync: addAppointment, isPending: isAddingAppointment } = useMutation({
+    mutationFn: (data: any) => api.post("/appointments", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      setSheetMode(null);
+    },
   });
 
   const { data: timelineData } = useQuery({
@@ -531,6 +463,12 @@ export default function PatientDetailPage() {
                 <Phone className="w-4 h-4 text-text-muted shrink-0" />
                 <span className="font-mono">{patient.phone_number}</span>
               </div>
+              {patient.address && (
+                <div className="flex items-start gap-2.5 text-sm text-secondary">
+                  <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                  <span>{patient.address}</span>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -560,7 +498,7 @@ export default function PatientDetailPage() {
             <Can method="POST" path="/api/appointments">
               <button
                 onClick={() => setSheetMode("visit")}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary-700 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
               >
                 <Plus className="w-4 h-4" />
                 New Department Visit
@@ -614,7 +552,7 @@ export default function PatientDetailPage() {
             <Can method="POST" path="/api/appointments">
               <button
                 onClick={() => setSheetMode("visit")}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Visit
@@ -654,7 +592,7 @@ export default function PatientDetailPage() {
                           className="flex gap-4"
                         >
                           <div className="relative z-10 shrink-0">
-                            <div className={`w-8 h-8 rounded-full ${dot.bg} flex items-center justify-center border-2 border-surface-secondary`}>
+                            <div className={`w-8 h-8 rounded-full ${dot.bg} flex items-center justify-center border-2 border-surface`}>
                               <DotIcon className={`w-3.5 h-3.5 ${dot.iconColor}`} />
                             </div>
                           </div>
@@ -673,8 +611,16 @@ export default function PatientDetailPage() {
       </div>
 
       {/* ── SHEETS ─────────────────────────────────────────────────────────── */}
-      <Sheet isOpen={sheetMode === "visit"} onClose={() => setSheetMode(null)} title="New Department Visit" description="Record a new department visit for this patient.">
-        <AddVisitForm onCancel={() => setSheetMode(null)} />
+      <Sheet isOpen={sheetMode === "visit"} onClose={() => setSheetMode(null)} title="New Department Visit" description="Book a new department visit for this patient.">
+        <AppointmentForm
+          initialData={{ patientId: id }}
+          patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
+          doctors={usersData.map((u: any) => ({ id: u.id, name: `${u.first_name} ${u.last_name}` }))}
+          departments={departmentsData.map((d: any) => ({ id: d.id, name: d.name }))}
+          onSubmit={(data) => addAppointment(data)}
+          onCancel={() => setSheetMode(null)}
+          isPending={isAddingAppointment}
+        />
       </Sheet>
 
       <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title="Edit Patient" description="Update the patient's personal information.">

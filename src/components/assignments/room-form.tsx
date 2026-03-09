@@ -1,12 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, BedDouble, Hash } from "lucide-react";
+import { AlignLeft, BedDouble, Hash, LayoutGrid } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const roomSchema = z.object({
   name: z.string().min(1, "Room name is required"),
+  roomType: z.enum(["WARD", "EXAMINATION"], { required_error: "Room type is required" }),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   description: z.string().optional(),
 });
@@ -46,6 +47,22 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
         {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <LayoutGrid className="w-4 h-4 text-primary-500" />
+          Room Type
+        </label>
+        <select
+          {...register("roomType")}
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
+        >
+          <option value="">Select type...</option>
+          <option value="WARD">Ward</option>
+          <option value="EXAMINATION">Examination</option>
+        </select>
+        {errors.roomType && <p className="text-xs text-danger-600 font-medium">{errors.roomType.message}</p>}
       </div>
 
       <div className="space-y-1.5">

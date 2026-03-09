@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Calendar, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
+import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -25,8 +25,6 @@ const assignmentSchema = z.object({
   userId: z.string().min(1, "Employee is required"),
   departmentId: z.string().min(1, "Department is required"),
   roomId: z.string().optional(),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().optional(),
   isActive: z.boolean().default(true),
   schedules: z.array(scheduleRowSchema).optional(),
 });
@@ -138,34 +136,6 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
             </option>
           ))}
         </select>
-      </div>
-
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary-500" />
-            Start Date
-          </label>
-          <input
-            {...register("startDate")}
-            type="date"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
-          {errors.startDate && <p className="text-xs text-danger-600 font-medium">{errors.startDate.message}</p>}
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary-500" />
-            End Date <span className="text-text-muted font-normal">(opt.)</span>
-          </label>
-          <input
-            {...register("endDate")}
-            type="date"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
-        </div>
       </div>
 
       {/* isActive */}
