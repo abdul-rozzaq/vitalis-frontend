@@ -12,7 +12,8 @@ const departmentSchema = z.object({
   price: z.coerce.number().min(0, "Price must be 0 or more").optional(),
 });
 
-type DepartmentFormValues = z.infer<typeof departmentSchema>;
+type DepartmentFormInput = z.input<typeof departmentSchema>;
+type DepartmentFormValues = z.output<typeof departmentSchema>;
 
 interface Department {
   id: string;
@@ -20,7 +21,7 @@ interface Department {
 }
 
 interface DepartmentFormProps {
-  initialData?: Partial<DepartmentFormValues>;
+  initialData?: Partial<DepartmentFormInput>;
   departments?: Department[];
   currentId?: string;
   onSubmit: (data: DepartmentFormValues) => void;
@@ -32,7 +33,7 @@ export function DepartmentForm({ initialData, departments = [], currentId, onSub
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<DepartmentFormValues>({
+  } = useForm<DepartmentFormInput, any, DepartmentFormValues>({
     resolver: zodResolver(departmentSchema),
     defaultValues: initialData || {},
   });
