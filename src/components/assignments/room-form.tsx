@@ -7,7 +7,7 @@ import * as z from "zod";
 
 const roomSchema = z.object({
   name: z.string().min(1, "Room name is required"),
-  roomType: z.enum(["WARD", "EXAMINATION"], { required_error: "Room type is required" }),
+  roomType: z.enum(["WARD", "EXAMINATION"], { message: "Room type is required" }),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   description: z.string().optional(),
 });
@@ -58,7 +58,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           {...register("roomType")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select type...</option>
+          <option value="" disabled hidden>Select type...</option>
           <option value="WARD">Ward</option>
           <option value="EXAMINATION">Examination</option>
         </select>
