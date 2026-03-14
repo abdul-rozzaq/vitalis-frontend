@@ -5,18 +5,7 @@ import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
 
-const DAY_LABELS: Record<number, string> = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday",
-};
-
 const scheduleRowSchema = z.object({
-  dayOfWeek: z.coerce.number().min(1).max(7),
   startTime: z.string().min(1, "Required"),
   endTime: z.string().min(1, "Required"),
 });
@@ -155,35 +144,23 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           </label>
           <button
             type="button"
-            onClick={() => append({ dayOfWeek: 1, startTime: "09:00", endTime: "18:00" })}
+            onClick={() => append({ startTime: "09:00", endTime: "18:00" })}
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
           >
             <Plus className="w-3 h-3" />
-            Add day
+            Add slot
           </button>
         </div>
 
         {fields.length > 0 && (
           <div className="space-y-2 rounded-lg border border-border overflow-hidden">
-            {/* Header */}
-            <div className="grid grid-cols-[1fr_90px_90px_32px] gap-2 px-3 py-2 bg-background text-xs font-medium text-text-muted">
-              <span>Day</span>
+            <div className="grid grid-cols-[1fr_1fr_32px] gap-2 px-3 py-2 bg-background text-xs font-medium text-text-muted">
               <span>Start</span>
               <span>End</span>
               <span />
             </div>
             {fields.map((field, idx) => (
-              <div key={field.id} className="grid grid-cols-[1fr_90px_90px_32px] gap-2 px-3 py-2 items-center border-t border-border">
-                <select
-                  {...register(`schedules.${idx}.dayOfWeek`)}
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
-                >
-                  {Object.entries(DAY_LABELS).map(([val, label]) => (
-                    <option key={val} value={val}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+              <div key={field.id} className="grid grid-cols-[1fr_1fr_32px] gap-2 px-3 py-2 items-center border-t border-border">
                 <input
                   {...register(`schedules.${idx}.startTime`)}
                   type="time"
@@ -203,7 +180,9 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         )}
 
         {fields.length === 0 && (
-          <p className="text-xs text-text-muted italic text-center py-2 border border-dashed border-border rounded-lg">No schedule rows yet — click "Add day" to create one.</p>
+          <p className="text-xs text-text-muted italic text-center py-2 border border-dashed border-border rounded-lg">
+            No schedule slots yet — click "Add slot" to create one.
+          </p>
         )}
       </div>
 

@@ -5,7 +5,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Eye, Filter, Loader2, MoreVertical, Plus } from "lucide-react";
+import { Download, Edit, Filter, Loader2, MoreVertical, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -43,7 +43,11 @@ export default function PatientsPage() {
         accessorFn: (row: Patient) => `${row.first_name} ${row.last_name}`,
         id: "name",
         header: "Name",
-        cell: (info: any) => <span className="font-medium text-text">{info.getValue() as string}</span>,
+        cell: ({ row }) => (
+          <Link href={`/patients/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+            {row.original.first_name} {row.original.last_name}
+          </Link>
+        ),
       },
       {
         accessorKey: "gender",
@@ -65,13 +69,6 @@ export default function PatientsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="GET" path={`/api/patients/:id`}>
-              <Link href={`/patients/${row.original.id}`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="View Patient">
-                  <Eye className="w-4 h-4" />
-                </button>
-              </Link>
-            </Can>
             <Can method="PUT" path={`/api/patients/:id`}>
               <Link href={`/patients/${row.original.id}/edit`}>
                 <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Edit Patient">

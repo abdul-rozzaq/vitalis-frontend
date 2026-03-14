@@ -7,8 +7,9 @@ import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { Building2, ChevronRight, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 interface Department {
@@ -118,7 +119,9 @@ export default function DepartmentsPage() {
                 <Building2 className={`w-4 h-4 ${color.icon}`} />
               </div>
               <div>
-                <p className="font-medium text-text">{row.original.name}</p>
+                <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+                  {row.original.name}
+                </Link>
                 {row.original.description && <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>}
               </div>
             </div>
@@ -159,6 +162,13 @@ export default function DepartmentsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
+            <Link
+              href={`/departments/${row.original.id}`}
+              className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
+              title="View Department"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Link>
             <Can method="PATCH" path="/api/departments/:id">
               <button
                 onClick={() => handleEditDepartment(row.original)}
@@ -246,6 +256,7 @@ export default function DepartmentsPage() {
           }
           departments={departmentsData ?? []}
           currentId={editingDepartment?.id}
+          hideParent
           onSubmit={handleFormSubmit}
           onCancel={() => setIsSheetOpen(false)}
         />

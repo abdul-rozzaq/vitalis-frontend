@@ -2,13 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, BedDouble, Hash, LayoutGrid } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 const roomSchema = z.object({
   name: z.string().min(1, "Room name is required"),
   roomType: z.enum(["WARD", "EXAMINATION"], { message: "Room type is required" }),
-  capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
+  capacity: z.coerce.number().min(1, "Capacity must be at least 1").optional(),
   description: z.string().optional(),
 });
 
@@ -26,6 +26,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RoomFormInput, any, RoomFormValues>({
     resolver: zodResolver(roomSchema),
@@ -33,6 +34,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
   });
 
   const isEditing = !!initialData;
+  const roomType = useWatch({ control, name: "roomType" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -59,26 +61,28 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="" disabled hidden>Select type...</option>
-          <option value="WARD">Ward</option>
           <option value="EXAMINATION">Examination</option>
+          <option value="WARD">Ward</option>
         </select>
         {errors.roomType && <p className="text-xs text-danger-600 font-medium">{errors.roomType.message}</p>}
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <BedDouble className="w-4 h-4 text-primary-500" />
-          Capacity
-        </label>
-        <input
-          {...register("capacity")}
-          type="number"
-          min={1}
-          placeholder="1"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
-        {errors.capacity && <p className="text-xs text-danger-600 font-medium">{errors.capacity.message}</p>}
-      </div>
+      {roomType === "WARD" && (
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <BedDouble className="w-4 h-4 text-primary-500" />
+            Capacity
+          </label>
+          <input
+            {...register("capacity")}
+            type="number"
+            min={1}
+            placeholder="1"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+          />
+          {errors.capacity && <p className="text-xs text-danger-600 font-medium">{errors.capacity.message}</p>}
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">

@@ -24,11 +24,12 @@ interface DepartmentFormProps {
   initialData?: Partial<DepartmentFormInput>;
   departments?: Department[];
   currentId?: string;
+  hideParent?: boolean;
   onSubmit: (data: DepartmentFormValues) => void;
   onCancel: () => void;
 }
 
-export function DepartmentForm({ initialData, departments = [], currentId, onSubmit, onCancel }: DepartmentFormProps) {
+export function DepartmentForm({ initialData, departments = [], currentId, hideParent = false, onSubmit, onCancel }: DepartmentFormProps) {
   const {
     register,
     handleSubmit,
@@ -58,23 +59,25 @@ export function DepartmentForm({ initialData, departments = [], currentId, onSub
         {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <GitBranch className="w-4 h-4 text-primary-500" />
-          Parent Department
-        </label>
-        <select
-          {...register("parentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">None (top-level)</option>
-          {parentOptions.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!hideParent && (
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <GitBranch className="w-4 h-4 text-primary-500" />
+            Parent Department
+          </label>
+          <select
+            {...register("parentId")}
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
+          >
+            <option value="">None (top-level)</option>
+            {parentOptions.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
