@@ -1,6 +1,6 @@
 "use client";
 
-import { EmployeeForm } from "@/components/employees/employee-form";
+import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employee-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Download, Edit, Filter, MoreVertical, Plus } from "lucide-react";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
@@ -23,6 +24,9 @@ interface Employee {
   first_name: string;
   last_name: string;
   email: string;
+  birthday?: string | null;
+  phone?: string | null;
+  photo?: string | null;
   role: Role;
   createdAt: string;
   updatedAt: string;
@@ -83,16 +87,26 @@ export default function EmployeesPage() {
     setIsSheetOpen(true);
   };
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = async (data: EmployeeSubmitData) => {
+    const { photoFile, ...rest } = data;
+
+    let photo = rest.photo;
+    if (photoFile) {
+      const formData = new FormData();
+      formData.append("photo", photoFile);
+      const res = await api.post("/uploads/photo", formData);
+      photo = res.data.url;
+    }
+
+    const payload = { ...rest, photo };
+
     if (editingEmployee) {
-      updateEmployee(data).then(() => {
-        setIsSheetOpen(false);
-        setEditingEmployee(null);
-      });
+      await updateEmployee(payload);
+      setIsSheetOpen(false);
+      setEditingEmployee(null);
     } else {
-      addEmployee(data).then(() => {
-        setIsSheetOpen(false);
-      });
+      await addEmployee(payload);
+      setIsSheetOpen(false);
     }
   };
 
@@ -111,19 +125,24 @@ export default function EmployeesPage() {
         accessorFn: (row: Employee) => `${row.first_name} ${row.last_name}`,
         id: "name",
         header: "Full Name",
-        cell: (info: any) => (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
-              {(info.getValue() as string)
-                .split(" ")
-                .map((n: string) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2)}
+        cell: (info: any) => {
+          const name = info.getValue() as string;
+          const photo = info.row.original.photo as string | null | undefined;
+          const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
+          const photoUrl = photo ? `${apiBase}${photo}` : null;
+          return (
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0 overflow-hidden">
+                {photoUrl ? (
+                  <Image src={photoUrl} alt={name} width={28} height={28} className="object-cover w-full h-full" unoptimized />
+                ) : (
+                  name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+                )}
+              </div>
+              <span className="font-medium text-text">{name}</span>
             </div>
-            <span className="font-medium text-text">{info.getValue() as string}</span>
-          </div>
-        ),
+          );
+        },
       },
       {
         accessorKey: "email",
@@ -227,6 +246,9 @@ export default function EmployeesPage() {
                   last_name: editingEmployee.last_name,
                   email: editingEmployee.email,
                   roleId: editingEmployee.role?.id,
+                  birthday: editingEmployee.birthday ?? undefined,
+                  phone: editingEmployee.phone ?? undefined,
+                  photo: editingEmployee.photo ?? undefined,
                 }
               : undefined
           }
