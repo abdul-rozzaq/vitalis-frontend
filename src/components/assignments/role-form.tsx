@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Shield } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -19,7 +19,7 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const roleSchema = z.object({
     name: z.string().min(1, t("forms.roleNameRequired")),
@@ -31,7 +31,7 @@ export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFor
     handleSubmit,
     formState: { errors },
   } = useForm<RoleFormValues>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(roleSchema) as any,
     defaultValues: initialData ?? {},
   });
 

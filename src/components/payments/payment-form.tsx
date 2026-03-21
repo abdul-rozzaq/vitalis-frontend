@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, CreditCard, DollarSign, FileText, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -35,7 +35,7 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ initialData, patients, departments, onSubmit, onCancel }: PaymentFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const paymentSchema = z.object({
     patient_id: z.string().min(1, t("forms.selectPatient")),
@@ -64,7 +64,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
     handleSubmit,
     formState: { errors },
   } = useForm<PaymentFormValues>({
-    resolver: zodResolver(paymentSchema),
+    resolver: zodResolver(paymentSchema) as any,
     defaultValues: initialData || {
       payment_method: "CASH",
       status: "PENDING",

@@ -2,7 +2,7 @@
 
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -22,7 +22,7 @@ interface Patient {
 }
 
 export default function PatientsPage() {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
     queryKey: ["patients"],

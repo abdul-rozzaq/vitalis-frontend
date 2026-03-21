@@ -4,7 +4,7 @@ import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -39,7 +39,7 @@ function getDepartmentColor(id: string) {
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);

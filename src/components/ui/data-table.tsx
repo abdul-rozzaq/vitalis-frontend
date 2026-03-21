@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -10,7 +10,7 @@ interface DataTableProps<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const table = useReactTable({
     data,

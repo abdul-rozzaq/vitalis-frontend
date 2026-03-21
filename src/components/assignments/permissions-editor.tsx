@@ -1,7 +1,7 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
@@ -58,7 +58,7 @@ interface PermissionsEditorProps {
 
 export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProps) {
   const queryClient = useQueryClient();
-  const { t } = useI18n();
+  const t = useTranslations();
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [dirty, setDirty] = useState(false);

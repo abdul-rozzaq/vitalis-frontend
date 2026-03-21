@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -53,7 +53,7 @@ interface AssignmentFormProps {
 }
 
 export function AssignmentForm({ initialData, users, departments, rooms, onSubmit, onCancel, isLoading }: AssignmentFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const {
     register,
@@ -61,7 +61,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
     control,
     formState: { errors },
   } = useForm<AssignmentFormInput, unknown, AssignmentFormValues>({
-    resolver: zodResolver(assignmentSchema),
+    resolver: zodResolver(assignmentSchema) as any,
     defaultValues: initialData ?? { isActive: true, schedules: [] },
   });
 

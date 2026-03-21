@@ -1,7 +1,7 @@
 "use client";
 
 import { PatientForm } from "@/components/patients/patient-form";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ export default function EditPatientPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const { data: patientData, isLoading } = useQuery({
     queryKey: ["patient", id],

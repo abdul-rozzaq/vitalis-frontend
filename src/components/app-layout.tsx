@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import Lottie from "lottie-react";
 import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, Moon, Sun, User, UserPen, Users } from "lucide-react";
@@ -18,7 +18,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const NAVIGATIONS = [
     { label: t("nav.patients"), href: "/patients", icon: Users, method: "GET", path: "/api/patients" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
@@ -16,7 +16,7 @@ interface Patient {
 }
 
 export function PatientSearch() {
-  const { t } = useI18n();
+  const t = useTranslations();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);

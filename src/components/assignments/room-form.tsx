@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, BedDouble, Hash, LayoutGrid } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
@@ -28,7 +28,7 @@ interface RoomFormProps {
 }
 
 export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const roomSchema = z.object({
     name: z.string().min(1, t("forms.roomNameRequired")),
@@ -43,7 +43,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
     control,
     formState: { errors },
   } = useForm<RoomFormInput, any, RoomFormValues>({
-    resolver: zodResolver(roomSchema),
+    resolver: zodResolver(roomSchema) as any,
     defaultValues: initialData ?? { capacity: 1 },
   });
 

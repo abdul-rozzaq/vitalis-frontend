@@ -4,7 +4,7 @@ import { PaymentForm } from "@/components/payments/payment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -182,7 +182,7 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; 
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
-  const { t } = useI18n();
+  const t = useTranslations();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);

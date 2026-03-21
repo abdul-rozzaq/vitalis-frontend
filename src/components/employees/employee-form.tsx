@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Mail, Phone, Shield, Upload, User, X } from "lucide-react";
 import Image from "next/image";
@@ -34,7 +34,7 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: EmployeeFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const employeeSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
@@ -52,7 +52,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
     handleSubmit,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
-    resolver: zodResolver(employeeSchema),
+    resolver: zodResolver(employeeSchema) as any,
     defaultValues: initialData || {},
   });
 

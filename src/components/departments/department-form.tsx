@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Building2, DollarSign, GitBranch } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -35,7 +35,7 @@ interface DepartmentFormProps {
 }
 
 export function DepartmentForm({ initialData, departments = [], currentId, hideParent = false, onSubmit, onCancel }: DepartmentFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const departmentSchema = z.object({
     name: z.string().min(2, t("forms.departmentNameTooShort")),
@@ -49,7 +49,7 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
     handleSubmit,
     formState: { errors },
   } = useForm<DepartmentFormInput, any, DepartmentFormValues>({
-    resolver: zodResolver(departmentSchema),
+    resolver: zodResolver(departmentSchema) as any,
     defaultValues: initialData || {},
   });
 

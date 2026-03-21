@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Lock, Mail, Stethoscope } from "lucide-react";
 import { motion } from "motion/react";
@@ -15,7 +15,7 @@ type LoginFormValues = {
 
 export default function LoginPage() {
   const { login, isLoggingIn, loginError } = useAuth();
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const loginSchema = z.object({
     email: z.email(t("login.emailInvalid")),

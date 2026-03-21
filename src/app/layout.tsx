@@ -2,6 +2,8 @@ import { AppLayout } from "@/components/app-layout";
 import { Providers } from "@/app/providers";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale } from "next-intl/server";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -12,9 +14,12 @@ export const metadata: Metadata = {
   description: "Minimalist Hospital CRM System",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -33,9 +38,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <NextTopLoader color="var(--color-primary-500)" height={2} />
-        <Providers>
-          <AppLayout>{children}</AppLayout>
-        </Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>
+            <AppLayout>{children}</AppLayout>
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

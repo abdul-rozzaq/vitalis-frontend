@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Link2, User } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -33,7 +33,7 @@ interface AppointmentFormProps {
 }
 
 export function AppointmentForm({ initialData, patients, assignments, onSubmit, onCancel, isPending }: AppointmentFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const appointmentSchema = z.object({
     patientId: z.string().min(1, t("forms.patientRequired")),
@@ -54,7 +54,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
     handleSubmit,
     formState: { errors },
   } = useForm<AppointmentFormValues>({
-    resolver: zodResolver(appointmentSchema),
+    resolver: zodResolver(appointmentSchema) as any,
     defaultValues: initialData || {},
   });
 

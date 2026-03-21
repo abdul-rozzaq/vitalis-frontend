@@ -1,6 +1,6 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -23,7 +23,7 @@ interface PatientFormProps {
 }
 
 export function PatientForm({ initialData, onSubmit, onCancel, isPending }: PatientFormProps) {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const patientSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
@@ -42,7 +42,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     handleSubmit,
     formState: { errors },
   } = useForm<PatientFormValues>({
-    resolver: zodResolver(patientSchema),
+    resolver: zodResolver(patientSchema) as any,
     defaultValues: initialData || {
       gender: "male",
     },

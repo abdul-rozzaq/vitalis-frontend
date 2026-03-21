@@ -1,12 +1,12 @@
 "use client";
 
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, HeartPulse } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 
 export default function NotFound() {
-  const { t } = useI18n();
+  const t = useTranslations();
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">

@@ -3,7 +3,7 @@
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -72,7 +72,7 @@ function formatTime(iso: string) {
 // ─── File Attach Button ────────────────────────────────────────────────────────
 
 function AttachFileButton({ visitId }: { visitId: string }) {
-  const { t } = useI18n();
+  const t = useTranslations();
   const inputRef = useRef<HTMLInputElement>(null);
   const [attached, setAttached] = useState<string | null>(null);
 
@@ -156,7 +156,7 @@ function PaymentCard({ event }: { event: TimelineEvent }) {
 }
 
 function FileCard({ event }: { event: TimelineEvent }) {
-  const { t } = useI18n();
+  const t = useTranslations();
   const ft = FILE_ICONS[event.file_type ?? "other"];
   const FileIcon = ft.icon;
   return (
@@ -192,7 +192,7 @@ function EventCard({ event }: { event: TimelineEvent }) {
 // ─── Edit Patient Form ─────────────────────────────────────────────────────────
 
 function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: () => void }) {
-  const { t } = useI18n();
+  const t = useTranslations();
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
@@ -278,7 +278,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { t } = useI18n();
+  const t = useTranslations();
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<"visit" | "edit" | null>(null);

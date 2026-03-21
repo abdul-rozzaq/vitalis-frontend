@@ -3,7 +3,7 @@
 import { Can } from "@/components/ui/can";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
-import { useI18n } from "@/i18n";
+import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Calendar, ChevronRight, Clock, DoorOpen, Plus, Users } from "lucide-react";
@@ -38,7 +38,7 @@ interface Assignment {
 }
 
 function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
-  const { t } = useI18n();
+  const t = useTranslations();
   const days = [1, 2, 3, 4, 5, 6, 7];
 
   const FULL_DAY_LABELS: Record<number, string> = {
@@ -114,7 +114,7 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
 export default function HomePage() {
   const { user } = useAuth();
   const { canRead } = usePermissions();
-  const { t } = useI18n();
+  const t = useTranslations();
   const canReadAssignments = canRead("/api/assignments");
 
   const stats = [
