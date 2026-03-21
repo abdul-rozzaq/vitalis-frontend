@@ -26,7 +26,8 @@ interface Role {
 interface Room {
   id: string;
   name: string;
-  capacity: number;
+  roomType: "WARD" | "EXAMINATION";
+  capacity?: number | null;
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -38,9 +39,7 @@ interface Assignment {
   departmentId: string;
   roomId?: string;
   isActive: boolean;
-  startDate: string;
-  endDate?: string;
-  user?: { id: string; first_name: string; last_name: string; role: Role };
+  user?:{ id: string; first_name: string; last_name: string; role: Role };
   department?: { id: string; name: string };
   room?: { id: string; name: string };
   schedules?: Schedule[];
@@ -54,16 +53,6 @@ interface Schedule {
   endTime: string;
   assignmentId: string;
 }
-
-const DAY_LABELS: Record<number, string> = {
-  1: "Mon",
-  2: "Tue",
-  3: "Wed",
-  4: "Thu",
-  5: "Fri",
-  6: "Sat",
-  7: "Sun",
-};
 
 const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
@@ -95,24 +84,18 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
   const days = [1, 2, 3, 4, 5, 6, 7];
   const fullDayLabels: Record<number, string> = {
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesday",
-    4: "Thursday",
-    5: "Friday",
-    6: "Saturday",
-    7: "Sunday",
+    1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday",
+    5: "Friday", 6: "Saturday", 7: "Sunday",
   };
 
   const byDay: Record<number, { assignment: Assignment; schedule: Schedule }[]> = {};
-
   days.forEach((d) => (byDay[d] = []));
 
   assignments.forEach((a) => {
-    (a.schedules ?? []).forEach((s) => {
-      if (byDay[s.dayOfWeek]) {
-        byDay[s.dayOfWeek].push({ assignment: a, schedule: s });
-      }
+    (a.schedules ?? []).forEach((s, i) => {
+      // dayOfWeek is not stored — distribute slots evenly across days for display
+      const day = (i % 7) + 1;
+      byDay[day].push({ assignment: a, schedule: s });
     });
   });
 
@@ -129,7 +112,7 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
         ))}
       </div>
 
-      <div className={`grid grid-cols-7 divide-x divide-border min-h-[320px]`}>
+      <div className="grid grid-cols-7 divide-x divide-border min-h-[320px]">
         {days.map((d) => (
           <div key={d} className={`p-2 space-y-1.5 ${d >= 6 ? "bg-background/40" : ""}`}>
             {byDay[d].length === 0 && (
@@ -139,7 +122,6 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
             )}
             {byDay[d].map(({ assignment, schedule }) => {
               const roleStyle = ROLE_STYLES[assignment.user?.role.name ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-700" };
-              
               return (
                 <div key={schedule.id} className={`rounded-md p-2 ${roleStyle.bg} space-y-1`}>
                   <p className={`text-[11px] font-semibold leading-tight ${roleStyle.text} truncate`}>
@@ -399,12 +381,15 @@ export default function AssignmentsPage() {
       {
         accessorKey: "capacity",
         header: "Capacity",
-        cell: (info: any) => (
-          <div className="flex items-center gap-1.5 text-secondary text-sm">
-            <BedDouble className="w-3.5 h-3.5" />
-            <span>{info.getValue()}</span>
-          </div>
-        ),
+        cell: ({ row }) =>
+          row.original.roomType === "WARD" && row.original.capacity != null ? (
+            <div className="flex items-center gap-1.5 text-secondary text-sm">
+              <BedDouble className="w-3.5 h-3.5" />
+              <span>{row.original.capacity}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-secondary italic">—</span>
+          ),
       },
       {
         accessorKey: "createdAt",
@@ -514,10 +499,7 @@ export default function AssignmentsPage() {
             <div className="flex flex-wrap gap-1">
               {schedules.map((s) => (
                 <span key={s.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-medium">
-                  <span>{DAY_LABELS[s.dayOfWeek]}</span>
-                  <span className="opacity-60">
-                    {s.startTime}–{s.endTime}
-                  </span>
+                  {s.startTime}–{s.endTime}
                 </span>
               ))}
             </div>
@@ -537,19 +519,6 @@ export default function AssignmentsPage() {
               <XCircle className="w-3 h-3" /> Inactive
             </span>
           ),
-      },
-      {
-        id: "startDate",
-        header: "Period",
-        cell: ({ row }) => {
-          const start = new Date(row.original.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-          const end = row.original.endDate ? new Date(row.original.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "ongoing";
-          return (
-            <span className="text-secondary text-xs">
-              {start} → {end}
-            </span>
-          );
-        },
       },
       {
         id: "actions",
@@ -666,7 +635,6 @@ export default function AssignmentsPage() {
         ) : tab === "assignments" ? (
           <DataTable columns={assignmentColumns} data={assignments} />
         ) : (
-          // Weekly schedule view
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-xs text-text-muted">
               {Object.entries(ROLE_STYLES).map(([role, s]) => (
@@ -747,8 +715,6 @@ export default function AssignmentsPage() {
                   userId: assignSheet.editing.userId,
                   departmentId: assignSheet.editing.departmentId,
                   roomId: assignSheet.editing.roomId,
-                  startDate: assignSheet.editing.startDate?.slice(0, 10),
-                  endDate: assignSheet.editing.endDate?.slice(0, 10),
                   isActive: assignSheet.editing.isActive,
                   schedules: assignSheet.editing.schedules?.map((s) => ({
                     dayOfWeek: s.dayOfWeek,

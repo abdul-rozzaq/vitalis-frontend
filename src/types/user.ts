@@ -3,7 +3,10 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  isSuperuser: boolean;
+  isSuperUser: boolean;
+  birthday?: string | null;
+  phone?: string | null;
+  photo?: string | null;
   role: {
     id: string;
     name: string;

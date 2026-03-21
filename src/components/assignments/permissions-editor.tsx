@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@/lib/api";
 import { Can } from "@/components/ui/can";
+import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -25,23 +25,23 @@ interface AvailableRoute {
 // ─── Method badge styles ──────────────────────────────────────────────────────
 
 const METHOD_STYLES: Record<string, string> = {
-  GET: "bg-green-100 text-green-700",
-  POST: "bg-blue-100 text-blue-700",
-  PATCH: "bg-amber-100 text-amber-700",
-  DELETE: "bg-red-100 text-red-600",
+  GET: "bg-primary-100 text-primary",
+  POST: "bg-info-50 text-info-600",
+  PATCH: "bg-warning-50 text-warning-600",
+  DELETE: "bg-danger-50 text-danger-600",
 };
 
 // ─── Group color cycle ────────────────────────────────────────────────────────
 
 const GROUP_COLORS = [
-  { header: "bg-blue-50 border-blue-100", dot: "bg-blue-500" },
-  { header: "bg-green-50 border-green-100", dot: "bg-green-500" },
-  { header: "bg-purple-50 border-purple-100", dot: "bg-purple-500" },
-  { header: "bg-orange-50 border-orange-100", dot: "bg-orange-500" },
-  { header: "bg-cyan-50 border-cyan-100", dot: "bg-cyan-500" },
-  { header: "bg-pink-50 border-pink-100", dot: "bg-pink-500" },
-  { header: "bg-amber-50 border-amber-100", dot: "bg-amber-500" },
-  { header: "bg-teal-50 border-teal-100", dot: "bg-teal-500" },
+  { header: "bg-info-50 border-border", dot: "bg-info-600" },
+  { header: "bg-primary-50 border-border", dot: "bg-primary" },
+  { header: "bg-danger-50 border-border", dot: "bg-danger-500" },
+  { header: "bg-warning-50 border-border", dot: "bg-amber-500" },
+  { header: "bg-primary-100 border-border", dot: "bg-primary-500" },
+  { header: "bg-danger-100 border-border", dot: "bg-danger-600" },
+  { header: "bg-info-50 border-border", dot: "bg-info-600" },
+  { header: "bg-surface-hover border-border", dot: "bg-secondary" },
 ];
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -181,9 +181,8 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                 if (dirty && !confirm("You have unsaved changes. Switch role anyway?")) return;
                 setSelectedRoleId(role.id);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors cursor-pointer border-b border-border last:border-b-0 ${
-                selectedRoleId === role.id ? "bg-primary-50 text-primary-700" : "text-secondary hover:bg-surface-hover hover:text-text"
-              }`}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors cursor-pointer border-b border-border last:border-b-0 ${selectedRoleId === role.id ? "bg-primary-50 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text"
+                }`}
             >
               <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${selectedRoleId === role.id ? "bg-primary-100" : "bg-background"}`}>
                 <Shield className={`w-3.5 h-3.5 ${selectedRoleId === role.id ? "text-primary" : "text-text-muted"}`} />
@@ -212,7 +211,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
             <button
               onClick={() => savePermissions()}
               disabled={!dirty || saving}
-              className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               {saving ? "Saving..." : "Save Changes"}
@@ -278,9 +277,8 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                               className="w-3.5 h-3.5 mt-0.5 accent-primary-600 cursor-pointer rounded shrink-0"
                             />
                             <span
-                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${
-                                METHOD_STYLES[route.method] ?? "bg-gray-100 text-gray-600"
-                              }`}
+                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide shrink-0 ${METHOD_STYLES[route.method] ?? "bg-surface-hover text-secondary"
+                                }`}
                             >
                               {route.method}
                             </span>
@@ -299,7 +297,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
 
             {/* Unsaved changes indicator */}
             {dirty && !saving && (
-              <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
+              <p className="text-xs text-warning-600 font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shrink-0" />
                 Unsaved changes — click "Save Changes" to apply
               </p>

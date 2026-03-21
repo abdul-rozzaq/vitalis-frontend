@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Heart, Phone, User } from "lucide-react";
+import { Calendar, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -14,6 +14,7 @@ const patientSchema = z.object({
     .string()
     .transform((val) => (val ? new Date(val).toISOString() : null))
     .nullable(),
+  address: z.string().optional(),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
@@ -22,9 +23,10 @@ interface PatientFormProps {
   initialData?: Partial<PatientFormValues>;
   onSubmit: (data: PatientFormValues) => void;
   onCancel: () => void;
+  isPending?: boolean;
 }
 
-export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProps) {
+export function PatientForm({ initialData, onSubmit, onCancel, isPending }: PatientFormProps) {
   const {
     register,
     handleSubmit,
@@ -109,7 +111,7 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
         />
       </div>
 
-      {/* <div className="space-y-1.5">
+      <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary-500" />
           Address
@@ -120,7 +122,7 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
           rows={3}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
-      </div> */}
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button
@@ -132,8 +134,10 @@ export function PatientForm({ initialData, onSubmit, onCancel }: PatientFormProp
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          disabled={isPending}
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
+          {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           {initialData ? "Update Patient" : "Add Patient"}
         </button>
       </div>

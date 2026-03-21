@@ -58,7 +58,7 @@ export function usePermissions() {
   function can(method: string, path: string): boolean {
     console.log(method, path);
     
-    if (user?.isSuperuser) return true;
+    if (user?.isSuperUser) return true;
     
     if (!permissions.length) return false;
 

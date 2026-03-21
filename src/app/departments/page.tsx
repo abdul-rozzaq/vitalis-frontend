@@ -7,76 +7,19 @@ import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, Filter, Loader2, Plus, Trash2, Users } from "lucide-react";
+import { Building2, ChevronRight, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 interface Department {
   id: string;
   name: string;
   description?: string;
-  head_name?: string;
-  employee_count?: number;
-  createdAt: string;
-  updatedAt: string;
+  price?: number | null;
+  parentId?: string | null;
+  parent?: { id: string; name: string } | null;
 }
-
-const DEPARTMENTS_MOCK_DATA: Department[] = [
-  {
-    id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    name: "Cardiology",
-    description: "Heart and cardiovascular system treatment",
-    head_name: "Dr. James Wilson",
-    employee_count: 12,
-    createdAt: "2026-01-10T08:00:00.000Z",
-    updatedAt: "2026-01-10T08:00:00.000Z",
-  },
-  {
-    id: "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-    name: "Neurology",
-    description: "Brain, spinal cord and nervous system",
-    head_name: "Dr. Sarah Chen",
-    employee_count: 9,
-    createdAt: "2026-01-12T08:00:00.000Z",
-    updatedAt: "2026-01-12T08:00:00.000Z",
-  },
-  {
-    id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
-    name: "Pediatrics",
-    description: "Medical care for infants, children and adolescents",
-    head_name: "Dr. Emily Carter",
-    employee_count: 15,
-    createdAt: "2026-01-15T08:00:00.000Z",
-    updatedAt: "2026-01-15T08:00:00.000Z",
-  },
-  {
-    id: "d4e5f6a7-b8c9-0123-defa-234567890123",
-    name: "Orthopedics",
-    description: "Musculoskeletal system and bone injuries",
-    head_name: "Dr. Michael Torres",
-    employee_count: 8,
-    createdAt: "2026-01-18T08:00:00.000Z",
-    updatedAt: "2026-01-18T08:00:00.000Z",
-  },
-  {
-    id: "e5f6a7b8-c9d0-1234-efab-345678901234",
-    name: "Emergency",
-    description: "Acute and urgent medical care",
-    head_name: "Dr. Lisa Park",
-    employee_count: 20,
-    createdAt: "2026-01-20T08:00:00.000Z",
-    updatedAt: "2026-01-20T08:00:00.000Z",
-  },
-  {
-    id: "f6a7b8c9-d0e1-2345-fabc-456789012345",
-    name: "Radiology",
-    description: "Medical imaging and diagnostics",
-    head_name: "Dr. Alan Grant",
-    employee_count: 6,
-    createdAt: "2026-01-22T08:00:00.000Z",
-    updatedAt: "2026-01-22T08:00:00.000Z",
-  },
-];
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
   { bg: "bg-blue-100", icon: "text-blue-600" },
@@ -92,6 +35,7 @@ function getDepartmentColor(id: string) {
   return DEPARTMENT_COLORS[index];
 }
 
+
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
 
@@ -99,18 +43,18 @@ export default function DepartmentsPage() {
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { data: departmentsData, isLoading } = useQuery({
+  const { data: departmentsData, isLoading } = useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn: () => api.get("/departments").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
-  const { mutateAsync: addDepartment, isPending: isAdding } = useMutation({
+  const { mutateAsync: addDepartment } = useMutation({
     mutationFn: (data: any) => api.post("/departments", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["departments"] }),
   });
 
-  const { mutateAsync: updateDepartment, isPending: isUpdating } = useMutation({
+  const { mutateAsync: updateDepartment } = useMutation({
     mutationFn: (data: any) => api.patch(`/departments/${editingDepartment?.id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["departments"] }),
   });
@@ -139,8 +83,6 @@ export default function DepartmentsPage() {
       deleteDepartment(id);
     }
   };
-
-  const isSaving = isAdding || isUpdating;
 
   const handleFormSubmit = (data: any) => {
     if (editingDepartment) {
@@ -177,7 +119,9 @@ export default function DepartmentsPage() {
                 <Building2 className={`w-4 h-4 ${color.icon}`} />
               </div>
               <div>
-                <p className="font-medium text-text">{row.original.name}</p>
+                <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+                  {row.original.name}
+                </Link>
                 {row.original.description && <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>}
               </div>
             </div>
@@ -185,58 +129,46 @@ export default function DepartmentsPage() {
         },
       },
       {
-        accessorKey: "head_name",
-        header: "Department Head",
-        cell: (info: any) => {
-          const value = info.getValue() as string | undefined;
-          return value ? (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
-                {value
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)}
-              </div>
-              <span className="text-sm text-text">{value}</span>
+        accessorKey: "parent",
+        header: "Parent",
+        cell: ({ row }) => {
+          const parent = row.original.parent;
+          return parent ? (
+            <div className="flex items-center gap-1.5 text-secondary text-sm">
+              <GitBranch className="w-3.5 h-3.5 shrink-0" />
+              <span>{parent.name}</span>
             </div>
           ) : (
-            <span className="text-xs text-secondary italic">Not assigned</span>
+            <span className="text-xs text-secondary italic">—</span>
           );
         },
       },
       {
-        accessorKey: "employee_count",
-        header: "Staff",
-        cell: (info: any) => {
-          const count = info.getValue() as number | undefined;
-          return (
-            <div className="flex items-center gap-1.5 text-secondary text-sm">
-              <Users className="w-3.5 h-3.5" />
-              <span>{count ?? 0}</span>
-            </div>
+        accessorKey: "price",
+        header: "Price",
+        cell: ({ row }) => {
+          const price = row.original.price;
+          return price != null ? (
+            <span className="text-sm text-text font-medium">
+              {Number(price).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </span>
+          ) : (
+            <span className="text-xs text-secondary italic">—</span>
           );
         },
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: (info: any) => (
-          <span className="text-secondary text-sm">
-            {new Date(info.getValue()).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
-          </span>
-        ),
       },
       {
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
+            <Link
+              href={`/departments/${row.original.id}`}
+              className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
+              title="View Department"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Link>
             <Can method="PATCH" path="/api/departments/:id">
               <button
                 onClick={() => handleEditDepartment(row.original)}
@@ -260,7 +192,7 @@ export default function DepartmentsPage() {
         ),
       },
     ],
-    [],
+    [isDeleting, deletingId],
   );
 
   return (
@@ -317,10 +249,14 @@ export default function DepartmentsPage() {
               ? {
                   name: editingDepartment.name,
                   description: editingDepartment.description,
-                  head_name: editingDepartment.head_name,
+                  price: editingDepartment.price ?? undefined,
+                  parentId: editingDepartment.parentId ?? undefined,
                 }
               : undefined
           }
+          departments={departmentsData ?? []}
+          currentId={editingDepartment?.id}
+          hideParent
           onSubmit={handleFormSubmit}
           onCancel={() => setIsSheetOpen(false)}
         />

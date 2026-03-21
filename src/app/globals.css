@@ -83,6 +83,18 @@
     --info-50: #eff6ff;
   }
 
+  /* Global input/select/textarea text and placeholder colors */
+  input,
+  select,
+  textarea {
+    color: var(--text);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+
   .dark {
     --background: #09090b;
     --surface: #18181b;

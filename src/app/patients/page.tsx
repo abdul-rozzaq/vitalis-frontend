@@ -1,16 +1,14 @@
 "use client";
 
-import { PatientForm } from "@/components/patients/patient-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
-import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Eye, Filter, Loader2, MoreVertical, Plus } from "lucide-react";
+import { Download, Edit, Filter, Loader2, MoreVertical, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 interface Patient {
   id: string;
@@ -23,55 +21,11 @@ interface Patient {
 }
 
 export default function PatientsPage() {
-  const queryClient = useQueryClient();
-
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
-
-  const { mutateAsync: addPatient } = useMutation({
-    mutationFn: (data: any) => api.post("/patients", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
-    },
-  });
-
-  const { mutateAsync: updatePatient } = useMutation({
-    mutationFn: (data: any) => api.patch(`/patients/${editingPatient?.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["patients"] });
-    },
-  });
-
-  const handleAddPatient = () => {
-    setEditingPatient(null);
-    setIsSheetOpen(true);
-  };
-
-  const handleEditPatient = (patient: Patient) => {
-    setEditingPatient(patient);
-    setIsSheetOpen(true);
-  };
-
-  const handleFormSubmit = (data: any) => {
-    console.log("Form submitted:", data);
-
-    if (editingPatient) {
-      updatePatient(data).then(() => {
-        setIsSheetOpen(false);
-        setEditingPatient(null);
-      });
-    } else {
-      addPatient(data).then(() => {
-        setIsSheetOpen(false);
-      });
-    }
-  };
 
   const columns = useMemo<ColumnDef<Patient>[]>(
     () => [
@@ -89,7 +43,11 @@ export default function PatientsPage() {
         accessorFn: (row: Patient) => `${row.first_name} ${row.last_name}`,
         id: "name",
         header: "Name",
-        cell: (info: any) => <span className="font-medium text-text">{info.getValue() as string}</span>,
+        cell: ({ row }) => (
+          <Link href={`/patients/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+            {row.original.first_name} {row.original.last_name}
+          </Link>
+        ),
       },
       {
         accessorKey: "gender",
@@ -111,21 +69,12 @@ export default function PatientsPage() {
         header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="GET" path={`/api/patients/:id`}>
-              <Link href={`/patients/${row.original.id}`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="View Patient">
-                  <Eye className="w-4 h-4" />
+            <Can method="PUT" path={`/api/patients/:id`}>
+              <Link href={`/patients/${row.original.id}/edit`}>
+                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Edit Patient">
+                  <Edit className="w-4 h-4" />
                 </button>
               </Link>
-            </Can>
-            <Can method="PUT" path={`/api/patients/:id`}>
-              <button
-                onClick={() => handleEditPatient(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit Patient"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
             </Can>
             <Can method="DELETE" path={`/api/patients/:id`}>
               <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
@@ -158,13 +107,12 @@ export default function PatientsPage() {
             Export
           </button>
           <Can method="POST" path={`/api/patients`}>
-            <button
-              onClick={handleAddPatient}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Patient
-            </button>
+            <Link href="/patients/new">
+              <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
+                <Plus className="w-3.5 h-3.5" />
+                Add Patient
+              </button>
+            </Link>
           </Can>
         </div>
       </motion.div>
@@ -180,26 +128,6 @@ export default function PatientsPage() {
         )}
       </motion.div>
 
-      {/* Slide-over Sheet */}
-      <Sheet
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        title={editingPatient ? "Edit Patient" : "Add New Patient"}
-        description={editingPatient ? "Modify details for an existing patient entry." : "Create a new entry in your patient directory."}
-      >
-        <PatientForm
-          initialData={
-            editingPatient
-              ? {
-                ...editingPatient,
-                birth_date: editingPatient.birth_date ?? undefined,
-              }
-              : undefined
-          }
-          onSubmit={handleFormSubmit}
-          onCancel={() => setIsSheetOpen(false)}
-        />
-      </Sheet>
     </div>
   );
 }
