@@ -1,3 +1,6 @@
+"use client";
+
+import { useI18n } from "@/i18n";
 import { ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -7,6 +10,8 @@ interface DataTableProps<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+  const { t } = useI18n();
+
   const table = useReactTable({
     data,
     columns,
@@ -18,6 +23,12 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
+
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageSize = table.getState().pagination.pageSize;
+  const total = table.getPrePaginationRowModel().rows.length;
+  const start = pageIndex * pageSize + 1;
+  const end = Math.min((pageIndex + 1) * pageSize, total);
 
   return (
     <div className="w-full">
@@ -49,7 +60,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="h-24 text-center text-text-muted">
-                    No results.
+                    {t("table.noResults")}
                   </td>
                 </tr>
               )}
@@ -60,9 +71,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-background">
           <div className="text-xs text-secondary">
-            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-            {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getPrePaginationRowModel().rows.length)} of{" "}
-            {table.getPrePaginationRowModel().rows.length} entries
+            {t("table.showing", { start, end, total })}
           </div>
           <div className="flex items-center gap-1.5">
             <button

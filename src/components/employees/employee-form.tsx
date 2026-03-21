@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Mail, Phone, Shield, Upload, User, X } from "lucide-react";
 import Image from "next/image";
@@ -7,18 +8,16 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const employeeSchema = z.object({
-  first_name: z.string().min(2, "First name is too short"),
-  last_name: z.string().min(2, "Last name is too short"),
-  email: z.email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
-  roleId: z.string().min(1, "Role is required"),
-  birthday: z.string().optional(),
-  phone: z.string().max(20).optional(),
-  photo: z.string().max(500).optional(),
-});
-
-type EmployeeFormValues = z.infer<typeof employeeSchema>;
+type EmployeeFormValues = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password?: string;
+  roleId: string;
+  birthday: string;
+  phone: string;
+  photo?: string;
+};
 
 export type EmployeeSubmitData = EmployeeFormValues & { photoFile?: File };
 
@@ -35,6 +34,19 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: EmployeeFormProps) {
+  const { t } = useI18n();
+
+  const employeeSchema = z.object({
+    first_name: z.string().min(2, t("forms.firstNameTooShort")),
+    last_name: z.string().min(2, t("forms.lastNameTooShort")),
+    email: z.email(t("forms.invalidEmail")),
+    password: z.string().min(6, t("forms.passwordTooShort")).optional().or(z.literal("")),
+    roleId: z.string().min(1, t("forms.roleRequired")),
+    birthday: z.string().min(1, t("forms.birthdayRequired")),
+    phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
+    photo: z.string().max(500).optional(),
+  });
+
   const {
     register,
     handleSubmit,
@@ -72,7 +84,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Upload className="w-4 h-4 text-primary-500" />
-          Photo
+          {t("forms.photo")}
         </label>
         <div className="flex items-center gap-4">
           {photoPreview ? (
@@ -105,9 +117,9 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
               className="cursor-pointer inline-flex items-center gap-1.5 bg-surface border border-border hover:bg-surface-hover text-secondary px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
             >
               <Upload className="w-3.5 h-3.5" />
-              {photoPreview ? "Change photo" : "Upload photo"}
+              {photoPreview ? t("forms.changePhoto") : t("forms.uploadPhoto")}
             </label>
-            <p className="text-xs text-secondary mt-1">JPG, PNG, WebP — max 5MB</p>
+            <p className="text-xs text-secondary mt-1">{t("forms.photoHint")}</p>
           </div>
         </div>
       </div>
@@ -116,7 +128,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            First Name
+            {t("forms.firstName")}
           </label>
           <input
             {...register("first_name")}
@@ -129,7 +141,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            Last Name
+            {t("forms.lastName")}
           </label>
           <input
             {...register("last_name")}
@@ -143,7 +155,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Mail className="w-4 h-4 text-primary-500" />
-          Email
+          {t("forms.email")}
         </label>
         <input
           {...register("email")}
@@ -158,7 +170,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary-500" />
-            Password
+            {t("forms.password")}
           </label>
           <input
             {...register("password")}
@@ -173,13 +185,13 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Shield className="w-4 h-4 text-primary-500" />
-          Role
+          {t("forms.role")}
         </label>
         <select
           {...register("roleId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select role...</option>
+          <option value="">{t("forms.selectRole")}</option>
           {roles.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
@@ -193,7 +205,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary-500" />
-            Birthday
+            {t("forms.birthday")} <span className="text-danger-600">*</span>
           </label>
           <input
             {...register("birthday")}
@@ -206,12 +218,12 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Phone className="w-4 h-4 text-primary-500" />
-            Phone
+            {t("forms.phone")} <span className="text-danger-600">*</span>
           </label>
           <input
             {...register("phone")}
             type="tel"
-            placeholder="+998 90 123 4567"
+            placeholder="+998901234567"
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
@@ -224,13 +236,13 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
-          {isEditing ? "Update Employee" : "Add Employee"}
+          {isEditing ? t("forms.updateEmployee") : t("forms.addEmployee")}
         </button>
       </div>
     </form>

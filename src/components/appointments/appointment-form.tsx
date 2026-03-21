@@ -1,43 +1,54 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Calendar, Stethoscope, User } from "lucide-react";
+import { Calendar, Link2, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const appointmentSchema = z.object({
-  patientId: z.string().min(1, "Patient is required"),
-  doctorId: z.string().min(1, "Doctor is required"),
-  departmentId: z.string().min(1, "Department is required"),
-  dateTime: z.string().min(1, "Date and time is required"),
-  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]).optional(),
-});
-
-type AppointmentFormValues = z.infer<typeof appointmentSchema>;
+type AppointmentFormValues = {
+  patientId: string;
+  assignmentId: string;
+  dateTime: string;
+  status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+};
 
 interface SelectOption {
   id: string;
   name: string;
 }
 
+interface AssignmentOption {
+  id: string;
+  label: string;
+}
+
 interface AppointmentFormProps {
   initialData?: Partial<AppointmentFormValues>;
   patients: SelectOption[];
-  doctors: SelectOption[];
-  departments: SelectOption[];
+  assignments: AssignmentOption[];
   onSubmit: (data: AppointmentFormValues) => void;
   onCancel: () => void;
   isPending?: boolean;
 }
 
-const STATUS_OPTIONS = [
-  { value: "PENDING", label: "Pending" },
-  { value: "CONFIRMED", label: "Confirmed" },
-  { value: "CANCELLED", label: "Cancelled" },
-  { value: "COMPLETED", label: "Completed" },
-];
+export function AppointmentForm({ initialData, patients, assignments, onSubmit, onCancel, isPending }: AppointmentFormProps) {
+  const { t } = useI18n();
 
-export function AppointmentForm({ initialData, patients, doctors, departments, onSubmit, onCancel, isPending }: AppointmentFormProps) {
+  const appointmentSchema = z.object({
+    patientId: z.string().min(1, t("forms.patientRequired")),
+    assignmentId: z.string().min(1, t("forms.assignmentRequired")),
+    dateTime: z.string().min(1, t("forms.dateTimeRequired")),
+    status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]).optional(),
+  });
+
+  const STATUS_OPTIONS = [
+    { value: "PENDING", label: t("forms.apptStatusPending") },
+    { value: "CONFIRMED", label: t("forms.apptStatusConfirmed") },
+    { value: "CANCELLED", label: t("forms.apptStatusCancelled") },
+    { value: "COMPLETED", label: t("forms.apptStatusCompleted") },
+  ];
+
   const {
     register,
     handleSubmit,
@@ -54,13 +65,13 @@ export function AppointmentForm({ initialData, patients, doctors, departments, o
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
-          Patient
+          {t("forms.patient")}
         </label>
         <select
           {...register("patientId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select patient...</option>
+          <option value="">{t("forms.selectPatientOption")}</option>
           {patients.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -70,42 +81,25 @@ export function AppointmentForm({ initialData, patients, doctors, departments, o
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Stethoscope className="w-4 h-4 text-primary-500" />
-          Doctor
+          <Link2 className="w-4 h-4 text-primary-500" />
+          {t("forms.assignmentDoctorDept")}
         </label>
         <select
-          {...register("doctorId")}
+          {...register("assignmentId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select doctor...</option>
-          {doctors.map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
+          <option value="">{t("forms.selectAssignment")}</option>
+          {assignments.map((a) => (
+            <option key={a.id} value={a.id}>{a.label}</option>
           ))}
         </select>
-        {errors.doctorId && <p className="text-xs text-danger-600 font-medium">{errors.doctorId.message}</p>}
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-primary-500" />
-          Department
-        </label>
-        <select
-          {...register("departmentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">Select department...</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
-          ))}
-        </select>
-        {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
+        {errors.assignmentId && <p className="text-xs text-danger-600 font-medium">{errors.assignmentId.message}</p>}
       </div>
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
-          Date & Time
+          {t("forms.dateTime")}
         </label>
         <input
           type="datetime-local"
@@ -117,7 +111,7 @@ export function AppointmentForm({ initialData, patients, doctors, departments, o
 
       {isEditing && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text">Status</label>
+          <label className="text-sm font-medium text-text">{t("forms.status")}</label>
           <select
             {...register("status")}
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
@@ -135,14 +129,14 @@ export function AppointmentForm({ initialData, patients, doctors, departments, o
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           disabled={isPending}
           className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isEditing ? "Update Appointment" : "Book Appointment"}
+          {isEditing ? t("forms.updateAppointment") : t("forms.bookAppointment")}
         </button>
       </div>
     </form>

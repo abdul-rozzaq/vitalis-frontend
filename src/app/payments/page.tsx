@@ -4,6 +4,7 @@ import { PaymentForm } from "@/components/payments/payment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -181,6 +182,7 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; 
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -240,7 +242,7 @@ export default function PaymentsPage() {
     setIsSheetOpen(true);
   };
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this payment?")) {
+    if (confirm(t("payments.deleteConfirm"))) {
       setDeletingId(id);
       deletePayment(id);
     }
@@ -265,7 +267,7 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "patient_name",
-        header: "Patient",
+        header: t("payments.colPatient"),
         cell: ({ row }) => {
           const name = row.original.patient_name || "—";
           return (
@@ -285,7 +287,7 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "department_name",
-        header: "Department",
+        header: t("payments.colDepartment"),
         cell: ({ row }) => (
           <div className="flex items-center gap-1.5 text-secondary text-sm">
             <Building2 className="w-3.5 h-3.5 shrink-0" />
@@ -295,7 +297,7 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "amount",
-        header: "Amount",
+        header: t("payments.colAmount"),
         cell: (info: any) => (
           <span className="font-semibold text-text text-sm">
             ${Number(info.getValue()).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -304,7 +306,7 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "payment_method",
-        header: "Method",
+        header: t("payments.colMethod"),
         cell: (info: any) => {
           const method = info.getValue() as string;
           const s = METHOD_STYLES[method] ?? { bg: "bg-gray-100", text: "text-gray-700", label: method };
@@ -318,7 +320,7 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t("payments.colStatus"),
         cell: (info: any) => {
           const status = info.getValue() as string;
           const s = STATUS_STYLES[status] ?? { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500", label: status };
@@ -332,21 +334,21 @@ export default function PaymentsPage() {
       },
       {
         accessorKey: "createdAt",
-        header: "Date",
+        header: t("payments.colDate"),
         cell: (info: any) => (
           <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/payments/:id">
               <button
                 onClick={() => handleEdit(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit Payment"
+                title={t("payments.editPayment")}
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -356,7 +358,7 @@ export default function PaymentsPage() {
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-                title="Delete Payment"
+                title={t("payments.deletePayment")}
               >
                 {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
@@ -365,7 +367,7 @@ export default function PaymentsPage() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -373,17 +375,17 @@ export default function PaymentsPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Payments</h2>
-          <p className="text-secondary text-sm mt-0.5">Track patient billing across departments.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("payments.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("payments.description")}</p>
         </div>
         <div className="flex items-center gap-2">
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
-            Filter
+            {t("common.filter")}
           </button>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Export
+            {t("common.export")}
           </button>
           <Can method="POST" path="/api/payments">
             <button
@@ -391,7 +393,7 @@ export default function PaymentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              New Payment
+              {t("payments.newPayment")}
             </button>
           </Can>
         </div>
@@ -400,15 +402,15 @@ export default function PaymentsPage() {
       {/* Summary Cards */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
-          label="Total Revenue"
+          label={t("payments.totalRevenue")}
           value={`$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-          sub="Paid payments"
+          sub={t("payments.paidPayments")}
           icon={TrendingUp}
           color="bg-green-100 text-green-600"
         />
-        <SummaryCard label="Total Payments" value={String(payments.length)} sub="All records" icon={CreditCard} color="bg-blue-100 text-blue-600" />
-        <SummaryCard label="Paid" value={String(paidCount)} sub="Completed" icon={Users} color="bg-primary-100 text-primary" />
-        <SummaryCard label="Pending" value={String(pendingCount)} sub="Awaiting payment" icon={Building2} color="bg-amber-100 text-amber-600" />
+        <SummaryCard label={t("payments.totalPayments")} value={String(payments.length)} sub={t("payments.allRecords")} icon={CreditCard} color="bg-blue-100 text-blue-600" />
+        <SummaryCard label={t("payments.paid")} value={String(paidCount)} sub={t("payments.completed")} icon={Users} color="bg-primary-100 text-primary" />
+        <SummaryCard label={t("payments.pending")} value={String(pendingCount)} sub={t("payments.awaitingPayment")} icon={Building2} color="bg-amber-100 text-amber-600" />
       </motion.div>
 
       {/* Table */}
@@ -426,8 +428,8 @@ export default function PaymentsPage() {
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingPayment ? "Edit Payment" : "New Payment"}
-        description={editingPayment ? "Update this payment record." : "Record a payment linked to a patient and department."}
+        title={editingPayment ? t("payments.editTitle") : t("payments.newPayment")}
+        description={editingPayment ? t("payments.editDesc") : t("payments.newDesc")}
       >
         <PaymentForm
           patients={patients}

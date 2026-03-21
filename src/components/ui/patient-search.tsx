@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
@@ -15,6 +16,7 @@ interface Patient {
 }
 
 export function PatientSearch() {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +83,7 @@ export function PatientSearch() {
             inputRef.current?.blur();
           }
         }}
-        placeholder="Search patients..."
+        placeholder={t("search.placeholder")}
         className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-8 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
       />
       {!query && (
@@ -95,10 +97,10 @@ export function PatientSearch() {
           {isLoading ? (
             <div className="flex items-center gap-2 px-4 py-3 text-sm text-text-muted">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Searching...
+              {t("search.searching")}
             </div>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-text-muted">No patients found.</p>
+            <p className="px-4 py-3 text-sm text-text-muted">{t("search.noPatients")}</p>
           ) : (
             <ul className="divide-y divide-border max-h-72 overflow-y-auto">
               {results.map((patient) => (

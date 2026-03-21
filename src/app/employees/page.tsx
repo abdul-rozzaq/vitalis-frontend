@@ -4,6 +4,7 @@ import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employe
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -41,6 +42,7 @@ const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> =
 
 export default function EmployeesPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -124,7 +126,7 @@ export default function EmployeesPage() {
       {
         accessorFn: (row: Employee) => `${row.first_name} ${row.last_name}`,
         id: "name",
-        header: "Full Name",
+        header: t("employees.colFullName"),
         cell: (info: any) => {
           const name = info.getValue() as string;
           const photo = info.row.original.photo as string | null | undefined;
@@ -146,12 +148,12 @@ export default function EmployeesPage() {
       },
       {
         accessorKey: "email",
-        header: "Email",
+        header: t("employees.colEmail"),
         cell: (info: any) => <span className="text-secondary text-sm font-mono">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "role",
-        header: "Role",
+        header: t("employees.colRole"),
         cell: (info: any) => {
           const role = info.getValue() as Role;
           const roleName = role?.name ?? "";
@@ -161,7 +163,7 @@ export default function EmployeesPage() {
       },
       {
         accessorKey: "createdAt",
-        header: "Joined",
+        header: t("employees.colJoined"),
         cell: (info: any) => (
           <span className="text-secondary text-sm">
             {new Date(info.getValue()).toLocaleDateString("en-US", {
@@ -174,14 +176,14 @@ export default function EmployeesPage() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/users/:id">
               <button
                 onClick={() => handleEditEmployee(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit Employee"
+                title={t("employees.editTitle")}
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -193,7 +195,7 @@ export default function EmployeesPage() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -201,18 +203,18 @@ export default function EmployeesPage() {
       {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Employees</h2>
-          <p className="text-secondary text-sm mt-0.5">Manage staff accounts and roles.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("employees.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("employees.description")}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
-            Filter
+            {t("common.filter")}
           </button>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Export
+            {t("common.export")}
           </button>
           <Can method="POST" path="/api/users">
             <button
@@ -220,7 +222,7 @@ export default function EmployeesPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Employee
+              {t("employees.addEmployee")}
             </button>
           </Can>
         </div>
@@ -235,8 +237,8 @@ export default function EmployeesPage() {
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingEmployee ? "Edit Employee" : "Add New Employee"}
-        description={editingEmployee ? "Modify details for an existing staff member." : "Create a new staff account and assign a role."}
+        title={editingEmployee ? t("employees.editTitle") : t("employees.addNewTitle")}
+        description={editingEmployee ? t("employees.editDesc") : t("employees.addNewDesc")}
       >
         <EmployeeForm
           initialData={

@@ -2,6 +2,7 @@
 
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -21,6 +22,8 @@ interface Patient {
 }
 
 export default function PatientsPage() {
+  const { t } = useI18n();
+
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((res) => res.data),
@@ -31,7 +34,7 @@ export default function PatientsPage() {
     () => [
       {
         accessorKey: "id",
-        header: "Patient ID",
+        header: t("patients.colId"),
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
@@ -42,7 +45,7 @@ export default function PatientsPage() {
       {
         accessorFn: (row: Patient) => `${row.first_name} ${row.last_name}`,
         id: "name",
-        header: "Name",
+        header: t("patients.colName"),
         cell: ({ row }) => (
           <Link href={`/patients/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
             {row.original.first_name} {row.original.last_name}
@@ -51,27 +54,27 @@ export default function PatientsPage() {
       },
       {
         accessorKey: "gender",
-        header: "Gender",
+        header: t("patients.colGender"),
         cell: (info: any) => <span className="capitalize">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "birth_date",
-        header: "Birth Date",
-        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "N/A"}</span>,
+        header: t("patients.colBirthDate"),
+        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : t("common.na")}</span>,
       },
       {
         accessorKey: "phone_number",
-        header: "Phone Number",
+        header: t("patients.colPhone"),
         cell: (info: any) => <span className="text-secondary font-mono text-xs">{info.getValue() as string}</span>,
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PUT" path={`/api/patients/:id`}>
               <Link href={`/patients/${row.original.id}/edit`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Edit Patient">
+                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
@@ -85,7 +88,7 @@ export default function PatientsPage() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -93,24 +96,24 @@ export default function PatientsPage() {
       {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Patients</h2>
-          <p className="text-secondary text-sm mt-0.5">Manage and view your patient directory.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("patients.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("patients.description")}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
-            Filter
+            {t("common.filter")}
           </button>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Export
+            {t("common.export")}
           </button>
           <Can method="POST" path={`/api/patients`}>
             <Link href="/patients/new">
               <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
                 <Plus className="w-3.5 h-3.5" />
-                Add Patient
+                {t("patients.addPatient")}
               </button>
             </Link>
           </Can>

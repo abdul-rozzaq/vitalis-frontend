@@ -4,6 +4,7 @@ import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -40,6 +41,7 @@ function getDepartmentColor(id: string) {
 export default function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingSubDept, setEditingSubDept] = useState<Department | null>(null);
@@ -116,7 +118,7 @@ export default function DepartmentDetailPage() {
       },
       {
         accessorKey: "name",
-        header: "Sub-department",
+        header: t("departments.colSubDepartment"),
         cell: ({ row }) => {
           const color = getDepartmentColor(row.original.id);
           return (
@@ -136,7 +138,7 @@ export default function DepartmentDetailPage() {
       },
       {
         accessorKey: "price",
-        header: "Price",
+        header: t("departments.colPrice"),
         cell: ({ row }) => {
           const price = row.original.price;
           return price != null ? (
@@ -150,7 +152,7 @@ export default function DepartmentDetailPage() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/departments/:id">
@@ -180,7 +182,7 @@ export default function DepartmentDetailPage() {
         ),
       },
     ],
-    [isDeleting, deletingId],
+    [isDeleting, deletingId, t],
   );
 
   if (isLoading) {
@@ -194,7 +196,7 @@ export default function DepartmentDetailPage() {
   if (!department) {
     return (
       <div className="p-6">
-        <p className="text-secondary text-sm">Department not found.</p>
+        <p className="text-secondary text-sm">{t("departments.notFound")}</p>
       </div>
     );
   }
@@ -210,7 +212,7 @@ export default function DepartmentDetailPage() {
           className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Departments
+          {t("departments.title")}
         </Link>
       </motion.div>
 
@@ -248,8 +250,8 @@ export default function DepartmentDetailPage() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-text">Sub-departments</h3>
-            <p className="text-secondary text-sm mt-0.5">Departments under {department.name}.</p>
+            <h3 className="text-base font-semibold text-text">{t("departments.subDepartments")}</h3>
+            <p className="text-secondary text-sm mt-0.5">{t("departments.subDepartmentsDesc", { name: department.name })}</p>
           </div>
           <Can method="POST" path="/api/departments">
             <button
@@ -257,7 +259,7 @@ export default function DepartmentDetailPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Sub-department
+              {t("departments.addSubDepartment")}
             </button>
           </Can>
         </div>
@@ -269,11 +271,11 @@ export default function DepartmentDetailPage() {
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingSubDept ? "Edit Sub-department" : "Add Sub-department"}
+        title={editingSubDept ? t("departments.editSubTitle") : t("departments.addSubTitle")}
         description={
           editingSubDept
-            ? "Modify details for this sub-department."
-            : `Create a new sub-department under ${department.name}.`
+            ? t("departments.editSubDesc")
+            : t("departments.addSubDesc", { name: department.name })
         }
       >
         <DepartmentForm

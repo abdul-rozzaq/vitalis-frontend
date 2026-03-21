@@ -1,6 +1,7 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
@@ -57,6 +58,7 @@ interface PermissionsEditorProps {
 
 export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProps) {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [dirty, setDirty] = useState(false);
@@ -159,7 +161,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
     return (
       <div className="flex flex-col items-center justify-center h-48 gap-3 text-center">
         <Shield className="w-8 h-8 text-text-muted" />
-        <p className="text-secondary text-sm">No roles found. Create a role first from the Roles tab.</p>
+        <p className="text-secondary text-sm">{t("assignments.noRoles")}</p>
       </div>
     );
   }
@@ -171,14 +173,14 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
       {/* ── Left: Role list ─────────────────────────────────────────────────── */}
       <div className="w-52 shrink-0 bg-surface border border-border rounded-lg overflow-hidden">
         <div className="px-3 py-2.5 border-b border-border bg-background">
-          <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Roles</p>
+          <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("assignments.roles")}</p>
         </div>
         <div className="flex flex-col">
           {roles.map((role) => (
             <button
               key={role.id}
               onClick={() => {
-                if (dirty && !confirm("You have unsaved changes. Switch role anyway?")) return;
+                if (dirty && !confirm(t("assignments.unsavedChangesConfirm"))) return;
                 setSelectedRoleId(role.id);
               }}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors cursor-pointer border-b border-border last:border-b-0 ${selectedRoleId === role.id ? "bg-primary-50 text-primary" : "text-secondary hover:bg-surface-hover hover:text-text"
@@ -203,9 +205,9 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
           <div>
             <p className="text-sm font-medium text-text flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5 text-text-muted" />
-              Permissions for <span className="text-primary font-semibold">{selectedRole?.name ?? "—"}</span>
+              {t("assignments.permissionsFor")} <span className="text-primary font-semibold">{selectedRole?.name ?? "—"}</span>
             </p>
-            <p className="text-xs text-text-muted mt-0.5">{loadingRoutes ? "Loading..." : `${totalChecked} / ${totalEndpoints} endpoints enabled`}</p>
+            <p className="text-xs text-text-muted mt-0.5">{loadingRoutes ? t("assignments.loading") : t("assignments.endpointsEnabled", { checked: totalChecked, total: totalEndpoints })}</p>
           </div>
           <Can method="PUT" path="/api/roles/:id/permissions">
             <button
@@ -214,7 +216,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
               className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? t("assignments.saving") : t("assignments.saveChanges")}
             </button>
           </Can>
         </div>
@@ -227,9 +229,9 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
         ) : routes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 bg-surface border border-border rounded-lg gap-2">
             <KeyRound className="w-7 h-7 text-text-muted" />
-            <p className="text-sm text-secondary">No available routes returned from the server.</p>
+            <p className="text-sm text-secondary">{t("assignments.noRoutes")}</p>
             <p className="text-xs text-text-muted">
-              Make sure <code className="font-mono bg-background px-1 rounded">GET /api/permissions/available-routes</code> is implemented.
+              {t("assignments.noRoutesHint")} <code className="font-mono bg-background px-1 rounded">GET /api/permissions/available-routes</code>
             </p>
           </div>
         ) : (
@@ -252,7 +254,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
                         </span>
                       </div>
                       {/* Toggle all in group */}
-                      <button onClick={() => toggleGroup(groupRoutes)} title={allChecked ? "Deselect all" : "Select all"} className="cursor-pointer">
+                      <button onClick={() => toggleGroup(groupRoutes)} title={allChecked ? t("assignments.deselectAll") : t("assignments.selectAll")} className="cursor-pointer">
                         {allChecked ? (
                           <CheckSquare2 className="w-4 h-4 text-primary-500" />
                         ) : someChecked ? (
@@ -299,7 +301,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
             {dirty && !saving && (
               <p className="text-xs text-warning-600 font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shrink-0" />
-                Unsaved changes — click "Save Changes" to apply
+                {t("assignments.unsavedChanges")}
               </p>
             )}
           </>

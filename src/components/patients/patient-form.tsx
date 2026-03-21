@@ -1,23 +1,19 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const patientSchema = z.object({
-  first_name: z.string().min(2, "First name is too short"),
-  last_name: z.string().min(2, "Last name is too short"),
-  phone_number: z.string().min(9, "Invalid phone number"),
-  gender: z.enum(["male", "female"]),
-  birth_date: z
-    .string()
-    .transform((val) => (val ? new Date(val).toISOString() : null))
-    .nullable(),
-  address: z.string().optional(),
-});
-
-type PatientFormValues = z.infer<typeof patientSchema>;
+type PatientFormValues = {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  gender: "male" | "female";
+  birth_date: string | null;
+  address?: string;
+};
 
 interface PatientFormProps {
   initialData?: Partial<PatientFormValues>;
@@ -27,6 +23,20 @@ interface PatientFormProps {
 }
 
 export function PatientForm({ initialData, onSubmit, onCancel, isPending }: PatientFormProps) {
+  const { t } = useI18n();
+
+  const patientSchema = z.object({
+    first_name: z.string().min(2, t("forms.firstNameTooShort")),
+    last_name: z.string().min(2, t("forms.lastNameTooShort")),
+    phone_number: z.string().min(9, t("forms.invalidPhone")),
+    gender: z.enum(["male", "female"]),
+    birth_date: z
+      .string()
+      .transform((val) => (val ? new Date(val).toISOString() : null))
+      .nullable(),
+    address: z.string().optional(),
+  });
+
   const {
     register,
     handleSubmit,
@@ -44,7 +54,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            First Name
+            {t("forms.firstName")}
           </label>
           <input
             {...register("first_name")}
@@ -57,7 +67,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            Last Name
+            {t("forms.lastName")}
           </label>
           <input
             {...register("last_name")}
@@ -71,7 +81,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
-          Phone Number
+          {t("forms.phone")}
         </label>
         <div className="relative">
           <input
@@ -86,13 +96,15 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Heart className="w-4 h-4 text-primary-500" />
-          Gender
+          {t("forms.gender")}
         </label>
         <div className="flex gap-4">
           {["male", "female"].map((gender) => (
             <label key={gender} className="flex items-center gap-2 cursor-pointer group">
               <input type="radio" value={gender} {...register("gender")} className="w-4 h-4 accent-primary-600 cursor-pointer" />
-              <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">{gender}</span>
+              <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">
+                {gender === "male" ? t("forms.male") : t("forms.female")}
+              </span>
             </label>
           ))}
         </div>
@@ -102,7 +114,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
-          Birth Date
+          {t("forms.birthDate")}
         </label>
         <input
           type="date"
@@ -114,11 +126,11 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary-500" />
-          Address
+          {t("forms.address")}
         </label>
         <textarea
           {...register("address")}
-          placeholder="Enter patient home address"
+          placeholder={t("forms.addressPlaceholder")}
           rows={3}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
@@ -130,7 +142,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
@@ -138,7 +150,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {initialData ? "Update Patient" : "Add Patient"}
+          {initialData ? t("forms.updatePatient") : t("forms.addPatient")}
         </button>
       </div>
     </form>

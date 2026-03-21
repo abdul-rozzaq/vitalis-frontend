@@ -1,26 +1,13 @@
 "use client";
 
+import { Can } from "@/components/ui/can";
 import { useAuth } from "@/hooks/use-auth";
-import { Activity, Calendar, ChevronRight, Clock, Plus, Users } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useI18n } from "@/i18n";
+import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, Calendar, ChevronRight, Clock, DoorOpen, Plus, Users } from "lucide-react";
 import { motion } from "motion/react";
-
-const stats = [
-  {
-    label: "Active Patients",
-    value: "1,284",
-    icon: Users,
-    color: "text-info-600",
-    bg: "bg-info-50",
-  },
-  {
-    label: "Appointments Today",
-    value: "42",
-    icon: Calendar,
-    color: "text-primary",
-    bg: "bg-primary-50",
-  },
-  { label: "Critical Cases", value: "7", icon: Activity, color: "text-danger-600", bg: "bg-danger-50" },
-];
 
 const recentPatients = [
   { name: "Sarah Johnson", id: "P-9021", status: "In Treatment", time: "10m ago" },
@@ -28,8 +15,122 @@ const recentPatients = [
   { name: "Emma Wilson", id: "P-9103", status: "Discharged", time: "2h ago" },
 ];
 
+const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
+  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
+  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
+  NURSE: { bg: "bg-green-100", text: "text-green-700" },
+  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
+};
+
+interface Schedule {
+  id: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+}
+
+interface Assignment {
+  id: string;
+  isActive: boolean;
+  user?: { first_name: string; last_name: string; role: { name: string } };
+  room?: { name: string };
+  schedules?: Schedule[];
+}
+
+function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
+  const { t } = useI18n();
+  const days = [1, 2, 3, 4, 5, 6, 7];
+
+  const FULL_DAY_LABELS: Record<number, string> = {
+    1: t("dashboard.monday"),
+    2: t("dashboard.tuesday"),
+    3: t("dashboard.wednesday"),
+    4: t("dashboard.thursday"),
+    5: t("dashboard.friday"),
+    6: t("dashboard.saturday"),
+    7: t("dashboard.sunday"),
+  };
+
+  const byDay: Record<number, { assignment: Assignment; schedule: Schedule }[]> = {};
+  days.forEach((d) => (byDay[d] = []));
+
+  assignments.forEach((a) => {
+    (a.schedules ?? []).forEach((s) => {
+      byDay[s.dayOfWeek]?.push({ assignment: a, schedule: s });
+    });
+  });
+
+  return (
+    <div className="bg-surface border border-border rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 border-b border-border">
+        {days.map((d) => (
+          <div
+            key={d}
+            className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-secondary bg-background"}`}
+          >
+            {FULL_DAY_LABELS[d]}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 divide-x divide-border min-h-[280px]">
+        {days.map((d) => (
+          <div key={d} className={`p-2 space-y-1.5 ${d >= 6 ? "bg-background/40" : ""}`}>
+            {byDay[d].length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <span className="text-xs text-text-muted">—</span>
+              </div>
+            ) : (
+              byDay[d].map(({ assignment, schedule }) => {
+                const roleStyle = ROLE_STYLES[assignment.user?.role.name ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-700" };
+                return (
+                  <div key={schedule.id} className={`rounded-md p-2 ${roleStyle.bg} space-y-1`}>
+                    <p className={`text-[11px] font-semibold leading-tight ${roleStyle.text} truncate`}>
+                      {assignment.user?.first_name} {assignment.user?.last_name}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <Clock className={`w-2.5 h-2.5 ${roleStyle.text} shrink-0`} />
+                      <p className={`text-[10px] ${roleStyle.text} opacity-80`}>
+                        {schedule.startTime}–{schedule.endTime}
+                      </p>
+                    </div>
+                    {assignment.room && (
+                      <div className="flex items-center gap-1">
+                        <DoorOpen className={`w-2.5 h-2.5 ${roleStyle.text} shrink-0`} />
+                        <p className={`text-[10px] ${roleStyle.text} opacity-80 truncate`}>{assignment.room.name}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { user } = useAuth();
+  const { canRead } = usePermissions();
+  const { t } = useI18n();
+  const canReadAssignments = canRead("/api/assignments");
+
+  const stats = [
+    { label: t("dashboard.activePatients"), value: "1,284", icon: Users, color: "text-info-600", bg: "bg-info-50" },
+    { label: t("dashboard.appointmentsToday"), value: "42", icon: Calendar, color: "text-primary", bg: "bg-primary-50" },
+    { label: t("dashboard.criticalCases"), value: "7", icon: Activity, color: "text-danger-600", bg: "bg-danger-50" },
+  ];
+
+  const { data: assignmentsRaw = [] } = useQuery<Assignment[]>({
+    queryKey: ["assignments"],
+    queryFn: () => api.get("/assignments").then((r) => r.data),
+    enabled: canReadAssignments,
+    refetchOnWindowFocus: false,
+  });
+
+  const activeAssignments = assignmentsRaw.filter((a) => a.isActive);
 
   if (!user) return null;
 
@@ -37,12 +138,12 @@ export default function HomePage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Dashboard</h2>
-          <p className="text-secondary text-sm mt-0.5">Welcome back, {user.first_name}. Here&apos;s what&apos;s happening today.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("dashboard.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("dashboard.welcome", { name: user.first_name })}</p>
         </div>
         <button className="bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
           <Plus className="w-4 h-4" />
-          New Patient
+          {t("dashboard.newPatient")}
         </button>
       </div>
 
@@ -72,8 +173,8 @@ export default function HomePage() {
         {/* Recent Patients */}
         <div className="lg:col-span-2 bg-surface rounded-lg border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text">Recent Patients</h3>
-            <button className="text-primary text-xs font-medium hover:underline cursor-pointer">View All</button>
+            <h3 className="text-sm font-semibold text-text">{t("dashboard.recentPatients")}</h3>
+            <button className="text-primary text-xs font-medium hover:underline cursor-pointer">{t("dashboard.viewAll")}</button>
           </div>
           <div className="divide-y divide-border-light">
             {recentPatients.map((patient) => (
@@ -98,7 +199,11 @@ export default function HomePage() {
                             : "bg-background text-text-muted"
                       }`}
                     >
-                      {patient.status}
+                      {patient.status === "In Treatment"
+                        ? t("dashboard.inTreatment")
+                        : patient.status === "Follow-up"
+                          ? t("dashboard.followUp")
+                          : t("dashboard.discharged")}
                     </span>
                     <div className="flex items-center gap-1 text-text-muted text-[10px] mt-0.5 justify-end">
                       <Clock className="w-3 h-3" />
@@ -116,7 +221,7 @@ export default function HomePage() {
         <div className="bg-surface-dark rounded-lg p-5 text-white relative overflow-hidden">
           <div className="relative z-10">
             <h3 className="text-base font-semibold mb-1">{(user as any).hospital ?? "Hospital"}</h3>
-            <p className="text-zinc-400 text-xs mb-6">System Status: Optimal</p>
+            <p className="text-zinc-400 text-xs mb-6">{t("dashboard.systemStatus")}</p>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -124,7 +229,7 @@ export default function HomePage() {
                   <Activity className="w-4 h-4 text-primary-500" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Server Load</p>
+                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">{t("dashboard.serverLoad")}</p>
                   <p className="text-sm font-semibold">24%</p>
                 </div>
               </div>
@@ -133,32 +238,42 @@ export default function HomePage() {
                   <Lock className="w-4 h-4 text-info-600" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Security</p>
-                  <p className="text-sm font-semibold">Encrypted</p>
+                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">{t("dashboard.security")}</p>
+                  <p className="text-sm font-semibold">{t("dashboard.encrypted")}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Weekly Schedule */}
+      <Can method="GET" path="/api/assignments">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-text">{t("dashboard.weeklySchedule")}</h3>
+              <p className="text-xs text-secondary mt-0.5">{t("dashboard.activeAssignmentsWeek")}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {Object.entries(ROLE_STYLES).map(([role, s]) => (
+                <span key={role} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${s.bg} ${s.text}`}>
+                  {role}
+                </span>
+              ))}
+              <span className="text-xs text-text-muted ml-1">{t("dashboard.activeCount", { count: activeAssignments.length })}</span>
+            </div>
+          </div>
+          <WeeklySchedule assignments={activeAssignments} />
+        </motion.div>
+      </Can>
     </div>
   );
 }
 
 function Lock({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>

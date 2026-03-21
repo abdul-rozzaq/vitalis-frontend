@@ -4,6 +4,7 @@ import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -11,33 +12,27 @@ import { Building2, Calendar as CalendarIcon, Download, Edit, Filter, Loader2, P
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
+interface Assignment {
+  id: string;
+  user: { id: string; first_name: string; last_name: string };
+  department: { id: string; name: string };
+  room: { id: string; name: string } | null;
+}
+
 interface Appointment {
   id: string;
   dateTime: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   patient: { id: string; first_name: string; last_name: string };
   patientId: string;
-  doctor: { id: string; first_name: string; last_name: string };
-  doctorId: string;
-  department: { id: string; name: string };
-  departmentId: string;
+  assignment: Assignment;
+  assignmentId: string;
 }
 
 interface Patient {
   id: string;
   first_name: string;
   last_name: string;
-}
-
-interface Doctor {
-  id: string;
-  first_name: string;
-  last_name: string;
-}
-
-interface Department {
-  id: string;
-  name: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -49,6 +44,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function AppointmentsPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -65,15 +61,9 @@ export default function AppointmentsPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: employeesData = [] } = useQuery<Doctor[]>({
-    queryKey: ["users"],
-    queryFn: () => api.get("/users").then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: departmentsData = [] } = useQuery<Department[]>({
-    queryKey: ["departments"],
-    queryFn: () => api.get("/departments").then((res) => res.data),
+  const { data: assignmentsData = [] } = useQuery<Assignment[]>({
+    queryKey: ["assignments"],
+    queryFn: () => api.get("/assignments").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -126,7 +116,10 @@ export default function AppointmentsPage() {
   };
 
   const patients = patientsData.map((p) => ({ id: p.id, name: `${p.first_name} ${p.last_name}` }));
-  const doctors = employeesData.map((e) => ({ id: e.id, name: `${e.first_name} ${e.last_name}` }));
+  const assignments = assignmentsData.map((a) => ({
+    id: a.id,
+    label: `Dr. ${a.user.first_name} ${a.user.last_name} — ${a.department.name}${a.room ? ` (${a.room.name})` : ""}`,
+  }));
 
   const columns = useMemo<ColumnDef<Appointment>[]>(
     () => [
@@ -141,7 +134,7 @@ export default function AppointmentsPage() {
       },
       {
         id: "patient",
-        header: "Patient",
+        header: t("appointments.colPatient"),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
@@ -150,28 +143,28 @@ export default function AppointmentsPage() {
         ),
       },
       {
-        id: "doctor",
-        header: "Doctor",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Stethoscope className="w-3.5 h-3.5 text-text-muted shrink-0" />
-            <span className="text-secondary">{row.original.doctor?.first_name} {row.original.doctor?.last_name}</span>
-          </div>
-        ),
-      },
-      {
-        id: "department",
-        header: "Department",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-text-muted shrink-0" />
-            <span className="text-xs bg-info-50 text-info-600 px-1.5 py-0.5 rounded font-medium">{row.original.department?.name}</span>
-          </div>
-        ),
+        id: "assignment",
+        header: t("appointments.colAssignment"),
+        cell: ({ row }) => {
+          const a = row.original.assignment;
+          if (!a) return null;
+          return (
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                <span className="text-secondary text-sm">Dr. {a.user?.first_name} {a.user?.last_name}</span>
+              </div>
+              <div className="flex items-center gap-1.5 ml-5">
+                <Building2 className="w-3 h-3 text-text-muted shrink-0" />
+                <span className="text-xs bg-info-50 text-info-600 px-1.5 py-0.5 rounded font-medium">{a.department?.name}</span>
+              </div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "dateTime",
-        header: "Date & Time",
+        header: t("appointments.colDateTime"),
         cell: ({ row }) => {
           const dt = new Date(row.original.dateTime);
           return (
@@ -185,7 +178,7 @@ export default function AppointmentsPage() {
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t("appointments.colStatus"),
         cell: ({ row }) => {
           const status = row.original.status;
           return (
@@ -197,7 +190,7 @@ export default function AppointmentsPage() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/appointments/:id">
@@ -223,25 +216,25 @@ export default function AppointmentsPage() {
         ),
       },
     ],
-    [isDeleting, deletingId],
+    [isDeleting, deletingId, t],
   );
 
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Appointments</h2>
-          <p className="text-secondary text-sm mt-0.5">Schedule and manage patient bookings.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("appointments.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("appointments.description")}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
-            Filter
+            {t("common.filter")}
           </button>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Export
+            {t("common.export")}
           </button>
           <Can method="POST" path="/api/appointments">
             <button
@@ -249,7 +242,7 @@ export default function AppointmentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              New Appointment
+              {t("appointments.newAppointment")}
             </button>
           </Can>
         </div>
@@ -268,24 +261,22 @@ export default function AppointmentsPage() {
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingAppointment ? "Edit Appointment" : "New Appointment"}
-        description={editingAppointment ? "Update the appointment details." : "Book a new appointment for a patient."}
+        title={editingAppointment ? t("appointments.editTitle") : t("appointments.newAppointment")}
+        description={editingAppointment ? t("appointments.editDesc") : t("appointments.newDesc")}
       >
         <AppointmentForm
           initialData={
             editingAppointment
               ? {
                   patientId: editingAppointment.patientId,
-                  doctorId: editingAppointment.doctorId,
-                  departmentId: editingAppointment.departmentId,
+                  assignmentId: editingAppointment.assignmentId,
                   dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
                   status: editingAppointment.status,
                 }
               : undefined
           }
           patients={patients}
-          doctors={doctors}
-          departments={departmentsData}
+          assignments={assignments}
           onSubmit={handleFormSubmit}
           onCancel={() => setIsSheetOpen(false)}
           isPending={isAdding || isUpdating}

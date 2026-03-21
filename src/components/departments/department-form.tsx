@@ -1,19 +1,24 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Building2, DollarSign, GitBranch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const departmentSchema = z.object({
-  name: z.string().min(2, "Department name is too short"),
-  description: z.string().optional(),
-  parentId: z.string().optional(),
-  price: z.coerce.number().min(0, "Price must be 0 or more").optional(),
-});
+type DepartmentFormInput = {
+  name: string;
+  description?: string;
+  parentId?: string;
+  price?: number | string;
+};
 
-type DepartmentFormInput = z.input<typeof departmentSchema>;
-type DepartmentFormValues = z.output<typeof departmentSchema>;
+type DepartmentFormValues = {
+  name: string;
+  description?: string;
+  parentId?: string;
+  price?: number;
+};
 
 interface Department {
   id: string;
@@ -30,6 +35,15 @@ interface DepartmentFormProps {
 }
 
 export function DepartmentForm({ initialData, departments = [], currentId, hideParent = false, onSubmit, onCancel }: DepartmentFormProps) {
+  const { t } = useI18n();
+
+  const departmentSchema = z.object({
+    name: z.string().min(2, t("forms.departmentNameTooShort")),
+    description: z.string().optional(),
+    parentId: z.string().optional(),
+    price: z.coerce.number().min(0, t("forms.priceMustBePositive")).optional(),
+  });
+
   const {
     register,
     handleSubmit,
@@ -49,7 +63,7 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
-          Department Name
+          {t("forms.departmentName")}
         </label>
         <input
           {...register("name")}
@@ -63,13 +77,13 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-primary-500" />
-            Parent Department
+            {t("forms.parentDepartment")}
           </label>
           <select
             {...register("parentId")}
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
-            <option value="">None (top-level)</option>
+            <option value="">{t("forms.noneTopLevel")}</option>
             {parentOptions.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name}
@@ -82,7 +96,7 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-primary-500" />
-          Price
+          {t("forms.price")}
         </label>
         <input
           {...register("price")}
@@ -98,11 +112,11 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <AlignLeft className="w-4 h-4 text-primary-500" />
-          Description
+          {t("forms.description")}
         </label>
         <textarea
           {...register("description")}
-          placeholder="Brief description of this department..."
+          placeholder={t("forms.departmentDescPlaceholder")}
           rows={4}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
@@ -114,13 +128,13 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
-          {isEditing ? "Update Department" : "Add Department"}
+          {isEditing ? t("forms.updateDepartment") : t("forms.addDepartment")}
         </button>
       </div>
     </form>

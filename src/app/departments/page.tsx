@@ -4,6 +4,7 @@ import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -38,6 +39,7 @@ function getDepartmentColor(id: string) {
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
@@ -78,7 +80,7 @@ export default function DepartmentsPage() {
   };
 
   const handleDeleteDepartment = (id: string) => {
-    if (confirm("Are you sure you want to delete this department?")) {
+    if (confirm(t("departments.deleteConfirm"))) {
       setDeletingId(id);
       deleteDepartment(id);
     }
@@ -110,7 +112,7 @@ export default function DepartmentsPage() {
       },
       {
         accessorKey: "name",
-        header: "Department",
+        header: t("departments.colDepartment"),
         cell: ({ row }) => {
           const color = getDepartmentColor(row.original.id);
           return (
@@ -130,7 +132,7 @@ export default function DepartmentsPage() {
       },
       {
         accessorKey: "parent",
-        header: "Parent",
+        header: t("departments.colParent"),
         cell: ({ row }) => {
           const parent = row.original.parent;
           return parent ? (
@@ -145,7 +147,7 @@ export default function DepartmentsPage() {
       },
       {
         accessorKey: "price",
-        header: "Price",
+        header: t("departments.colPrice"),
         cell: ({ row }) => {
           const price = row.original.price;
           return price != null ? (
@@ -159,13 +161,13 @@ export default function DepartmentsPage() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Link
               href={`/departments/${row.original.id}`}
               className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
-              title="View Department"
+              title={t("departments.viewDepartment")}
             >
               <ChevronRight className="w-4 h-4" />
             </Link>
@@ -173,7 +175,7 @@ export default function DepartmentsPage() {
               <button
                 onClick={() => handleEditDepartment(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit Department"
+                title={t("departments.editDepartment")}
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -183,7 +185,7 @@ export default function DepartmentsPage() {
                 onClick={() => handleDeleteDepartment(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-                title="Delete Department"
+                title={t("departments.deleteDepartment")}
               >
                 {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
@@ -192,7 +194,7 @@ export default function DepartmentsPage() {
         ),
       },
     ],
-    [isDeleting, deletingId],
+    [isDeleting, deletingId, t],
   );
 
   return (
@@ -200,18 +202,18 @@ export default function DepartmentsPage() {
       {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Departments</h2>
-          <p className="text-secondary text-sm mt-0.5">Manage hospital departments and their staff.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("departments.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("departments.description")}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Filter className="w-3.5 h-3.5" />
-            Filter
+            {t("common.filter")}
           </button>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
-            Export
+            {t("common.export")}
           </button>
           <Can method="POST" path="/api/departments">
             <button
@@ -219,7 +221,7 @@ export default function DepartmentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Department
+              {t("departments.addDepartment")}
             </button>
           </Can>
         </div>
@@ -240,8 +242,8 @@ export default function DepartmentsPage() {
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingDepartment ? "Edit Department" : "Add New Department"}
-        description={editingDepartment ? "Modify details for this department." : "Create a new department in your organization."}
+        title={editingDepartment ? t("departments.editTitle") : t("departments.addNewTitle")}
+        description={editingDepartment ? t("departments.editDesc") : t("departments.addNewDesc")}
       >
         <DepartmentForm
           initialData={

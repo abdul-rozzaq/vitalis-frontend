@@ -1,16 +1,15 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Shield } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const roleSchema = z.object({
-  name: z.string().min(1, "Role name is required"),
-  description: z.string().optional(),
-});
-
-type RoleFormValues = z.infer<typeof roleSchema>;
+type RoleFormValues = {
+  name: string;
+  description?: string;
+};
 
 interface RoleFormProps {
   initialData?: Partial<RoleFormValues>;
@@ -20,6 +19,13 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFormProps) {
+  const { t } = useI18n();
+
+  const roleSchema = z.object({
+    name: z.string().min(1, t("forms.roleNameRequired")),
+    description: z.string().optional(),
+  });
+
   const {
     register,
     handleSubmit,
@@ -36,7 +42,7 @@ export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFor
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Shield className="w-4 h-4 text-primary-500" />
-          Role Name
+          {t("forms.roleName")}
         </label>
         <input
           {...register("name")}
@@ -49,11 +55,11 @@ export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFor
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <AlignLeft className="w-4 h-4 text-primary-500" />
-          Description <span className="text-text-muted font-normal">(optional)</span>
+          {t("forms.description")} <span className="text-text-muted font-normal">({t("forms.optional")})</span>
         </label>
         <textarea
           {...register("description")}
-          placeholder="Brief description of this role's responsibilities..."
+          placeholder={t("forms.roleDescPlaceholder")}
           rows={3}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
@@ -65,14 +71,14 @@ export function RoleForm({ initialData, onSubmit, onCancel, isLoading }: RoleFor
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           disabled={isLoading}
           className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
-          {isLoading ? "Saving..." : isEditing ? "Update Role" : "Add Role"}
+          {isLoading ? t("forms.saving") : isEditing ? t("forms.updateRole") : t("forms.addRole")}
         </button>
       </div>
     </form>

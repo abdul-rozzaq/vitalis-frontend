@@ -1,20 +1,19 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, CreditCard, DollarSign, FileText, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-const paymentSchema = z.object({
-  patient_id: z.string().min(1, "Please select a patient"),
-  department_id: z.string().min(1, "Please select a department"),
-  amount: z.string().min(1, "Amount is required"),
-  payment_method: z.enum(["CASH", "CARD", "INSURANCE", "BANK_TRANSFER"]),
-  status: z.enum(["PAID", "PENDING", "CANCELLED"]),
-  description: z.string().optional(),
-});
-
-type PaymentFormValues = z.infer<typeof paymentSchema>;
+type PaymentFormValues = {
+  patient_id: string;
+  department_id: string;
+  amount: string;
+  payment_method: "CASH" | "CARD" | "INSURANCE" | "BANK_TRANSFER";
+  status: "PAID" | "PENDING" | "CANCELLED";
+  description?: string;
+};
 
 interface PatientOption {
   id: string;
@@ -35,20 +34,31 @@ interface PaymentFormProps {
   onCancel: () => void;
 }
 
-const PAYMENT_METHODS = [
-  { value: "CASH", label: "Cash" },
-  { value: "CARD", label: "Card" },
-  { value: "INSURANCE", label: "Insurance" },
-  { value: "BANK_TRANSFER", label: "Bank Transfer" },
-];
-
-const PAYMENT_STATUSES = [
-  { value: "PAID", label: "Paid" },
-  { value: "PENDING", label: "Pending" },
-  { value: "CANCELLED", label: "Cancelled" },
-];
-
 export function PaymentForm({ initialData, patients, departments, onSubmit, onCancel }: PaymentFormProps) {
+  const { t } = useI18n();
+
+  const paymentSchema = z.object({
+    patient_id: z.string().min(1, t("forms.selectPatient")),
+    department_id: z.string().min(1, t("forms.selectDepartment")),
+    amount: z.string().min(1, t("forms.amountRequired")),
+    payment_method: z.enum(["CASH", "CARD", "INSURANCE", "BANK_TRANSFER"]),
+    status: z.enum(["PAID", "PENDING", "CANCELLED"]),
+    description: z.string().optional(),
+  });
+
+  const PAYMENT_METHODS = [
+    { value: "CASH", label: t("forms.methodCash") },
+    { value: "CARD", label: t("forms.methodCard") },
+    { value: "INSURANCE", label: t("forms.methodInsurance") },
+    { value: "BANK_TRANSFER", label: t("forms.methodBankTransfer") },
+  ];
+
+  const PAYMENT_STATUSES = [
+    { value: "PAID", label: t("forms.statusPaid") },
+    { value: "PENDING", label: t("forms.statusPending") },
+    { value: "CANCELLED", label: t("forms.statusCancelled") },
+  ];
+
   const {
     register,
     handleSubmit,
@@ -69,13 +79,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Users className="w-4 h-4 text-primary-500" />
-          Patient
+          {t("forms.patient")}
         </label>
         <select
           {...register("patient_id")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select a patient...</option>
+          <option value="">{t("forms.selectPatientOption")}</option>
           {patients.map((p) => (
             <option key={p.id} value={p.id}>
               {p.first_name} {p.last_name}
@@ -89,13 +99,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
-          Department
+          {t("forms.department")}
         </label>
         <select
           {...register("department_id")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select a department...</option>
+          <option value="">{t("forms.selectDepartmentOption")}</option>
           {departments.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
@@ -109,7 +119,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-primary-500" />
-          Amount
+          {t("forms.amount")}
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">$</span>
@@ -130,7 +140,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-primary-500" />
-            Method
+            {t("forms.method")}
           </label>
           <select
             {...register("payment_method")}
@@ -147,7 +157,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary-500" />
-            Status
+            {t("forms.status")}
           </label>
           <select
             {...register("status")}
@@ -166,11 +176,11 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary-500" />
-          Notes (optional)
+          {t("forms.notes")}
         </label>
         <textarea
           {...register("description")}
-          placeholder="Additional notes about this payment..."
+          placeholder={t("forms.notesPlaceholder")}
           rows={3}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
         />
@@ -182,13 +192,13 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
-          {isEditing ? "Update Payment" : "Record Payment"}
+          {isEditing ? t("forms.updatePayment") : t("forms.recordPayment")}
         </button>
       </div>
     </form>

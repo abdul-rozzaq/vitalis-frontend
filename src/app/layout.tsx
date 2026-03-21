@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <NextTopLoader color="var(--color-primary-500)" height={2} />
         <Providers>
           <AppLayout>{children}</AppLayout>

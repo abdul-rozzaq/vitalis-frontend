@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { useI18n } from "@/i18n";
+import { ArrowLeft, HeartPulse } from "lucide-react";
 import { motion } from "motion/react";
-import { HeartPulse, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function NotFound() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-4">
       <motion.div
@@ -20,13 +23,13 @@ export default function NotFound() {
         <h1 className="text-3xl font-semibold text-text tracking-tight mb-2">404</h1>
 
         <p className="text-secondary text-sm mb-6">
-          The page or record you are looking for seems to have gone missing from our clinical charts.
+          {t("notFound.description")}
         </p>
 
         <Link href="/">
           <button className="bg-text text-background hover:opacity-90 px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-opacity cursor-pointer">
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            {t("notFound.back")}
           </button>
         </Link>
       </motion.div>

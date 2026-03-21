@@ -3,6 +3,7 @@
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,103 +41,6 @@ interface TimelineEvent {
   file_size?: string;
 }
 
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-
-const MOCK_TIMELINE: Record<string, TimelineEvent[]> = {
-  default: [
-    {
-      id: "evt-1",
-      type: "visit",
-      date: "2026-02-25T09:00:00.000Z",
-      department: "Cardiology",
-      department_color: "bg-info-50 text-info-600",
-      title: "Cardiology Consultation",
-      description: "Routine cardiac checkup. ECG performed. No abnormalities detected.",
-    },
-    {
-      id: "evt-2",
-      type: "payment",
-      date: "2026-02-25T10:30:00.000Z",
-      title: "Payment received",
-      amount: 450.0,
-      status: "PAID",
-      payment_method: "Card",
-    },
-    {
-      id: "evt-3",
-      type: "file",
-      date: "2026-02-25T10:35:00.000Z",
-      title: "ECG Report uploaded",
-      file_name: "ecg-report-2026-02-25.pdf",
-      file_type: "pdf",
-      file_size: "1.2 MB",
-    },
-    {
-      id: "evt-4",
-      type: "visit",
-      date: "2026-02-10T11:00:00.000Z",
-      department: "Radiology",
-      department_color: "bg-info-50 text-info-600",
-      title: "MRI Scan — Radiology",
-      description: "Brain MRI scan ordered by neurologist. Results pending review.",
-    },
-    {
-      id: "evt-5",
-      type: "payment",
-      date: "2026-02-10T12:00:00.000Z",
-      title: "Payment pending",
-      amount: 320.0,
-      status: "PENDING",
-      payment_method: "Insurance",
-    },
-    {
-      id: "evt-6",
-      type: "file",
-      date: "2026-02-10T13:10:00.000Z",
-      title: "MRI Scan image uploaded",
-      file_name: "mri-brain-scan.jpg",
-      file_type: "image",
-      file_size: "4.8 MB",
-    },
-    {
-      id: "evt-7",
-      type: "file",
-      date: "2026-02-10T13:12:00.000Z",
-      title: "Referral letter uploaded",
-      file_name: "referral-neurology.pdf",
-      file_type: "pdf",
-      file_size: "340 KB",
-    },
-    {
-      id: "evt-8",
-      type: "visit",
-      date: "2026-01-18T14:00:00.000Z",
-      department: "Orthopedics",
-      department_color: "bg-warning-50 text-warning-600",
-      title: "Orthopedics — Knee Examination",
-      description: "Patient reported knee pain. X-ray ordered. Prescribed physiotherapy for 4 weeks.",
-    },
-    {
-      id: "evt-9",
-      type: "payment",
-      date: "2026-01-18T15:00:00.000Z",
-      title: "Payment received",
-      amount: 220.0,
-      status: "PAID",
-      payment_method: "Cash",
-    },
-    {
-      id: "evt-10",
-      type: "payment",
-      date: "2025-12-05T10:00:00.000Z",
-      title: "Payment cancelled",
-      amount: 180.0,
-      status: "CANCELLED",
-      payment_method: "Card",
-    },
-  ],
-};
-
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 const STATUS_STYLES = {
@@ -168,6 +72,7 @@ function formatTime(iso: string) {
 // ─── File Attach Button ────────────────────────────────────────────────────────
 
 function AttachFileButton({ visitId }: { visitId: string }) {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [attached, setAttached] = useState<string | null>(null);
 
@@ -191,7 +96,7 @@ function AttachFileButton({ visitId }: { visitId: string }) {
         title="Attach file to this visit"
       >
         <Upload className="w-3 h-3" />
-        Attach file
+        {t("patients.attachFile")}
       </button>
     </div>
   );
@@ -251,6 +156,7 @@ function PaymentCard({ event }: { event: TimelineEvent }) {
 }
 
 function FileCard({ event }: { event: TimelineEvent }) {
+  const { t } = useI18n();
   const ft = FILE_ICONS[event.file_type ?? "other"];
   const FileIcon = ft.icon;
   return (
@@ -268,7 +174,7 @@ function FileCard({ event }: { event: TimelineEvent }) {
           </div>
         </div>
       </div>
-      <button className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Download">
+      <button className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("common.download")}>
         <Download className="w-4 h-4" />
       </button>
     </div>
@@ -286,13 +192,14 @@ function EventCard({ event }: { event: TimelineEvent }) {
 // ─── Edit Patient Form ─────────────────────────────────────────────────────────
 
 function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            First Name
+            {t("forms.firstName")}
           </label>
           <input
             defaultValue={patient.first_name}
@@ -302,7 +209,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
-            Last Name
+            {t("forms.lastName")}
           </label>
           <input
             defaultValue={patient.last_name}
@@ -314,7 +221,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
-          Phone Number
+          {t("forms.phone")}
         </label>
         <input
           defaultValue={patient.phone_number}
@@ -325,7 +232,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
-          Birth Date
+          {t("forms.birthDate")}
         </label>
         <input
           type="date"
@@ -335,12 +242,14 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text">Gender</label>
+        <label className="text-sm font-medium text-text">{t("forms.gender")}</label>
         <div className="flex gap-4">
           {["male", "female"].map((g) => (
             <label key={g} className="flex items-center gap-2 cursor-pointer group">
               <input type="radio" name="gender" value={g} defaultChecked={patient.gender === g} className="w-4 h-4 accent-primary-600 cursor-pointer" />
-              <span className="text-sm text-secondary capitalize">{g}</span>
+              <span className="text-sm text-secondary capitalize">
+                {g === "male" ? t("forms.male") : t("forms.female")}
+              </span>
             </label>
           ))}
         </div>
@@ -352,13 +261,13 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="button"
           className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
         >
-          Save Changes
+          {t("patients.saveChanges")}
         </button>
       </div>
     </div>
@@ -369,6 +278,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useI18n();
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<"visit" | "edit" | null>(null);
@@ -379,15 +289,9 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: departmentsData = [] } = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.get("/departments").then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: usersData = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => api.get("/users").then((res) => res.data),
+  const { data: assignmentsData = [] } = useQuery({
+    queryKey: ["assignments"],
+    queryFn: () => api.get("/assignments").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -395,18 +299,19 @@ export default function PatientDetailPage() {
     mutationFn: (data: any) => api.post("/appointments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-timeline", id] });
       setSheetMode(null);
     },
   });
 
-  const { data: timelineData } = useQuery({
+  const { data: timelineData, isLoading: isTimelineLoading } = useQuery({
     queryKey: ["patient-timeline", id],
     queryFn: () => api.get(`/patients/${id}/timeline`).then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
   const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
-  const timeline: TimelineEvent[] = timelineData ?? MOCK_TIMELINE[id] ?? MOCK_TIMELINE.default;
+  const timeline: TimelineEvent[] = timelineData ?? [];
 
   const grouped = timeline.reduce<Record<string, TimelineEvent[]>>((acc, evt) => {
     const day = new Date(evt.date).toDateString();
@@ -429,7 +334,7 @@ export default function PatientDetailPage() {
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
         <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to Patients
+          {t("patients.backToPatients")}
         </Link>
       </motion.div>
 
@@ -478,22 +383,22 @@ export default function PatientDetailPage() {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="text-lg font-bold text-text">{visitCount}</p>
-                <p className="text-[11px] text-text-muted">Visits</p>
+                <p className="text-[11px] text-text-muted">{t("patients.visits")}</p>
               </div>
               <div>
                 <p className="text-lg font-bold text-text">${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })}</p>
-                <p className="text-[11px] text-text-muted">Paid</p>
+                <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
               </div>
               <div>
                 <p className="text-lg font-bold text-text">{fileCount}</p>
-                <p className="text-[11px] text-text-muted">Files</p>
+                <p className="text-[11px] text-text-muted">{t("patients.files")}</p>
               </div>
             </div>
           </div>
 
           {/* Action buttons */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Actions</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
 
             <Can method="POST" path="/api/appointments">
               <button
@@ -501,7 +406,7 @@ export default function PatientDetailPage() {
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
               >
                 <Plus className="w-4 h-4" />
-                New Department Visit
+                {t("patients.newDeptVisit")}
               </button>
             </Can>
 
@@ -511,26 +416,26 @@ export default function PatientDetailPage() {
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
               >
                 <Edit className="w-4 h-4" />
-                Edit Patient Info
+                {t("patients.editPatientInfo")}
               </button>
             </Can>
 
             <Can method="POST" path="/api/payments">
               <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
                 <CreditCard className="w-4 h-4" />
-                Record Payment
+                {t("patients.recordPayment")}
               </button>
             </Can>
 
             <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
               <Upload className="w-4 h-4" />
-              Upload File
+              {t("patients.uploadFile")}
             </button>
           </div>
 
           {/* Departments visited */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Departments Visited</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t("patients.departmentsVisited")}</p>
             <div className="flex flex-wrap gap-1.5">
               {[...new Set(timeline.filter((e) => e.type === "visit" && e.department).map((e) => e.department!))].map((dept) => {
                 const deptColor = timeline.find((e) => e.department === dept)?.department_color ?? "bg-gray-100 text-gray-700";
@@ -548,21 +453,30 @@ export default function PatientDetailPage() {
         {/* ── RIGHT TIMELINE ─────────────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text">Activity Timeline</h2>
+            <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
             <Can method="POST" path="/api/appointments">
               <button
                 onClick={() => setSheetMode("visit")}
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Visit
+                {t("patients.addVisit")}
               </button>
             </Can>
           </div>
 
-          {groupedEntries.length === 0 ? (
+          {isTimelineLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse">
+                  <div className="h-4 bg-border rounded w-1/3 mb-3" />
+                  <div className="h-3 bg-border rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          ) : groupedEntries.length === 0 ? (
             <div className="bg-surface border border-border rounded-xl p-12 text-center">
-              <p className="text-secondary text-sm">No activity recorded yet.</p>
+              <p className="text-secondary text-sm">{t("patients.noActivity")}</p>
             </div>
           ) : (
             groupedEntries.map(([day, events], groupIdx) => (
@@ -611,19 +525,21 @@ export default function PatientDetailPage() {
       </div>
 
       {/* ── SHEETS ─────────────────────────────────────────────────────────── */}
-      <Sheet isOpen={sheetMode === "visit"} onClose={() => setSheetMode(null)} title="New Department Visit" description="Book a new department visit for this patient.">
+      <Sheet isOpen={sheetMode === "visit"} onClose={() => setSheetMode(null)} title={t("patients.newDeptVisit")} description={t("patients.newDeptVisitDesc")}>
         <AppointmentForm
           initialData={{ patientId: id }}
           patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
-          doctors={usersData.map((u: any) => ({ id: u.id, name: `${u.first_name} ${u.last_name}` }))}
-          departments={departmentsData.map((d: any) => ({ id: d.id, name: d.name }))}
+          assignments={assignmentsData.map((a: any) => ({
+            id: a.id,
+            label: `Dr. ${a.user.first_name} ${a.user.last_name} — ${a.department.name}${a.room ? ` (${a.room.name})` : ""}`,
+          }))}
           onSubmit={(data) => addAppointment(data)}
           onCancel={() => setSheetMode(null)}
           isPending={isAddingAppointment}
         />
       </Sheet>
 
-      <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title="Edit Patient" description="Update the patient's personal information.">
+      <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title={t("patients.editPatientSheet")} description={t("patients.editPatientDesc")}>
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
     </div>

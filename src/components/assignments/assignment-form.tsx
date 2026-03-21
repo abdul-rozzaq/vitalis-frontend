@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -13,7 +14,7 @@ const scheduleRowSchema = z.object({
 const assignmentSchema = z.object({
   userId: z.string().min(1, "Employee is required"),
   departmentId: z.string().min(1, "Department is required"),
-  roomId: z.string().optional(),
+  roomId: z.string().min(1, "Room is required"),
   isActive: z.boolean().default(true),
   schedules: z.array(scheduleRowSchema).optional(),
 });
@@ -52,6 +53,8 @@ interface AssignmentFormProps {
 }
 
 export function AssignmentForm({ initialData, users, departments, rooms, onSubmit, onCancel, isLoading }: AssignmentFormProps) {
+  const { t } = useI18n();
+
   const {
     register,
     handleSubmit,
@@ -72,13 +75,13 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
-          Employee
+          {t("forms.employee")}
         </label>
         <select
           {...register("userId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select employee...</option>
+          <option value="">{t("forms.selectEmployee")}</option>
           {users.map((u) => (
             <option key={u.id} value={u.id}>
               {u.first_name} {u.last_name} ({u.role?.name})
@@ -92,13 +95,13 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
-          Department
+          {t("forms.department")}
         </label>
         <select
           {...register("departmentId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">Select department...</option>
+          <option value="">{t("forms.selectDepartmentOption")}</option>
           {departments.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
@@ -108,30 +111,31 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
       </div>
 
-      {/* Room (optional) */}
+      {/* Room */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <DoorOpen className="w-4 h-4 text-primary-500" />
-          Room <span className="text-text-muted font-normal">(optional)</span>
+          {t("forms.room")}
         </label>
         <select
           {...register("roomId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="">No room assigned</option>
+          <option value="">{t("forms.selectRoom")}</option>
           {rooms.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
             </option>
           ))}
         </select>
+        {errors.roomId && <p className="text-xs text-danger-600 font-medium">{errors.roomId.message}</p>}
       </div>
 
       {/* isActive */}
       <div className="flex items-center gap-3">
         <input {...register("isActive")} type="checkbox" id="isActive" className="w-4 h-4 accent-primary-600 cursor-pointer rounded" />
         <label htmlFor="isActive" className="text-sm font-medium text-text cursor-pointer">
-          Active assignment
+          {t("forms.activeAssignment")}
         </label>
       </div>
 
@@ -140,7 +144,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Clock className="w-4 h-4 text-primary-500" />
-            Weekly Schedule
+            {t("forms.weeklySchedule")}
           </label>
           <button
             type="button"
@@ -148,15 +152,15 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-700 bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
           >
             <Plus className="w-3 h-3" />
-            Add slot
+            {t("forms.addSlot")}
           </button>
         </div>
 
         {fields.length > 0 && (
           <div className="space-y-2 rounded-lg border border-border overflow-hidden">
             <div className="grid grid-cols-[1fr_1fr_32px] gap-2 px-3 py-2 bg-background text-xs font-medium text-text-muted">
-              <span>Start</span>
-              <span>End</span>
+              <span>{t("forms.startTime")}</span>
+              <span>{t("forms.endTime")}</span>
               <span />
             </div>
             {fields.map((field, idx) => (
@@ -181,7 +185,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
 
         {fields.length === 0 && (
           <p className="text-xs text-text-muted italic text-center py-2 border border-dashed border-border rounded-lg">
-            No schedule slots yet — click "Add slot" to create one.
+            {t("forms.noScheduleSlots")}
           </p>
         )}
       </div>
@@ -192,14 +196,14 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           onClick={onCancel}
           className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
         >
-          Cancel
+          {t("forms.cancel")}
         </button>
         <button
           type="submit"
           disabled={isLoading}
           className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
         >
-          {isLoading ? "Saving..." : isEditing ? "Update" : "Create Assignment"}
+          {isLoading ? t("forms.saving") : isEditing ? t("forms.update") : t("forms.createAssignment")}
         </button>
       </div>
     </form>

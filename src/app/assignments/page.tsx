@@ -7,10 +7,11 @@ import { RoomForm } from "@/components/assignments/room-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Building2, Calendar, CheckCircle2, Clock, DoorOpen, Edit, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
+import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
@@ -69,90 +70,20 @@ const TAB_IDLE = "text-secondary hover:bg-surface-hover hover:text-text";
 
 // ─── Tabs ──────────────────────────────────────────────────────────────────────
 
-type TabId = "assignments" | "rooms" | "roles" | "permissions" | "schedule";
-
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "assignments", label: "Assignments", icon: User },
-  { id: "rooms", label: "Rooms", icon: DoorOpen },
-  { id: "roles", label: "Roles", icon: Shield },
-  { id: "permissions", label: "Permissions", icon: KeyRound },
-  { id: "schedule", label: "Schedule", icon: Calendar },
-];
-
-// ─── Weekly Schedule View ──────────────────────────────────────────────────────
-
-function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
-  const days = [1, 2, 3, 4, 5, 6, 7];
-  const fullDayLabels: Record<number, string> = {
-    1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday",
-    5: "Friday", 6: "Saturday", 7: "Sunday",
-  };
-
-  const byDay: Record<number, { assignment: Assignment; schedule: Schedule }[]> = {};
-  days.forEach((d) => (byDay[d] = []));
-
-  assignments.forEach((a) => {
-    (a.schedules ?? []).forEach((s, i) => {
-      // dayOfWeek is not stored — distribute slots evenly across days for display
-      const day = (i % 7) + 1;
-      byDay[day].push({ assignment: a, schedule: s });
-    });
-  });
-
-  return (
-    <div className="bg-surface border border-border rounded-lg overflow-hidden">
-      <div className="grid grid-cols-7 border-b border-border">
-        {days.map((d) => (
-          <div
-            key={d}
-            className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-secondary bg-background"}`}
-          >
-            {fullDayLabels[d]}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 divide-x divide-border min-h-[320px]">
-        {days.map((d) => (
-          <div key={d} className={`p-2 space-y-1.5 ${d >= 6 ? "bg-background/40" : ""}`}>
-            {byDay[d].length === 0 && (
-              <div className="h-full flex items-center justify-center">
-                <span className="text-xs text-text-muted">—</span>
-              </div>
-            )}
-            {byDay[d].map(({ assignment, schedule }) => {
-              const roleStyle = ROLE_STYLES[assignment.user?.role.name ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-700" };
-              return (
-                <div key={schedule.id} className={`rounded-md p-2 ${roleStyle.bg} space-y-1`}>
-                  <p className={`text-[11px] font-semibold leading-tight ${roleStyle.text} truncate`}>
-                    {assignment.user?.first_name} {assignment.user?.last_name}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <Clock className={`w-2.5 h-2.5 ${roleStyle.text} shrink-0`} />
-                    <p className={`text-[10px] ${roleStyle.text} opacity-80`}>
-                      {schedule.startTime}–{schedule.endTime}
-                    </p>
-                  </div>
-                  {assignment.room && (
-                    <div className="flex items-center gap-1">
-                      <DoorOpen className={`w-2.5 h-2.5 ${roleStyle.text} shrink-0`} />
-                      <p className={`text-[10px] ${roleStyle.text} opacity-80 truncate`}>{assignment.room.name}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+type TabId = "assignments" | "rooms" | "roles" | "permissions";
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AssignmentsPage() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: "assignments", label: t("assignments.tabAssignments"), icon: User },
+    { id: "rooms", label: t("assignments.tabRooms"), icon: DoorOpen },
+    { id: "roles", label: t("assignments.tabRoles"), icon: Shield },
+    { id: "permissions", label: t("assignments.tabPermissions"), icon: KeyRound },
+  ];
 
   const [tab, setTab] = useState<TabId>("assignments");
 
@@ -292,7 +223,7 @@ export default function AssignmentsPage() {
       },
       {
         accessorKey: "name",
-        header: "Role",
+        header: t("assignments.colRole"),
         cell: ({ row }) => (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
@@ -304,19 +235,19 @@ export default function AssignmentsPage() {
       },
       {
         accessorKey: "description",
-        header: "Description",
+        header: t("assignments.colDescription"),
         cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ?? <span className="text-text-muted italic">—</span>}</span>,
       },
       {
         accessorKey: "createdAt",
-        header: "Created",
+        header: t("assignments.colCreated"),
         cell: (info: any) => (
           <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/roles/:id">
@@ -347,7 +278,7 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingRole, deletingId],
+    [deletingRole, deletingId, t],
   );
 
   // ── Columns ───────────────────────────────────────────────────────────────────
@@ -365,7 +296,7 @@ export default function AssignmentsPage() {
       },
       {
         accessorKey: "name",
-        header: "Room",
+        header: t("assignments.colRoom"),
         cell: ({ row }) => (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center shrink-0">
@@ -380,7 +311,7 @@ export default function AssignmentsPage() {
       },
       {
         accessorKey: "capacity",
-        header: "Capacity",
+        header: t("assignments.colCapacity"),
         cell: ({ row }) =>
           row.original.roomType === "WARD" && row.original.capacity != null ? (
             <div className="flex items-center gap-1.5 text-secondary text-sm">
@@ -393,14 +324,14 @@ export default function AssignmentsPage() {
       },
       {
         accessorKey: "createdAt",
-        header: "Created",
+        header: t("assignments.colCreated"),
         cell: (info: any) => (
           <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
         ),
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/rooms/:id">
@@ -431,7 +362,7 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingRoom, deletingId],
+    [deletingRoom, deletingId, t],
   );
 
 
@@ -448,7 +379,7 @@ export default function AssignmentsPage() {
       },
       {
         id: "employee",
-        header: "Employee",
+        header: t("assignments.colEmployee"),
         cell: ({ row }) => {
           const u = row.original.user;
           if (!u) return <span className="text-text-muted text-sm">—</span>;
@@ -471,7 +402,7 @@ export default function AssignmentsPage() {
       },
       {
         id: "department",
-        header: "Department",
+        header: t("assignments.colDepartment"),
         cell: ({ row }) => (
           <div className="flex items-center gap-1.5 text-secondary text-sm">
             <Building2 className="w-3.5 h-3.5 shrink-0" />
@@ -481,20 +412,20 @@ export default function AssignmentsPage() {
       },
       {
         id: "room",
-        header: "Room",
+        header: t("assignments.colRoom"),
         cell: ({ row }) => (
           <div className="flex items-center gap-1.5 text-secondary text-sm">
             <DoorOpen className="w-3.5 h-3.5 shrink-0" />
-            {row.original.room?.name ?? <span className="text-text-muted italic">Not assigned</span>}
+            {row.original.room?.name ?? <span className="text-text-muted italic">{t("assignments.notAssigned")}</span>}
           </div>
         ),
       },
       {
         id: "schedule",
-        header: "Schedule",
+        header: t("assignments.colSchedule"),
         cell: ({ row }) => {
           const schedules = row.original.schedules ?? [];
-          if (schedules.length === 0) return <span className="text-text-muted text-xs italic">No schedule</span>;
+          if (schedules.length === 0) return <span className="text-text-muted text-xs italic">{t("assignments.noSchedule")}</span>;
           return (
             <div className="flex flex-wrap gap-1">
               {schedules.map((s) => (
@@ -508,21 +439,21 @@ export default function AssignmentsPage() {
       },
       {
         id: "isActive",
-        header: "Status",
+        header: t("assignments.colStatus"),
         cell: ({ row }) =>
           row.original.isActive ? (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
-              <CheckCircle2 className="w-3 h-3" /> Active
+              <CheckCircle2 className="w-3 h-3" /> {t("assignments.active")}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-              <XCircle className="w-3 h-3" /> Inactive
+              <XCircle className="w-3 h-3" /> {t("assignments.inactive")}
             </span>
           ),
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/assignments/:id">
@@ -553,7 +484,7 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingAssignment, deletingId],
+    [deletingAssignment, deletingId, t],
   );
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -565,8 +496,8 @@ export default function AssignmentsPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">Assignments</h2>
-          <p className="text-secondary text-sm mt-0.5">Manage staff assignments, rooms and weekly schedules.</p>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("assignments.title")}</h2>
+          <p className="text-secondary text-sm mt-0.5">{t("assignments.description")}</p>
         </div>
 
         {/* Add button per tab */}
@@ -577,7 +508,7 @@ export default function AssignmentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Room
+              {t("assignments.addRoom")}
             </button>
           </Can>
         )}
@@ -588,7 +519,7 @@ export default function AssignmentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Role
+              {t("assignments.addRole")}
             </button>
           </Can>
         )}
@@ -599,7 +530,7 @@ export default function AssignmentsPage() {
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              New Assignment
+              {t("assignments.newAssignment")}
             </button>
           </Can>
         )}
@@ -632,20 +563,8 @@ export default function AssignmentsPage() {
           <DataTable columns={roleColumns} data={roles} />
         ) : tab === "permissions" ? (
           <PermissionsEditor roles={roles} loadingRoles={loadingRoles} />
-        ) : tab === "assignments" ? (
-          <DataTable columns={assignmentColumns} data={assignments} />
         ) : (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-xs text-text-muted">
-              {Object.entries(ROLE_STYLES).map(([role, s]) => (
-                <span key={role} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${s.bg} ${s.text}`}>
-                  {role}
-                </span>
-              ))}
-              <span className="ml-auto">Showing {assignments.filter((a) => a.isActive).length} active assignments</span>
-            </div>
-            <WeeklySchedule assignments={assignments.filter((a) => a.isActive)} />
-          </div>
+          <DataTable columns={assignmentColumns} data={assignments} />
         )}
       </motion.div>
 
@@ -653,8 +572,8 @@ export default function AssignmentsPage() {
       <Sheet
         isOpen={roomSheet.open}
         onClose={() => setRoomSheet({ open: false, editing: null })}
-        title={roomSheet.editing ? "Edit Room" : "Add New Room"}
-        description={roomSheet.editing ? "Update room information." : "Create a new room in the facility."}
+        title={roomSheet.editing ? t("assignments.editRoomTitle") : t("assignments.addRoomTitle")}
+        description={roomSheet.editing ? t("assignments.editRoomDesc") : t("assignments.addRoomDesc")}
       >
         <RoomForm
           key={roomSheet.editing?.id ?? "new-room"}
@@ -677,8 +596,8 @@ export default function AssignmentsPage() {
       <Sheet
         isOpen={roleSheet.open}
         onClose={() => setRoleSheet({ open: false, editing: null })}
-        title={roleSheet.editing ? "Edit Role" : "Add New Role"}
-        description={roleSheet.editing ? "Update role information." : "Create a new role for staff members."}
+        title={roleSheet.editing ? t("assignments.editRoleTitle") : t("assignments.addRoleTitle")}
+        description={roleSheet.editing ? t("assignments.editRoleDesc") : t("assignments.addRoleDesc")}
       >
         <RoleForm
           key={roleSheet.editing?.id ?? "new-role"}
@@ -700,8 +619,8 @@ export default function AssignmentsPage() {
       <Sheet
         isOpen={assignSheet.open}
         onClose={() => setAssignSheet({ open: false, editing: null })}
-        title={assignSheet.editing ? "Edit Assignment" : "New Assignment"}
-        description={assignSheet.editing ? "Update this assignment." : "Assign an employee to a department and room with a schedule."}
+        title={assignSheet.editing ? t("assignments.editAssignmentTitle") : t("assignments.newAssignment")}
+        description={assignSheet.editing ? t("assignments.editAssignmentDesc") : t("assignments.newAssignmentDesc")}
         className="max-w-lg"
       >
         <AssignmentForm

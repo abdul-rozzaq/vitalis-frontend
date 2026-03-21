@@ -1,6 +1,7 @@
 "use client";
 
 import { PatientForm } from "@/components/patients/patient-form";
+import { useI18n } from "@/i18n";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ export default function EditPatientPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: patientData, isLoading } = useQuery({
     queryKey: ["patient", id],
@@ -36,13 +38,13 @@ export default function EditPatientPage() {
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
         <Link href={`/patients/${id}`} className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to Patient
+          {t("patients.backToPatient")}
         </Link>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}>
-        <h2 className="text-xl font-semibold text-text tracking-tight">Edit Patient</h2>
-        <p className="text-secondary text-sm mt-0.5">Update the patient's personal information.</p>
+        <h2 className="text-xl font-semibold text-text tracking-tight">{t("patients.editPatientSheet")}</h2>
+        <p className="text-secondary text-sm mt-0.5">{t("patients.editPatientDesc")}</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>

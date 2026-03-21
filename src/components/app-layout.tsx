@@ -2,22 +2,15 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { useI18n } from "@/i18n";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import Lottie from "lottie-react";
-import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, User, UserPen, Users, Sun, Moon } from "lucide-react";
+import { Activity, Bell, Building2, Calendar, CreditCard, GitFork, LogOut, Moon, Sun, User, UserPen, Users } from "lucide-react";
 import { PatientSearch } from "./ui/patient-search";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { Can } from "./ui/can";
-
-const NAVIGATIONS = [
-  { label: "Patients", href: "/patients", icon: Users, method: "GET", path: "/api/patients" },
-  { label: "Appointments", href: "/appointments", icon: Calendar, method: "GET", path: "/api/appointments" },
-  { label: "Employees", href: "/employees", icon: UserPen, method: "GET", path: "/api/employees" },
-  { label: "Departments", href: "/departments", icon: Building2, method: "GET", path: "/api/departments" },
-  { label: "Payments", href: "/payments", icon: CreditCard, method: "GET", path: "/api/payments" },
-  { label: "Assignments", href: "/assignments", icon: GitFork, method: "GET", path: "/api/assignments" },
-];
 
 const IGNORE_PATHS = ["/login"];
 
@@ -25,6 +18,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
+
+  const NAVIGATIONS = [
+    { label: t("nav.patients"), href: "/patients", icon: Users, method: "GET", path: "/api/patients" },
+    { label: t("nav.appointments"), href: "/appointments", icon: Calendar, method: "GET", path: "/api/appointments" },
+    { label: t("nav.employees"), href: "/employees", icon: UserPen, method: "GET", path: "/api/employees" },
+    { label: t("nav.departments"), href: "/departments", icon: Building2, method: "GET", path: "/api/departments" },
+    { label: t("nav.payments"), href: "/payments", icon: CreditCard, method: "GET", path: "/api/payments" },
+    { label: t("nav.assignments"), href: "/assignments", icon: GitFork, method: "GET", path: "/api/assignments" },
+  ];
 
   if (IGNORE_PATHS.includes(pathname)) return <>{children}</>;
 
@@ -58,7 +61,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Navigation */}
         <nav className="flex-1 flex flex-col px-3 py-4 gap-0.5">
           {NAVIGATIONS.map((nav) => (
-            <Can key={nav.label} method={nav.method} path={nav.path}>
+            <Can key={nav.href} method={nav.method} path={nav.path}>
               <NavItem href={nav.href} icon={nav.icon} label={nav.label} active={pathname.startsWith(nav.href)} />
             </Can>
           ))}
@@ -82,7 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             className="w-full flex items-center gap-2.5 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-md transition-colors group cursor-pointer text-sm"
           >
             <LogOut className="w-4 h-4" />
-            <span className="font-medium">Sign Out</span>
+            <span className="font-medium">{t("nav.signOut")}</span>
           </button>
         </div>
       </aside>
@@ -95,7 +98,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <PatientSearch />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <button className="relative p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer">
               <Bell className="w-[18px] h-[18px]" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-danger-500 rounded-full"></span>
@@ -103,7 +107,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               onClick={toggleTheme}
               className="p-1.5 text-text-muted hover:text-text transition-colors cursor-pointer"
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
             >
               {theme === "dark" ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
@@ -116,8 +120,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// ─── Nav Item ─────────────────────────────────────────────────────────────────
 
 function NavItem({ icon: Icon, label, active = false, href }: { icon: any; label: string; active?: boolean; href: string }) {
   return (
