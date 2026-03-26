@@ -137,7 +137,8 @@
     "addNewTitle": "Add New Employee",
     "addNewDesc": "Create a new staff account and assign a role.",
     "editTitle": "Edit Employee",
-    "editDesc": "Modify details for an existing staff member."
+    "editDesc": "Modify details for an existing staff member.",
+    "backToEmployees": "Back to Employees"
   },
   "departments": {
     "title": "Departments",
@@ -424,6 +425,13 @@
     "roomTypeWard": "Ward",
     "startTime": "Start",
     "endTime": "End",
-    "noScheduleSlots": "No schedule slots yet — click \"Add slot\" to create one."
+    "noScheduleSlots": "No schedule slots yet — click \"Add slot\" to create one.",
+    "region": "Region",
+    "selectRegion": "Select region...",
+    "district": "District",
+    "selectDistrict": "Select district...",
+    "regionRequired": "Region is required",
+    "districtRequired": "District is required",
+    "birthDateRequired": "Birth date is required"
   }
 }

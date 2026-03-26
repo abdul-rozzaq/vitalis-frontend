@@ -1,23 +1,20 @@
 "use client";
 
-import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employee-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
-import { Sheet } from "@/components/ui/sheet";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Download, Edit, Filter, MoreVertical, Plus } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 interface Role {
   id: string;
   name: string;
-  description: string;
-  createdAt: string;
 }
 
 interface Employee {
@@ -30,7 +27,6 @@ interface Employee {
   photo?: string | null;
   role: Role;
   createdAt: string;
-  updatedAt: string;
 }
 
 const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
@@ -41,76 +37,13 @@ const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> =
 };
 
 export default function EmployeesPage() {
-  const queryClient = useQueryClient();
   const t = useTranslations();
 
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-
-  // ----- Queries ----- //
-
-  const { data: employeesData } = useQuery({
+  const { data: employeesData = [] } = useQuery({
     queryKey: ["employees"],
     queryFn: () => api.get("/users").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
-
-  const { data: rolesData } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
-
-  // ----- Mutations ----- //
-
-  const { mutateAsync: addEmployee } = useMutation({
-    mutationFn: (data: any) => api.post("/users", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-    },
-  });
-
-  const { mutateAsync: updateEmployee } = useMutation({
-    mutationFn: (data: any) => api.patch(`/users/${editingEmployee?.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-    },
-  });
-
-  // ----- Handlers ----- //
-
-  const handleAddEmployee = () => {
-    setEditingEmployee(null);
-    setIsSheetOpen(true);
-  };
-
-  const handleEditEmployee = (employee: Employee) => {
-    setEditingEmployee(employee);
-    setIsSheetOpen(true);
-  };
-
-  const handleFormSubmit = async (data: EmployeeSubmitData) => {
-    const { photoFile, ...rest } = data;
-
-    let photo = rest.photo;
-    if (photoFile) {
-      const formData = new FormData();
-      formData.append("photo", photoFile);
-      const res = await api.post("/uploads/photo", formData);
-      photo = res.data.url;
-    }
-
-    const payload = { ...rest, photo };
-
-    if (editingEmployee) {
-      await updateEmployee(payload);
-      setIsSheetOpen(false);
-      setEditingEmployee(null);
-    } else {
-      await addEmployee(payload);
-      setIsSheetOpen(false);
-    }
-  };
 
   const columns = useMemo<ColumnDef<Employee>[]>(
     () => [
@@ -166,11 +99,7 @@ export default function EmployeesPage() {
         header: t("employees.colJoined"),
         cell: (info: any) => (
           <span className="text-secondary text-sm">
-            {new Date(info.getValue()).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })}
+            {new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
           </span>
         ),
       },
@@ -180,13 +109,11 @@ export default function EmployeesPage() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/users/:id">
-              <button
-                onClick={() => handleEditEmployee(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title={t("employees.editTitle")}
-              >
-                <Edit className="w-4 h-4" />
-              </button>
+              <Link href={`/employees/${row.original.id}/edit`}>
+                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("employees.editTitle")}>
+                  <Edit className="w-4 h-4" />
+                </button>
+              </Link>
             </Can>
             <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
               <MoreVertical className="w-4 h-4" />
@@ -200,7 +127,6 @@ export default function EmployeesPage() {
 
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-      {/* Header Area */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("employees.title")}</h2>
@@ -217,48 +143,19 @@ export default function EmployeesPage() {
             {t("common.export")}
           </button>
           <Can method="POST" path="/api/users">
-            <button
-              onClick={handleAddEmployee}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t("employees.addEmployee")}
-            </button>
+            <Link href="/employees/new">
+              <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
+                <Plus className="w-3.5 h-3.5" />
+                {t("employees.addEmployee")}
+              </button>
+            </Link>
           </Can>
         </div>
       </motion.div>
 
-      {/* Main Table Content */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-        <DataTable columns={columns} data={employeesData || []} />
+        <DataTable columns={columns} data={employeesData} />
       </motion.div>
-
-      {/* Slide-over Sheet */}
-      <Sheet
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        title={editingEmployee ? t("employees.editTitle") : t("employees.addNewTitle")}
-        description={editingEmployee ? t("employees.editDesc") : t("employees.addNewDesc")}
-      >
-        <EmployeeForm
-          initialData={
-            editingEmployee
-              ? {
-                  first_name: editingEmployee.first_name,
-                  last_name: editingEmployee.last_name,
-                  email: editingEmployee.email,
-                  roleId: editingEmployee.role?.id,
-                  birthday: editingEmployee.birthday ?? undefined,
-                  phone: editingEmployee.phone ?? undefined,
-                  photo: editingEmployee.photo ?? undefined,
-                }
-              : undefined
-          }
-          roles={rolesData || []}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setIsSheetOpen(false)}
-        />
-      </Sheet>
     </div>
   );
 }

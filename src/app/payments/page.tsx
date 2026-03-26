@@ -300,7 +300,7 @@ export default function PaymentsPage() {
         header: t("payments.colAmount"),
         cell: (info: any) => (
           <span className="font-semibold text-text text-sm">
-            ${Number(info.getValue()).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {Number(info.getValue()).toLocaleString("uz-UZ")} so'm
           </span>
         ),
       },
@@ -403,7 +403,7 @@ export default function PaymentsPage() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard
           label={t("payments.totalRevenue")}
-          value={`$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+          value={`${totalRevenue.toLocaleString("uz-UZ")} so'm`}
           sub={t("payments.paidPayments")}
           icon={TrendingUp}
           color="bg-green-100 text-green-600"

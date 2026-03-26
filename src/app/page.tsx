@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Calendar, ChevronRight, Clock, DoorOpen, Plus, Users } from "lucide-react";
+import Link from "next/link";
 import { motion } from "motion/react";
 
 const recentPatients = [
@@ -141,10 +142,14 @@ export default function HomePage() {
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("dashboard.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("dashboard.welcome", { name: user.first_name })}</p>
         </div>
-        <button className="bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
-          <Plus className="w-4 h-4" />
-          {t("dashboard.newPatient")}
-        </button>
+        <Can method="POST" path="/api/patients">
+          <Link href="/patients/new">
+            <button className="bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+              <Plus className="w-4 h-4" />
+              {t("dashboard.newPatient")}
+            </button>
+          </Link>
+        </Can>
       </div>
 
       {/* Stats Grid */}

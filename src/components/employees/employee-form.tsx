@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Mail, Phone, Shield, Upload, User, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -31,16 +32,17 @@ interface EmployeeFormProps {
   roles: RoleOption[];
   onSubmit: (data: EmployeeSubmitData) => void;
   onCancel: () => void;
+  isPending?: boolean;
 }
 
-export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: EmployeeFormProps) {
+export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending }: EmployeeFormProps) {
   const t = useTranslations();
 
   const employeeSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
     email: z.email(t("forms.invalidEmail")),
-    password: z.string().min(6, t("forms.passwordTooShort")).optional().or(z.literal("")),
+    password: z.string().min(6, t("forms.passwordTooShort")),
     roleId: z.string().min(1, t("forms.roleRequired")),
     birthday: z.string().min(1, t("forms.birthdayRequired")),
     phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
@@ -240,8 +242,10 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel }: Employe
         </button>
         <button
           type="submit"
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+          disabled={isPending}
+          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
+          {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           {isEditing ? t("forms.updateEmployee") : t("forms.addEmployee")}
         </button>
       </div>

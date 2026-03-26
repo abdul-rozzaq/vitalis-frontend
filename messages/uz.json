@@ -137,7 +137,8 @@
     "addNewTitle": "Yangi xodim qo'shish",
     "addNewDesc": "Yangi xodim hisobi yaratish va rol belgilash.",
     "editTitle": "Xodimni tahrirlash",
-    "editDesc": "Mavjud xodim ma'lumotlarini o'zgartirish."
+    "editDesc": "Mavjud xodim ma'lumotlarini o'zgartirish.",
+    "backToEmployees": "Xodimlarga qaytish"
   },
   "departments": {
     "title": "Bo'limlar",
@@ -424,6 +425,13 @@
     "roomTypeWard": "Palatka",
     "startTime": "Boshlanish",
     "endTime": "Tugash",
-    "noScheduleSlots": "Hali jadval slotlari yo'q — qo'shish uchun \"Slot qo'shish\" tugmasini bosing."
+    "noScheduleSlots": "Hali jadval slotlari yo'q — qo'shish uchun \"Slot qo'shish\" tugmasini bosing.",
+    "region": "Viloyat",
+    "selectRegion": "Viloyatni tanlang...",
+    "district": "Tuman",
+    "selectDistrict": "Tumanni tanlang...",
+    "regionRequired": "Viloyat majburiy",
+    "districtRequired": "Tuman majburiy",
+    "birthDateRequired": "Tug'ilgan sana majburiy"
   }
 }

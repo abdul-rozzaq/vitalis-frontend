@@ -148,7 +148,7 @@ function PaymentCard({ event }: { event: TimelineEvent }) {
         </div>
       </div>
       <div className="text-right">
-        <p className={`text-base font-bold ${s.text}`}>${Number(event.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+        <p className={`text-base font-bold ${s.text}`}>{Number(event.amount).toLocaleString("uz-UZ")} so'm</p>
         <span className="text-xs text-text-muted">{formatTime(event.date)}</span>
       </div>
     </div>
