@@ -5,9 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # args:
-      #   - NEXT_PUBLIC_API_URL=http://172.21.0.20:9000/api
-    
+      args:
+        - NEXT_PUBLIC_API_URL=http://172.21.0.20:9000/api
+
     container_name: vitalis-frontend
 
     ports:
