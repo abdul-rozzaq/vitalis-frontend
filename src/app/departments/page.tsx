@@ -4,12 +4,12 @@ import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, ChevronRight, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { Building2, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -164,13 +164,13 @@ export default function DepartmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Link
+            {/* <Link
               href={`/departments/${row.original.id}`}
               className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
               title={t("departments.viewDepartment")}
             >
               <ChevronRight className="w-4 h-4" />
-            </Link>
+            </Link> */}
             <Can method="PATCH" path="/api/departments/:id">
               <button
                 onClick={() => handleEditDepartment(row.original)}
@@ -249,11 +249,11 @@ export default function DepartmentsPage() {
           initialData={
             editingDepartment
               ? {
-                  name: editingDepartment.name,
-                  description: editingDepartment.description,
-                  price: editingDepartment.price ?? undefined,
-                  parentId: editingDepartment.parentId ?? undefined,
-                }
+                name: editingDepartment.name,
+                description: editingDepartment.description,
+                price: editingDepartment.price ?? undefined,
+                parentId: editingDepartment.parentId ?? undefined,
+              }
               : undefined
           }
           departments={departmentsData ?? []}
