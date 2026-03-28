@@ -4,7 +4,7 @@ import { storageService, STORAGE_KEYS } from "@/services/storage";
 
 // Configure axios for the external backend
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://172.21.0.20:9000/api",
   withCredentials: true,
 });
 
