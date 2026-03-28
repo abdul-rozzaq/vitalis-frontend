@@ -2,12 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
+import { Calendar, CreditCard, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import * as z from "zod";
 import { api } from "@/lib/api";
+
+type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
 type PatientFormValues = {
   first_name: string;
@@ -16,6 +18,10 @@ type PatientFormValues = {
   gender: "male" | "female";
   birth_date: string;
   address?: string;
+  document_type?: DocumentType | null;
+  document_series?: string | null;
+  document_number?: string | null;
+  pinfl?: string | null;
   districtId?: string | null;
 };
 
@@ -40,6 +46,10 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     gender: z.enum(["male", "female"]),
     birth_date: z.string().min(1, t("forms.birthDateRequired")).transform((val) => new Date(val).toISOString()),
     address: z.string().optional(),
+    document_type: z.enum(["PASSPORT", "BIRTH_CERTIFICATE", "FOREIGN_PASSPORT", "RESIDENCE_PERMIT"]).nullable().optional(),
+    document_series: z.string().max(10).nullable().optional(),
+    document_number: z.string().max(20).nullable().optional(),
+    pinfl: z.string().regex(/^\d{14}$/, t("forms.pinflInvalid")).nullable().optional().or(z.literal("")),
     districtId: z.string().uuid(),
   });
 
@@ -162,6 +172,64 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           rows={3}
           className={cls(false, "resize-none")}
         />
+      </div>
+
+      {/* Document Information */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <CreditCard className="w-4 h-4 text-primary-500" />
+          {t("forms.documentType")}
+        </label>
+        <select {...register("document_type")} className={cls(!!errors.document_type)}>
+          <option value="">{t("forms.selectDocumentType")}</option>
+          <option value="PASSPORT">{t("forms.docTypePassport")}</option>
+          <option value="BIRTH_CERTIFICATE">{t("forms.docTypeBirthCertificate")}</option>
+          <option value="FOREIGN_PASSPORT">{t("forms.docTypeForeignPassport")}</option>
+          <option value="RESIDENCE_PERMIT">{t("forms.docTypeResidencePermit")}</option>
+        </select>
+        {errMsg(errors.document_type?.message)}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary-500" />
+            {t("forms.documentSeries")}
+          </label>
+          <input
+            {...register("document_series")}
+            placeholder={t("forms.documentSeriesPlaceholder")}
+            className={cls(!!errors.document_series)}
+          />
+          {errMsg(errors.document_series?.message)}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary-500" />
+            {t("forms.documentNumber")}
+          </label>
+          <input
+            {...register("document_number")}
+            placeholder={t("forms.documentNumberPlaceholder")}
+            className={cls(!!errors.document_number)}
+          />
+          {errMsg(errors.document_number?.message)}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <CreditCard className="w-4 h-4 text-primary-500" />
+          {t("forms.pinfl")}
+        </label>
+        <input
+          {...register("pinfl")}
+          placeholder={t("forms.pinflPlaceholder")}
+          maxLength={14}
+          className={cls(!!errors.pinfl)}
+        />
+        {errMsg(errors.pinfl?.message)}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

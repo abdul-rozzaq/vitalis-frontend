@@ -69,17 +69,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* User info + Logout */}
         <div className="px-3 py-3 border-t border-border space-y-1">
-          <div className="flex items-center gap-2.5 px-3 py-1.5">
-            <div className="w-7 h-7 bg-background rounded-full flex items-center justify-center border border-border shrink-0">
-              <User className="w-3.5 h-3.5 text-text-muted" />
+          <Link href="/settings">
+            <div className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors hover:bg-surface-hover cursor-pointer ${pathname === "/settings" ? "bg-primary-50" : ""}`}>
+              <div className="w-7 h-7 bg-background rounded-full flex items-center justify-center border border-border shrink-0">
+                <User className="w-3.5 h-3.5 text-text-muted" />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-sm font-medium leading-tight truncate ${pathname === "/settings" ? "text-primary" : "text-text"}`}>
+                  {user.first_name} {user.last_name}
+                </p>
+                <p className="text-[11px] text-text-muted truncate">{roleName}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-text leading-tight truncate">
-                {user.first_name} {user.last_name}
-              </p>
-              <p className="text-[11px] text-text-muted truncate">{roleName}</p>
-            </div>
-          </div>
+          </Link>
           <button
             onClick={() => logout()}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-md transition-colors group cursor-pointer text-sm"

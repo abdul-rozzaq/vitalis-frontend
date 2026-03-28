@@ -11,8 +11,9 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
+import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, ExternalLink, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -456,6 +457,13 @@ export default function AssignmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
+            <Link
+              href={`/assignments/${row.original.id}`}
+              className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors"
+              title={t("assignments.viewAssignment")}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
             <Can method="PATCH" path="/api/assignments/:id">
               <button
                 onClick={() => setAssignSheet({ open: true, editing: row.original })}

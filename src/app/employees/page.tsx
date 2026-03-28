@@ -21,9 +21,8 @@ interface Employee {
   id: string;
   first_name: string;
   last_name: string;
-  email: string;
+  phone: string;
   birthday?: string | null;
-  phone?: string | null;
   photo?: string | null;
   role: Role;
   createdAt: string;
@@ -80,8 +79,8 @@ export default function EmployeesPage() {
         },
       },
       {
-        accessorKey: "email",
-        header: t("employees.colEmail"),
+        accessorKey: "phone",
+        header: t("employees.colPhone"),
         cell: (info: any) => <span className="text-secondary text-sm font-mono">{info.getValue() as string}</span>,
       },
       {

@@ -49,13 +49,19 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
     { value: "COMPLETED", label: t("forms.apptStatusCompleted") },
   ];
 
+  function nowLocal() {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    return now.toISOString().slice(0, 16);
+  }
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentSchema) as any,
-    defaultValues: initialData || {},
+    defaultValues: { dateTime: nowLocal(), ...initialData },
   });
 
   const isEditing = !!initialData;

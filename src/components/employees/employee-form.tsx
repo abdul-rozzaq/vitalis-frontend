@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Mail, Phone, Shield, Upload, User, X } from "lucide-react";
+import { Calendar, Phone, Shield, Upload, User, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -12,11 +12,10 @@ import * as z from "zod";
 type EmployeeFormValues = {
   first_name: string;
   last_name: string;
-  email: string;
+  phone: string;
   password?: string;
   roleId: string;
   birthday: string;
-  phone: string;
   photo?: string;
 };
 
@@ -41,11 +40,10 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
   const employeeSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
-    email: z.email(t("forms.invalidEmail")),
+    phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
     password: z.string().min(6, t("forms.passwordTooShort")),
     roleId: z.string().min(1, t("forms.roleRequired")),
     birthday: z.string().min(1, t("forms.birthdayRequired")),
-    phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
     photo: z.string().max(500).optional(),
   });
 
@@ -156,16 +154,16 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Mail className="w-4 h-4 text-primary-500" />
-          {t("forms.email")}
+          <Phone className="w-4 h-4 text-primary-500" />
+          {t("forms.phone")}
         </label>
         <input
-          {...register("email")}
-          type="email"
-          placeholder="employee@vitalis.uz"
+          {...register("phone")}
+          type="tel"
+          placeholder="+998901234567"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.email && <p className="text-xs text-danger-600 font-medium">{errors.email.message}</p>}
+        {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
       </div>
 
       {!isEditing && (
@@ -203,33 +201,17 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
         {errors.roleId && <p className="text-xs text-danger-600 font-medium">{errors.roleId.message}</p>}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-primary-500" />
-            {t("forms.birthday")} <span className="text-danger-600">*</span>
-          </label>
-          <input
-            {...register("birthday")}
-            type="date"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
-          {errors.birthday && <p className="text-xs text-danger-600 font-medium">{errors.birthday.message}</p>}
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <Phone className="w-4 h-4 text-primary-500" />
-            {t("forms.phone")} <span className="text-danger-600">*</span>
-          </label>
-          <input
-            {...register("phone")}
-            type="tel"
-            placeholder="+998901234567"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
-          {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
-        </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-primary-500" />
+          {t("forms.birthday")}
+        </label>
+        <input
+          {...register("birthday")}
+          type="date"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+        {errors.birthday && <p className="text-xs text-danger-600 font-medium">{errors.birthday.message}</p>}
       </div>
 
       <div className="flex gap-3 pt-2">

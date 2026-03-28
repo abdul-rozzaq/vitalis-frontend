@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Building2, DollarSign, Edit, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, DollarSign, Edit, ExternalLink, GitBranch, Loader2, Plus, Trash2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -23,6 +23,26 @@ interface Department {
   parent?: { id: string; name: string } | null;
   children?: Department[];
 }
+
+type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+
+interface Appointment {
+  id: string;
+  dateTime: string;
+  createdAt: string;
+  status: AppointmentStatus;
+  patient: { id: string; first_name: string; last_name: string };
+  assignment: {
+    user: { first_name: string; last_name: string };
+    room?: { name: string } | null;
+  };
+}
+
+const STATUS_STYLES: Record<AppointmentStatus, { bg: string; text: string; icon: React.ElementType }> = {
+  PENDING:   { bg: "bg-amber-50 border-amber-200",  text: "text-amber-700",  icon: Clock },
+  CONFIRMED: { bg: "bg-green-50 border-green-200",  text: "text-green-700",  icon: CheckCircle2 },
+  CANCELLED: { bg: "bg-red-50 border-red-200",      text: "text-red-600",    icon: XCircle },
+};
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
   { bg: "bg-blue-100", icon: "text-blue-600" },
@@ -50,6 +70,12 @@ export default function DepartmentDetailPage() {
   const { data: department, isLoading } = useQuery<Department>({
     queryKey: ["departments", id],
     queryFn: () => api.get(`/departments/${id}`).then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: appointments = [], isLoading: loadingAppts } = useQuery<Appointment[]>({
+    queryKey: ["appointments", "department", id],
+    queryFn: () => api.get("/appointments", { params: { departmentId: id } }).then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -127,7 +153,9 @@ export default function DepartmentDetailPage() {
                 <Building2 className={`w-4 h-4 ${color.icon}`} />
               </div>
               <div>
-                <p className="font-medium text-text">{row.original.name}</p>
+                <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+                  {row.original.name}
+                </Link>
                 {row.original.description && (
                   <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>
                 )}
@@ -155,6 +183,13 @@ export default function DepartmentDetailPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
+            <Link
+              href={`/departments/${row.original.id}`}
+              className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors"
+              title={t("departments.viewDepartment")}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
             <Can method="PATCH" path="/api/departments/:id">
               <button
                 onClick={() => handleEditSubDept(row.original)}
@@ -267,11 +302,66 @@ export default function DepartmentDetailPage() {
         <DataTable columns={columns} data={department.children ?? []} />
       </motion.div>
 
+      {/* Appointments */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4">
+        <div>
+          <h3 className="text-base font-semibold text-text">{t("appointments.title")}</h3>
+          <p className="text-secondary text-sm mt-0.5">{t("departments.appointmentsDesc", { name: department.name })}</p>
+        </div>
+
+        {loadingAppts ? (
+          <div className="bg-surface border border-border rounded-lg h-32 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 text-text-muted animate-spin" />
+          </div>
+        ) : appointments.length === 0 ? (
+          <div className="bg-surface border border-border rounded-lg py-10 text-center">
+            <Calendar className="w-8 h-8 text-text-muted mx-auto mb-2" />
+            <p className="text-sm text-secondary">{t("departments.noAppointments")}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {appointments.map((appt) => {
+              const s = STATUS_STYLES[appt.status] ?? STATUS_STYLES.PENDING;
+              const StatusIcon = s.icon;
+              return (
+                <div key={appt.id} className={`flex items-center gap-4 rounded-lg border px-4 py-3 ${s.bg}`}>
+                  <div className="shrink-0">
+                    <StatusIcon className={`w-4 h-4 ${s.text}`} />
+                  </div>
+                  <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+                    <div className="flex items-center gap-1.5 text-sm text-text font-medium truncate">
+                      <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                      <Link href={`/patients/${appt.patient.id}`} className="truncate hover:text-primary transition-colors">
+                        {appt.patient.first_name} {appt.patient.last_name}
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-secondary truncate">
+                      <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                      Dr. {appt.assignment.user.first_name} {appt.assignment.user.last_name}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-secondary">
+                      <Calendar className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                      {new Date(appt.dateTime).toLocaleString("uz-UZ", {
+                        year: "numeric", month: "short", day: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>
+                    {appt.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
+
       {/* Sheet */}
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        title={editingSubDept ? t("departments.editSubTitle") : t("departments.addSubTitle")}
+        title={editingSubDept ? t("departments.editSubTitle") : t("departments.addSubTitle", { name: department.name })}
         description={
           editingSubDept
             ? t("departments.editSubDesc")

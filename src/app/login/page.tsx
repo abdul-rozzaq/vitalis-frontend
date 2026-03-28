@@ -3,13 +3,13 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Lock, Mail, Stethoscope } from "lucide-react";
+import { Loader2, Lock, Phone, Stethoscope } from "lucide-react";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 type LoginFormValues = {
-  email: string;
+  phone: string;
   password: string;
 };
 
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const t = useTranslations();
 
   const loginSchema = z.object({
-    email: z.email(t("login.emailInvalid")),
+    phone: z.string().regex(/^\+998[0-9]{9}$/, t("login.phoneInvalid")),
     password: z.string(),
   });
 
@@ -29,8 +29,8 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "admin@vitalis.uz",
-      password: "admin",
+      phone: "+998",
+      password: "",
     },
   });
 
@@ -52,17 +52,17 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-text-muted mb-1.5 ml-0.5">{t("login.emailLabel")}</label>
+              <label className="block text-xs font-medium uppercase tracking-wider text-text-muted mb-1.5 ml-0.5">{t("login.phoneLabel")}</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                 <input
-                  {...register("email")}
-                  type="email"
-                  placeholder={t("login.emailPlaceholder")}
+                  {...register("phone")}
+                  type="tel"
+                  placeholder={t("login.phonePlaceholder")}
                   className="w-full bg-background border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-colors"
                 />
               </div>
-              {errors.email && <p className="text-danger-600 text-xs mt-1 ml-0.5">{errors.email.message}</p>}
+              {errors.phone && <p className="text-danger-600 text-xs mt-1 ml-0.5">{errors.phone.message}</p>}
             </div>
 
             <div>

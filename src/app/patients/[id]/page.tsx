@@ -7,13 +7,15 @@ import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, CreditCard, Download, Edit, FileText, ImageIcon, MapPin, Paperclip, Phone, Plus, Upload, User, XCircle } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, CreditCard, Download, Edit, FileText, Hash, ImageIcon, MapPin, Paperclip, Phone, Plus, Upload, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
+
+type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
 interface Patient {
   id: string;
@@ -23,6 +25,10 @@ interface Patient {
   gender: "male" | "female";
   birth_date: string | null;
   address?: string;
+  document_type?: DocumentType | null;
+  document_series?: string | null;
+  document_number?: string | null;
+  pinfl?: string | null;
 }
 
 interface TimelineEvent {
@@ -372,6 +378,23 @@ export default function PatientDetailPage() {
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>{patient.address}</span>
+                </div>
+              )}
+              {(patient.document_type || patient.document_series || patient.document_number) && (
+                <div className="flex items-start gap-2.5 text-sm text-secondary">
+                  <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                  <span>
+                    {patient.document_type?.replace(/_/g, " ")}
+                    {(patient.document_series || patient.document_number) && (
+                      <span className="font-mono"> {patient.document_series}{patient.document_number}</span>
+                    )}
+                  </span>
+                </div>
+              )}
+              {patient.pinfl && (
+                <div className="flex items-center gap-2.5 text-sm text-secondary">
+                  <Hash className="w-4 h-4 text-text-muted shrink-0" />
+                  <span className="font-mono">{patient.pinfl}</span>
                 </div>
               )}
             </div>

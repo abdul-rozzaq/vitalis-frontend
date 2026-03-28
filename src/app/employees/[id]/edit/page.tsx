@@ -72,10 +72,9 @@ export default function EditEmployeePage() {
             initialData={{
               first_name: employee.first_name,
               last_name: employee.last_name,
-              email: employee.email,
+              phone: employee.phone ?? undefined,
               roleId: employee.role?.id,
               birthday: employee.birthday ?? undefined,
-              phone: employee.phone ?? undefined,
               photo: employee.photo ?? undefined,
             }}
             roles={rolesData}
