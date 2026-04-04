@@ -41,7 +41,9 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
     phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
-    password: z.string().min(6, t("forms.passwordTooShort")),
+    password: initialData
+      ? z.string().optional()
+      : z.string().min(6, t("forms.passwordTooShort")),
     roleId: z.string().min(1, t("forms.roleRequired")),
     birthday: z.string().min(1, t("forms.birthdayRequired")),
     photo: z.string().max(500).optional(),

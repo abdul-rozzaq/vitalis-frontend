@@ -2,16 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, CreditCard, DollarSign, FileText, Users } from "lucide-react";
+import { Building2, CreditCard, FileText, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 type PaymentFormValues = {
-  patient_id: string;
-  department_id: string;
-  amount: string;
-  payment_method: "CASH" | "CARD" | "INSURANCE" | "BANK_TRANSFER";
-  status: "PAID" | "PENDING" | "CANCELLED";
+  patientId: string;
+  departmentId: string;
+  amount: number;
+  method: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
+  status: "PAID" | "UNPAID";
   description?: string;
 };
 
@@ -38,25 +38,24 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
   const t = useTranslations();
 
   const paymentSchema = z.object({
-    patient_id: z.string().min(1, t("forms.selectPatient")),
-    department_id: z.string().min(1, t("forms.selectDepartment")),
-    amount: z.string().min(1, t("forms.amountRequired")),
-    payment_method: z.enum(["CASH", "CARD", "INSURANCE", "BANK_TRANSFER"]),
-    status: z.enum(["PAID", "PENDING", "CANCELLED"]),
+    patientId: z.string().min(1, t("forms.selectPatient")),
+    departmentId: z.string().min(1, t("forms.selectDepartment")),
+    amount: z.number().positive(t("forms.amountRequired")),
+    method: z.enum(["CASH", "CREDIT_CARD", "DEBIT_CARD", "PAYPAL"]),
+    status: z.enum(["PAID", "UNPAID"]),
     description: z.string().optional(),
   });
 
   const PAYMENT_METHODS = [
     { value: "CASH", label: t("forms.methodCash") },
-    { value: "CARD", label: t("forms.methodCard") },
-    { value: "INSURANCE", label: t("forms.methodInsurance") },
-    { value: "BANK_TRANSFER", label: t("forms.methodBankTransfer") },
+    { value: "CREDIT_CARD", label: t("forms.methodCreditCard") },
+    { value: "DEBIT_CARD", label: t("forms.methodDebitCard") },
+    { value: "PAYPAL", label: t("forms.methodPaypal") },
   ];
 
   const PAYMENT_STATUSES = [
     { value: "PAID", label: t("forms.statusPaid") },
-    { value: "PENDING", label: t("forms.statusPending") },
-    { value: "CANCELLED", label: t("forms.statusCancelled") },
+    { value: "UNPAID", label: t("forms.statusUnpaid") },
   ];
 
   const {
@@ -66,8 +65,8 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema) as any,
     defaultValues: initialData || {
-      payment_method: "CASH",
-      status: "PENDING",
+      method: "CASH",
+      status: "UNPAID",
     },
   });
 
@@ -82,7 +81,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
           {t("forms.patient")}
         </label>
         <select
-          {...register("patient_id")}
+          {...register("patientId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">{t("forms.selectPatientOption")}</option>
@@ -92,7 +91,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             </option>
           ))}
         </select>
-        {errors.patient_id && <p className="text-xs text-danger-600 font-medium">{errors.patient_id.message}</p>}
+        {errors.patientId && <p className="text-xs text-danger-600 font-medium">{errors.patientId.message}</p>}
       </div>
 
       {/* Department */}
@@ -102,7 +101,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
           {t("forms.department")}
         </label>
         <select
-          {...register("department_id")}
+          {...register("departmentId")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">{t("forms.selectDepartmentOption")}</option>
@@ -112,24 +111,24 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             </option>
           ))}
         </select>
-        {errors.department_id && <p className="text-xs text-danger-600 font-medium">{errors.department_id.message}</p>}
+        {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
       </div>
 
       {/* Amount */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-primary-500" />
+          <CreditCard className="w-4 h-4 text-primary-500" />
           {t("forms.amount")}
         </label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">UZS</span>
           <input
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
             type="number"
             min="0"
             step="0.01"
             placeholder="0.00"
-            className="w-full bg-surface border border-border rounded-md pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            className="w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
         </div>
         {errors.amount && <p className="text-xs text-danger-600 font-medium">{errors.amount.message}</p>}
@@ -143,7 +142,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             {t("forms.method")}
           </label>
           <select
-            {...register("payment_method")}
+            {...register("method")}
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
             {PAYMENT_METHODS.map((m) => (

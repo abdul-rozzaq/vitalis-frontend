@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, CreditCard, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as z from "zod";
 import { api } from "@/lib/api";
 
@@ -76,6 +76,12 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     enabled: !!selectedRegionId,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (initialData?.districtId && districts.length > 0) {
+      setValue("districtId", initialData.districtId);
+    }
+  }, [districts, initialData?.districtId, setValue]);
 
   const cls = (hasError: boolean, extra = "") =>
     `w-full bg-surface border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all shadow-sm ${

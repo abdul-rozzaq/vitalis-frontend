@@ -3,8 +3,9 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Lock, Phone, Stethoscope } from "lucide-react";
+import { Loader2, Lock, Phone } from "lucide-react";
 import { motion } from "motion/react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -43,8 +44,8 @@ export default function LoginPage() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-sm">
         <div className="bg-surface rounded-lg border border-border p-6 md:p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-3">
-              <Stethoscope className="w-6 h-6 text-primary" />
+            <div className="w-40 h-14 flex items-center justify-center mb-3">
+              <Image src="/logo.png" alt="Vitalis logo" width={160} height={56} className="w-40 h-14 object-contain" priority />
             </div>
             <h1 className="text-xl font-semibold text-text tracking-tight">{t("login.title")}</h1>
             <p className="text-secondary text-sm mt-0.5">{t("login.subtitle")}</p>

@@ -4,12 +4,12 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Filter, Loader2, MoreVertical, Plus } from "lucide-react";
+import { Download, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface Patient {
   id: string;
@@ -18,17 +18,65 @@ interface Patient {
   phone_number: string;
   gender: "male" | "female";
   birth_date: string | null;
-  // address?: string;
 }
 
 export default function PatientsPage() {
   const t = useTranslations();
+  const queryClient = useQueryClient();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
+
+  const { mutateAsync: deletePatient, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => api.delete(`/patients/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      setDeletingId(null);
+    },
+  });
+
+  const filteredPatients = useMemo(
+    () =>
+      filterText.trim()
+        ? patientsData.filter((p: Patient) =>
+            `${p.first_name} ${p.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
+            (p.phone_number ?? "").includes(filterText),
+          )
+        : patientsData,
+    [patientsData, filterText],
+  );
+
+  const handleExport = () => {
+    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colBirthDate"), t("patients.colPhone")];
+    const rows = patientsData.map((p: Patient) => [
+      p.id,
+      `${p.first_name} ${p.last_name}`,
+      p.gender,
+      p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
+      p.phone_number,
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map((cell: string) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `patients-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm(t("patients.deleteConfirm"))) {
+      setDeletingId(id);
+      deletePatient(id);
+    }
+  };
 
   const columns = useMemo<ColumnDef<Patient>[]>(
     () => [
@@ -38,7 +86,6 @@ export default function PatientsPage() {
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
-
           return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
         },
       },
@@ -72,23 +119,30 @@ export default function PatientsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="PUT" path={`/api/patients/:id`}>
+            <Can method="PUT" path="/api/patients/:id">
               <Link href={`/patients/${row.original.id}/edit`}>
                 <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
             </Can>
-            <Can method="DELETE" path={`/api/patients/:id`}>
-              <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
-                <MoreVertical className="w-4 h-4" />
+            <Can method="DELETE" path="/api/patients/:id">
+              <button
+                onClick={() => handleDelete(row.original.id)}
+                disabled={isDeleting && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title={t("patients.deletePatient")}
+              >
+                {isDeleting && deletingId === row.original.id
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
         ),
       },
     ],
-    [t],
+    [t, isDeleting, deletingId],
   );
 
   return (
@@ -101,15 +155,31 @@ export default function PatientsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          {filterOpen && (
+            <input
+              autoFocus
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              placeholder={t("common.filterPlaceholder")}
+              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
+            />
+          )}
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
           </button>
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button
+            onClick={handleExport}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
-          <Can method="POST" path={`/api/patients`}>
+          <Can method="POST" path="/api/patients">
             <Link href="/patients/new">
               <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
                 <Plus className="w-3.5 h-3.5" />
@@ -127,10 +197,9 @@ export default function PatientsPage() {
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={patientsData} />
+          <DataTable columns={columns} data={filteredPatients} />
         )}
       </motion.div>
-
     </div>
   );
 }

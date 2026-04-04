@@ -56,7 +56,9 @@ export default function EditPatientPage() {
           <PatientForm
             initialData={{
               ...patient,
-              birth_date: patient.birth_date ?? undefined,
+              birth_date: patient.birth_date
+                ? new Date(patient.birth_date).toISOString().split('T')[0]
+                : undefined,
             }}
             onSubmit={(data) => updatePatient(data)}
             onCancel={() => router.push(`/patients/${id}`)}

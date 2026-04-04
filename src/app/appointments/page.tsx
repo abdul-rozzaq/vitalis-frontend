@@ -48,6 +48,10 @@ export default function AppointmentsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pinMap, setPinMap] = useState<Record<string, string | null>>({});
+  const [loadingPinId, setLoadingPinId] = useState<string | null>(null);
 
   const { data: appointmentsData, isLoading } = useQuery<Appointment[]>({
     queryKey: ["appointments"],
@@ -96,7 +100,7 @@ export default function AppointmentsPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this appointment?")) {
+    if (confirm(t("appointments.deleteConfirm"))) {
       setDeletingId(id);
       deleteAppointment(id);
     }
@@ -113,6 +117,35 @@ export default function AppointmentsPage() {
         setIsSheetOpen(false);
       });
     }
+  };
+
+  const filteredAppointments = useMemo(
+    () =>
+      filterText.trim()
+        ? (appointmentsData ?? []).filter((a: Appointment) =>
+            `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.toLowerCase().includes(filterText.toLowerCase()),
+          )
+        : (appointmentsData ?? []),
+    [appointmentsData, filterText],
+  );
+
+  const handleExport = () => {
+    const appts = appointmentsData ?? [];
+    const headers = [t("appointments.colPatient"), t("appointments.colAssignment"), t("appointments.colDateTime"), t("appointments.colStatus")];
+    const rows = appts.map((a: Appointment) => [
+      `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.trim(),
+      a.assignment ? `${a.assignment.user?.first_name} ${a.assignment.user?.last_name} — ${a.assignment.department?.name}` : "",
+      a.dateTime ? new Date(a.dateTime).toLocaleString() : "",
+      a.status,
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const el = document.createElement("a");
+    el.href = url;
+    el.download = `appointments-${new Date().toISOString().slice(0, 10)}.csv`;
+    el.click();
+    URL.revokeObjectURL(url);
   };
 
   const patients = patientsData.map((p) => ({ id: p.id, name: `${p.first_name} ${p.last_name}` }));
@@ -189,6 +222,36 @@ export default function AppointmentsPage() {
         },
       },
       {
+        id: "accessCode",
+        header: t("appointments.colAccessCode"),
+        cell: ({ row }) => {
+          const id = row.original.id;
+          const pin = pinMap[id];
+          return (
+            <div className="flex items-center gap-2">
+              {pin !== undefined ? (
+                <span className="font-mono text-xs bg-surface-hover px-2 py-0.5 rounded border border-border tracking-widest">
+                  {pin ?? "—"}
+                </span>
+              ) : (
+                <button
+                  onClick={async () => {
+                    setLoadingPinId(id);
+                    const res = await api.post(`/appointments/${id}/access-code`);
+                    setPinMap((prev) => ({ ...prev, [id]: res.data.accessCode }));
+                    setLoadingPinId(null);
+                  }}
+                  disabled={loadingPinId === id}
+                  className="text-xs text-primary hover:underline cursor-pointer disabled:opacity-40"
+                >
+                  {loadingPinId === id ? <Loader2 className="w-3 h-3 animate-spin" /> : t("appointments.showPin")}
+                </button>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         id: "actions",
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
@@ -216,7 +279,7 @@ export default function AppointmentsPage() {
         ),
       },
     ],
-    [isDeleting, deletingId, t],
+    [isDeleting, deletingId, t, pinMap, loadingPinId],
   );
 
   return (
@@ -228,11 +291,27 @@ export default function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          {filterOpen && (
+            <input
+              autoFocus
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              placeholder={t("common.filterPlaceholder")}
+              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
+            />
+          )}
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
           </button>
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button
+            onClick={handleExport}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
@@ -254,7 +333,7 @@ export default function AppointmentsPage() {
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={appointmentsData ?? []} />
+          <DataTable columns={columns} data={filteredAppointments} />
         )}
       </motion.div>
 

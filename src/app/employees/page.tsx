@@ -4,13 +4,13 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Filter, MoreVertical, Plus } from "lucide-react";
+import { Download, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface Role {
   id: string;
@@ -37,12 +37,61 @@ const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> =
 
 export default function EmployeesPage() {
   const t = useTranslations();
+  const queryClient = useQueryClient();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const { data: employeesData = [] } = useQuery({
     queryKey: ["employees"],
     queryFn: () => api.get("/users").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
+
+  const { mutateAsync: deleteEmployee, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => api.delete(`/users/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      setDeletingId(null);
+    },
+  });
+
+  const filteredEmployees = useMemo(
+    () =>
+      filterText.trim()
+        ? employeesData.filter((e: Employee) =>
+            `${e.first_name} ${e.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
+            (e.phone ?? "").includes(filterText),
+          )
+        : employeesData,
+    [employeesData, filterText],
+  );
+
+  const handleExport = () => {
+    const headers = ["#", t("employees.colFullName"), t("employees.colPhone"), t("employees.colRole"), t("employees.colJoined")];
+    const rows = employeesData.map((e: Employee, idx: number) => [
+      idx + 1,
+      `${e.first_name} ${e.last_name}`,
+      e.phone ?? "",
+      e.role?.name ?? "",
+      e.createdAt ? new Date(e.createdAt).toLocaleDateString() : "",
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map((cell: string) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm(t("employees.deleteConfirm"))) {
+      setDeletingId(id);
+      deleteEmployee(id);
+    }
+  };
 
   const columns = useMemo<ColumnDef<Employee>[]>(
     () => [
@@ -114,14 +163,23 @@ export default function EmployeesPage() {
                 </button>
               </Link>
             </Can>
-            <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
-              <MoreVertical className="w-4 h-4" />
-            </button>
+            <Can method="DELETE" path="/api/users/:id">
+              <button
+                onClick={() => handleDelete(row.original.id)}
+                disabled={isDeleting && deletingId === row.original.id}
+                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                title={t("employees.deleteEmployee")}
+              >
+                {isDeleting && deletingId === row.original.id
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Trash2 className="w-4 h-4" />}
+              </button>
+            </Can>
           </div>
         ),
       },
     ],
-    [t],
+    [t, isDeleting, deletingId],
   );
 
   return (
@@ -133,11 +191,27 @@ export default function EmployeesPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          {filterOpen && (
+            <input
+              autoFocus
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              placeholder={t("common.filterPlaceholder")}
+              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
+            />
+          )}
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
           </button>
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button
+            onClick={handleExport}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
@@ -153,7 +227,7 @@ export default function EmployeesPage() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-        <DataTable columns={columns} data={employeesData} />
+        <DataTable columns={columns} data={filteredEmployees} />
       </motion.div>
     </div>
   );

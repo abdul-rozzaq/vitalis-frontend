@@ -16,17 +16,15 @@ import { useMemo, useState } from "react";
 
 interface Payment {
   id: string;
-  // flat fields (may come from API or be derived below)
   patient_id: string;
   patient_name?: string;
   department_id: string;
   department_name?: string;
   amount: number;
-  payment_method: "CASH" | "CARD" | "INSURANCE" | "BANK_TRANSFER";
-  status: "PAID" | "PENDING" | "CANCELLED";
+  method: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
+  status: "PAID" | "UNPAID";
   description?: string;
   createdAt: string;
-  // nested relations that backend may return
   patient?: { id: string; first_name: string; last_name: string };
   department?: { id: string; name: string };
 }
@@ -35,10 +33,11 @@ interface Payment {
 function normalizePayment(p: any): Payment {
   return {
     ...p,
-    patient_id: p.patient_id ?? p.patient?.id ?? "",
+    patient_id: p.patientId ?? p.patient_id ?? p.patient?.id ?? "",
     patient_name: p.patient_name ?? (p.patient ? `${p.patient.first_name} ${p.patient.last_name}` : undefined),
-    department_id: p.department_id ?? p.department?.id ?? "",
+    department_id: p.departmentId ?? p.department_id ?? p.department?.id ?? "",
     department_name: p.department_name ?? p.department?.name ?? undefined,
+    method: p.method ?? p.payment_method,
   };
 }
 
@@ -79,7 +78,7 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d1",
     department_name: "Cardiology",
     amount: 450.0,
-    payment_method: "CARD",
+    method: "CREDIT_CARD",
     status: "PAID",
     description: "Routine cardiac checkup",
     createdAt: "2026-02-20T10:30:00.000Z",
@@ -91,8 +90,8 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d5",
     department_name: "Emergency",
     amount: 1200.0,
-    payment_method: "INSURANCE",
-    status: "PENDING",
+    method: "CASH",
+    status: "UNPAID",
     description: "Emergency room visit",
     createdAt: "2026-02-21T14:15:00.000Z",
   },
@@ -103,7 +102,7 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d3",
     department_name: "Pediatrics",
     amount: 280.5,
-    payment_method: "CASH",
+    method: "CASH",
     status: "PAID",
     description: "Pediatric consultation",
     createdAt: "2026-02-22T09:00:00.000Z",
@@ -115,7 +114,7 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d4",
     department_name: "Orthopedics",
     amount: 850.0,
-    payment_method: "BANK_TRANSFER",
+    method: "DEBIT_CARD",
     status: "PAID",
     description: "Knee X-ray & consultation",
     createdAt: "2026-02-23T11:45:00.000Z",
@@ -127,8 +126,8 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d6",
     department_name: "Radiology",
     amount: 320.0,
-    payment_method: "CARD",
-    status: "CANCELLED",
+    method: "CREDIT_CARD",
+    status: "UNPAID",
     description: "MRI scan",
     createdAt: "2026-02-24T16:00:00.000Z",
   },
@@ -139,26 +138,25 @@ const MOCK_PAYMENTS: Payment[] = [
     department_id: "d2",
     department_name: "Neurology",
     amount: 600.0,
-    payment_method: "INSURANCE",
-    status: "PENDING",
+    method: "PAYPAL",
+    status: "UNPAID",
     description: "Neurological assessment",
     createdAt: "2026-02-25T13:20:00.000Z",
   },
 ];
 
-// ─── Status & Method styles ───────────────────────────────────────────────────
+// ─── Static style maps (bg/text only — labels come from t() inside component) ──
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  PAID: { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500", label: "Paid" },
-  PENDING: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500", label: "Pending" },
-  CANCELLED: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500", label: "Cancelled" },
+const STATUS_STYLE_MAP: Record<string, { bg: string; text: string; dot: string }> = {
+  PAID:   { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
+  UNPAID: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
 };
 
-const METHOD_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  CASH: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Cash" },
-  CARD: { bg: "bg-blue-100", text: "text-blue-700", label: "Card" },
-  INSURANCE: { bg: "bg-purple-100", text: "text-purple-700", label: "Insurance" },
-  BANK_TRANSFER: { bg: "bg-slate-100", text: "text-slate-700", label: "Bank Transfer" },
+const METHOD_STYLE_MAP: Record<string, { bg: string; text: string }> = {
+  CASH:        { bg: "bg-emerald-100", text: "text-emerald-700" },
+  CREDIT_CARD: { bg: "bg-blue-100",    text: "text-blue-700" },
+  DEBIT_CARD:  { bg: "bg-indigo-100",  text: "text-indigo-700" },
+  PAYPAL:      { bg: "bg-slate-100",   text: "text-slate-700" },
 };
 
 // ─── Summary Card ─────────────────────────────────────────────────────────────
@@ -186,6 +184,20 @@ export default function PaymentsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // ── Translation maps (inside component so t() is available) ─────────────────
+  const STATUS_LABELS: Record<string, string> = {
+    PAID:   t("payments.statusPaid"),
+    UNPAID: t("payments.statusUnpaid"),
+  };
+  const METHOD_LABELS: Record<string, string> = {
+    CASH:        t("payments.methodCash"),
+    CREDIT_CARD: t("payments.methodCreditCard"),
+    DEBIT_CARD:  t("payments.methodDebitCard"),
+    PAYPAL:      t("payments.methodPaypal"),
+  };
 
   const { data: paymentsRaw, isLoading: isLoadingPayments } = useQuery({
     queryKey: ["payments"],
@@ -230,8 +242,40 @@ export default function PaymentsPage() {
 
   // Summary stats
   const totalRevenue = payments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0);
-  const pendingCount = payments.filter((p) => p.status === "PENDING").length;
+  const unpaidCount = payments.filter((p) => p.status === "UNPAID").length;
   const paidCount = payments.filter((p) => p.status === "PAID").length;
+
+  const filteredPayments = useMemo(
+    () =>
+      filterText.trim()
+        ? payments.filter(
+            (p: Payment) =>
+              (p.patient_name ?? "").toLowerCase().includes(filterText.toLowerCase()) ||
+              (p.department_name ?? "").toLowerCase().includes(filterText.toLowerCase()),
+          )
+        : payments,
+    [payments, filterText],
+  );
+
+  const handleExport = () => {
+    const headers = [t("payments.colPatient"), t("payments.colDepartment"), t("payments.colAmount"), t("payments.colMethod"), t("payments.colStatus"), t("payments.colDate")];
+    const rows = payments.map((p: Payment) => [
+      p.patient_name ?? "",
+      p.department_name ?? "",
+      p.amount,
+      METHOD_LABELS[p.method] ?? p.method,
+      STATUS_LABELS[p.status] ?? p.status,
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payments-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleAdd = () => {
     setEditingPayment(null);
@@ -248,7 +292,15 @@ export default function PaymentsPage() {
     }
   };
   const handleSubmit = (data: any) => {
-    const action = editingPayment ? updatePayment(data) : addPayment(data);
+    const payload = {
+      patientId: data.patientId,
+      departmentId: data.departmentId,
+      amount: Number(data.amount),
+      method: data.method,
+      status: data.status,
+      description: data.description,
+    };
+    const action = editingPayment ? updatePayment(payload) : addPayment(payload);
     action.then(() => {
       setIsSheetOpen(false);
       setEditingPayment(null);
@@ -305,15 +357,16 @@ export default function PaymentsPage() {
         ),
       },
       {
-        accessorKey: "payment_method",
+        accessorKey: "method",
         header: t("payments.colMethod"),
         cell: (info: any) => {
           const method = info.getValue() as string;
-          const s = METHOD_STYLES[method] ?? { bg: "bg-gray-100", text: "text-gray-700", label: method };
+          const s = METHOD_STYLE_MAP[method] ?? { bg: "bg-gray-100", text: "text-gray-700" };
+          const label = METHOD_LABELS[method] ?? method;
           return (
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
               <CreditCard className="w-3 h-3" />
-              {s.label}
+              {label}
             </span>
           );
         },
@@ -323,11 +376,12 @@ export default function PaymentsPage() {
         header: t("payments.colStatus"),
         cell: (info: any) => {
           const status = info.getValue() as string;
-          const s = STATUS_STYLES[status] ?? { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500", label: status };
+          const s = STATUS_STYLE_MAP[status] ?? { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
+          const label = STATUS_LABELS[status] ?? status;
           return (
             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-              {s.label}
+              {label}
             </span>
           );
         },
@@ -367,7 +421,7 @@ export default function PaymentsPage() {
         ),
       },
     ],
-    [t],
+    [t, isDeleting, deletingId, STATUS_LABELS, METHOD_LABELS],
   );
 
   return (
@@ -379,11 +433,27 @@ export default function PaymentsPage() {
           <p className="text-secondary text-sm mt-0.5">{t("payments.description")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          {filterOpen && (
+            <input
+              autoFocus
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              placeholder={t("common.filterPlaceholder")}
+              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
+            />
+          )}
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
           </button>
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+          <button
+            onClick={handleExport}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
@@ -410,7 +480,7 @@ export default function PaymentsPage() {
         />
         <SummaryCard label={t("payments.totalPayments")} value={String(payments.length)} sub={t("payments.allRecords")} icon={CreditCard} color="bg-blue-100 text-blue-600" />
         <SummaryCard label={t("payments.paid")} value={String(paidCount)} sub={t("payments.completed")} icon={Users} color="bg-primary-100 text-primary" />
-        <SummaryCard label={t("payments.pending")} value={String(pendingCount)} sub={t("payments.awaitingPayment")} icon={Building2} color="bg-amber-100 text-amber-600" />
+        <SummaryCard label={t("payments.pending")} value={String(unpaidCount)} sub={t("payments.awaitingPayment")} icon={Building2} color="bg-amber-100 text-amber-600" />
       </motion.div>
 
       {/* Table */}
@@ -420,7 +490,7 @@ export default function PaymentsPage() {
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={payments} />
+          <DataTable columns={columns} data={filteredPayments} />
         )}
       </motion.div>
 
@@ -437,10 +507,10 @@ export default function PaymentsPage() {
           initialData={
             editingPayment
               ? {
-                  patient_id: editingPayment.patient_id,
-                  department_id: editingPayment.department_id,
-                  amount: String(editingPayment.amount),
-                  payment_method: editingPayment.payment_method,
+                  patientId: editingPayment.patient_id,
+                  departmentId: editingPayment.department_id,
+                  amount: editingPayment.amount,
+                  method: editingPayment.method,
                   status: editingPayment.status,
                   description: editingPayment.description,
                 }

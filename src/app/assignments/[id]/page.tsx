@@ -55,13 +55,13 @@ const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
 };
 
 const DAY_COLS: Record<number, string> = {
-  1: "bg-blue-50 border-blue-200",
-  2: "bg-emerald-50 border-emerald-200",
-  3: "bg-violet-50 border-violet-200",
-  4: "bg-amber-50 border-amber-200",
-  5: "bg-rose-50 border-rose-200",
-  6: "bg-cyan-50 border-cyan-200",
-  7: "bg-slate-50 border-slate-200",
+  1: "bg-surface border-border border-l-4 border-l-blue-400",
+  2: "bg-surface border-border border-l-4 border-l-emerald-400",
+  3: "bg-surface border-border border-l-4 border-l-violet-400",
+  4: "bg-surface border-border border-l-4 border-l-amber-400",
+  5: "bg-surface border-border border-l-4 border-l-rose-400",
+  6: "bg-surface border-border border-l-4 border-l-cyan-400",
+  7: "bg-surface border-border border-l-4 border-l-slate-400",
 };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────

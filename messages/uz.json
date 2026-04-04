@@ -33,11 +33,12 @@
     "na": "N/A",
     "optional": "(ixtiyoriy)",
     "notAssigned": "Tayinlanmagan",
-    "areYouSure": "Ishonchingiz komilmi?"
+    "areYouSure": "Ishonchingiz komilmi?",
+    "filterPlaceholder": "Qidirish..."
   },
   "table": {
     "noResults": "Natija topilmadi.",
-    "showing": "{start}–{end} / {total} ta yozuv"
+    "showing": "{start}–{end} / {total} ta ro'yxat"
   },
   "search": {
     "placeholder": "Bemorlarni qidirish...",
@@ -122,7 +123,9 @@
     "backToPatient": "Bemorga qaytish",
     "statusPaid": "To'langan",
     "statusPending": "Kutilmoqda",
-    "statusCancelled": "Bekor qilingan"
+    "statusCancelled": "Bekor qilingan",
+    "deleteConfirm": "Ushbu bemorni o'chirishni xohlaysizmi?",
+    "deletePatient": "Bemorni o'chirish"
   },
   "employees": {
     "title": "Xodimlar",
@@ -134,9 +137,12 @@
     "colJoined": "Qo'shilgan",
     "addNewTitle": "Yangi xodim qo'shish",
     "addNewDesc": "Yangi xodim hisobi yaratish va rol belgilash.",
+    "colPhone": "Telefon raqam",
     "editTitle": "Xodimni tahrirlash",
     "editDesc": "Mavjud xodim ma'lumotlarini o'zgartirish.",
-    "backToEmployees": "Xodimlarga qaytish"
+    "backToEmployees": "Xodimlarga qaytish",
+    "deleteConfirm": "Ushbu xodimni o'chirishni xohlaysizmi?",
+    "deleteEmployee": "Xodimni o'chirish"
   },
   "departments": {
     "title": "Bo'limlar",
@@ -214,7 +220,10 @@
     "awaitingPayment": "To'lov kutilmoqda",
     "editTitle": "To'lovni tahrirlash",
     "editDesc": "Ushbu to'lov yozuvini yangilash.",
-    "newDesc": "Bemor va bo'limga bog'liq to'lovni qayd etish."
+    "newDesc": "Bemor va bo'limga bog'liq to'lovni qayd etish.",
+    "methodCreditCard": "Kredit karta",
+    "methodDebitCard": "Debit karta",
+    "methodPaypal": "PayPal"
   },
   "appointments": {
     "title": "Uchrashuvlar",
@@ -231,7 +240,10 @@
     "statusPending": "Kutilmoqda",
     "statusConfirmed": "Tasdiqlangan",
     "statusCancelled": "Bekor qilingan",
-    "statusCompleted": "Bajarilgan"
+    "statusCompleted": "Bajarilgan",
+    "deleteConfirm": "Ushbu uchrashuvni o'chirishni xohlaysizmi?",
+    "colAccessCode": "Kirish kodi",
+    "showPin": "Kodni ko'rish"
   },
   "assignments": {
     "title": "Tayinlovlar",
@@ -359,8 +371,12 @@
     "methodBankTransfer": "Bank o'tkazmasi",
     "paymentStatus": "Holat",
     "statusPaid": "To'langan",
+    "statusUnpaid": "To'lanmagan",
     "statusPending": "Kutilmoqda",
     "statusCancelled": "Bekor qilingan",
+    "methodCreditCard": "Kredit karta",
+    "methodDebitCard": "Debit karta",
+    "methodPaypal": "PayPal",
     "notes": "Izohlar (ixtiyoriy)",
     "notesPlaceholder": "Ushbu to'lov haqida qo'shimcha izohlar...",
     "recordPayment": "To'lovni qayd etish",
@@ -452,6 +468,10 @@
     "docTypeBirthCertificate": "Tug'ilganlik guvohnomasi",
     "docTypeForeignPassport": "Xorijiy pasport",
     "docTypeResidencePermit": "Yashash ruxsatnomasi"
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "empty": "Bildirishnomalar yo'q"
   },
   "settings": {
     "title": "Sozlamalar",

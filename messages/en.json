@@ -33,7 +33,8 @@
     "na": "N/A",
     "optional": "(optional)",
     "notAssigned": "Not assigned",
-    "areYouSure": "Are you sure?"
+    "areYouSure": "Are you sure?",
+    "filterPlaceholder": "Search..."
   },
   "table": {
     "noResults": "No results.",
@@ -123,6 +124,8 @@
     "statusPaid": "Paid",
     "statusPending": "Pending",
     "statusCancelled": "Cancelled",
+    "deleteConfirm": "Are you sure you want to delete this patient?",
+    "deletePatient": "Delete Patient",
     "documentInfo": "Document Information",
     "pinflLabel": "PINFL"
   },
@@ -138,7 +141,9 @@
     "addNewDesc": "Create a new staff account and assign a role.",
     "editTitle": "Edit Employee",
     "editDesc": "Modify details for an existing staff member.",
-    "backToEmployees": "Back to Employees"
+    "backToEmployees": "Back to Employees",
+    "deleteConfirm": "Are you sure you want to delete this employee?",
+    "deleteEmployee": "Delete Employee"
   },
   "departments": {
     "title": "Departments",
@@ -216,7 +221,10 @@
     "awaitingPayment": "Awaiting payment",
     "editTitle": "Edit Payment",
     "editDesc": "Update this payment record.",
-    "newDesc": "Record a payment linked to a patient and department."
+    "newDesc": "Record a payment linked to a patient and department.",
+    "methodCreditCard": "Credit Card",
+    "methodDebitCard": "Debit Card",
+    "methodPaypal": "PayPal"
   },
   "appointments": {
     "title": "Appointments",
@@ -233,7 +241,10 @@
     "statusPending": "Pending",
     "statusConfirmed": "Confirmed",
     "statusCancelled": "Cancelled",
-    "statusCompleted": "Completed"
+    "statusCompleted": "Completed",
+    "deleteConfirm": "Are you sure you want to delete this appointment?",
+    "colAccessCode": "Access Code",
+    "showPin": "Show PIN"
   },
   "assignments": {
     "title": "Assignments",
@@ -361,8 +372,12 @@
     "methodBankTransfer": "Bank Transfer",
     "paymentStatus": "Status",
     "statusPaid": "Paid",
+    "statusUnpaid": "Unpaid",
     "statusPending": "Pending",
     "statusCancelled": "Cancelled",
+    "methodCreditCard": "Credit Card",
+    "methodDebitCard": "Debit Card",
+    "methodPaypal": "PayPal",
     "notes": "Notes (optional)",
     "notesPlaceholder": "Additional notes about this payment...",
     "recordPayment": "Record Payment",
@@ -454,6 +469,10 @@
     "docTypeBirthCertificate": "Birth Certificate",
     "docTypeForeignPassport": "Foreign Passport",
     "docTypeResidencePermit": "Residence Permit"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications"
   },
   "settings": {
     "title": "Settings",

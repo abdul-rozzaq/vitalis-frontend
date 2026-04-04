@@ -74,7 +74,9 @@ export default function EditEmployeePage() {
               last_name: employee.last_name,
               phone: employee.phone ?? undefined,
               roleId: employee.role?.id,
-              birthday: employee.birthday ?? undefined,
+              birthday: employee.birthday
+                ? new Date(employee.birthday).toISOString().split('T')[0]
+                : undefined,
               photo: employee.photo ?? undefined,
             }}
             roles={rolesData}
