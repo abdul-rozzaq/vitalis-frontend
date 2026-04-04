@@ -50,7 +50,7 @@ export default function SettingsPage() {
       path: ["confirmPassword"],
     });
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(

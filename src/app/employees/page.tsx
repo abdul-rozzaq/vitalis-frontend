@@ -111,7 +111,7 @@ export default function EmployeesPage() {
         cell: (info: any) => {
           const name = info.getValue() as string;
           const photo = info.row.original.photo as string | null | undefined;
-          const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") ?? "";
+          const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
           const photoUrl = photo ? `${apiBase}${photo}` : null;
           return (
             <div className="flex items-center gap-2.5">

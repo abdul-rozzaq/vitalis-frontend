@@ -29,6 +29,12 @@ interface Patient {
   document_series?: string | null;
   document_number?: string | null;
   pinfl?: string | null;
+  district?: {
+    name: string;
+    region?: {
+      name: string;
+    } | null;
+  } | null;
 }
 
 interface TimelineEvent {
@@ -380,6 +386,22 @@ export default function PatientDetailPage() {
                   <span>{patient.address}</span>
                 </div>
               )}
+              {patient.district?.region?.name && (
+                <div className="flex items-start gap-2.5 text-sm text-secondary">
+                  <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                  <span>
+                    <span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}
+                  </span>
+                </div>
+              )}
+              {patient.district?.name && (
+                <div className="flex items-start gap-2.5 text-sm text-secondary">
+                  <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                  <span>
+                    <span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}
+                  </span>
+                </div>
+              )}
               {(patient.document_type || patient.document_series || patient.document_number) && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
@@ -409,7 +431,7 @@ export default function PatientDetailPage() {
                 <p className="text-[11px] text-text-muted">{t("patients.visits")}</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-text">${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })}</p>
+                <p className="text-lg font-bold text-text">{totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS</p>
                 <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
               </div>
               <div>
