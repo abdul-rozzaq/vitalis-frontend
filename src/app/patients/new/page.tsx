@@ -1,11 +1,12 @@
 "use client";
 
 import { PatientForm } from "@/components/patients/patient-form";
-import { useTranslations } from "next-intl";
+import { NewPatientPayload } from "@/features/patients/new/types";
 import { api } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,7 +15,7 @@ export default function NewPatientPage() {
   const t = useTranslations();
 
   const { mutateAsync: addPatient, isPending } = useMutation({
-    mutationFn: (data: any) => api.post("/patients", data),
+    mutationFn: (data: NewPatientPayload) => api.post("/patients", data),
     onSuccess: (res) => {
       const id = res.data?.id;
       router.push(id ? `/patients/${id}` : "/patients");

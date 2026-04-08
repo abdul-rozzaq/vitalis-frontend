@@ -7,71 +7,35 @@ import { RoomForm } from "@/components/assignments/room-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import {
+  Assignment,
+  DepartmentOption,
+  Role,
+  RolePayload,
+  Room,
+  RoomPayload,
+  SheetState,
+  TabId,
+  UserOption,
+} from "@/features/assignments/types";
+import {
+  ROLE_STYLES,
+  TAB_ACTIVE,
+  TAB_BASE,
+  TAB_IDLE,
+  asArray,
+  formatShortDate,
+  getAssignmentTabs,
+  getTableRowIndex,
+} from "@/features/assignments/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, ExternalLink, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
+import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, ExternalLink, Loader2, Plus, Shield, Trash2, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-}
-
-interface Room {
-  id: string;
-  name: string;
-  roomType: "WARD" | "EXAMINATION";
-  capacity?: number | null;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Assignment {
-  id: string;
-  userId: string;
-  departmentId: string;
-  roomId?: string;
-  isActive: boolean;
-  user?: { id: string; first_name: string; last_name: string; role: Role };
-  department?: { id: string; name: string };
-  room?: { id: string; name: string };
-  schedules?: Schedule[];
-  createdAt: string;
-}
-
-interface Schedule {
-  id: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  assignmentId: string;
-}
-
-const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-green-100", text: "text-green-700" },
-  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
-};
-
-// ─── Shared button styles ──────────────────────────────────────────────────────
-
-const TAB_BASE = "px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer";
-const TAB_ACTIVE = "bg-primary text-white shadow-sm shadow-primary-600/20";
-const TAB_IDLE = "text-secondary hover:bg-surface-hover hover:text-text";
-
-// ─── Tabs ──────────────────────────────────────────────────────────────────────
-
-type TabId = "assignments" | "rooms" | "roles" | "permissions";
+import { useCallback, useMemo, useState } from "react";
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -79,68 +43,58 @@ export default function AssignmentsPage() {
   const queryClient = useQueryClient();
   const t = useTranslations();
 
-  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-    { id: "assignments", label: t("assignments.tabAssignments"), icon: User },
-    { id: "rooms", label: t("assignments.tabRooms"), icon: DoorOpen },
-    { id: "roles", label: t("assignments.tabRoles"), icon: Shield },
-    { id: "permissions", label: t("assignments.tabPermissions"), icon: KeyRound },
-  ];
+  const tabs = useMemo(() => getAssignmentTabs(t), [t]);
 
   const [tab, setTab] = useState<TabId>("assignments");
 
-  // Sheet state
-  const [roomSheet, setRoomSheet] = useState<{ open: boolean; editing: Room | null }>({ open: false, editing: null });
-  const [roleSheet, setRoleSheet] = useState<{ open: boolean; editing: Role | null }>({ open: false, editing: null });
-  const [assignSheet, setAssignSheet] = useState<{ open: boolean; editing: Assignment | null }>({ open: false, editing: null });
+  const [roomSheet, setRoomSheet] = useState<SheetState<Room>>({ open: false, editing: null });
+  const [roleSheet, setRoleSheet] = useState<SheetState<Role>>({ open: false, editing: null });
+  const [assignSheet, setAssignSheet] = useState<SheetState<Assignment>>({ open: false, editing: null });
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // ── Queries ──────────────────────────────────────────────────────────────────
 
   const { data: roomsRaw, isLoading: loadingRooms } = useQuery({
     queryKey: ["rooms"],
-    queryFn: () => api.get("/rooms").then((r) => r.data),
+    queryFn: () => api.get("/rooms").then((r) => r.data as unknown),
     refetchOnWindowFocus: false,
   });
 
   const { data: rolesRaw, isLoading: loadingRoles } = useQuery({
     queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((r) => r.data),
+    queryFn: () => api.get("/roles").then((r) => r.data as unknown),
     refetchOnWindowFocus: false,
   });
 
   const { data: assignmentsRaw, isLoading: loadingAssignments } = useQuery({
     queryKey: ["assignments"],
-    queryFn: () => api.get("/assignments").then((r) => r.data),
+    queryFn: () => api.get("/assignments").then((r) => r.data as unknown),
     refetchOnWindowFocus: false,
   });
 
   const { data: usersRaw } = useQuery({
     queryKey: ["employees"],
-    queryFn: () => api.get("/users").then((r) => r.data),
+    queryFn: () => api.get("/users").then((r) => r.data as unknown),
     refetchOnWindowFocus: false,
   });
 
   const { data: departmentsRaw } = useQuery({
     queryKey: ["departments"],
-    queryFn: () => api.get("/departments").then((r) => r.data),
+    queryFn: () => api.get("/departments").then((r) => r.data as unknown),
     refetchOnWindowFocus: false,
   });
 
-  const rooms: Room[] = Array.isArray(roomsRaw) ? roomsRaw : [];
-  const roles: Role[] = Array.isArray(rolesRaw) ? rolesRaw : [];
-  const assignments: Assignment[] = Array.isArray(assignmentsRaw) ? assignmentsRaw : [];
-  const users = usersRaw ?? [];
-  const departments = departmentsRaw ?? [];
-
-  // ── Room mutations ────────────────────────────────────────────────────────────
+  const rooms = asArray<Room>(roomsRaw);
+  const roles = asArray<Role>(rolesRaw);
+  const assignments = asArray<Assignment>(assignmentsRaw);
+  const users = asArray<UserOption>(usersRaw);
+  const departments = asArray<DepartmentOption>(departmentsRaw);
 
   const { mutateAsync: createRoom, isPending: creatingRoom } = useMutation({
-    mutationFn: (d: any) => api.post("/rooms", d),
+    mutationFn: (data: RoomPayload) => api.post("/rooms", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rooms"] }),
   });
 
   const { mutateAsync: updateRoom, isPending: updatingRoom } = useMutation({
-    mutationFn: (d: any) => api.patch(`/rooms/${roomSheet.editing?.id}`, d),
+    mutationFn: (data: RoomPayload) => api.patch(`/rooms/${roomSheet.editing?.id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rooms"] }),
   });
 
@@ -152,15 +106,13 @@ export default function AssignmentsPage() {
     },
   });
 
-  // ── Role mutations ────────────────────────────────────────────────────────────
-
   const { mutateAsync: createRole, isPending: creatingRole } = useMutation({
-    mutationFn: (d: any) => api.post("/roles", d),
+    mutationFn: (data: RolePayload) => api.post("/roles", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
   });
 
   const { mutateAsync: updateRole, isPending: updatingRole } = useMutation({
-    mutationFn: (d: any) => api.patch(`/roles/${roleSheet.editing?.id}`, d),
+    mutationFn: (data: RolePayload) => api.patch(`/roles/${roleSheet.editing?.id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
   });
 
@@ -172,15 +124,13 @@ export default function AssignmentsPage() {
     },
   });
 
-  // ── Assignment mutations ──────────────────────────────────────────────────────
-
   const { mutateAsync: createAssignment, isPending: creatingAssignment } = useMutation({
-    mutationFn: (d: any) => api.post("/assignments", d),
+    mutationFn: (data: AssignmentFormValues) => api.post("/assignments", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assignments"] }),
   });
 
   const { mutateAsync: updateAssignment, isPending: updatingAssignment } = useMutation({
-    mutationFn: (d: any) => api.patch(`/assignments/${assignSheet.editing?.id}`, d),
+    mutationFn: (data: AssignmentFormValues) => api.patch(`/assignments/${assignSheet.editing?.id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assignments"] }),
   });
 
@@ -192,24 +142,65 @@ export default function AssignmentsPage() {
     },
   });
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  const openRoomSheet = useCallback((room: Room | null) => {
+    setRoomSheet({ open: true, editing: room });
+  }, []);
 
-  const handleRoomSubmit = (data: any) => {
+  const openRoleSheet = useCallback((role: Role | null) => {
+    setRoleSheet({ open: true, editing: role });
+  }, []);
+
+  const openAssignmentSheet = useCallback((assignment: Assignment | null) => {
+    setAssignSheet({ open: true, editing: assignment });
+  }, []);
+
+  const closeRoomSheet = useCallback(() => {
+    setRoomSheet({ open: false, editing: null });
+  }, []);
+
+  const closeRoleSheet = useCallback(() => {
+    setRoleSheet({ open: false, editing: null });
+  }, []);
+
+  const closeAssignmentSheet = useCallback(() => {
+    setAssignSheet({ open: false, editing: null });
+  }, []);
+
+  const handleRoomSubmit = useCallback((data: RoomPayload) => {
     const action = roomSheet.editing ? updateRoom(data) : createRoom(data);
-    action.then(() => setRoomSheet({ open: false, editing: null }));
-  };
+    void action.then(closeRoomSheet);
+  }, [roomSheet.editing, updateRoom, createRoom, closeRoomSheet]);
 
-  const handleRoleSubmit = (data: any) => {
+  const handleRoleSubmit = useCallback((data: RolePayload) => {
     const action = roleSheet.editing ? updateRole(data) : createRole(data);
-    action.then(() => setRoleSheet({ open: false, editing: null }));
-  };
+    void action.then(closeRoleSheet);
+  }, [roleSheet.editing, updateRole, createRole, closeRoleSheet]);
 
-  const handleAssignSubmit = (data: AssignmentFormValues) => {
+  const handleAssignSubmit = useCallback((data: AssignmentFormValues) => {
     const action = assignSheet.editing ? updateAssignment(data) : createAssignment(data);
-    action.then(() => setAssignSheet({ open: false, editing: null }));
-  };
+    void action.then(closeAssignmentSheet);
+  }, [assignSheet.editing, updateAssignment, createAssignment, closeAssignmentSheet]);
 
-  // ── Role columns ──────────────────────────────────────────────────────────────
+  const handleDeleteRole = useCallback((role: Role) => {
+    if (confirm(`Delete role "${role.name}"?`)) {
+      setDeletingId(role.id);
+      void deleteRole(role.id);
+    }
+  }, [deleteRole]);
+
+  const handleDeleteRoom = useCallback((room: Room) => {
+    if (confirm("Delete this room?")) {
+      setDeletingId(room.id);
+      void deleteRoom(room.id);
+    }
+  }, [deleteRoom]);
+
+  const handleDeleteAssignment = useCallback((assignment: Assignment) => {
+    if (confirm("Delete this assignment?")) {
+      setDeletingId(assignment.id);
+      void deleteAssignment(assignment.id);
+    }
+  }, [deleteAssignment]);
 
   const roleColumns = useMemo<ColumnDef<Role>[]>(
     () => [
@@ -218,7 +209,7 @@ export default function AssignmentsPage() {
         header: "#",
         cell: ({ row, table }) => (
           <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
+            {getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}
           </span>
         ),
       },
@@ -237,14 +228,15 @@ export default function AssignmentsPage() {
       {
         accessorKey: "description",
         header: t("assignments.colDescription"),
-        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ?? <span className="text-text-muted italic">—</span>}</span>,
+        cell: ({ getValue }) => {
+          const value = getValue<string | null | undefined>();
+          return <span className="text-secondary text-sm">{value ?? <span className="text-text-muted italic">—</span>}</span>;
+        },
       },
       {
         accessorKey: "createdAt",
         header: t("assignments.colCreated"),
-        cell: (info: any) => (
-          <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
-        ),
+        cell: ({ getValue }) => <span className="text-secondary text-sm">{formatShortDate(getValue<string>())}</span>,
       },
       {
         id: "actions",
@@ -253,7 +245,7 @@ export default function AssignmentsPage() {
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/roles/:id">
               <button
-                onClick={() => setRoleSheet({ open: true, editing: row.original })}
+                onClick={() => openRoleSheet(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Role"
               >
@@ -262,12 +254,7 @@ export default function AssignmentsPage() {
             </Can>
             <Can method="DELETE" path="/api/roles/:id">
               <button
-                onClick={() => {
-                  if (confirm(`Delete role "${row.original.name}"?`)) {
-                    setDeletingId(row.original.id);
-                    deleteRole(row.original.id);
-                  }
-                }}
+                onClick={() => handleDeleteRole(row.original)}
                 disabled={deletingRole && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Role"
@@ -279,10 +266,8 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingRole, deletingId, t],
+    [deletingRole, deletingId, t, openRoleSheet, handleDeleteRole],
   );
-
-  // ── Columns ───────────────────────────────────────────────────────────────────
 
   const roomColumns = useMemo<ColumnDef<Room>[]>(
     () => [
@@ -291,7 +276,7 @@ export default function AssignmentsPage() {
         header: "#",
         cell: ({ row, table }) => (
           <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
+            {getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}
           </span>
         ),
       },
@@ -326,9 +311,7 @@ export default function AssignmentsPage() {
       {
         accessorKey: "createdAt",
         header: t("assignments.colCreated"),
-        cell: (info: any) => (
-          <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
-        ),
+        cell: ({ getValue }) => <span className="text-secondary text-sm">{formatShortDate(getValue<string>())}</span>,
       },
       {
         id: "actions",
@@ -337,7 +320,7 @@ export default function AssignmentsPage() {
           <div className="flex justify-end gap-2">
             <Can method="PATCH" path="/api/rooms/:id">
               <button
-                onClick={() => setRoomSheet({ open: true, editing: row.original })}
+                onClick={() => openRoomSheet(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Room"
               >
@@ -346,12 +329,7 @@ export default function AssignmentsPage() {
             </Can>
             <Can method="DELETE" path="/api/rooms/:id">
               <button
-                onClick={() => {
-                  if (confirm("Delete this room?")) {
-                    setDeletingId(row.original.id);
-                    deleteRoom(row.original.id);
-                  }
-                }}
+                onClick={() => handleDeleteRoom(row.original)}
                 disabled={deletingRoom && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Room"
@@ -363,7 +341,7 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingRoom, deletingId, t],
+    [deletingRoom, deletingId, t, openRoomSheet, handleDeleteRoom],
   );
 
 
@@ -374,7 +352,7 @@ export default function AssignmentsPage() {
         header: "#",
         cell: ({ row, table }) => (
           <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1}
+            {getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}
           </span>
         ),
       },
@@ -466,7 +444,7 @@ export default function AssignmentsPage() {
             </Link>
             <Can method="PATCH" path="/api/assignments/:id">
               <button
-                onClick={() => setAssignSheet({ open: true, editing: row.original })}
+                onClick={() => openAssignmentSheet(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
                 title="Edit Assignment"
               >
@@ -475,12 +453,7 @@ export default function AssignmentsPage() {
             </Can>
             <Can method="DELETE" path="/api/assignments/:id">
               <button
-                onClick={() => {
-                  if (confirm("Delete this assignment?")) {
-                    setDeletingId(row.original.id);
-                    deleteAssignment(row.original.id);
-                  }
-                }}
+                onClick={() => handleDeleteAssignment(row.original)}
                 disabled={deletingAssignment && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title="Delete Assignment"
@@ -492,10 +465,8 @@ export default function AssignmentsPage() {
         ),
       },
     ],
-    [deletingAssignment, deletingId, t],
+    [deletingAssignment, deletingId, t, openAssignmentSheet, handleDeleteAssignment],
   );
-
-  // ─────────────────────────────────────────────────────────────────────────────
 
   const isTableLoading = tab === "rooms" ? loadingRooms : tab === "roles" ? loadingRoles : tab === "permissions" ? false : loadingAssignments;
 
@@ -512,7 +483,7 @@ export default function AssignmentsPage() {
         {tab === "rooms" && (
           <Can method="POST" path="/api/rooms">
             <button
-              onClick={() => setRoomSheet({ open: true, editing: null })}
+              onClick={() => openRoomSheet(null)}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -523,7 +494,7 @@ export default function AssignmentsPage() {
         {tab === "roles" && (
           <Can method="POST" path="/api/roles">
             <button
-              onClick={() => setRoleSheet({ open: true, editing: null })}
+              onClick={() => openRoleSheet(null)}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -534,7 +505,7 @@ export default function AssignmentsPage() {
         {tab === "assignments" && (
           <Can method="POST" path="/api/assignments">
             <button
-              onClick={() => setAssignSheet({ open: true, editing: null })}
+              onClick={() => openAssignmentSheet(null)}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -551,7 +522,7 @@ export default function AssignmentsPage() {
         transition={{ delay: 0.04 }}
         className="flex items-center gap-1 bg-surface border border-border p-1 rounded-xl w-fit"
       >
-        {TABS.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)} className={`${TAB_BASE} flex items-center gap-2 ${tab === id ? TAB_ACTIVE : TAB_IDLE}`}>
             <Icon className="w-4 h-4" />
             {label}
@@ -579,7 +550,7 @@ export default function AssignmentsPage() {
       {/* ── Room Sheet ─────────────────────────────────────────────────────────── */}
       <Sheet
         isOpen={roomSheet.open}
-        onClose={() => setRoomSheet({ open: false, editing: null })}
+        onClose={closeRoomSheet}
         title={roomSheet.editing ? t("assignments.editRoomTitle") : t("assignments.addRoomTitle")}
         description={roomSheet.editing ? t("assignments.editRoomDesc") : t("assignments.addRoomDesc")}
       >
@@ -595,7 +566,7 @@ export default function AssignmentsPage() {
               : undefined
           }
           onSubmit={handleRoomSubmit}
-          onCancel={() => setRoomSheet({ open: false, editing: null })}
+          onCancel={closeRoomSheet}
           isLoading={creatingRoom || updatingRoom}
         />
       </Sheet>
@@ -603,7 +574,7 @@ export default function AssignmentsPage() {
       {/* ── Role Sheet ─────────────────────────────────────────────────────────── */}
       <Sheet
         isOpen={roleSheet.open}
-        onClose={() => setRoleSheet({ open: false, editing: null })}
+        onClose={closeRoleSheet}
         title={roleSheet.editing ? t("assignments.editRoleTitle") : t("assignments.addRoleTitle")}
         description={roleSheet.editing ? t("assignments.editRoleDesc") : t("assignments.addRoleDesc")}
       >
@@ -618,7 +589,7 @@ export default function AssignmentsPage() {
               : undefined
           }
           onSubmit={handleRoleSubmit}
-          onCancel={() => setRoleSheet({ open: false, editing: null })}
+          onCancel={closeRoleSheet}
           isLoading={creatingRole || updatingRole}
         />
       </Sheet>
@@ -626,7 +597,7 @@ export default function AssignmentsPage() {
       {/* ── Assignment Sheet ──────────────────────────────────────────────────── */}
       <Sheet
         isOpen={assignSheet.open}
-        onClose={() => setAssignSheet({ open: false, editing: null })}
+        onClose={closeAssignmentSheet}
         title={assignSheet.editing ? t("assignments.editAssignmentTitle") : t("assignments.newAssignment")}
         description={assignSheet.editing ? t("assignments.editAssignmentDesc") : t("assignments.newAssignmentDesc")}
         className="max-w-lg"
@@ -652,7 +623,7 @@ export default function AssignmentsPage() {
               : undefined
           }
           onSubmit={handleAssignSubmit}
-          onCancel={() => setAssignSheet({ open: false, editing: null })}
+          onCancel={closeAssignmentSheet}
           isLoading={creatingAssignment || updatingAssignment}
         />
       </Sheet>

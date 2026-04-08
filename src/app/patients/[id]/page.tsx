@@ -3,98 +3,30 @@
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import {
+  AppointmentFormPayload,
+  AppointmentTimelineItem,
+  AssignmentSource,
+  Patient,
+  SheetMode,
+} from "@/features/patients/detail/types";
+import {
+  APPOINTMENT_STATUS_STYLES,
+  PAYMENT_STATUS_STYLES,
+  formatDate,
+  formatTime,
+  resolveFileUrl,
+  toAssignmentOptions,
+} from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, CreditCard, Download, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, Upload, User, XCircle } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, CreditCard, Download, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, Upload, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
-
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
-
-interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  gender: "male" | "female";
-  birth_date: string | null;
-  address?: string;
-  document_type?: DocumentType | null;
-  document_series?: string | null;
-  document_number?: string | null;
-  pinfl?: string | null;
-  district?: {
-    name: string;
-    region?: {
-      name: string;
-    } | null;
-  } | null;
-}
-
-interface AppointmentPayment {
-  id: string;
-  createdAt: string;
-  amount: number;
-  status: "PAID" | "UNPAID";
-  method?: string | null;
-  department?: { name: string };
-}
-
-interface AppointmentFile {
-  id: string;
-  name: string;
-  url: string;
-  createdAt: string;
-}
-
-interface AppointmentTimelineItem {
-  id: string;
-  assignmentId?: string;
-  dateTime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  files?: AppointmentFile[];
-  assignment: {
-    id?: string;
-    department: { name: string };
-    user: { first_name: string; last_name: string };
-  };
-  payments?: AppointmentPayment[];
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-const PAYMENT_STATUS_STYLES = {
-  PAID: { bg: "bg-primary-50", border: "border-primary-100", text: "text-primary", icon: CheckCircle2, dot: "bg-primary" },
-  PENDING: { bg: "bg-warning-50", border: "border-amber-200", text: "text-warning-600", icon: Clock, dot: "bg-amber-500" },
-  CANCELLED: { bg: "bg-danger-50", border: "border-danger-100", text: "text-danger-600", icon: XCircle, dot: "bg-danger-500" },
-};
-
-const APPOINTMENT_STATUS_STYLES: Record<AppointmentTimelineItem["status"], string> = {
-  PENDING: "bg-warning-50 text-warning-600",
-  CONFIRMED: "bg-primary-50 text-primary",
-  CANCELLED: "bg-danger-50 text-danger-600",
-  COMPLETED: "bg-primary-50 text-primary",
-};
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-}
-
-function resolveFileUrl(url: string) {
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/api\/?$/, "");
-  if (!base) return url;
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
-}
+import { useCallback, useMemo, useRef, useState } from "react";
 
 function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem }) {
   const payments = appointment.payments ?? [];
@@ -252,7 +184,7 @@ export default function PatientDetailPage() {
   const t = useTranslations();
 
   const queryClient = useQueryClient();
-  const [sheetMode, setSheetMode] = useState<"visit" | "edit" | "editAppointment" | null>(null);
+  const [sheetMode, setSheetMode] = useState<SheetMode>(null);
   const [editingAppointment, setEditingAppointment] = useState<AppointmentTimelineItem | null>(null);
   const [uploadingAppointmentId, setUploadingAppointmentId] = useState<string | null>(null);
   const [uploadTargetAppointment, setUploadTargetAppointment] = useState<AppointmentTimelineItem | null>(null);
@@ -264,14 +196,24 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: assignmentsData = [] } = useQuery({
+  const { data: assignmentsDataRaw } = useQuery({
     queryKey: ["assignments"],
-    queryFn: () => api.get("/assignments").then((res) => res.data),
+    queryFn: () => api.get("/assignments").then((res) => res.data as unknown),
     refetchOnWindowFocus: false,
   });
 
+  const assignmentsData = useMemo(
+    () => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []),
+    [assignmentsDataRaw],
+  );
+
+  const assignmentOptions = useMemo(
+    () => toAssignmentOptions(assignmentsData),
+    [assignmentsData],
+  );
+
   const { mutateAsync: addAppointment, isPending: isAddingAppointment } = useMutation({
-    mutationFn: (data: any) => api.post("/appointments", data),
+    mutationFn: (data: AppointmentFormPayload) => api.post("/appointments", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
@@ -280,7 +222,7 @@ export default function PatientDetailPage() {
   });
 
   const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useMutation({
-    mutationFn: (data: any) => api.patch(`/appointments/${editingAppointment?.id}`, data),
+    mutationFn: (data: AppointmentFormPayload) => api.patch(`/appointments/${editingAppointment?.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
@@ -319,22 +261,22 @@ export default function PatientDetailPage() {
     [appointments],
   );
 
-  const handleEditAppointment = (appointment: AppointmentTimelineItem) => {
+  const handleEditAppointment = useCallback((appointment: AppointmentTimelineItem) => {
     setEditingAppointment(appointment);
     setSheetMode("editAppointment");
-  };
+  }, []);
 
-  const handleAppointmentSheetClose = () => {
+  const handleAppointmentSheetClose = useCallback(() => {
     setEditingAppointment(null);
     setSheetMode(null);
-  };
+  }, []);
 
-  const handleAttachFileClick = (appointment: AppointmentTimelineItem) => {
+  const handleAttachFileClick = useCallback((appointment: AppointmentTimelineItem) => {
     setUploadTargetAppointment(appointment);
     fileInputRef.current?.click();
-  };
+  }, []);
 
-  const handleAttachFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !uploadTargetAppointment) return;
 
@@ -364,7 +306,7 @@ export default function PatientDetailPage() {
       setUploadTargetAppointment(null);
       event.target.value = "";
     }
-  };
+  }, [queryClient, id, uploadTargetAppointment]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
@@ -599,10 +541,7 @@ export default function PatientDetailPage() {
         <AppointmentForm
           initialData={{ patientId: id }}
           patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
-          assignments={assignmentsData.map((a: any) => ({
-            id: a.id,
-            label: `Dr. ${a.user.first_name} ${a.user.last_name} — ${a.department.name}${a.room ? ` (${a.room.name})` : ""}`,
-          }))}
+          assignments={assignmentOptions}
           onSubmit={(data) => addAppointment(data)}
           onCancel={() => setSheetMode(null)}
           isPending={isAddingAppointment}
@@ -627,10 +566,7 @@ export default function PatientDetailPage() {
               : undefined
           }
           patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
-          assignments={assignmentsData.map((a: any) => ({
-            id: a.id,
-            label: `Dr. ${a.user.first_name} ${a.user.last_name} — ${a.department.name}${a.room ? ` (${a.room.name})` : ""}`,
-          }))}
+          assignments={assignmentOptions}
           onSubmit={(data) => updateAppointment(data)}
           onCancel={handleAppointmentSheetClose}
           isPending={isUpdatingAppointment}

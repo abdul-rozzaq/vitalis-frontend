@@ -1,5 +1,8 @@
 "use client";
 
+import { createPasswordSchema, createProfileSchema } from "@/features/settings/schemas";
+import { ChangePasswordPayload, PasswordFormValues, ProfileFormValues } from "@/features/settings/types";
+import { getApiErrorMessage, getInitialPhotoPreview } from "@/features/settings/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,49 +15,19 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-type ProfileFormValues = {
-  first_name: string;
-  last_name: string;
-  phone: string;
-  birthday: string;
-  photo?: string;
-};
-
-type PasswordFormValues = {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-};
-
 export default function SettingsPage() {
   const t = useTranslations();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const profileSchema = z.object({
-    first_name: z.string().min(2, t("forms.firstNameTooShort")),
-    last_name: z.string().min(2, t("forms.lastNameTooShort")),
-    phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
-    birthday: z.string().optional(),
-    photo: z.string().optional(),
-  });
-
-  const passwordSchema = z
-    .object({
-      currentPassword: z.string().min(1, t("settings.currentPasswordRequired")),
-      newPassword: z.string().min(6, t("forms.passwordTooShort")),
-      confirmPassword: z.string().min(1, t("settings.confirmPasswordRequired")),
-    })
-    .refine((d) => d.newPassword === d.confirmPassword, {
-      message: t("settings.passwordsMismatch"),
-      path: ["confirmPassword"],
-    });
+  const profileSchema = createProfileSchema(t);
+  const passwordSchema = createPasswordSchema(t);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(
-    user?.photo ? `${apiBase}${user.photo}` : null
+    getInitialPhotoPreview(apiBase, user?.photo)
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
@@ -64,8 +37,8 @@ export default function SettingsPage() {
     register: regProfile,
     handleSubmit: handleProfileSubmit,
     formState: { errors: profileErrors },
-  } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema) as any,
+  } = useForm<z.input<typeof profileSchema>, unknown, z.output<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
     defaultValues: {
       first_name: user?.first_name ?? "",
       last_name: user?.last_name ?? "",
@@ -80,12 +53,12 @@ export default function SettingsPage() {
     handleSubmit: handlePasswordSubmit,
     reset: resetPassword,
     formState: { errors: passwordErrors },
-  } = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema) as any,
+  } = useForm<z.input<typeof passwordSchema>, unknown, z.output<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
   });
 
   const { mutateAsync: updateProfile, isPending: isUpdatingProfile } = useMutation({
-    mutationFn: (data: any) => api.patch(`/users/${user?.id}`, data),
+    mutationFn: (data: ProfileFormValues) => api.patch(`/users/${user?.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth-me"] });
       setProfileSuccess(true);
@@ -94,7 +67,7 @@ export default function SettingsPage() {
   });
 
   const { mutateAsync: changePassword, isPending: isChangingPassword, error: passwordError } = useMutation({
-    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
+    mutationFn: (data: ChangePasswordPayload) =>
       api.patch("/auth/change-password", data),
     onSuccess: () => {
       resetPassword();
@@ -131,7 +104,7 @@ export default function SettingsPage() {
     await changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword });
   };
 
-  const passwordErrorMsg = (passwordError as any)?.response?.data?.message;
+  const passwordErrorMsg = getApiErrorMessage(passwordError);
 
   return (
     <div className="p-6 max-w-2xl mx-auto w-full space-y-6">

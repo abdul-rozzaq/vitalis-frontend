@@ -4,43 +4,20 @@ import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useTranslations } from "next-intl";
+import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
+import {
+  STATUS_STYLES,
+  filterAppointmentsByPatientName,
+  toAssignmentOptions,
+  toPatientOptions,
+} from "@/features/appointments/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar as CalendarIcon, Download, Edit, Filter, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-
-interface Assignment {
-  id: string;
-  user: { id: string; first_name: string; last_name: string };
-  department: { id: string; name: string };
-  room: { id: string; name: string } | null;
-}
-
-interface Appointment {
-  id: string;
-  dateTime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  patient: { id: string; first_name: string; last_name: string };
-  patientId: string;
-  assignment: Assignment;
-  assignmentId: string;
-}
-
-interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-}
-
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-warning-50 text-warning-600",
-  CONFIRMED: "bg-primary-50 text-primary",
-  CANCELLED: "bg-danger-50 text-danger-600",
-  COMPLETED: "bg-info-50 text-info-600",
-};
 
 export default function AppointmentsPage() {
   const queryClient = useQueryClient();
@@ -70,12 +47,12 @@ export default function AppointmentsPage() {
   });
 
   const { mutateAsync: addAppointment, isPending: isAdding } = useMutation({
-    mutationFn: (data: any) => api.post("/appointments", data),
+    mutationFn: (data: AppointmentFormPayload) => api.post("/appointments", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
   });
 
   const { mutateAsync: updateAppointment, isPending: isUpdating } = useMutation({
-    mutationFn: (data: any) => api.patch(`/appointments/${editingAppointment?.id}`, data),
+    mutationFn: (data: AppointmentFormPayload) => api.patch(`/appointments/${editingAppointment?.id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
   });
 
@@ -104,7 +81,7 @@ export default function AppointmentsPage() {
     }
   }, [deleteAppointment, t]);
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: AppointmentFormPayload) => {
     if (editingAppointment) {
       updateAppointment(data).then(() => {
         setIsSheetOpen(false);
@@ -118,12 +95,7 @@ export default function AppointmentsPage() {
   };
 
   const filteredAppointments = useMemo(
-    () =>
-      filterText.trim()
-        ? (appointmentsData ?? []).filter((a: Appointment) =>
-            `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.toLowerCase().includes(filterText.toLowerCase()),
-          )
-        : (appointmentsData ?? []),
+    () => filterAppointmentsByPatientName(appointmentsData ?? [], filterText),
     [appointmentsData, filterText],
   );
 
@@ -146,11 +118,8 @@ export default function AppointmentsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const patients = patientsData.map((p) => ({ id: p.id, name: `${p.first_name} ${p.last_name}` }));
-  const assignments = assignmentsData.map((a) => ({
-    id: a.id,
-    label: `Dr. ${a.user.first_name} ${a.user.last_name} — ${a.department.name}${a.room ? ` (${a.room.name})` : ""}`,
-  }));
+  const patients = useMemo(() => toPatientOptions(patientsData), [patientsData]);
+  const assignments = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
 
   const columns = useMemo<ColumnDef<Appointment>[]>(
     () => [
@@ -315,11 +284,11 @@ export default function AppointmentsPage() {
           initialData={
             editingAppointment
               ? {
-                  patientId: editingAppointment.patientId,
-                  assignmentId: editingAppointment.assignmentId,
-                  dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                  status: editingAppointment.status,
-                }
+                patientId: editingAppointment.patientId,
+                assignmentId: editingAppointment.assignmentId,
+                dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
+                status: editingAppointment.status,
+              }
               : undefined
           }
           patients={patients}
