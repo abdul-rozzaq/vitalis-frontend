@@ -7,12 +7,12 @@ import { RoomForm } from "@/components/assignments/room-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { BedDouble, Building2, CheckCircle2, DoorOpen, Edit, ExternalLink, KeyRound, Loader2, Plus, Shield, Trash2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -41,7 +41,7 @@ interface Assignment {
   departmentId: string;
   roomId?: string;
   isActive: boolean;
-  user?:{ id: string; first_name: string; last_name: string; role: Role };
+  user?: { id: string; first_name: string; last_name: string; role: Role };
   department?: { id: string; name: string };
   room?: { id: string; name: string };
   schedules?: Schedule[];
@@ -588,10 +588,10 @@ export default function AssignmentsPage() {
           initialData={
             roomSheet.editing
               ? {
-                  name: roomSheet.editing.name,
-                  capacity: roomSheet.editing.capacity ?? undefined,
-                  description: roomSheet.editing.description,
-                }
+                name: roomSheet.editing.name,
+                capacity: roomSheet.editing.capacity ?? undefined,
+                description: roomSheet.editing.description,
+              }
               : undefined
           }
           onSubmit={handleRoomSubmit}
@@ -612,9 +612,9 @@ export default function AssignmentsPage() {
           initialData={
             roleSheet.editing
               ? {
-                  name: roleSheet.editing.name,
-                  description: roleSheet.editing.description,
-                }
+                name: roleSheet.editing.name,
+                description: roleSheet.editing.description,
+              }
               : undefined
           }
           onSubmit={handleRoleSubmit}
@@ -639,16 +639,16 @@ export default function AssignmentsPage() {
           initialData={
             assignSheet.editing
               ? {
-                  userId: assignSheet.editing.userId,
-                  departmentId: assignSheet.editing.departmentId,
-                  roomId: assignSheet.editing.roomId,
-                  isActive: assignSheet.editing.isActive,
-                  schedules: assignSheet.editing.schedules?.map((s) => ({
-                    dayOfWeek: s.dayOfWeek,
-                    startTime: s.startTime,
-                    endTime: s.endTime,
-                  })),
-                }
+                userId: assignSheet.editing.userId,
+                departmentId: assignSheet.editing.departmentId,
+                roomId: assignSheet.editing.roomId,
+                isActive: assignSheet.editing.isActive,
+                schedules: assignSheet.editing.schedules?.map((s) => ({
+                  dayOfWeek: s.dayOfWeek,
+                  startTime: s.startTime,
+                  endTime: s.endTime,
+                })),
+              }
               : undefined
           }
           onSubmit={handleAssignSubmit}

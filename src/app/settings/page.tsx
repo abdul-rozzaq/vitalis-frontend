@@ -2,15 +2,15 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Calendar, Camera, KeyRound, Loader2, Phone, Shield, Upload, User, X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Calendar, Camera, KeyRound, Loader2, Phone, Shield, User, X } from "lucide-react";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { motion } from "motion/react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 type ProfileFormValues = {
   first_name: string;

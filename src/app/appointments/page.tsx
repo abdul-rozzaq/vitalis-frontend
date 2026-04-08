@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar as CalendarIcon, Download, Edit, Filter, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 interface Assignment {
   id: string;
@@ -50,8 +50,6 @@ export default function AppointmentsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filterText, setFilterText] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [pinMap, setPinMap] = useState<Record<string, string | null>>({});
-  const [loadingPinId, setLoadingPinId] = useState<string | null>(null);
 
   const { data: appointmentsData, isLoading } = useQuery<Appointment[]>({
     queryKey: ["appointments"],
@@ -94,17 +92,17 @@ export default function AppointmentsPage() {
     setIsSheetOpen(true);
   };
 
-  const handleEdit = (appointment: Appointment) => {
+  const handleEdit = useCallback((appointment: Appointment) => {
     setEditingAppointment(appointment);
     setIsSheetOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     if (confirm(t("appointments.deleteConfirm"))) {
       setDeletingId(id);
       deleteAppointment(id);
     }
-  };
+  }, [deleteAppointment, t]);
 
   const handleFormSubmit = (data: any) => {
     if (editingAppointment) {
@@ -222,36 +220,6 @@ export default function AppointmentsPage() {
         },
       },
       {
-        id: "accessCode",
-        header: t("appointments.colAccessCode"),
-        cell: ({ row }) => {
-          const id = row.original.id;
-          const pin = pinMap[id];
-          return (
-            <div className="flex items-center gap-2">
-              {pin !== undefined ? (
-                <span className="font-mono text-xs bg-surface-hover px-2 py-0.5 rounded border border-border tracking-widest">
-                  {pin ?? "—"}
-                </span>
-              ) : (
-                <button
-                  onClick={async () => {
-                    setLoadingPinId(id);
-                    const res = await api.post(`/appointments/${id}/access-code`);
-                    setPinMap((prev) => ({ ...prev, [id]: res.data.accessCode }));
-                    setLoadingPinId(null);
-                  }}
-                  disabled={loadingPinId === id}
-                  className="text-xs text-primary hover:underline cursor-pointer disabled:opacity-40"
-                >
-                  {loadingPinId === id ? <Loader2 className="w-3 h-3 animate-spin" /> : t("appointments.showPin")}
-                </button>
-              )}
-            </div>
-          );
-        },
-      },
-      {
         id: "actions",
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
@@ -279,7 +247,7 @@ export default function AppointmentsPage() {
         ),
       },
     ],
-    [isDeleting, deletingId, t, pinMap, loadingPinId],
+    [isDeleting, deletingId, t, handleEdit, handleDelete],
   );
 
   return (

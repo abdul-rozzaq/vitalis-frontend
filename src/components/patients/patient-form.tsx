@@ -60,7 +60,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     formState: { errors },
   } = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema) as any,
-    defaultValues: initialData || { gender: "male" },
+    defaultValues: initialData || {},
   });
 
   const { data: regions = [] } = useQuery<{ id: string; name: string }[]>({

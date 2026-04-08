@@ -241,9 +241,7 @@
     "statusConfirmed": "Подтверждено",
     "statusCancelled": "Отменено",
     "statusCompleted": "Завершено",
-    "deleteConfirm": "Вы уверены, что хотите удалить эту запись?",
-    "colAccessCode": "Код доступа",
-    "showPin": "Показать PIN"
+    "deleteConfirm": "Вы уверены, что хотите удалить эту запись?"
   },
   "assignments": {
     "title": "Назначения",

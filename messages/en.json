@@ -242,9 +242,7 @@
     "statusConfirmed": "Confirmed",
     "statusCancelled": "Cancelled",
     "statusCompleted": "Completed",
-    "deleteConfirm": "Are you sure you want to delete this appointment?",
-    "colAccessCode": "Access Code",
-    "showPin": "Show PIN"
+    "deleteConfirm": "Are you sure you want to delete this appointment?"
   },
   "assignments": {
     "title": "Assignments",

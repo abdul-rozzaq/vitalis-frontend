@@ -241,9 +241,7 @@
     "statusConfirmed": "Tasdiqlangan",
     "statusCancelled": "Bekor qilingan",
     "statusCompleted": "Bajarilgan",
-    "deleteConfirm": "Ushbu uchrashuvni o'chirishni xohlaysizmi?",
-    "colAccessCode": "Kirish kodi",
-    "showPin": "Kodni ko'rish"
+    "deleteConfirm": "Ushbu uchrashuvni o'chirishni xohlaysizmi?"
   },
   "assignments": {
     "title": "Tayinlovlar",
