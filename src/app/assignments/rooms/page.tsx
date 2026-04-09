@@ -81,7 +81,7 @@ export default function AssignmentsRoomsPage() {
       },
       {
         accessorKey: "createdAt",
-        header: t("common.createdAt"),
+        header: t("common.created"),
         cell: ({ row }) => <span className="text-text-muted text-xs">{formatShortDate(row.original.createdAt)}</span>,
       },
       {
