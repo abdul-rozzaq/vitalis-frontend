@@ -21,12 +21,12 @@ import {
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CreditCard, Download, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, Upload, User } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, Download, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem }) {
   const payments = appointment.payments ?? [];
@@ -185,10 +185,6 @@ export default function PatientDetailPage() {
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
-  const [editingAppointment, setEditingAppointment] = useState<AppointmentTimelineItem | null>(null);
-  const [uploadingAppointmentId, setUploadingAppointmentId] = useState<string | null>(null);
-  const [uploadTargetAppointment, setUploadTargetAppointment] = useState<AppointmentTimelineItem | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: patientData } = useQuery({
     queryKey: ["patient", id],
@@ -217,16 +213,6 @@ export default function PatientDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
-      setSheetMode(null);
-    },
-  });
-
-  const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useMutation({
-    mutationFn: (data: AppointmentFormPayload) => api.patch(`/appointments/${editingAppointment?.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
-      setEditingAppointment(null);
       setSheetMode(null);
     },
   });
@@ -260,53 +246,6 @@ export default function PatientDetailPage() {
     () => [...new Set(appointments.map((appointment) => appointment.assignment.department.name))],
     [appointments],
   );
-
-  const handleEditAppointment = useCallback((appointment: AppointmentTimelineItem) => {
-    setEditingAppointment(appointment);
-    setSheetMode("editAppointment");
-  }, []);
-
-  const handleAppointmentSheetClose = useCallback(() => {
-    setEditingAppointment(null);
-    setSheetMode(null);
-  }, []);
-
-  const handleAttachFileClick = useCallback((appointment: AppointmentTimelineItem) => {
-    setUploadTargetAppointment(appointment);
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleAttachFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !uploadTargetAppointment) return;
-
-    const appointmentId = uploadTargetAppointment.id;
-    if (!appointmentId) {
-      event.target.value = "";
-      return;
-    }
-
-    try {
-      setUploadingAppointmentId(uploadTargetAppointment.id);
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await api.post("/uploads/file", formData);
-      const fileUrl = uploadResponse.data?.url;
-
-      await api.post(`/appointments/${appointmentId}/files`, {
-        name: file.name,
-        url: fileUrl,
-      });
-
-      await queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
-    } finally {
-      setUploadingAppointmentId(null);
-      setUploadTargetAppointment(null);
-      event.target.value = "";
-    }
-  }, [queryClient, id, uploadTargetAppointment]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
@@ -432,22 +371,6 @@ export default function PatientDetailPage() {
                 {t("patients.editPatientInfo")}
               </button>
             </Can>
-
-            <Can method="POST" path="/api/payments">
-              <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
-                <CreditCard className="w-4 h-4" />
-                {t("patients.recordPayment")}
-              </button>
-            </Can>
-
-            <button
-              onClick={() => appointments[0] && handleAttachFileClick(appointments[0])}
-              disabled={appointments.length === 0}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Upload className="w-4 h-4" />
-              {t("patients.uploadFile")}
-            </button>
           </div>
 
           {/* Departments visited */}
@@ -504,28 +427,14 @@ export default function PatientDetailPage() {
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="text-xs text-text-muted">{formatDate(appointment.dateTime)}</div>
                     <div className="flex items-center gap-2">
-                      <Can method="POST" path="/api/appointments/:id/files">
-                        <button
-                          onClick={() => handleAttachFileClick(appointment)}
-                          disabled={uploadingAppointmentId === appointment.id}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-text bg-surface border border-border hover:bg-surface-hover px-2 py-1 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={t("patients.uploadFile")}
-                        >
-                          <Paperclip className="w-3.5 h-3.5" />
-                          {uploadingAppointmentId === appointment.id ? t("common.loading") : t("patients.uploadFile")}
-                        </button>
-                      </Can>
-
-                      <Can method="PATCH" path="/api/appointments/:id">
-                        <button
-                          onClick={() => handleEditAppointment(appointment)}
-                          className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-text bg-surface border border-border hover:bg-surface-hover px-2 py-1 rounded-md transition-colors cursor-pointer"
-                          title={t("appointments.editTitle")}
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                          {t("appointments.editTitle")}
-                        </button>
-                      </Can>
+                      <Link
+                        href={`/appointments/${appointment.id}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-text bg-surface border border-border hover:bg-surface-hover px-2 py-1 rounded-md transition-colors cursor-pointer"
+                        title={t("appointments.viewDetails")}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        {t("appointments.viewDetails")}
+                      </Link>
                     </div>
                   </div>
                   <AppointmentCard appointment={appointment} />
@@ -548,36 +457,9 @@ export default function PatientDetailPage() {
         />
       </Sheet>
 
-      <Sheet
-        isOpen={sheetMode === "editAppointment"}
-        onClose={handleAppointmentSheetClose}
-        title={t("appointments.editTitle")}
-        description={t("appointments.editDesc")}
-      >
-        <AppointmentForm
-          initialData={
-            editingAppointment
-              ? {
-                patientId: id,
-                assignmentId: editingAppointment.assignmentId ?? editingAppointment.assignment.id,
-                dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                status: editingAppointment.status,
-              }
-              : undefined
-          }
-          patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
-          assignments={assignmentOptions}
-          onSubmit={(data) => updateAppointment(data)}
-          onCancel={handleAppointmentSheetClose}
-          isPending={isUpdatingAppointment}
-        />
-      </Sheet>
-
       <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title={t("patients.editPatientSheet")} description={t("patients.editPatientDesc")}>
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
-
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFileChange} />
     </div>
   );
 }

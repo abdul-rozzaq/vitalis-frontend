@@ -14,9 +14,10 @@ import {
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Calendar as CalendarIcon, Download, Edit, Filter, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
+import { Building2, Calendar as CalendarIcon, Download, Edit, ExternalLink, Filter, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 export default function AppointmentsPage() {
@@ -193,6 +194,13 @@ export default function AppointmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
+            <Link
+              href={`/appointments/${row.original.id}`}
+              className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors"
+              title={t("appointments.viewDetails")}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
             <Can method="PATCH" path="/api/appointments/:id">
               <button
                 onClick={() => handleEdit(row.original)}
