@@ -59,6 +59,7 @@ export interface UserOption {
 export interface DepartmentOption {
   id: string;
   name: string;
+  price?: number | null;
 }
 
 export type TabId = "assignments" | "rooms" | "roles" | "permissions";

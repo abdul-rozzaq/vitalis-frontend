@@ -1,8 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -36,6 +36,7 @@ interface UserOption {
 interface DeptOption {
   id: string;
   name: string;
+  price?: number | null;
 }
 interface RoomOption {
   id: string;
@@ -104,7 +105,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           <option value="">{t("forms.selectDepartmentOption")}</option>
           {departments.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.name}
+              {d.name} — {d.price != null ? `${d.price.toLocaleString()} uzs` : t("forms.priceNotSet")}
             </option>
           ))}
         </select>

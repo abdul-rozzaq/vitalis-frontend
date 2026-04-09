@@ -29,3 +29,5 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
   { id: "roles" as TabId, label: t("assignments.tabRoles"), icon: Shield },
   { id: "permissions" as TabId, label: t("assignments.tabPermissions"), icon: KeyRound },
 ];
+
+export const getAssignmentsTabHref = (tabId: TabId) => (tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`);
