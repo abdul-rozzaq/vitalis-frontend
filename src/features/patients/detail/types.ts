@@ -1,5 +1,7 @@
 export type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
+export type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_POSITIVE" | "B_NEGATIVE" | "AB_POSITIVE" | "AB_NEGATIVE";
+
 export interface Patient {
   id: string;
   first_name: string;
@@ -12,6 +14,7 @@ export interface Patient {
   document_series?: string | null;
   document_number?: string | null;
   pinfl?: string | null;
+  blood_type: BloodType | null;
   district?: {
     name: string;
     region?: {
