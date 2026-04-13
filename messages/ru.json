@@ -509,7 +509,9 @@
     "docTypePassport": "Паспорт",
     "docTypeBirthCertificate": "Свидетельство о рождении",
     "docTypeForeignPassport": "Иностранный паспорт",
-    "docTypeResidencePermit": "Вид на жительство"
+    "docTypeResidencePermit": "Вид на жительство",
+    "bloodType": "Группа крови",
+    "selectBloodType": "Выберите группу крови..."
   },
   "notifications": {
     "title": "Уведомления",

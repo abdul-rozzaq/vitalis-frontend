@@ -1,15 +1,16 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, CreditCard, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import * as z from "zod";
 import { api } from "@/lib/api";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import { Calendar, CreditCard, Droplet, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
+type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_POSITIVE" | "B_NEGATIVE" | "AB_POSITIVE" | "AB_NEGATIVE";
 
 type PatientFormValues = {
   first_name: string;
@@ -18,6 +19,7 @@ type PatientFormValues = {
   gender: "male" | "female";
   birth_date: string;
   address?: string;
+  blood_type?: BloodType | null;
   document_type?: DocumentType | null;
   document_series?: string | null;
   document_number?: string | null;
@@ -46,6 +48,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     gender: z.enum(["male", "female"]),
     birth_date: z.string().min(1, t("forms.birthDateRequired")).transform((val) => new Date(val).toISOString()),
     address: z.string().optional(),
+    blood_type: z.enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"]).nullable().optional(),
     document_type: z.enum(["PASSPORT", "BIRTH_CERTIFICATE", "FOREIGN_PASSPORT", "RESIDENCE_PERMIT"]).nullable().optional(),
     document_series: z.string().max(10).nullable().optional(),
     document_number: z.string().max(20).nullable().optional(),
@@ -84,10 +87,9 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
   }, [districts, initialData?.districtId, setValue]);
 
   const cls = (hasError: boolean, extra = "") =>
-    `w-full bg-surface border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all shadow-sm ${
-      hasError
-        ? "border-red-400 focus:ring-red-400/20 focus:border-red-400"
-        : "border-border focus:ring-accent/20 focus:border-accent"
+    `w-full bg-surface border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all shadow-sm ${hasError
+      ? "border-red-400 focus:ring-red-400/20 focus:border-red-400"
+      : "border-border focus:ring-accent/20 focus:border-accent"
     } ${extra}`;
 
   const errMsg = (msg?: string) =>
@@ -136,22 +138,43 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         {errMsg(errors.phone_number?.message)}
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Heart className="w-4 h-4 text-primary-500" />
-          {t("forms.gender")}
-        </label>
-        <div className="flex gap-4">
-          {["male", "female"].map((gender) => (
-            <label key={gender} className="flex items-center gap-2 cursor-pointer group">
-              <input type="radio" value={gender} {...register("gender")} className="w-4 h-4 accent-primary-600 cursor-pointer" />
-              <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">
-                {gender === "male" ? t("forms.male") : t("forms.female")}
-              </span>
-            </label>
-          ))}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <Heart className="w-4 h-4 text-primary-500" />
+            {t("forms.gender")}
+          </label>
+          <div className="flex gap-4">
+            {["male", "female"].map((gender) => (
+              <label key={gender} className="flex items-center gap-2 cursor-pointer group">
+                <input type="radio" value={gender} {...register("gender")} className="w-4 h-4 accent-primary-600 cursor-pointer" />
+                <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">
+                  {gender === "male" ? t("forms.male") : t("forms.female")}
+                </span>
+              </label>
+            ))}
+          </div>
+          {errMsg(errors.gender?.message)}
         </div>
-        {errMsg(errors.gender?.message)}
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <Droplet className="w-4 h-4 text-primary-500" />
+            {t("forms.bloodType")}
+          </label>
+          <select {...register("blood_type")} className={cls(!!errors.blood_type)}>
+            <option value="">{t("forms.selectBloodType")}</option>
+            <option value="O_POSITIVE">O+</option>
+            <option value="O_NEGATIVE">O-</option>
+            <option value="A_POSITIVE">A+</option>
+            <option value="A_NEGATIVE">A-</option>
+            <option value="B_POSITIVE">B+</option>
+            <option value="B_NEGATIVE">B-</option>
+            <option value="AB_POSITIVE">AB+</option>
+            <option value="AB_NEGATIVE">AB-</option>
+          </select>
+          {errMsg(errors.blood_type?.message)}
+        </div>
       </div>
 
       <div className="space-y-1.5">

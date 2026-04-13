@@ -21,7 +21,7 @@ import {
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, Download, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, User } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, Download, Droplet, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -158,6 +158,27 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Droplet className="w-4 h-4 text-primary-500" />
+          {t("forms.bloodType")}
+        </label>
+        <select
+          defaultValue={patient.blood_type ?? ""}
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        >
+          <option value="">{t("forms.selectBloodType")}</option>
+          <option value="O_POSITIVE">O+</option>
+          <option value="O_NEGATIVE">O-</option>
+          <option value="A_POSITIVE">A+</option>
+          <option value="A_NEGATIVE">A-</option>
+          <option value="B_POSITIVE">B+</option>
+          <option value="B_NEGATIVE">B-</option>
+          <option value="AB_POSITIVE">AB+</option>
+          <option value="AB_NEGATIVE">AB-</option>
+        </select>
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button
           type="button"
@@ -268,7 +289,15 @@ export default function PatientDetailPage() {
               <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
               <div>
                 <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
-                <span className="text-xs text-text-muted capitalize">{patient.gender}</span>
+                <div className="flex items-center justify-center gap-2 text-xs text-text-muted capitalize">
+                  <span>{patient.gender}</span>
+                  {patient.blood_type && (
+                    <>
+                      <span>•</span>
+                      <span className="font-mono">{patient.blood_type.replace(/_/g, " ")}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -281,6 +310,12 @@ export default function PatientDetailPage() {
                 <div className="flex items-center gap-2.5 text-sm text-secondary">
                   <Calendar className="w-4 h-4 text-text-muted shrink-0" />
                   {new Date(patient.birth_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                </div>
+              )}
+              {patient.blood_type && (
+                <div className="flex items-center gap-2.5 text-sm text-secondary">
+                  <Droplet className="w-4 h-4 text-text-muted shrink-0" />
+                  <span className="font-mono">{patient.blood_type.replace(/_/g, " ")}</span>
                 </div>
               )}
               <div className="flex items-center gap-2.5 text-sm text-secondary">

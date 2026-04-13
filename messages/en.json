@@ -511,7 +511,9 @@
     "docTypePassport": "Passport",
     "docTypeBirthCertificate": "Birth Certificate",
     "docTypeForeignPassport": "Foreign Passport",
-    "docTypeResidencePermit": "Residence Permit"
+    "docTypeResidencePermit": "Residence Permit",
+    "bloodType": "Blood Type",
+    "selectBloodType": "Select blood type..."
   },
   "notifications": {
     "title": "Notifications",

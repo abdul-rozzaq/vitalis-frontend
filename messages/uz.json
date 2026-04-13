@@ -509,7 +509,9 @@
     "docTypePassport": "Pasport",
     "docTypeBirthCertificate": "Tug'ilganlik guvohnomasi",
     "docTypeForeignPassport": "Xorijiy pasport",
-    "docTypeResidencePermit": "Yashash ruxsatnomasi"
+    "docTypeResidencePermit": "Yashash ruxsatnomasi",
+    "bloodType": "Qon guruhi",
+    "selectBloodType": "Qon guruhini tanlang..."
   },
   "notifications": {
     "title": "Bildirishnomalar",
