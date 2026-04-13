@@ -100,13 +100,15 @@ export function PrescriptionEditor({ appointmentId, initialData }: PrescriptionE
           {t("appointments.noPrescription")}
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {fields.map((field, idx) => {
             const mealRelation = items?.[idx]?.mealRelation;
+            const cell = "bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-accent/30";
             return (
-              <div key={field.id} className="border border-border rounded-lg p-4 space-y-3 bg-surface">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="md:col-span-2">
+              <div key={field.id} className="border border-border rounded-lg p-3 space-y-2 bg-surface">
+                {/* Row 1: Medicine · Dosage · Frequency */}
+                <div className="grid grid-cols-[2fr_1fr_1fr] gap-2 items-start">
+                  <div>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.medicine")}</label>
                     <MedicineCombobox
                       value={items?.[idx]?.medicineId}
@@ -118,90 +120,52 @@ export function PrescriptionEditor({ appointmentId, initialData }: PrescriptionE
                       disabled={isPending}
                     />
                   </div>
-
                   <div>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.dosage")}</label>
-                    <input
-                      value={items?.[idx]?.dosage || ""}
-                      onChange={(e) => setValue(`items.${idx}.dosage`, e.target.value, { shouldDirty: true })}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    />
+                    <input value={items?.[idx]?.dosage || ""} onChange={(e) => setValue(`items.${idx}.dosage`, e.target.value, { shouldDirty: true })} className={cell} />
                   </div>
-
                   <div>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.frequency")}</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={items?.[idx]?.frequency || 1}
-                      onChange={(e) => setValue(`items.${idx}.frequency`, Number(e.target.value || 1), { shouldDirty: true })}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    />
+                    <input type="number" min={1} value={items?.[idx]?.frequency || 1} onChange={(e) => setValue(`items.${idx}.frequency`, Number(e.target.value || 1), { shouldDirty: true })} className={cell} />
                   </div>
+                </div>
 
+                {/* Row 2: Start · End · Meal · (time) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
                   <div>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.startDate")}</label>
-                    <input
-                      type="date"
-                      value={items?.[idx]?.startDate || ""}
-                      onChange={(e) => setValue(`items.${idx}.startDate`, e.target.value, { shouldDirty: true })}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    />
+                    <input type="date" value={items?.[idx]?.startDate || ""} onChange={(e) => setValue(`items.${idx}.startDate`, e.target.value, { shouldDirty: true })} className={cell} />
                   </div>
-
                   <div>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.endDate")}</label>
-                    <input
-                      type="date"
-                      value={items?.[idx]?.endDate || ""}
-                      onChange={(e) => setValue(`items.${idx}.endDate`, e.target.value, { shouldDirty: true })}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    />
+                    <input type="date" value={items?.[idx]?.endDate || ""} onChange={(e) => setValue(`items.${idx}.endDate`, e.target.value, { shouldDirty: true })} className={cell} />
                   </div>
-
-                  <div>
+                  <div className={mealRelation === "AT_SPECIFIC_TIME" ? "" : "sm:col-span-2"}>
                     <label className="text-xs text-secondary mb-1 block">{t("prescription.mealRelation")}</label>
-                    <select
-                      value={mealRelation || "AFTER_MEAL"}
-                      onChange={(e) => setValue(`items.${idx}.mealRelation`, e.target.value as MealRelation, { shouldDirty: true })}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    >
+                    <select value={mealRelation || "AFTER_MEAL"} onChange={(e) => setValue(`items.${idx}.mealRelation`, e.target.value as MealRelation, { shouldDirty: true })} className={cell}>
                       <option value="BEFORE_MEAL">{t("prescription.beforeMeal")}</option>
                       <option value="AFTER_MEAL">{t("prescription.afterMeal")}</option>
                       <option value="WITH_MEAL">{t("prescription.withMeal")}</option>
                       <option value="AT_SPECIFIC_TIME">{t("prescription.atTime")}</option>
                     </select>
                   </div>
-
                   {mealRelation === "AT_SPECIFIC_TIME" && (
                     <div>
                       <label className="text-xs text-secondary mb-1 block">{t("prescription.specificTime")}</label>
-                      <input
-                        type="time"
-                        value={items?.[idx]?.specificTime || ""}
-                        onChange={(e) => setValue(`items.${idx}.specificTime`, e.target.value, { shouldDirty: true })}
-                        className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                      />
+                      <input type="time" value={items?.[idx]?.specificTime || ""} onChange={(e) => setValue(`items.${idx}.specificTime`, e.target.value, { shouldDirty: true })} className={cell} />
                     </div>
                   )}
-
-                  <div className="md:col-span-2">
-                    <label className="text-xs text-secondary mb-1 block">{t("prescription.note")}</label>
-                    <textarea
-                      value={items?.[idx]?.note || ""}
-                      onChange={(e) => setValue(`items.${idx}.note`, e.target.value, { shouldDirty: true })}
-                      rows={2}
-                      className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm"
-                    />
-                  </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => remove(idx)}
-                    className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 cursor-pointer"
-                  >
+                {/* Row 3: Note · Remove */}
+                <div className="flex items-center gap-2">
+                  <input
+                    value={items?.[idx]?.note || ""}
+                    onChange={(e) => setValue(`items.${idx}.note`, e.target.value, { shouldDirty: true })}
+                    placeholder={t("prescription.note")}
+                    className={`${cell} flex-1`}
+                  />
+                  <button type="button" onClick={() => remove(idx)} className="shrink-0 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600 cursor-pointer">
                     <Trash2 className="w-3.5 h-3.5" />
                     {t("prescription.remove")}
                   </button>

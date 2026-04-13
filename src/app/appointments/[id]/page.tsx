@@ -1,6 +1,7 @@
 "use client";
 
 import { AppointmentForm } from "@/components/appointments/appointment-form";
+import { FileUploadModal } from "@/components/appointments/file-upload-modal";
 import { PrescriptionEditor } from "@/components/appointments/prescription-editor";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
@@ -14,7 +15,7 @@ import { ArrowLeft, Building2, Calendar, CreditCard, Edit, FileText, Loader2, Re
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
 type PaymentStatus = "PAID" | "UNPAID";
@@ -29,6 +30,7 @@ interface PaymentFormProps {
 
 function AppointmentPaymentForm({ appointment, onSubmit, onCancel, isPending }: PaymentFormProps) {
   const t = useTranslations();
+
   const [amount, setAmount] = useState<string>("");
   const [method, setMethod] = useState<PaymentMethod>("CASH");
   const [status, setStatus] = useState<PaymentStatus>("PAID");
@@ -127,7 +129,7 @@ export default function AppointmentDetailPage() {
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<DetailSheetMode>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
 
   const { data: appointment, isLoading } = useQuery<Appointment>({
     queryKey: ["appointments", id],
@@ -180,10 +182,8 @@ export default function AppointmentDetailPage() {
     },
   });
 
-  const handleAttachFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !appointment) return;
-
+  const handleFileUploadConfirm = async (file: File, name: string) => {
+    if (!appointment) return;
     try {
       setIsUploadingFile(true);
 
@@ -194,14 +194,14 @@ export default function AppointmentDetailPage() {
       const fileUrl = uploadResponse.data?.url;
 
       await api.post(`/appointments/${appointment.id}/files`, {
-        name: file.name,
+        name,
         url: fileUrl,
       });
 
       await invalidateAppointmentData(appointment.patientId);
+      setIsFileModalOpen(false);
     } finally {
       setIsUploadingFile(false);
-      event.target.value = "";
     }
   };
 
@@ -316,7 +316,7 @@ export default function AppointmentDetailPage() {
             <Can method="POST" path="/api/appointments/:id/files">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => setIsFileModalOpen(true)}
                 disabled={isUploadingFile}
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-secondary transition-colors hover:bg-surface-hover hover:text-text cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -387,7 +387,12 @@ export default function AppointmentDetailPage() {
         />
       </Sheet>
 
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleAttachFileChange} />
+      <FileUploadModal
+        isOpen={isFileModalOpen}
+        onClose={() => setIsFileModalOpen(false)}
+        onConfirm={handleFileUploadConfirm}
+        isPending={isUploadingFile}
+      />
     </div>
   );
 }

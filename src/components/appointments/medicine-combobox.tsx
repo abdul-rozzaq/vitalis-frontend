@@ -14,12 +14,7 @@ interface MedicineComboboxProps {
   disabled?: boolean;
 }
 
-export function MedicineCombobox({
-  value,
-  displayName,
-  onChange,
-  disabled,
-}: MedicineComboboxProps) {
+export function MedicineCombobox({ value, displayName, onChange, disabled }: MedicineComboboxProps) {
   const t = useTranslations();
   const [query, setQuery] = useState(displayName ?? "");
   const [debouncedQuery, setDebouncedQuery] = useState(displayName ?? "");

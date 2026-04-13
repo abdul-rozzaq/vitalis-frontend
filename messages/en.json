@@ -253,7 +253,11 @@
     "noPayments": "No payments yet.",
     "noFiles": "No files attached.",
     "noPrescription": "No prescription items yet.",
-    "notFound": "Appointment not found."
+    "notFound": "Appointment not found.",
+    "uploadFileDesc": "Select a file and optionally rename it before uploading.",
+    "clickToSelectFile": "Click to select a file",
+    "fileName": "File name",
+    "fileNamePlaceholder": "Enter file name"
   },
   "prescription": {
     "searchMedicine": "Search medicine...",

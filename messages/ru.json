@@ -251,7 +251,11 @@
     "noPayments": "Платежей пока нет.",
     "noFiles": "Файлы не прикреплены.",
     "noPrescription": "В рецепте пока нет записей.",
-    "notFound": "Запись не найдена."
+    "notFound": "Запись не найдена.",
+    "uploadFileDesc": "Выберите файл и при необходимости переименуйте его перед загрузкой.",
+    "clickToSelectFile": "Нажмите, чтобы выбрать файл",
+    "fileName": "Имя файла",
+    "fileNamePlaceholder": "Введите имя файла"
   },
   "prescription": {
     "searchMedicine": "Поиск лекарства...",
