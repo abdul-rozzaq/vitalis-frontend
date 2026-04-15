@@ -279,7 +279,12 @@
     "withMeal": "With meal",
     "atTime": "At specific time",
     "specificTime": "Time",
-    "note": "Note"
+    "note": "Note",
+    "print": "Print Prescription",
+    "printing": "Preparing print...",
+    "printFailed": "Failed to generate printable prescription.",
+    "printPopupBlocked": "Pop-up blocked. Please allow pop-ups and try again.",
+    "printLoadingTitle": "Preparing Prescription"
   },
   "assignments": {
     "title": "Assignments",

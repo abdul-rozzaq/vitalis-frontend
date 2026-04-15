@@ -11,7 +11,7 @@ import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CreditCard, Edit, FileText, Loader2, Receipt, Stethoscope, Upload } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, CreditCard, Edit, FileText, Loader2, Printer, Receipt, Stethoscope, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -130,6 +130,8 @@ export default function AppointmentDetailPage() {
   const [sheetMode, setSheetMode] = useState<DetailSheetMode>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+  const [isPrintingPrescription, setIsPrintingPrescription] = useState(false);
+  const [printError, setPrintError] = useState<string | null>(null);
 
   const { data: appointment, isLoading } = useQuery<Appointment>({
     queryKey: ["appointments", id],
@@ -202,6 +204,67 @@ export default function AppointmentDetailPage() {
       setIsFileModalOpen(false);
     } finally {
       setIsUploadingFile(false);
+    }
+  };
+
+  const handlePrintPrescription = async () => {
+    const prescriptionId = appointment?.prescription?.id;
+    if (!prescriptionId || isPrintingPrescription) return;
+
+    setPrintError(null);
+    setIsPrintingPrescription(true);
+
+    let printWindow: Window | null = null;
+    let objectUrl: string | null = null;
+
+    try {
+      printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        setPrintError(t("prescription.printPopupBlocked"));
+        return;
+      }
+
+      printWindow.document.write(`<!doctype html><html><head><title>${t("prescription.printLoadingTitle")}</title></head><body><p>${t("common.loading")}</p></body></html>`);
+      printWindow.document.close();
+
+      const response = await api.get<string>(`/prescriptions/${prescriptionId}/print`, {
+        responseType: "text",
+      });
+
+      if (printWindow.closed) {
+        return;
+      }
+
+      if (!response.data || response.data.trim().length === 0) {
+        throw new Error("Empty printable HTML");
+      }
+
+      objectUrl = URL.createObjectURL(
+        new Blob([response.data], { type: "text/html;charset=utf-8" }),
+      );
+
+      printWindow.location.replace(objectUrl);
+
+      const triggerPrint = () => {
+        if (!printWindow || printWindow.closed) return;
+        printWindow.focus();
+        printWindow.print();
+        if (objectUrl) {
+          setTimeout(() => URL.revokeObjectURL(objectUrl as string), 5000);
+        }
+      };
+
+      printWindow.onload = () => setTimeout(triggerPrint, 160);
+    } catch {
+      if (printWindow && !printWindow.closed) {
+        printWindow.close();
+      }
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      setPrintError(t("prescription.printFailed"));
+    } finally {
+      setIsPrintingPrescription(false);
     }
   };
 
@@ -347,6 +410,24 @@ export default function AppointmentDetailPage() {
       </div>
 
       <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
+            <Printer className="w-4 h-4 text-primary" />
+            {t("appointments.prescription")}
+          </h3>
+          <Can method="GET" path="/api/prescriptions/:id/print">
+            <button
+              type="button"
+              onClick={handlePrintPrescription}
+              disabled={!appointment.prescription || isPrintingPrescription}
+              className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-xs font-medium text-secondary transition-colors hover:bg-surface-hover hover:text-text cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isPrintingPrescription ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+              {isPrintingPrescription ? t("prescription.printing") : t("prescription.print")}
+            </button>
+          </Can>
+        </div>
+        {printError && <p className="mb-3 text-xs text-red-500">{printError}</p>}
         <PrescriptionEditor appointmentId={appointment.id} initialData={appointment.prescription} />
       </div>
 

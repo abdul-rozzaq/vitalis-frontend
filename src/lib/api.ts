@@ -4,7 +4,7 @@ import { storageService, STORAGE_KEYS } from "@/services/storage";
 
 // Configure axios for the external backend
 export const api = axios.create({
-  baseURL:(process.env.NEXT_PUBLIC_API_URL ?? "http://172.21.0.20:9000").replace(/\/+$/, "") + "/api",
+  baseURL: (process.env.NEXT_PUBLIC_API_URL ?? "http://172.21.0.20:9000").replace(/\/+$/, "") + "/api",
   withCredentials: true,
 });
 
@@ -35,8 +35,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const message: string =
-      error.response?.data?.message || error.message || "Something went wrong";
+    const message: string = error.response?.data?.message || error.message || "Something went wrong";
 
     toast.error(message);
 

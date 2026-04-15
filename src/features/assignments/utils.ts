@@ -24,10 +24,18 @@ export const formatShortDate = (dateString: string) =>
 export const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
 export const getAssignmentTabs = (t: (key: string) => string) => [
-  { id: "assignments" as TabId, label: t("assignments.tabAssignments"), icon: User },
+  {
+    id: "assignments" as TabId,
+    label: t("assignments.tabAssignments"),
+    icon: User,
+  },
   { id: "rooms" as TabId, label: t("assignments.tabRooms"), icon: DoorOpen },
   { id: "roles" as TabId, label: t("assignments.tabRoles"), icon: Shield },
-  { id: "permissions" as TabId, label: t("assignments.tabPermissions"), icon: KeyRound },
+  {
+    id: "permissions" as TabId,
+    label: t("assignments.tabPermissions"),
+    icon: KeyRound,
+  },
 ];
 
 export const getAssignmentsTabHref = (tabId: TabId) => (tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`);

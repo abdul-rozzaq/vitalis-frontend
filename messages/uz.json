@@ -277,7 +277,12 @@
     "withMeal": "Ovqat bilan",
     "atTime": "Aniq vaqtda",
     "specificTime": "Vaqt",
-    "note": "Izoh"
+    "note": "Izoh",
+    "print": "Retseptni chop etish",
+    "printing": "Chop etishga tayyorlanmoqda...",
+    "printFailed": "Retseptning chop etiladigan versiyasini yaratib bo'lmadi.",
+    "printPopupBlocked": "Qalqib chiquvchi oyna bloklandi. Pop-up'larni yoqing va qayta urinib ko'ring.",
+    "printLoadingTitle": "Retsept tayyorlanmoqda"
   },
   "assignments": {
     "title": "Tayinlovlar",

@@ -9,7 +9,7 @@ import { useAuth } from "./use-auth";
 export interface Permission {
   id: string;
   method: string; // "GET" | "POST" | "PATCH" | "DELETE"
-  path: string;   // "/api/users" | "/api/users/:id"
+  path: string; // "/api/users" | "/api/users/:id"
 }
 
 // ─── Path normalization ───────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ export interface Permission {
 function pathToRegex(template: string): RegExp {
   const escaped = template
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape special chars
-    .replace(/:[^/]+/g, "[^/]+");             // replace :param with wildcard
+    .replace(/:[^/]+/g, "[^/]+"); // replace :param with wildcard
   return new RegExp(`^${escaped}$`);
 }
 
@@ -57,9 +57,9 @@ export function usePermissions() {
    */
   function can(method: string, path: string): boolean {
     console.log(method, path);
-    
+
     if (user?.isSuperUser) return true;
-    
+
     if (!permissions.length) return false;
 
     return permissions.some((p) => {
