@@ -125,7 +125,8 @@
     "statusPending": "Kutilmoqda",
     "statusCancelled": "Bekor qilingan",
     "deleteConfirm": "Ushbu bemorni o'chirishni xohlaysizmi?",
-    "deletePatient": "Bemorni o'chirish"
+    "deletePatient": "Bemorni o'chirish",
+    "showDocuments": "Batafsil ko'rish"
   },
   "employees": {
     "title": "Xodimlar",

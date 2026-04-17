@@ -125,7 +125,8 @@
     "statusPending": "Ожидание",
     "statusCancelled": "Отменено",
     "deleteConfirm": "Вы уверены, что хотите удалить этого пациента?",
-    "deletePatient": "Удалить пациента"
+    "deletePatient": "Удалить пациента",
+    "showDocuments": "Подробнее"
   },
   "employees": {
     "title": "Сотрудники",

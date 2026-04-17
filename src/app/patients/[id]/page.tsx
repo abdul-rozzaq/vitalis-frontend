@@ -21,12 +21,41 @@ import {
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, Download, Droplet, Edit, FileText, Hash, MapPin, Paperclip, Phone, Plus, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Calendar,
+  Download,
+  Droplet,
+  Edit,
+  FileText,
+  Hash,
+  MapPin,
+  Paperclip,
+  Phone,
+  Plus,
+  User,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+
+
+function formatUzPhone(phone?: string) {
+  if (!phone) return "";
+
+  const cleaned = phone.replace(/\D/g, "");
+
+  const match = cleaned.match(/^998(\d{2})(\d{3})(\d{2})(\d{2})$/);
+
+  if (!match) return phone;
+
+  const [, code, part1, part2, part3] = match;
+
+  return `+998(${code})${part1}-${part2}-${part3}`;
+}
 
 function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem }) {
   const payments = appointment.payments ?? [];
@@ -42,7 +71,9 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
           </p>
         </div>
         <div className="text-right">
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${APPOINTMENT_STATUS_STYLES[appointment.status]}`}>
+          <span
+            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${APPOINTMENT_STATUS_STYLES[appointment.status]}`}
+          >
             {appointment.status}
           </span>
           <p className="text-xs text-text-muted mt-1">{formatTime(appointment.dateTime)}</p>
@@ -56,7 +87,10 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
             const Icon = style.icon;
 
             return (
-              <div key={payment.id} className={`border rounded-lg px-3 py-2 flex items-center justify-between gap-3 ${style.bg} ${style.border}`}>
+              <div
+                key={payment.id}
+                className={`border rounded-lg px-3 py-2 flex items-center justify-between gap-3 ${style.bg} ${style.border}`}
+              >
                 <div className="flex items-center gap-2">
                   <Icon className={`w-4 h-4 ${style.text}`} />
                   <div>
@@ -65,7 +99,9 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-sm font-semibold ${style.text}`}>{Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m</p>
+                  <p className={`text-sm font-semibold ${style.text}`}>
+                    {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
+                  </p>
                   <p className="text-xs text-text-muted">{formatTime(payment.createdAt)}</p>
                 </div>
               </div>
@@ -77,7 +113,13 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
       {files.length > 0 ? (
         <div className="space-y-2 pt-2 border-t border-border">
           {files.map((file) => (
-            <a key={file.id} href={resolveFileUrl(file.url)} target="_blank" rel="noreferrer" className="bg-surface-hover rounded-lg px-3 py-2 flex items-center justify-between gap-3 hover:bg-border transition-colors">
+            <a
+              key={file.id}
+              href={resolveFileUrl(file.url)}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-surface-hover rounded-lg px-3 py-2 flex items-center justify-between gap-3 hover:bg-border transition-colors"
+            >
               <div className="flex items-center gap-2 min-w-0">
                 <Paperclip className="w-4 h-4 text-secondary shrink-0" />
                 <p className="text-sm text-text truncate">{file.name}</p>
@@ -90,7 +132,6 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
     </div>
   );
 }
-
 
 // ─── Edit Patient Form ─────────────────────────────────────────────────────────
 
@@ -149,7 +190,13 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         <div className="flex gap-4">
           {["male", "female"].map((g) => (
             <label key={g} className="flex items-center gap-2 cursor-pointer group">
-              <input type="radio" name="gender" value={g} defaultChecked={patient.gender === g} className="w-4 h-4 accent-primary-600 cursor-pointer" />
+              <input
+                type="radio"
+                name="gender"
+                value={g}
+                defaultChecked={patient.gender === g}
+                className="w-4 h-4 accent-primary-600 cursor-pointer"
+              />
               <span className="text-sm text-secondary capitalize">
                 {g === "male" ? t("forms.male") : t("forms.female")}
               </span>
@@ -207,6 +254,24 @@ export default function PatientDetailPage() {
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
 
+  // --- Pasport ma'lumotlari uchun yangi state'lar ---
+  const [docRevealed, setDocRevealed] = useState(false);
+  const [docLoading, setDocLoading] = useState(false);
+
+  const handleRevealDoc = async () => {
+    setDocLoading(true);
+    try {
+      // Real API endpoint bo'lsa:
+      // await api.get(`/patients/${id}/document`);
+      // Hozircha simulate qilinmoqda:
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setDocRevealed(true);
+    } finally {
+      setDocLoading(false);
+    }
+  };
+  // -------------------------------------------------
+
   const { data: patientData } = useQuery({
     queryKey: ["patient", id],
     queryFn: () => api.get(`/patients/${id}`).then((res) => res.data),
@@ -224,10 +289,7 @@ export default function PatientDetailPage() {
     [assignmentsDataRaw],
   );
 
-  const assignmentOptions = useMemo(
-    () => toAssignmentOptions(assignmentsData),
-    [assignmentsData],
-  );
+  const assignmentOptions = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
 
   const { mutateAsync: addAppointment, isPending: isAddingAppointment } = useMutation({
     mutationFn: (data: AppointmentFormPayload) => api.post("/appointments", data),
@@ -244,16 +306,24 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
+  const patient: Patient =
+    patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
+
   const appointments = useMemo(
-    () => [...appointmentsData].sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()),
+    () =>
+      [...appointmentsData].sort(
+        (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
+      ),
     [appointmentsData],
   );
 
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
   const visitCount = appointments.length;
-  const fileCount = appointments.reduce((total, appointment) => total + (appointment.files?.length ?? 0), 0);
+  const fileCount = appointments.reduce(
+    (total, appointment) => total + (appointment.files?.length ?? 0),
+    0,
+  );
   const totalPaid = appointments.reduce(
     (total, appointment) =>
       total +
@@ -268,11 +338,20 @@ export default function PatientDetailPage() {
     [appointments],
   );
 
+  const hasDocInfo =
+    patient.document_type ||
+    patient.document_series ||
+    patient.document_number ||
+    patient.pinfl;
+
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
       {/* Back link */}
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
-        <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
+        <Link
+          href="/patients"
+          className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group"
+        >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           {t("patients.backToPatients")}
         </Link>
@@ -281,12 +360,19 @@ export default function PatientDetailPage() {
       {/* Two-column layout */}
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ── LEFT SIDEBAR ───────────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 }} className="w-full lg:w-72 shrink-0 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.04 }}
+          className="w-full lg:w-72 shrink-0 space-y-4"
+        >
           {/* Patient card */}
           <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
             {/* Avatar + Name */}
             <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
+              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">
+                {initials}
+              </div>
               <div>
                 <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
                 <div className="flex items-center justify-center gap-2 text-xs text-text-muted capitalize">
@@ -309,58 +395,123 @@ export default function PatientDetailPage() {
               {patient.birth_date && (
                 <div className="flex items-center gap-2.5 text-sm text-secondary">
                   <Calendar className="w-4 h-4 text-text-muted shrink-0" />
-                  {new Date(patient.birth_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  {new Date(patient.birth_date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </div>
               )}
-              {patient.blood_type && (
-                <div className="flex items-center gap-2.5 text-sm text-secondary">
-                  <Droplet className="w-4 h-4 text-text-muted shrink-0" />
-                  <span className="font-mono">{patient.blood_type.replace(/_/g, " ")}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2.5 text-sm text-secondary">
+
+              {/* <div className="flex items-center gap-2.5 text-sm text-secondary">
                 <Phone className="w-4 h-4 text-text-muted shrink-0" />
                 <span className="font-mono">{patient.phone_number}</span>
+              </div> */}
+
+              <div className="flex items-center gap-2.5 text-sm text-secondary">
+                <Phone className="w-4 h-4 text-text-muted shrink-0" />
+                <span className="font-mono">
+                  {formatUzPhone(patient.phone_number)}
+                </span>
               </div>
-              {patient.address && (
-                <div className="flex items-start gap-2.5 text-sm text-secondary">
-                  <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                  <span>{patient.address}</span>
-                </div>
-              )}
+
+
               {patient.district?.region?.name && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}
+                    <span className="text-text-muted">{t("forms.region")}:</span>{" "}
+                    {patient.district.region.name}
                   </span>
                 </div>
               )}
+
               {patient.district?.name && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}
+                    <span className="text-text-muted">{t("forms.district")}:</span>{" "}
+                    {patient.district.name}
                   </span>
                 </div>
               )}
-              {(patient.document_type || patient.document_series || patient.document_number) && (
-                <div className="flex items-start gap-2.5 text-sm text-secondary">
-                  <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                  <span>
-                    {patient.document_type?.replace(/_/g, " ")}
-                    {(patient.document_series || patient.document_number) && (
-                      <span className="font-mono"> {patient.document_series}{patient.document_number}</span>
-                    )}
-                  </span>
+
+              {/* ── Pasport / hujjat ma'lumotlari ── */}
+              {hasDocInfo && (
+                <div className="space-y-2 pt-1">
+                  {!docRevealed ? (
+                    <button
+                      type="button"
+                      onClick={handleRevealDoc}
+                      disabled={docLoading}
+                      className="flex items-center justify-center gap-2 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 disabled:opacity-60 disabled:cursor-not-allowed px-3 py-2 rounded-md transition-colors cursor-pointer w-full"
+                    >
+                      {docLoading ? (
+                        <>
+                          <svg
+                            className="w-3.5 h-3.5 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
+                          </svg>
+                          {t("common.loading")}
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-3.5 h-3.5" />
+                          {t("patients.showDocuments")}
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-2.5"
+                    >
+                      {(patient.document_type ||
+                        patient.document_series ||
+                        patient.document_number) && (
+                          <div className="flex items-start gap-2.5 text-sm text-secondary">
+                            <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                            <span>
+                              {patient.document_type?.replace(/_/g, " ")}
+                              {(patient.document_series || patient.document_number) && (
+                                <span className="font-mono">
+                                  {" "}
+                                  {patient.document_series}
+                                  {patient.document_number}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      {patient.pinfl && (
+                        <div className="flex items-center gap-2.5 text-sm text-secondary">
+                          <Hash className="w-4 h-4 text-text-muted shrink-0" />
+                          <span className="font-mono">{patient.pinfl}</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
                 </div>
               )}
-              {patient.pinfl && (
-                <div className="flex items-center gap-2.5 text-sm text-secondary">
-                  <Hash className="w-4 h-4 text-text-muted shrink-0" />
-                  <span className="font-mono">{patient.pinfl}</span>
-                </div>
-              )}
+              {/* ─────────────────────────────────── */}
             </div>
 
             {/* Divider */}
@@ -373,7 +524,9 @@ export default function PatientDetailPage() {
                 <p className="text-[11px] text-text-muted">{t("patients.visits")}</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-text">{totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS</p>
+                <p className="text-lg font-bold text-text">
+                  {totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS
+                </p>
                 <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
               </div>
               <div>
@@ -385,7 +538,9 @@ export default function PatientDetailPage() {
 
           {/* Action buttons */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
+              {t("common.actions")}
+            </p>
 
             <Can method="POST" path="/api/appointments">
               <button
@@ -410,10 +565,15 @@ export default function PatientDetailPage() {
 
           {/* Departments visited */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t("patients.departmentsVisited")}</p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+              {t("patients.departmentsVisited")}
+            </p>
             <div className="flex flex-wrap gap-1.5">
               {visitedDepartments.map((department) => (
-                <span key={department} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary">
+                <span
+                  key={department}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary"
+                >
                   <Building2 className="w-3 h-3" />
                   {department}
                 </span>
@@ -423,7 +583,12 @@ export default function PatientDetailPage() {
         </motion.div>
 
         {/* ── RIGHT TIMELINE ─────────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="flex-1 min-w-0 space-y-6"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
             <Can method="POST" path="/api/appointments">
@@ -440,7 +605,10 @@ export default function PatientDetailPage() {
           {isTimelineLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse">
+                <div
+                  key={i}
+                  className="bg-surface border border-border rounded-xl p-4 animate-pulse"
+                >
                   <div className="h-4 bg-border rounded w-1/3 mb-3" />
                   <div className="h-3 bg-border rounded w-2/3" />
                 </div>
@@ -481,7 +649,12 @@ export default function PatientDetailPage() {
       </div>
 
       {/* ── SHEETS ─────────────────────────────────────────────────────────── */}
-      <Sheet isOpen={sheetMode === "visit"} onClose={() => setSheetMode(null)} title={t("patients.newDeptVisit")} description={t("patients.newDeptVisitDesc")}>
+      <Sheet
+        isOpen={sheetMode === "visit"}
+        onClose={() => setSheetMode(null)}
+        title={t("patients.newDeptVisit")}
+        description={t("patients.newDeptVisitDesc")}
+      >
         <AppointmentForm
           initialData={{ patientId: id }}
           patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
@@ -492,7 +665,12 @@ export default function PatientDetailPage() {
         />
       </Sheet>
 
-      <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title={t("patients.editPatientSheet")} description={t("patients.editPatientDesc")}>
+      <Sheet
+        isOpen={sheetMode === "edit"}
+        onClose={() => setSheetMode(null)}
+        title={t("patients.editPatientSheet")}
+        description={t("patients.editPatientDesc")}
+      >
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
     </div>
