@@ -45,8 +45,6 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
   const patientSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
-    // FIX #9: Telefon validatsiyasi — PatternFormat "+998 (90) 123-45-67" formatida beradi
-    // Submit oldidan raqamlar ajratib olinadi, shuning uchun shu formatni qabul qilamiz
     phone_number: z
       .string()
       .min(1, t("forms.phoneRequired"))
@@ -56,31 +54,29 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       .string()
       .min(1, t("forms.birthDateRequired"))
       .transform((val) => new Date(val).toISOString()),
-    address: z.string().optional(),
-    // FIX #6: Qon guruhi optional
+    address: z.string().optional().or(z.literal("")),
+    // bo'sh string "" ham qabul qilinadi
     blood_type: z
       .enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"])
       .nullable()
-      .optional(),
-    // FIX #5: Hujjat turi optional
+      .optional()
+      .or(z.literal("")),
     document_type: z
       .enum(["PASSPORT", "BIRTH_CERTIFICATE", "FOREIGN_PASSPORT", "RESIDENCE_PERMIT"])
       .nullable()
-      .optional(),
-    // FIX #7: Hujjat seriyasi optional
-    document_series: z.string().max(10).nullable().optional(),
-    document_number: z.string().max(20).nullable().optional(),
+      .optional()
+      .or(z.literal("")),
+    document_series: z.string().max(10).nullable().optional().or(z.literal("")),
+    document_number: z.string().max(20).nullable().optional().or(z.literal("")),
     pinfl: z
       .string()
       .regex(/^\d{14}$/, t("forms.pinflInvalid"))
       .nullable()
       .optional()
       .or(z.literal("")),
-    // FIX: districtId nullable qilindi (viloyat o'zgarganda null beriladi)
-    districtId: z.string().uuid().nullable(),
+    districtId: z.string().uuid().nullable().optional().or(z.literal("")),
   });
 
-  // FIX: Bitta useForm — control va register bir joydan
   const {
     register,
     handleSubmit,
@@ -115,11 +111,19 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     }
   }, [districts, initialData?.districtId, setValue]);
 
-  // FIX: Submit oldidan telefon raqamidan faqat raqamlarni olish
-  // "+998 (90) 123-45-67" => "+998901234567"
   const handleFormSubmit = (data: PatientFormValues) => {
     const cleanedPhone = data.phone_number.replace(/\s|\(|\)|-/g, "");
-    onSubmit({ ...data, phone_number: cleanedPhone });
+    onSubmit({
+      ...data,
+      phone_number: cleanedPhone,
+      // bo'sh string "" => null ga o'giriladi
+      blood_type: (data.blood_type as string) === "" ? null : data.blood_type,
+      document_type: (data.document_type as string) === "" ? null : data.document_type,
+      document_series: data.document_series || null,
+      document_number: data.document_number || null,
+      pinfl: data.pinfl || null,
+      districtId: data.districtId || null,
+    });
   };
 
   const cls = (hasError: boolean, extra = "") =>
@@ -162,9 +166,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         </div>
       </div>
 
-    
-
-      {/* FIX #9: Telefon — PASTGA tushirildi, asosiy useForm-ning control bilan bog'landi */}
+      {/* Telefon */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
@@ -181,8 +183,6 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
               value={value}
               name={name}
               onValueChange={(values) => {
-                // FIX: formattedValue emas, raw value ishlatiladi
-                // Zod validatsiya uchun formatted qiymat saqlanadi
                 onChange(values.formattedValue);
               }}
               type="tel"
@@ -197,7 +197,6 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       {/* Jinsi va Qon guruhi */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          {/* FIX: Typo tuzatildi — "spacSe-y-1.5" => "space-y-1.5" */}
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Heart className="w-4 h-4 text-primary-500" />
             {t("forms.gender")}
@@ -220,7 +219,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           {errMsg(errors.gender?.message)}
         </div>
 
-        {/* FIX #6: Qon guruhi — optional (talab qilinmaydi) */}
+        {/* Qon guruhi — optional */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Droplet className="w-4 h-4 text-primary-500" />
@@ -252,21 +251,21 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         {errMsg(errors.birth_date?.message)}
       </div>
 
-        {/* FIX #8: Viloyat va Tuman — YUQORIGA ko'chirildi (form boshiga yaqin) */}
+      {/* Viloyat va Tuman */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary-500" />
             {t("forms.region")}
-            {/* <span className="text-xs text-secondary font-normal">(optional)</span> */}
+            <span className="text-xs text-secondary font-normal">(optional)</span>
           </label>
           <select
             value={selectedRegionId}
             onChange={(e) => {
               setSelectedRegionId(e.target.value);
-              setValue("districtId", null); // FIX: null endi schema bilan mos
+              setValue("districtId", null);
             }}
-            className={cls(!!errors.districtId && !selectedRegionId)}
+            className={cls(false)}
           >
             <option value="">{t("forms.selectRegion")}</option>
             {regions.map((r) => (
@@ -275,22 +274,18 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
               </option>
             ))}
           </select>
-          {errors.districtId && !selectedRegionId && errMsg(t("forms.regionRequired"))}
         </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary-500" />
             {t("forms.district")}
-            {/* <span className="text-xs text-secondary font-normal">(optional)</span> */}
+            <span className="text-xs text-secondary font-normal">(optional)</span>
           </label>
           <select
             {...register("districtId")}
             disabled={!selectedRegionId}
-            className={cls(
-              !!errors.districtId && !!selectedRegionId,
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
+            className={cls(false, "disabled:opacity-50 disabled:cursor-not-allowed")}
           >
             <option value="">{t("forms.selectDistrict")}</option>
             {districts.map((d) => (
@@ -299,11 +294,10 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
               </option>
             ))}
           </select>
-          {errors.districtId && !!selectedRegionId && errMsg(t("forms.districtRequired"))}
         </div>
       </div>
 
-      {/* Manzil */}
+      {/* Manzil — optional */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary-500" />
@@ -318,7 +312,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         />
       </div>
 
-      {/* FIX #5: Hujjat turi — optional */}
+      {/* Hujjat turi — optional */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-primary-500" />
@@ -335,7 +329,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         {errMsg(errors.document_type?.message)}
       </div>
 
-      {/* FIX #7: Hujjat seriyasi va raqami — optional */}
+      {/* Hujjat seriyasi va raqami — optional */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -366,7 +360,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         </div>
       </div>
 
-      {/* PINFL */}
+      {/* PINFL — optional */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-primary-500" />
@@ -381,8 +375,6 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         />
         {errMsg(errors.pinfl?.message)}
       </div>
-
-
 
       {/* Tugmalar */}
       <div className="flex gap-3 pt-2">
