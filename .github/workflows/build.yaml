@@ -33,8 +33,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ github.event.repository.name }}:latest
-            ${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
+            ${{ vars.DOCKER_REGISTRY_NAME }}/${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ github.event.repository.name }}:latest
+            ${{ vars.DOCKER_REGISTRY_NAME }}/${{ vars.DOCKER_REGISTRY_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
 
       - name: Notify Telegram
         if: always()
