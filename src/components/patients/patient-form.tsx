@@ -6,7 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, CreditCard, Droplet, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { PatternFormat } from "react-number-format";
 import * as z from "zod";
 
 type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
@@ -44,26 +45,54 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
   const patientSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
-    phone_number: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
+    // FIX #9: Telefon validatsiyasi — PatternFormat "+998 (90) 123-45-67" formatida beradi
+    // Submit oldidan raqamlar ajratib olinadi, shuning uchun shu formatni qabul qilamiz
+    phone_number: z
+      .string()
+      .min(1, t("forms.phoneRequired"))
+      .regex(/^\+998 \(\d{2}\) \d{3}-\d{2}-\d{2}$/, t("forms.phoneInvalidUzbekistan")),
     gender: z.enum(["male", "female"]),
-    birth_date: z.string().min(1, t("forms.birthDateRequired")).transform((val) => new Date(val).toISOString()),
+    birth_date: z
+      .string()
+      .min(1, t("forms.birthDateRequired"))
+      .transform((val) => new Date(val).toISOString()),
     address: z.string().optional(),
-    blood_type: z.enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"]).nullable().optional(),
-    document_type: z.enum(["PASSPORT", "BIRTH_CERTIFICATE", "FOREIGN_PASSPORT", "RESIDENCE_PERMIT"]).nullable().optional(),
+    // FIX #6: Qon guruhi optional
+    blood_type: z
+      .enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"])
+      .nullable()
+      .optional(),
+    // FIX #5: Hujjat turi optional
+    document_type: z
+      .enum(["PASSPORT", "BIRTH_CERTIFICATE", "FOREIGN_PASSPORT", "RESIDENCE_PERMIT"])
+      .nullable()
+      .optional(),
+    // FIX #7: Hujjat seriyasi optional
     document_series: z.string().max(10).nullable().optional(),
     document_number: z.string().max(20).nullable().optional(),
-    pinfl: z.string().regex(/^\d{14}$/, t("forms.pinflInvalid")).nullable().optional().or(z.literal("")),
-    districtId: z.string().uuid(),
+    pinfl: z
+      .string()
+      .regex(/^\d{14}$/, t("forms.pinflInvalid"))
+      .nullable()
+      .optional()
+      .or(z.literal("")),
+    // FIX: districtId nullable qilindi (viloyat o'zgarganda null beriladi)
+    districtId: z.string().uuid().nullable(),
   });
 
+  // FIX: Bitta useForm — control va register bir joydan
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors },
   } = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema) as any,
-    defaultValues: initialData || {},
+    defaultValues: {
+      phone_number: "+998 (  )    -  -  ",
+      ...initialData,
+    },
   });
 
   const { data: regions = [] } = useQuery<{ id: string; name: string }[]>({
@@ -86,6 +115,13 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     }
   }, [districts, initialData?.districtId, setValue]);
 
+  // FIX: Submit oldidan telefon raqamidan faqat raqamlarni olish
+  // "+998 (90) 123-45-67" => "+998901234567"
+  const handleFormSubmit = (data: PatientFormValues) => {
+    const cleanedPhone = data.phone_number.replace(/\s|\(|\)|-/g, "");
+    onSubmit({ ...data, phone_number: cleanedPhone });
+  };
+
   const cls = (hasError: boolean, extra = "") =>
     `w-full bg-surface border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all shadow-sm ${hasError
       ? "border-red-400 focus:ring-red-400/20 focus:border-red-400"
@@ -96,7 +132,8 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     msg ? <p className="text-xs text-red-500 font-medium mt-1">{msg}</p> : null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+      {/* Ism va Familiya */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -125,21 +162,42 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         </div>
       </div>
 
+    
+
+      {/* FIX #9: Telefon — PASTGA tushirildi, asosiy useForm-ning control bilan bog'landi */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
         </label>
-        <input
-          {...register("phone_number")}
-          placeholder="+1 234 567 890"
-          className={cls(!!errors.phone_number)}
+        <Controller
+          control={control}
+          name="phone_number"
+          render={({ field: { onChange, name, value } }) => (
+            <PatternFormat
+              format="+998 (##) ###-##-##"
+              allowEmptyFormatting
+              mask="_"
+              value={value}
+              name={name}
+              onValueChange={(values) => {
+                // FIX: formattedValue emas, raw value ishlatiladi
+                // Zod validatsiya uchun formatted qiymat saqlanadi
+                onChange(values.formattedValue);
+              }}
+              type="tel"
+              placeholder="+998 (99) 999-99-99"
+              className={cls(!!errors.phone_number)}
+            />
+          )}
         />
-        {errMsg(errors.phone_number?.message)}
+        {errMsg(errors.phone_number?.message as string)}
       </div>
 
+      {/* Jinsi va Qon guruhi */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
+          {/* FIX: Typo tuzatildi — "spacSe-y-1.5" => "space-y-1.5" */}
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Heart className="w-4 h-4 text-primary-500" />
             {t("forms.gender")}
@@ -147,7 +205,12 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           <div className="flex gap-4">
             {["male", "female"].map((gender) => (
               <label key={gender} className="flex items-center gap-2 cursor-pointer group">
-                <input type="radio" value={gender} {...register("gender")} className="w-4 h-4 accent-primary-600 cursor-pointer" />
+                <input
+                  type="radio"
+                  value={gender}
+                  {...register("gender")}
+                  className="w-4 h-4 accent-primary-600 cursor-pointer"
+                />
                 <span className="text-sm text-secondary group-hover:text-text transition-colors capitalize">
                   {gender === "male" ? t("forms.male") : t("forms.female")}
                 </span>
@@ -157,10 +220,12 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           {errMsg(errors.gender?.message)}
         </div>
 
+        {/* FIX #6: Qon guruhi — optional (talab qilinmaydi) */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <Droplet className="w-4 h-4 text-primary-500" />
             {t("forms.bloodType")}
+            <span className="text-xs text-secondary font-normal">(optional)</span>
           </label>
           <select {...register("blood_type")} className={cls(!!errors.blood_type)}>
             <option value="">{t("forms.selectBloodType")}</option>
@@ -177,101 +242,29 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         </div>
       </div>
 
+      {/* Tug'ilgan sana */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
           {t("forms.birthDate")}
         </label>
-        <input
-          type="date"
-          {...register("birth_date")}
-          className={cls(!!errors.birth_date)}
-        />
+        <input type="date" {...register("birth_date")} className={cls(!!errors.birth_date)} />
         {errMsg(errors.birth_date?.message)}
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-primary-500" />
-          {t("forms.address")}
-        </label>
-        <textarea
-          {...register("address")}
-          placeholder={t("forms.addressPlaceholder")}
-          rows={3}
-          className={cls(false, "resize-none")}
-        />
-      </div>
-
-      {/* Document Information */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-primary-500" />
-          {t("forms.documentType")}
-        </label>
-        <select {...register("document_type")} className={cls(!!errors.document_type)}>
-          <option value="">{t("forms.selectDocumentType")}</option>
-          <option value="PASSPORT">{t("forms.docTypePassport")}</option>
-          <option value="BIRTH_CERTIFICATE">{t("forms.docTypeBirthCertificate")}</option>
-          <option value="FOREIGN_PASSPORT">{t("forms.docTypeForeignPassport")}</option>
-          <option value="RESIDENCE_PERMIT">{t("forms.docTypeResidencePermit")}</option>
-        </select>
-        {errMsg(errors.document_type?.message)}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-primary-500" />
-            {t("forms.documentSeries")}
-          </label>
-          <input
-            {...register("document_series")}
-            placeholder={t("forms.documentSeriesPlaceholder")}
-            className={cls(!!errors.document_series)}
-          />
-          {errMsg(errors.document_series?.message)}
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-primary-500" />
-            {t("forms.documentNumber")}
-          </label>
-          <input
-            {...register("document_number")}
-            placeholder={t("forms.documentNumberPlaceholder")}
-            className={cls(!!errors.document_number)}
-          />
-          {errMsg(errors.document_number?.message)}
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-primary-500" />
-          {t("forms.pinfl")}
-        </label>
-        <input
-          {...register("pinfl")}
-          placeholder={t("forms.pinflPlaceholder")}
-          maxLength={14}
-          className={cls(!!errors.pinfl)}
-        />
-        {errMsg(errors.pinfl?.message)}
-      </div>
-
+        {/* FIX #8: Viloyat va Tuman — YUQORIGA ko'chirildi (form boshiga yaqin) */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary-500" />
             {t("forms.region")}
+            {/* <span className="text-xs text-secondary font-normal">(optional)</span> */}
           </label>
           <select
             value={selectedRegionId}
             onChange={(e) => {
               setSelectedRegionId(e.target.value);
-              setValue("districtId", null);
+              setValue("districtId", null); // FIX: null endi schema bilan mos
             }}
             className={cls(!!errors.districtId && !selectedRegionId)}
           >
@@ -289,11 +282,15 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary-500" />
             {t("forms.district")}
+            {/* <span className="text-xs text-secondary font-normal">(optional)</span> */}
           </label>
           <select
             {...register("districtId")}
             disabled={!selectedRegionId}
-            className={cls(!!errors.districtId && !!selectedRegionId, "disabled:opacity-50 disabled:cursor-not-allowed")}
+            className={cls(
+              !!errors.districtId && !!selectedRegionId,
+              "disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
           >
             <option value="">{t("forms.selectDistrict")}</option>
             {districts.map((d) => (
@@ -306,6 +303,88 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         </div>
       </div>
 
+      {/* Manzil */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-primary-500" />
+          {t("forms.address")}
+          <span className="text-xs text-secondary font-normal">(optional)</span>
+        </label>
+        <textarea
+          {...register("address")}
+          placeholder={t("forms.addressPlaceholder")}
+          rows={3}
+          className={cls(false, "resize-none")}
+        />
+      </div>
+
+      {/* FIX #5: Hujjat turi — optional */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <CreditCard className="w-4 h-4 text-primary-500" />
+          {t("forms.documentType")}
+          <span className="text-xs text-secondary font-normal">(optional)</span>
+        </label>
+        <select {...register("document_type")} className={cls(!!errors.document_type)}>
+          <option value="">{t("forms.selectDocumentType")}</option>
+          <option value="PASSPORT">{t("forms.docTypePassport")}</option>
+          <option value="BIRTH_CERTIFICATE">{t("forms.docTypeBirthCertificate")}</option>
+          <option value="FOREIGN_PASSPORT">{t("forms.docTypeForeignPassport")}</option>
+          <option value="RESIDENCE_PERMIT">{t("forms.docTypeResidencePermit")}</option>
+        </select>
+        {errMsg(errors.document_type?.message)}
+      </div>
+
+      {/* FIX #7: Hujjat seriyasi va raqami — optional */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary-500" />
+            {t("forms.documentSeries")}
+            <span className="text-xs text-secondary font-normal">(optional)</span>
+          </label>
+          <input
+            {...register("document_series")}
+            placeholder={t("forms.documentSeriesPlaceholder")}
+            className={cls(!!errors.document_series)}
+          />
+          {errMsg(errors.document_series?.message)}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-text flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary-500" />
+            {t("forms.documentNumber")}
+            <span className="text-xs text-secondary font-normal">(optional)</span>
+          </label>
+          <input
+            {...register("document_number")}
+            placeholder={t("forms.documentNumberPlaceholder")}
+            className={cls(!!errors.document_number)}
+          />
+          {errMsg(errors.document_number?.message)}
+        </div>
+      </div>
+
+      {/* PINFL */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <CreditCard className="w-4 h-4 text-primary-500" />
+          {t("forms.pinfl")}
+          <span className="text-xs text-secondary font-normal">(optional)</span>
+        </label>
+        <input
+          {...register("pinfl")}
+          placeholder={t("forms.pinflPlaceholder")}
+          maxLength={14}
+          className={cls(!!errors.pinfl)}
+        />
+        {errMsg(errors.pinfl?.message)}
+      </div>
+
+
+
+      {/* Tugmalar */}
       <div className="flex gap-3 pt-2">
         <button
           type="button"
