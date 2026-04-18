@@ -1,14 +1,13 @@
+import { STORAGE_KEYS, storageService } from "@/services/storage";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { storageService, STORAGE_KEYS } from "@/services/storage";
 
-// Configure axios for the external backend
 export const api = axios.create({
-  baseURL: (process.env.NEXT_PUBLIC_API_URL ?? "http://172.21.0.20:9000").replace(/\/+$/, "") + "/api",
+  baseURL: "/api",
   withCredentials: true,
 });
 
-// Request interceptor to attach the auth token from local storage
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = storageService.getItem<string>(STORAGE_KEYS.TOKEN);
@@ -19,23 +18,20 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Response interceptor — show toast on errors
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Skip 401 on /auth/me — expected when the user is not logged in yet
     const isAuthCheck = error.config?.url?.includes("/auth/me");
 
     if (isAuthCheck && error.response?.status === 401) {
       return Promise.reject(error);
     }
 
-    const message: string = error.response?.data?.message || error.message || "Something went wrong";
+    const message = error.response?.data?.message || error.message || "Something went wrong";
 
     toast.error(message);
 

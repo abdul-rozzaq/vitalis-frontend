@@ -1,18 +1,13 @@
 services:
   vitalis-frontend:
     image: registry.solara.uz/ci-user/vitalis-frontend:latest
-
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=http://172.21.0.20:9000/api
-
     container_name: vitalis-frontend
-
+    env_file:
+      - ../.env
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://172.21.0.20:9000/api
 
     restart: unless-stopped
