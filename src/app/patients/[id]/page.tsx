@@ -18,6 +18,7 @@ import {
   resolveFileUrl,
   toAssignmentOptions,
 } from "@/features/patients/detail/utils";
+import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -57,7 +58,13 @@ function formatUzPhone(phone?: string) {
   return `+998(${code})${part1}-${part2}-${part3}`;
 }
 
-function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem }) {
+function AppointmentCard({
+  appointment,
+  showAmount,
+}: {
+  appointment: AppointmentTimelineItem;
+  showAmount: boolean;
+}) {
   const payments = appointment.payments ?? [];
   const files = appointment.files ?? [];
 
@@ -95,15 +102,19 @@ function AppointmentCard({ appointment }: { appointment: AppointmentTimelineItem
                   <Icon className={`w-4 h-4 ${style.text}`} />
                   <div>
                     <p className={`text-sm font-medium ${style.text}`}>{payment.status}</p>
-                    <p className="text-xs text-text-muted">{payment.method ?? "-"}</p>
+                    {showAmount && (
+                      <p className="text-xs text-text-muted">{payment.method ?? "-"}</p>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`text-sm font-semibold ${style.text}`}>
-                    {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
-                  </p>
-                  <p className="text-xs text-text-muted">{formatTime(payment.createdAt)}</p>
-                </div>
+                {showAmount && (
+                  <div className="text-right">
+                    <p className={`text-sm font-semibold ${style.text}`}>
+                      {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
+                    </p>
+                    <p className="text-xs text-text-muted">{formatTime(payment.createdAt)}</p>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -250,6 +261,13 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const t = useTranslations();
+  const { user } = useAuth();
+
+  // ADMIN, SUPERADMIN (isSuperUser), DIRECTOR rollari summani ko'ra oladi
+  const AMOUNT_ALLOWED_ROLES = ["ADMIN", "DIRECTOR"];
+  const canSeeAmount =
+    user?.isSuperUser === true ||
+    AMOUNT_ALLOWED_ROLES.includes(user?.role?.name?.toUpperCase() ?? "");
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
@@ -524,10 +542,19 @@ export default function PatientDetailPage() {
                 <p className="text-[11px] text-text-muted">{t("patients.visits")}</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-text">
-                  {totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS
-                </p>
-                <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
+                {canSeeAmount ? (
+                  <>
+                    <p className="text-lg font-bold text-text">
+                      {totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS
+                    </p>
+                    <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-bold text-text">—</p>
+                    <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
+                  </>
+                )}
               </div>
               <div>
                 <p className="text-lg font-bold text-text">{fileCount}</p>
@@ -640,7 +667,7 @@ export default function PatientDetailPage() {
                       </Link>
                     </div>
                   </div>
-                  <AppointmentCard appointment={appointment} />
+                  <AppointmentCard appointment={appointment} showAmount={canSeeAmount} />
                 </motion.div>
               ))}
             </div>
