@@ -1,6 +1,6 @@
 services:
   vitalis-frontend:
-    image: rayyandev/vitalis-frontend:latest
+    image: registry.solara.uz/ci-user/vitalis-frontend:latest
 
     build:
       context: .
