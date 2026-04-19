@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  ClipboardList,
   Download,
   Droplet,
   Edit,
@@ -588,6 +589,22 @@ export default function PatientDetailPage() {
                 {t("patients.editPatientInfo")}
               </button>
             </Can>
+
+            <Link
+              href={`/patients/${id}/medical-cards/new`}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+            >
+              <ClipboardList className="w-4 h-4" />
+              {t("medicalCard.newCard")}
+            </Link>
+
+            <Link
+              href={`/patients/${id}/medical-cards`}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              {t("medicalCard.myCards")}
+            </Link>
           </div>
 
           {/* Departments visited */}
