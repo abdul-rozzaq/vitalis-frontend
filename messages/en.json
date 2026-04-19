@@ -129,9 +129,7 @@
     "deletePatient": "Delete Patient",
     "documentInfo": "Document Information",
     "pinflLabel": "PINFL",
-    "showDocuments":"Details"
-
-
+    "showDocuments": "Details"
   },
   "employees": {
     "title": "Employees",
@@ -542,5 +540,42 @@
     "currentPasswordRequired": "Current password is required",
     "confirmPasswordRequired": "Please confirm your new password",
     "passwordsMismatch": "Passwords do not match"
+  },
+  "medicalCard": {
+    "title": "003/x Medical Card",
+    "newCard": "+ New Medical Card (003/x)",
+    "myCards": "Medical Cards",
+    "noCards": "No medical cards yet.",
+    "createCard": "Create Medical Card",
+    "viewCard": "View Card",
+    "downloadWord": "Download (Word)",
+    "basicInfo": "Basic Information",
+    "hospitalization": "Hospitalization",
+    "complaints": "Complaints",
+    "anamnesis": "Anamnesis",
+    "lifeAnamnesis": "Life Anamnesis",
+    "diagnosis": "Diagnosis",
+    "treatment": "Treatment",
+    "dailyNotes": "Daily Notes",
+    "addNote": "Add Note",
+    "removeNote": "Remove",
+    "admissionDate": "Admission Date",
+    "dischargeDate": "Discharge Date",
+    "wardNumber": "Ward Number",
+    "departmentName": "Department",
+    "doctorName": "Doctor Name",
+    "nurseName": "Nurse Name",
+    "diagnosisInitial": "Initial Diagnosis",
+    "diagnosisFinal": "Final Diagnosis",
+    "noteDate": "Date",
+    "noteText": "Note",
+    "saving": "Saving...",
+    "saveCard": "Save Card",
+    "backToPatient": "Back to Patient",
+    "cardSaved": "Medical card saved successfully",
+    "exportFailed": "Failed to export document",
+    "signatures": "Signatures",
+    "doctorSignature": "Doctor Signature",
+    "nurseSignature": "Nurse Signature"
   }
 }
