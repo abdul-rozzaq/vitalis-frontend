@@ -1,15 +1,16 @@
 "use client";
 
+import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
+import { Download, Edit, Filter, Loader2, Plus, Trash2, X } from "lucide-react";
+import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
 interface Role {
@@ -41,6 +42,13 @@ export default function EmployeesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filterText, setFilterText] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+
+  const { data: rolesData = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: () => api.get("/roles").then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
 
   const { data: employeesData = [] } = useQuery({
     queryKey: ["employees"],
@@ -58,13 +66,16 @@ export default function EmployeesPage() {
 
   const filteredEmployees = useMemo(
     () =>
-      filterText.trim()
-        ? employeesData.filter((e: Employee) =>
-            `${e.first_name} ${e.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
-            (e.phone ?? "").includes(filterText),
-          )
-        : employeesData,
-    [employeesData, filterText],
+      employeesData.filter((e: Employee) => {
+        const matchSearch =
+          `${e.first_name} ${e.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
+          (e.phone ?? "").includes(filterText);
+
+        const matchRole = selectedRole ? e.role?.name === selectedRole : true;
+
+        return matchSearch && matchRole;
+      }),
+    [employeesData, filterText, selectedRole],
   );
 
   const handleExport = () => {
@@ -91,6 +102,14 @@ export default function EmployeesPage() {
       setDeletingId(id);
       deleteEmployee(id);
     }
+  };
+
+  // ✅ Filter toggle: yopilganda selectedRole reset bo'ladi
+  const handleToggleFilter = () => {
+    if (filterOpen) {
+      setSelectedRole("");
+    }
+    setFilterOpen((v) => !v);
   };
 
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -130,7 +149,7 @@ export default function EmployeesPage() {
       {
         accessorKey: "phone",
         header: t("employees.colPhone"),
-        cell: (info: any) => <span className="text-secondary text-sm font-mono">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="text-secondary text-sm font-mono">{formatPhone(info.getValue() as string)}</span>,
       },
       {
         accessorKey: "role",
@@ -191,23 +210,60 @@ export default function EmployeesPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <input
+            autoFocus
+            type="text"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            placeholder={t("common.filterPlaceholder")}
+            className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
+          />
+
+          {/* ✅ Role select — faqat filterOpen bo'lganda ko'rinadi, X tugmasi bilan reset */}
           {filterOpen && (
-            <input
-              autoFocus
-              type="text"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              placeholder={t("common.filterPlaceholder")}
-              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
-            />
+            <div className="flex items-center gap-1">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer"
+              >
+                <option value="">all</option>
+                {rolesData.map((role: Role) => (
+                  <option key={role.id} value={role.name}>
+                    {ROLE_STYLES[role.name]?.label ?? role.name}
+                  </option>
+                ))}
+              </select>
+              {/* ✅ Tanlangan roleni tozalash tugmasi */}
+              {selectedRole && (
+                <button
+                  onClick={() => setSelectedRole("")}
+                  className="p-1.5 rounded-md hover:bg-surface-hover text-secondary hover:text-text transition-colors cursor-pointer"
+                  title={t("common.clear")}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           )}
+
           <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={handleToggleFilter}
+            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || selectedRole
+                ? "bg-primary-50 border-primary text-primary hover:bg-primary-100"
+                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+              }`}
           >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
+            {/* ✅ Tanlangan rol nomi filter tugmasida ko'rsatiladi */}
+            {selectedRole && (
+              <span className="ml-0.5 font-semibold">
+                · {ROLE_STYLES[selectedRole]?.label ?? selectedRole}
+              </span>
+            )}
           </button>
+
           <button
             onClick={handleExport}
             className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"

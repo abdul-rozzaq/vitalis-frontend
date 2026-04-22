@@ -1,13 +1,14 @@
 "use client";
 
+import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Download, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -45,9 +46,9 @@ export default function PatientsPage() {
     () =>
       filterText.trim()
         ? patientsData.filter((p: Patient) =>
-            `${p.first_name} ${p.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
-            (p.phone_number ?? "").includes(filterText),
-          )
+          `${p.first_name} ${p.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
+          (p.phone_number ?? "").includes(filterText),
+        )
         : patientsData,
     [patientsData, filterText],
   );
@@ -112,7 +113,7 @@ export default function PatientsPage() {
       {
         accessorKey: "phone_number",
         header: t("patients.colPhone"),
-        cell: (info: any) => <span className="text-secondary font-mono text-xs">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="text-secondary font-mono text-xs">{formatPhone(info.getValue() as string)}</span>,
       },
       {
         id: "actions",

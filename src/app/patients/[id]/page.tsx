@@ -1,6 +1,8 @@
 "use client";
 
 import { AppointmentForm } from "@/components/appointments/appointment-form";
+import formatPhone from "@/components/formatPhone";
+import usePhoneFormatter from "@/components/formatPhoneinput";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import {
@@ -44,20 +46,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
-
-function formatUzPhone(phone?: string) {
-  if (!phone) return "";
-
-  const cleaned = phone.replace(/\D/g, "");
-
-  const match = cleaned.match(/^998(\d{2})(\d{3})(\d{2})(\d{2})$/);
-
-  if (!match) return phone;
-
-  const [, code, part1, part2, part3] = match;
-
-  return `+998(${code})${part1}-${part2}-${part3}`;
-}
 
 function AppointmentCard({
   appointment,
@@ -149,6 +137,7 @@ function AppointmentCard({
 
 function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: () => void }) {
   const t = useTranslations();
+  const phone = usePhoneFormatter(patient.phone_number);
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
@@ -174,13 +163,27 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      {/* <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
         </label>
         <input
           defaultValue={patient.phone_number}
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+      </div> */}
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Phone className="w-4 h-4 text-primary-500" />
+          {t("forms.phone")}
+        </label>
+
+        <input
+          value={phone.value}
+          onChange={phone.onChange}
+          placeholder="+998 (__) ___-__-__"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
       </div>
@@ -430,7 +433,7 @@ export default function PatientDetailPage() {
               <div className="flex items-center gap-2.5 text-sm text-secondary">
                 <Phone className="w-4 h-4 text-text-muted shrink-0" />
                 <span className="font-mono">
-                  {formatUzPhone(patient.phone_number)}
+                  {formatPhone(patient.phone_number)}
                 </span>
               </div>
 

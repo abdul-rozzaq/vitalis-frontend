@@ -1,12 +1,12 @@
 "use client";
 
 import { PatientForm } from "@/components/patients/patient-form";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 

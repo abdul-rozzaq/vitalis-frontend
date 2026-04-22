@@ -369,6 +369,7 @@ export default function AppointmentDetailPage() {
           )}
         </div>
 
+        {/* ✅ FIX 1: File upload — yuklanayotganda Loader2 spinner ko'rsatiladi */}
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
@@ -383,7 +384,11 @@ export default function AppointmentDetailPage() {
                 disabled={isUploadingFile}
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-secondary transition-colors hover:bg-surface-hover hover:text-text cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Upload className="w-3.5 h-3.5" />
+                {isUploadingFile ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5" />
+                )}
                 {isUploadingFile ? t("common.loading") : t("patients.uploadFile")}
               </button>
             </Can>
@@ -428,7 +433,8 @@ export default function AppointmentDetailPage() {
           </Can>
         </div>
         {printError && <p className="mb-3 text-xs text-red-500">{printError}</p>}
-        <PrescriptionEditor appointmentId={appointment.id} initialData={appointment.prescription} />
+        {/* ✅ FIX 2: enterAddsRow prop — PrescriptionEditor'da Enter = yangi qator */}
+        <PrescriptionEditor appointmentId={appointment.id} initialData={appointment.prescription} enterAddsRow />
       </div>
 
       <Sheet

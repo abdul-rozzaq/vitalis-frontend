@@ -1,13 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Phone, Shield, Upload, User, X } from "lucide-react";
+import { Calendar, Loader2, Phone, Shield, Upload, User, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
+import usePhoneFormatter from "../formatPhoneinput";
 
 type EmployeeFormValues = {
   first_name: string;
@@ -52,6 +52,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema) as any,
@@ -62,6 +63,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo ?? null);
+  const phone = usePhoneFormatter(initialData?.phone || "");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -154,7 +156,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      {/* <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
@@ -166,7 +168,39 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
         {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
-      </div>
+      </div> */}
+
+      <Controller
+        name="phone"
+        control={control}
+        render={({ field }) => (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-2">
+              <Phone className="w-4 h-4 text-primary-500" />
+              {t("forms.phone")}
+            </label>
+
+            <input
+              value={phone.value}
+              onChange={(e) => {
+                phone.onChange(e); // UI format
+
+                const cleaned = e.target.value.replace(/\D/g, "");
+                field.onChange("+" + cleaned); // backend value
+              }}
+              type="tel"
+              placeholder="+998 (__) ___-__-__"
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+
+            {errors.phone && (
+              <p className="text-xs text-danger-600 font-medium">
+                {errors.phone.message}
+              </p>
+            )}
+          </div>
+        )}
+      />
 
       {!isEditing && (
         <div className="space-y-1.5">

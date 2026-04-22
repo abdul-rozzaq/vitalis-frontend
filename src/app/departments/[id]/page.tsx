@@ -4,12 +4,12 @@ import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, DollarSign, Edit, ExternalLink, GitBranch, Loader2, Plus, Trash2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -39,9 +39,9 @@ interface Appointment {
 }
 
 const STATUS_STYLES: Record<AppointmentStatus, { bg: string; text: string; icon: React.ElementType }> = {
-  PENDING:   { bg: "bg-amber-50 border-amber-200",  text: "text-amber-700",  icon: Clock },
-  CONFIRMED: { bg: "bg-green-50 border-green-200",  text: "text-green-700",  icon: CheckCircle2 },
-  CANCELLED: { bg: "bg-red-50 border-red-200",      text: "text-red-600",    icon: XCircle },
+  PENDING: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: Clock },
+  CONFIRMED: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: CheckCircle2 },
+  CANCELLED: { bg: "bg-red-50 border-red-200", text: "text-red-600", icon: XCircle },
 };
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
@@ -114,19 +114,42 @@ export default function DepartmentDetailPage() {
     }
   };
 
+  // const handleFormSubmit = (data: any) => {
+  //   if (editingSubDept) {
+  //     updateSubDept(data).then(() => {
+  //       setIsSheetOpen(false);
+  //       setEditingSubDept(null);
+  //     });
+  //   } else {
+  //     addSubDept(data).then(() => {
+  //       setIsSheetOpen(false);
+  //     });
+  //   }
+  // };
+
   const handleFormSubmit = (data: any) => {
+    const payload = {
+      ...data,
+      price:
+        data.price === "" ||
+          data.price === undefined ||
+          data.price === null ||
+          Number(data.price) === 0
+          ? null
+          : Number(data.price),
+    };
+
     if (editingSubDept) {
-      updateSubDept(data).then(() => {
+      updateSubDept(payload).then(() => {
         setIsSheetOpen(false);
         setEditingSubDept(null);
       });
     } else {
-      addSubDept(data).then(() => {
+      addSubDept(payload).then(() => {
         setIsSheetOpen(false);
       });
     }
   };
-
   const columns = useMemo<ColumnDef<Department>[]>(
     () => [
       {
@@ -372,10 +395,10 @@ export default function DepartmentDetailPage() {
           initialData={
             editingSubDept
               ? {
-                  name: editingSubDept.name,
-                  description: editingSubDept.description,
-                  price: editingSubDept.price ?? undefined,
-                }
+                name: editingSubDept.name,
+                description: editingSubDept.description,
+                price: editingSubDept.price ?? undefined,
+              }
               : undefined
           }
           hideParent
