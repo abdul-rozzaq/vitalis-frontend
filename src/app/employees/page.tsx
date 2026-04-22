@@ -239,7 +239,7 @@ export default function EmployeesPage() {
                 <button
                   onClick={() => setSelectedRole("")}
                   className="p-1.5 rounded-md hover:bg-surface-hover text-secondary hover:text-text transition-colors cursor-pointer"
-                  title={t("common.clear")}
+                  title="clear"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
