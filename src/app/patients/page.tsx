@@ -120,7 +120,7 @@ export default function PatientsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="PUT" path="/api/patients/:id">
+            <Can method="PATCH" path="/api/patients/:id">
               <Link href={`/patients/${row.original.id}/edit`}>
                 <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />

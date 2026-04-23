@@ -1,15 +1,16 @@
 "use client";
 
-import { AppointmentForm } from "@/components/appointments/appointment-form";
 import formatPhone from "@/components/formatPhone";
 import usePhoneFormatter from "@/components/formatPhoneinput";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import {
-  AppointmentFormPayload,
-  AppointmentTimelineItem,
   AssignmentSource,
+  CaseStep,
+  CaseStepStatus,
+  CaseStepType,
   Patient,
+  PatientCase,
   SheetMode,
 } from "@/features/patients/detail/types";
 import {
@@ -26,18 +27,25 @@ import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ArrowRightCircle,
   Building2,
   Calendar,
+  CheckCircle2,
+  ClipboardCheck,
   ClipboardList,
   Download,
   Droplet,
   Edit,
   FileText,
+  FlaskConical,
   Hash,
+  LogOut,
   MapPin,
   Paperclip,
   Phone,
   Plus,
+  Scissors,
+  Stethoscope,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -47,88 +55,168 @@ import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 
-function AppointmentCard({
-  appointment,
-  showAmount,
-}: {
-  appointment: AppointmentTimelineItem;
-  showAmount: boolean;
-}) {
-  const payments = appointment.payments ?? [];
-  const files = appointment.files ?? [];
+const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
+  CHECKIN: ClipboardCheck,
+  CONSULTATION: Stethoscope,
+  LAB: FlaskConical,
+  PROCEDURE: Scissors,
+  REFERRAL: ArrowRightCircle,
+  DISCHARGE: LogOut,
+};
+
+const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
+  CHECKIN: "bg-blue-50 text-blue-600",
+  CONSULTATION: "bg-primary-50 text-primary",
+  LAB: "bg-purple-50 text-purple-600",
+  PROCEDURE: "bg-orange-50 text-orange-600",
+  REFERRAL: "bg-yellow-50 text-yellow-600",
+  DISCHARGE: "bg-green-50 text-green-600",
+};
+
+const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
+  PENDING: "bg-surface-hover text-secondary",
+  IN_PROGRESS: "bg-blue-50 text-blue-700",
+  DONE: "bg-green-50 text-green-700",
+  CANCELLED: "bg-red-50 text-red-600",
+};
+
+const CASE_STATUS_COLOR: Record<string, string> = {
+  ACTIVE: "bg-blue-50 text-blue-700 border-blue-200",
+  COMPLETED: "bg-green-50 text-green-700 border-green-200",
+  CANCELLED: "bg-surface-hover text-secondary border-border",
+};
+
+function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
+  const t = useTranslations();
+  const Icon = STEP_ICONS[step.type];
+  const files = step.appointment?.files ?? [];
+  const payments = step.appointment?.payments ?? [];
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-text">{appointment.assignment.department.name}</p>
-          <p className="text-xs text-secondary">
-            Dr. {appointment.assignment.user.first_name} {appointment.assignment.user.last_name}
-          </p>
-        </div>
-        <div className="text-right">
-          <span
-            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${APPOINTMENT_STATUS_STYLES[appointment.status]}`}
-          >
-            {appointment.status}
+    <div className="flex gap-3 px-4 py-3">
+      <div className={`mt-0.5 rounded-full p-1.5 shrink-0 ${STEP_TYPE_COLOR[step.type]}`}>
+        <Icon className="w-3.5 h-3.5" />
+      </div>
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <span className="text-sm font-medium text-text">{t(`cases.stepType.${step.type}`)}</span>
+            {step.assignment && (
+              <p className="text-xs text-secondary mt-0.5">
+                Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} — {step.assignment.department.name}
+              </p>
+            )}
+          </div>
+          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}>
+            {t(`cases.stepStatus.${step.status}`)}
           </span>
-          <p className="text-xs text-text-muted mt-1">{formatTime(appointment.dateTime)}</p>
+        </div>
+
+        {step.note && <p className="text-xs text-text-muted italic">{step.note}</p>}
+
+        {payments.length > 0 && (
+          <div className="space-y-1">
+            {payments.map((payment) => {
+              const style = PAYMENT_STATUS_STYLES[payment.status === "PAID" ? "PAID" : "PENDING"];
+              const PayIcon = style.icon;
+              return (
+                <div key={payment.id} className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border}`}>
+                  <div className="flex items-center gap-1.5">
+                    <PayIcon className={`w-3.5 h-3.5 ${style.text}`} />
+                    <span className={`font-medium ${style.text}`}>{payment.status}</span>
+                    {payment.method && <span className="text-text-muted">• {payment.method}</span>}
+                  </div>
+                  {showAmount && (
+                    <span className={`font-semibold ${style.text}`}>
+                      {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {files.length > 0 && (
+          <div className="space-y-1">
+            {files.map((file) => (
+              <a key={file.id} href={resolveFileUrl(file.url)} target="_blank" rel="noreferrer"
+                className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Paperclip className="w-3.5 h-3.5 text-secondary shrink-0" />
+                  <span className="text-xs text-text truncate">{file.name}</span>
+                </div>
+                <Download className="w-3.5 h-3.5 text-secondary shrink-0" />
+              </a>
+            ))}
+          </div>
+        )}
+
+        {step.appointment && (
+          <Link href={`/appointments/${step.appointment.id}`}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+            <FileText className="w-3 h-3" />
+            {t("appointments.viewDetails")}
+          </Link>
+        )}
+
+        {step.completedAt && (
+          <p className="text-[10px] text-text-muted flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            {formatTime(step.completedAt)}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CaseCard({
+  patientCase,
+  showAmount,
+  onAddStep,
+}: {
+  patientCase: PatientCase;
+  showAmount: boolean;
+  onAddStep?: () => void;
+}) {
+  const t = useTranslations();
+  return (
+    <div className="bg-surface border border-border rounded-xl overflow-hidden">
+      <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>
+              {t(`cases.status.${patientCase.status}`)}
+            </span>
+            {patientCase.chiefComplaint && (
+              <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>
+            )}
+          </div>
+          {patientCase.closedAt && (
+            <p className="text-xs text-text-muted mt-0.5">
+              {t("cases.closedAt")}: {formatDate(patientCase.closedAt)}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
+          {patientCase.status === "ACTIVE" && onAddStep && (
+            <button
+              onClick={onAddStep}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            >
+              <Plus className="w-3 h-3" />
+              {t("cases.addStep")}
+            </button>
+          )}
         </div>
       </div>
-
-      {payments.length > 0 ? (
-        <div className="space-y-2 pt-2 border-t border-border">
-          {payments.map((payment) => {
-            const style = PAYMENT_STATUS_STYLES[payment.status === "PAID" ? "PAID" : "PENDING"];
-            const Icon = style.icon;
-
-            return (
-              <div
-                key={payment.id}
-                className={`border rounded-lg px-3 py-2 flex items-center justify-between gap-3 ${style.bg} ${style.border}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className={`w-4 h-4 ${style.text}`} />
-                  <div>
-                    <p className={`text-sm font-medium ${style.text}`}>{payment.status}</p>
-                    {showAmount && (
-                      <p className="text-xs text-text-muted">{payment.method ?? "-"}</p>
-                    )}
-                  </div>
-                </div>
-                {showAmount && (
-                  <div className="text-right">
-                    <p className={`text-sm font-semibold ${style.text}`}>
-                      {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
-                    </p>
-                    <p className="text-xs text-text-muted">{formatTime(payment.createdAt)}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {files.length > 0 ? (
-        <div className="space-y-2 pt-2 border-t border-border">
-          {files.map((file) => (
-            <a
-              key={file.id}
-              href={resolveFileUrl(file.url)}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-surface-hover rounded-lg px-3 py-2 flex items-center justify-between gap-3 hover:bg-border transition-colors"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Paperclip className="w-4 h-4 text-secondary shrink-0" />
-                <p className="text-sm text-text truncate">{file.name}</p>
-              </div>
-              <Download className="w-4 h-4 text-secondary shrink-0" />
-            </a>
-          ))}
-        </div>
-      ) : null}
+      <div className="divide-y divide-border">
+        {patientCase.steps.map((step) => (
+          <CaseStepRow key={step.id} step={step} showAmount={showAmount} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -300,64 +388,108 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
+  const [chiefComplaint, setChiefComplaint] = useState("");
+  const [addStepCaseId, setAddStepCaseId] = useState<string | null>(null);
+  const [stepType, setStepType] = useState<CaseStepType | "">("");
+  const [stepAssignmentId, setStepAssignmentId] = useState("");
+  const [stepDateTime, setStepDateTime] = useState(() => new Date().toISOString().slice(0, 16));
+  const [stepAmount, setStepAmount] = useState("");
+  const [stepNote, setStepNote] = useState("");
+
+  const resetStepForm = () => {
+    setStepType("");
+    setStepAssignmentId("");
+    setStepDateTime(new Date().toISOString().slice(0, 16));
+    setStepAmount("");
+    setStepNote("");
+  };
+
   const { data: assignmentsDataRaw } = useQuery({
     queryKey: ["assignments"],
     queryFn: () => api.get("/assignments").then((res) => res.data as unknown),
     refetchOnWindowFocus: false,
   });
-
   const assignmentsData = useMemo(
     () => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []),
     [assignmentsDataRaw],
   );
-
   const assignmentOptions = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
 
-  const { mutateAsync: addAppointment, isPending: isAddingAppointment } = useMutation({
-    mutationFn: (data: AppointmentFormPayload) => api.post("/appointments", data),
+  const { mutateAsync: addStep, isPending: isAddingStep } = useMutation({
+    mutationFn: ({ caseId, payload }: { caseId: string; payload: Record<string, unknown> }) =>
+      api.post(`/cases/${caseId}/steps`, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      queryClient.invalidateQueries({ queryKey: ["patient-appointments", id] });
+      queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
+      setAddStepCaseId(null);
+      resetStepForm();
+    },
+  });
+
+  const handleAddStep = () => {
+    if (!addStepCaseId || !stepType) return;
+    const payload: Record<string, unknown> = { type: stepType };
+    if (stepNote) payload.note = stepNote;
+    if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
+    if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
+    if (stepAmount) payload.amount = Number(stepAmount);
+    addStep({ caseId: addStepCaseId, payload });
+  };
+
+  const { mutateAsync: addCase, isPending: isAddingCase } = useMutation({
+    mutationFn: (complaint: string) =>
+      api.post("/cases", { patientId: id, chiefComplaint: complaint || undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
+      setChiefComplaint("");
       setSheetMode(null);
     },
   });
 
-  const { data: appointmentsData = [], isLoading: isTimelineLoading } = useQuery<AppointmentTimelineItem[]>({
-    queryKey: ["patient-appointments", id],
-    queryFn: () => api.get(`/appointments?patientId=${id}`).then((res) => res.data),
+  const { data: casesData = [], isLoading: isTimelineLoading } = useQuery<PatientCase[]>({
+    queryKey: ["patient-cases", id],
+    queryFn: () => api.get(`/patients/${id}/cases`).then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
   const patient: Patient =
     patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
 
-  const appointments = useMemo(
-    () =>
-      [...appointmentsData].sort(
-        (a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime(),
-      ),
-    [appointmentsData],
+  const cases = useMemo(
+    () => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()),
+    [casesData],
   );
 
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
-  const visitCount = appointments.length;
-  const fileCount = appointments.reduce(
-    (total, appointment) => total + (appointment.files?.length ?? 0),
+  const visitCount = cases.length;
+  const fileCount = cases.reduce(
+    (total, c) =>
+      total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0),
     0,
   );
-  const totalPaid = appointments.reduce(
-    (total, appointment) =>
+  const totalPaid = cases.reduce(
+    (total, c) =>
       total +
-      (appointment.payments ?? [])
-        .filter((payment) => payment.status === "PAID")
-        .reduce((sum, payment) => sum + Number(payment.amount), 0),
+      c.steps.reduce(
+        (s, step) =>
+          s +
+          (step.appointment?.payments ?? [])
+            .filter((p) => p.status === "PAID")
+            .reduce((sum, p) => sum + Number(p.amount), 0),
+        0,
+      ),
     0,
   );
 
   const visitedDepartments = useMemo(
-    () => [...new Set(appointments.map((appointment) => appointment.assignment.department.name))],
-    [appointments],
+    () => [
+      ...new Set(
+        cases.flatMap((c) =>
+          c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name),
+        ),
+      ),
+    ],
+    [cases],
   );
 
   const hasDocInfo =
@@ -573,13 +705,13 @@ export default function PatientDetailPage() {
               {t("common.actions")}
             </p>
 
-            <Can method="POST" path="/api/appointments">
+            <Can method="POST" path="/api/cases">
               <button
-                onClick={() => setSheetMode("visit")}
+                onClick={() => setSheetMode("checkin")}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
               >
                 <Plus className="w-4 h-4" />
-                {t("patients.newDeptVisit")}
+                {t("cases.newCase")}
               </button>
             </Can>
 
@@ -638,13 +770,13 @@ export default function PatientDetailPage() {
         >
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
-            <Can method="POST" path="/api/appointments">
+            <Can method="POST" path="/api/cases">
               <button
-                onClick={() => setSheetMode("visit")}
+                onClick={() => setSheetMode("checkin")}
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                {t("patients.addVisit")}
+                {t("cases.newCase")}
               </button>
             </Can>
           </div>
@@ -661,33 +793,24 @@ export default function PatientDetailPage() {
                 </div>
               ))}
             </div>
-          ) : appointments.length === 0 ? (
+          ) : cases.length === 0 ? (
             <div className="bg-surface border border-border rounded-xl p-12 text-center">
               <p className="text-secondary text-sm">{t("patients.noActivity")}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {appointments.map((appointment, index) => (
+              {cases.map((patientCase, index) => (
                 <motion.div
-                  key={appointment.id}
+                  key={patientCase.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
                 >
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <div className="text-xs text-text-muted">{formatDate(appointment.dateTime)}</div>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/appointments/${appointment.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary hover:text-text bg-surface border border-border hover:bg-surface-hover px-2 py-1 rounded-md transition-colors cursor-pointer"
-                        title={t("appointments.viewDetails")}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        {t("appointments.viewDetails")}
-                      </Link>
-                    </div>
-                  </div>
-                  <AppointmentCard appointment={appointment} showAmount={canSeeAmount} />
+                  <CaseCard
+                    patientCase={patientCase}
+                    showAmount={canSeeAmount}
+                    onAddStep={() => setAddStepCaseId(patientCase.id)}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -697,19 +820,42 @@ export default function PatientDetailPage() {
 
       {/* ── SHEETS ─────────────────────────────────────────────────────────── */}
       <Sheet
-        isOpen={sheetMode === "visit"}
+        isOpen={sheetMode === "checkin"}
         onClose={() => setSheetMode(null)}
-        title={t("patients.newDeptVisit")}
-        description={t("patients.newDeptVisitDesc")}
+        title={t("cases.newCase")}
+        description={t("cases.newCaseDesc")}
       >
-        <AppointmentForm
-          initialData={{ patientId: id }}
-          patients={[{ id: patient.id, name: `${patient.first_name} ${patient.last_name}` }]}
-          assignments={assignmentOptions}
-          onSubmit={(data) => addAppointment(data)}
-          onCancel={() => setSheetMode(null)}
-          isPending={isAddingAppointment}
-        />
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              {t("cases.chiefComplaint")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <input
+              value={chiefComplaint}
+              onChange={(e) => setChiefComplaint(e.target.value)}
+              placeholder={t("cases.chiefComplaintPlaceholder")}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setSheetMode(null)}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              {t("forms.cancel")}
+            </button>
+            <button
+              type="button"
+              disabled={isAddingCase}
+              onClick={() => addCase(chiefComplaint)}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
+              {isAddingCase ? t("common.loading") : t("cases.startCase")}
+            </button>
+          </div>
+        </div>
       </Sheet>
 
       <Sheet
@@ -719,6 +865,139 @@ export default function PatientDetailPage() {
         description={t("patients.editPatientDesc")}
       >
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
+      </Sheet>
+
+      <Sheet
+        isOpen={addStepCaseId !== null}
+        onClose={() => { setAddStepCaseId(null); resetStepForm(); }}
+        title={t("cases.addStep")}
+        description={t("cases.addStepDesc")}
+      >
+        <div className="space-y-4">
+          {/* Step type */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("cases.stepTypeLabel")}</label>
+            <select
+              value={stepType}
+              onChange={(e) => { setStepType(e.target.value as CaseStepType); setStepAssignmentId(""); }}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            >
+              <option value="">{t("forms.select")}</option>
+              {(["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"] as CaseStepType[]).map((type) => (
+                <option key={type} value={type}>{t(`cases.stepType.${type}`)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* CONSULTATION: assignment + dateTime + amount */}
+          {stepType === "CONSULTATION" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text">{t("forms.doctor")}</label>
+                <select
+                  value={stepAssignmentId}
+                  onChange={(e) => setStepAssignmentId(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+                >
+                  <option value="">{t("forms.select")}</option>
+                  {assignmentOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text">{t("forms.dateTime")}</label>
+                <input
+                  type="datetime-local"
+                  value={stepDateTime}
+                  onChange={(e) => setStepDateTime(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={stepAmount}
+                  onChange={(e) => setStepAmount(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+                />
+              </div>
+            </>
+          )}
+
+          {/* LAB / PROCEDURE: amount */}
+          {(stepType === "LAB" || stepType === "PROCEDURE") && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
+              <input
+                type="number"
+                min="0"
+                value={stepAmount}
+                onChange={(e) => setStepAmount(e.target.value)}
+                placeholder="0"
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              />
+            </div>
+          )}
+
+          {/* REFERRAL: optional assignment */}
+          {stepType === "REFERRAL" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">
+                {t("forms.doctor")}
+                <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+              </label>
+              <select
+                value={stepAssignmentId}
+                onChange={(e) => setStepAssignmentId(e.target.value)}
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              >
+                <option value="">{t("forms.select")}</option>
+                {assignmentOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Note (all types) */}
+          {stepType && stepType !== "CHECKIN" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">
+                {t("forms.note")}
+                <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+              </label>
+              <textarea
+                rows={3}
+                value={stepNote}
+                onChange={(e) => setStepNote(e.target.value)}
+                placeholder={t("forms.notePlaceholder")}
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => { setAddStepCaseId(null); resetStepForm(); }}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              {t("forms.cancel")}
+            </button>
+            <button
+              type="button"
+              disabled={!stepType || isAddingStep}
+              onClick={handleAddStep}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
+              {isAddingStep ? t("common.loading") : t("cases.addStep")}
+            </button>
+          </div>
+        </div>
       </Sheet>
     </div>
   );

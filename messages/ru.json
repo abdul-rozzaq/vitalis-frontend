@@ -226,6 +226,45 @@
     "methodDebitCard": "Дебетовая карта",
     "methodPaypal": "PayPal"
   },
+  "cases": {
+    "newCase": "Новый случай",
+    "newCaseDesc": "Открыть новый медицинский случай для этого пациента.",
+    "startCase": "Начать случай",
+    "checkin": "Регистрация",
+    "chiefComplaint": "Основная жалоба",
+    "chiefComplaintPlaceholder": "Причина визита...",
+    "openedAt": "Открыт",
+    "closedAt": "Закрыт",
+    "noActivity": "Нет случаев",
+    "addStep": "Добавить шаг",
+    "addStepDesc": "Добавить шаг к этому случаю (консультация, лаборатория, процедура, направление или выписка).",
+    "stepTypeLabel": "Тип шага",
+    "closeCase": "Закрыть случай",
+    "doctorPanel": "Действия врача",
+    "markDone": "Отметить выполненным",
+    "addReferral": "Направить в отделение",
+    "requestLab": "Запрос лаборатории",
+    "discharge": "Выписать пациента",
+    "status": {
+      "ACTIVE": "Активный",
+      "COMPLETED": "Завершён",
+      "CANCELLED": "Отменён"
+    },
+    "stepType": {
+      "CHECKIN": "Регистрация",
+      "CONSULTATION": "Консультация",
+      "LAB": "Лаборатория",
+      "PROCEDURE": "Процедура",
+      "REFERRAL": "Направление",
+      "DISCHARGE": "Выписка"
+    },
+    "stepStatus": {
+      "PENDING": "Ожидание",
+      "IN_PROGRESS": "В процессе",
+      "DONE": "Выполнено",
+      "CANCELLED": "Отменено"
+    }
+  },
   "appointments": {
     "title": "Записи",
     "description": "Планирование и управление записями пациентов.",
@@ -517,7 +556,11 @@
     "docTypeForeignPassport": "Иностранный паспорт",
     "docTypeResidencePermit": "Вид на жительство",
     "bloodType": "Группа крови",
-    "selectBloodType": "Выберите группу крови..."
+    "selectBloodType": "Выберите группу крови...",
+    "select": "Выберите...",
+    "doctor": "Врач / Назначение",
+    "note": "Примечание",
+    "notePlaceholder": "Дополнительные заметки..."
   },
   "notifications": {
     "title": "Уведомления",

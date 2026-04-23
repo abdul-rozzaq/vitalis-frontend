@@ -226,6 +226,45 @@
     "methodDebitCard": "Debit karta",
     "methodPaypal": "PayPal"
   },
+  "cases": {
+    "newCase": "Yangi ish",
+    "newCaseDesc": "Bu bemor uchun yangi tibbiy ish ochish.",
+    "startCase": "Ishni boshlash",
+    "checkin": "Ro'yxatga olish",
+    "chiefComplaint": "Asosiy shikoyat",
+    "chiefComplaintPlaceholder": "Tashrif sababi...",
+    "openedAt": "Ochildi",
+    "closedAt": "Yopildi",
+    "noActivity": "Ishlar yo'q",
+    "addStep": "Qadam qo'shish",
+    "addStepDesc": "Bu ishga qadam qo'shish (konsultatsiya, laboratoriya, protsedura, yo'naltirish yoki chiqarish).",
+    "stepTypeLabel": "Qadam turi",
+    "closeCase": "Ishni yopish",
+    "doctorPanel": "Shifokor amallar",
+    "markDone": "Bajarildi deb belgilash",
+    "addReferral": "Bo'limga yo'naltirish",
+    "requestLab": "Laboratoriya so'rovi",
+    "discharge": "Bemorni chiqarish",
+    "status": {
+      "ACTIVE": "Faol",
+      "COMPLETED": "Yakunlangan",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "stepType": {
+      "CHECKIN": "Ro'yxatga olish",
+      "CONSULTATION": "Konsultatsiya",
+      "LAB": "Laboratoriya",
+      "PROCEDURE": "Protsedura",
+      "REFERRAL": "Yo'llanma",
+      "DISCHARGE": "Chiqarish"
+    },
+    "stepStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "DONE": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    }
+  },
   "appointments": {
     "title": "Uchrashuvlar",
     "description": "Bemor bron qilishlarini rejalashtirish va boshqarish.",
@@ -517,7 +556,11 @@
     "docTypeForeignPassport": "Xorijiy pasport",
     "docTypeResidencePermit": "Yashash ruxsatnomasi",
     "bloodType": "Qon guruhi",
-    "selectBloodType": "Qon guruhini tanlang..."
+    "selectBloodType": "Qon guruhini tanlang...",
+    "select": "Tanlang...",
+    "doctor": "Shifokor / Tayinlov",
+    "note": "Izoh",
+    "notePlaceholder": "Qo'shimcha izohlar..."
   },
   "notifications": {
     "title": "Bildirishnomalar",

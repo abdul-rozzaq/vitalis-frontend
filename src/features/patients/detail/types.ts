@@ -53,7 +53,45 @@ export interface AppointmentTimelineItem {
   payments?: AppointmentPayment[];
 }
 
-export type SheetMode = "visit" | "edit" | "editAppointment" | null;
+export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
+export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
+export type CaseStepStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+
+export interface CaseStep {
+  id: string;
+  caseId: string;
+  type: CaseStepType;
+  status: CaseStepStatus;
+  note?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+  assignmentId?: string | null;
+  appointmentId?: string | null;
+  assignment?: {
+    id: string;
+    department: { name: string; id: string };
+    user: { first_name: string; last_name: string };
+    room?: { name: string } | null;
+  } | null;
+  appointment?: (AppointmentTimelineItem & { id: string }) | null;
+  prescription?: {
+    id: string;
+    items: { id: string; medicine: { name: string }; dosage: string; frequency: number }[];
+  } | null;
+}
+
+export interface PatientCase {
+  id: string;
+  patientId: string;
+  status: CaseStatus;
+  chiefComplaint?: string | null;
+  openedAt: string;
+  closedAt?: string | null;
+  steps: CaseStep[];
+  createdAt: string;
+}
+
+export type SheetMode = "checkin" | "visit" | "edit" | "editAppointment" | null;
 
 export interface AssignmentSource {
   id: string;

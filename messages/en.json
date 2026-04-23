@@ -228,6 +228,45 @@
     "methodDebitCard": "Debit Card",
     "methodPaypal": "PayPal"
   },
+  "cases": {
+    "newCase": "New Case",
+    "newCaseDesc": "Open a new medical case for this patient.",
+    "startCase": "Start Case",
+    "checkin": "Check-in",
+    "chiefComplaint": "Chief Complaint",
+    "chiefComplaintPlaceholder": "Main reason for visit...",
+    "openedAt": "Opened",
+    "closedAt": "Closed",
+    "noActivity": "No cases yet",
+    "addStep": "Add Step",
+    "addStepDesc": "Add a step to this case (consultation, lab, procedure, referral, or discharge).",
+    "stepTypeLabel": "Step Type",
+    "closeCase": "Close Case",
+    "doctorPanel": "Doctor Actions",
+    "markDone": "Mark as Done",
+    "addReferral": "Refer to Department",
+    "requestLab": "Request Lab",
+    "discharge": "Discharge Patient",
+    "status": {
+      "ACTIVE": "Active",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "stepType": {
+      "CHECKIN": "Check-in",
+      "CONSULTATION": "Consultation",
+      "LAB": "Lab Test",
+      "PROCEDURE": "Procedure",
+      "REFERRAL": "Referral",
+      "DISCHARGE": "Discharge"
+    },
+    "stepStatus": {
+      "PENDING": "Pending",
+      "IN_PROGRESS": "In Progress",
+      "DONE": "Done",
+      "CANCELLED": "Cancelled"
+    }
+  },
   "appointments": {
     "title": "Appointments",
     "description": "Schedule and manage patient bookings.",
@@ -402,6 +441,7 @@
     "price": "Price",
     "priceMustBePositive": "Price must be 0 or more",
     "description": "Description",
+    "optional": "(optional)",
     "descriptionPlaceholder": "Brief description of this department...",
     "addDepartment": "Add Department",
     "updateDepartment": "Update Department",
@@ -519,7 +559,11 @@
     "docTypeForeignPassport": "Foreign Passport",
     "docTypeResidencePermit": "Residence Permit",
     "bloodType": "Blood Type",
-    "selectBloodType": "Select blood type..."
+    "selectBloodType": "Select blood type...",
+    "select": "Select...",
+    "doctor": "Doctor / Assignment",
+    "note": "Note",
+    "notePlaceholder": "Additional notes..."
   },
   "notifications": {
     "title": "Notifications",
