@@ -34,7 +34,10 @@
     "optional": "(необязательно)",
     "notAssigned": "Не назначен",
     "areYouSure": "Вы уверены?",
-    "filterPlaceholder": "Поиск..."
+    "filterPlaceholder": "Поиск...",
+    "all": "Все",
+    "allDepartments": "Все отделы",
+    "reset": "Сброс"
   },
   "table": {
     "noResults": "Результаты не найдены.",
@@ -224,7 +227,11 @@
     "newDesc": "Записать платёж, привязанный к пациенту и отделению.",
     "methodCreditCard": "Кредитная карта",
     "methodDebitCard": "Дебетовая карта",
-    "methodPaypal": "PayPal"
+    "methodPaypal": "PayPal",
+    "minAmount": "Минимальная сумма",
+    "maxAmount": "Максимальная сумма",
+    "dateFrom": "С",
+    "dateTo": "По"
   },
   "appointments": {
     "title": "Записи",

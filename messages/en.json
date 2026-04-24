@@ -35,7 +35,10 @@
     "optional": "(optional)",
     "notAssigned": "Not assigned",
     "areYouSure": "Are you sure?",
-    "filterPlaceholder": "Search..."
+    "filterPlaceholder": "Search...",
+    "all": "All",
+    "allDepartments": "All departments",
+    "reset": "Reset"
   },
   "table": {
     "noResults": "No results.",
@@ -226,7 +229,11 @@
     "newDesc": "Record a payment linked to a patient and department.",
     "methodCreditCard": "Credit Card",
     "methodDebitCard": "Debit Card",
-    "methodPaypal": "PayPal"
+    "methodPaypal": "PayPal",
+    "minAmount": "Min amount",
+    "maxAmount": "Max amount",
+    "dateFrom": "From",
+    "dateTo": "To"
   },
   "appointments": {
     "title": "Appointments",
