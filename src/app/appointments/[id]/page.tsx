@@ -11,7 +11,7 @@ import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Calendar, CreditCard, Edit, FileText, Loader2, Printer, Receipt, Stethoscope, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, CreditCard, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Receipt, Scissors, Stethoscope, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -19,7 +19,8 @@ import { useMemo, useState } from "react";
 
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
 type PaymentStatus = "PAID" | "UNPAID";
-type DetailSheetMode = "editAppointment" | "addPayment" | null;
+type DetailSheetMode = "editAppointment" | "addPayment" | "addStep" | null;
+type StepType = "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
 
 interface PaymentFormProps {
   appointment: Appointment;
@@ -183,6 +184,52 @@ export default function AppointmentDetailPage() {
       setSheetMode(null);
     },
   });
+
+  const [stepType, setStepType] = useState<StepType | "">("");
+  const [stepAssignmentId, setStepAssignmentId] = useState("");
+  const [stepDateTime, setStepDateTime] = useState(() => new Date().toISOString().slice(0, 16));
+  const [stepAmount, setStepAmount] = useState("");
+  const [stepNote, setStepNote] = useState("");
+
+  const resetStepForm = () => {
+    setStepType("");
+    setStepAssignmentId("");
+    setStepDateTime(new Date().toISOString().slice(0, 16));
+    setStepAmount("");
+    setStepNote("");
+  };
+
+  const { mutateAsync: markStepDone, isPending: isMarkingDone } = useMutation({
+    mutationFn: ({ caseId, stepId }: { caseId: string; stepId: string }) =>
+      api.patch(`/cases/${caseId}/steps/${stepId}`, {
+        status: "DONE",
+        completedAt: new Date().toISOString(),
+      }),
+    onSuccess: async () => {
+      await invalidateAppointmentData(appointment?.patientId);
+    },
+  });
+
+  const { mutateAsync: addCaseStep, isPending: isAddingStep } = useMutation({
+    mutationFn: ({ caseId, payload }: { caseId: string; payload: Record<string, unknown> }) =>
+      api.post(`/cases/${caseId}/steps`, payload),
+    onSuccess: async () => {
+      await invalidateAppointmentData(appointment?.patientId);
+      setSheetMode(null);
+      resetStepForm();
+    },
+  });
+
+  const handleAddCaseStep = () => {
+    const caseId = appointment?.caseStep?.caseId;
+    if (!caseId || !stepType) return;
+    const payload: Record<string, unknown> = { type: stepType };
+    if (stepNote) payload.note = stepNote;
+    if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
+    if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
+    if (stepAmount) payload.amount = Number(stepAmount);
+    addCaseStep({ caseId, payload });
+  };
 
   const handleFileUploadConfirm = async (file: File, name: string) => {
     if (!appointment) return;
@@ -437,6 +484,76 @@ export default function AppointmentDetailPage() {
         <PrescriptionEditor appointmentId={appointment.id} initialData={appointment.prescription} enterAddsRow />
       </div>
 
+      {/* Doctor Case Actions — only when appointment belongs to a case */}
+      {appointment.caseStep && appointment.caseStep.case?.status === "ACTIVE" && (
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <h3 className="text-base font-semibold text-text mb-4 inline-flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-primary" />
+            {t("cases.doctorPanel")}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {/* Mark current step as Done */}
+            {appointment.caseStep.status !== "DONE" && appointment.caseStep.status !== "CANCELLED" && (
+              <Can method="PATCH" path="/api/cases/:id/steps/:id">
+                <button
+                  type="button"
+                  disabled={isMarkingDone}
+                  onClick={() =>
+                    markStepDone({
+                      caseId: appointment.caseStep!.caseId,
+                      stepId: appointment.caseStep!.id,
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-md bg-green-50 border border-green-200 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  {isMarkingDone ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  {t("cases.markDone")}
+                </button>
+              </Can>
+            )}
+            {/* Add follow-up steps */}
+            <Can method="POST" path="/api/cases/:id/steps">
+              <button
+                type="button"
+                onClick={() => { setStepType("LAB"); setSheetMode("addStep"); }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 border border-purple-200 px-3 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+              >
+                <FlaskConical className="w-3.5 h-3.5" />
+                {t("cases.requestLab")}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStepType("PROCEDURE"); setSheetMode("addStep"); }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-orange-50 border border-orange-200 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer"
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                {t("cases.stepType.PROCEDURE")}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStepType("REFERRAL"); setSheetMode("addStep"); }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-yellow-50 border border-yellow-200 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100 transition-colors cursor-pointer"
+              >
+                <ArrowRightCircle className="w-3.5 h-3.5" />
+                {t("cases.addReferral")}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStepType("DISCHARGE"); setSheetMode("addStep"); }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-surface-hover border border-border px-3 py-2 text-sm font-medium text-secondary hover:bg-border transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                {t("cases.discharge")}
+              </button>
+            </Can>
+          </div>
+        </div>
+      )}
+
       <Sheet
         isOpen={sheetMode === "editAppointment"}
         onClose={() => setSheetMode(null)}
@@ -472,6 +589,93 @@ export default function AppointmentDetailPage() {
           onCancel={() => setSheetMode(null)}
           isPending={isCreatingPayment}
         />
+      </Sheet>
+
+      <Sheet
+        isOpen={sheetMode === "addStep"}
+        onClose={() => { setSheetMode(null); resetStepForm(); }}
+        title={t("cases.addStep")}
+        description={t("cases.addStepDesc")}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("cases.stepTypeLabel")}</label>
+            <select
+              value={stepType}
+              onChange={(e) => setStepType(e.target.value as StepType)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            >
+              {(["LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"] as StepType[]).map((type) => (
+                <option key={type} value={type}>{t(`cases.stepType.${type}`)}</option>
+              ))}
+            </select>
+          </div>
+
+          {stepType === "REFERRAL" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">
+                {t("forms.doctor")}
+                <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+              </label>
+              <select
+                value={stepAssignmentId}
+                onChange={(e) => setStepAssignmentId(e.target.value)}
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              >
+                <option value="">{t("forms.select")}</option>
+                {assignmentOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {(stepType === "LAB" || stepType === "PROCEDURE") && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
+              <input
+                type="number"
+                min="0"
+                value={stepAmount}
+                onChange={(e) => setStepAmount(e.target.value)}
+                placeholder="0"
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              {t("forms.note")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <textarea
+              rows={3}
+              value={stepNote}
+              onChange={(e) => setStepNote(e.target.value)}
+              placeholder={t("forms.notePlaceholder")}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => { setSheetMode(null); resetStepForm(); }}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              {t("forms.cancel")}
+            </button>
+            <button
+              type="button"
+              disabled={!stepType || isAddingStep}
+              onClick={handleAddCaseStep}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
+              {isAddingStep ? t("common.loading") : t("cases.addStep")}
+            </button>
+          </div>
+        </div>
       </Sheet>
 
       <FileUploadModal

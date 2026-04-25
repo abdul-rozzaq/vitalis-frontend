@@ -60,6 +60,13 @@ export interface Appointment {
   payments?: Payment[];
   files?: AppointmentFile[];
   prescription?: Prescription | null;
+  caseStep?: {
+    id: string;
+    caseId: string;
+    type: string;
+    status: "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+    case?: { id: string; status: string } | null;
+  } | null;
 }
 
 export interface Patient {
