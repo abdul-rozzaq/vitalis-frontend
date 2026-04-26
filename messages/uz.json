@@ -647,6 +647,7 @@
     "markDone": "Bajarildi",
     "note": "Izoh",
     "notePlaceholder": "Izoh kiriting...",
+    "removeFile": "Faylni o'chirish",
     "orderStatus": {
       "PENDING": "Kutilmoqda",
       "IN_PROGRESS": "Jarayonda",

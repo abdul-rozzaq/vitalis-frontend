@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { resolveFileUrl } from "@/features/patients/detail/utils";
@@ -165,12 +167,13 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     <p className="text-xs text-text-muted mt-1 italic">{item.note}</p>
                   )}
                 </div>
-                {editingItemId !== item.id && item.status !== "DONE" && item.status !== "CANCELLED" && (
+                {editingItemId !== item.id && item.status !== "CANCELLED" && (
                   <button
                     onClick={() => openEdit(item)}
-                    className="text-xs text-primary hover:underline flex-shrink-0"
+                    className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors flex-shrink-0"
+                    title={t("lab.updateItem")}
                   >
-                    {t("lab.updateItem")}
+                    <Pencil className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -217,14 +220,24 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                         />
                       </label>
                       {form.fileUrl && (
-                        <a
-                          href={resolveFileUrl(form.fileUrl)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-text-muted hover:text-text"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </a>
+                        <>
+                          <a
+                            href={resolveFileUrl(form.fileUrl)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-text-muted hover:text-text"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, fileUrl: "", fileName: "" }))}
+                            className="text-text-muted hover:text-red-600 transition-colors"
+                            title={t("lab.removeFile")}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>

@@ -649,6 +649,7 @@
     "markDone": "Mark Done",
     "note": "Note",
     "notePlaceholder": "Add a note...",
+    "removeFile": "Remove file",
     "orderStatus": {
       "PENDING": "Pending",
       "IN_PROGRESS": "In Progress",

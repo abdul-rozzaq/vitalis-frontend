@@ -646,6 +646,7 @@
     "markDone": "Выполнено",
     "note": "Примечание",
     "notePlaceholder": "Добавьте примечание...",
+    "removeFile": "Удалить файл",
     "orderStatus": {
       "PENDING": "Ожидание",
       "IN_PROGRESS": "В процессе",

@@ -1,9 +1,8 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { useTranslations } from "next-intl";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import Lottie from "lottie-react";
 import {
   Bell,
@@ -12,20 +11,20 @@ import {
   CreditCard,
   FlaskConical,
   GitFork,
-  Microscope,
   LogOut,
+  Microscope,
   Moon,
   Sun,
   User,
   UserPen,
   Users,
 } from "lucide-react";
-import { PatientSearch } from "./ui/patient-search";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { Can } from "./ui/can";
-import Image from "next/image";
+import { PatientSearch } from "./ui/patient-search";
 
 const IGNORE_PATHS = ["/login"];
 
@@ -72,13 +71,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       method: "GET",
       path: "/api/payments",
     },
-    {
-      label: t("nav.assignments"),
-      href: "/assignments",
-      icon: GitFork,
-      method: "GET",
-      path: "/api/assignments",
-    },
+
     {
       label: t("nav.lab"),
       href: "/lab",
@@ -92,6 +85,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       icon: Microscope,
       method: "GET",
       path: "/api/laboratories",
+    },
+    {
+      label: t("nav.assignments"),
+      href: "/assignments",
+      icon: GitFork,
+      method: "GET",
+      path: "/api/assignments",
     },
   ];
 
@@ -248,11 +248,10 @@ function NavItem({
   return (
     <Link href={href}>
       <button
-        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${
-          active
+        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${active
             ? "bg-primary-50 text-primary"
             : "text-secondary hover:bg-surface-hover hover:text-text"
-        }`}
+          }`}
       >
         <Icon className="w-[18px] h-[18px]" />
         <span>{label}</span>
