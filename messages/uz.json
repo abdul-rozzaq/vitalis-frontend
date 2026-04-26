@@ -36,7 +36,11 @@
     "optional": "(ixtiyoriy)",
     "notAssigned": "Tayinlanmagan",
     "areYouSure": "Ishonchingiz komilmi?",
-    "filterPlaceholder": "Qidirish..."
+    "filterPlaceholder": "Qidirish...",
+    "all": "Hammasi",
+    "allDepartments": "Barcha bo‘limlar",
+    "reset": "Tozalash",
+    "search": "Qidirish"
   },
   "table": {
     "noResults": "Natija topilmadi.",
@@ -179,7 +183,8 @@
     "colSubDepartment": "Quyi bo'lim",
     "subDepartmentsDesc": "{name} ostidagi bo'limlar.",
     "appointmentsDesc": "{name} bo'limidagi so'nggi qabullar.",
-    "noAppointments": "Bu bo'lim uchun hali qabullar qayd etilmagan."
+    "noAppointments": "Bu bo'lim uchun hali qabullar qayd etilmagan.",
+    "appointmentsDescWithChildren": "{name} va uning bo‘limlariga tegishli barcha yozuvlar"
   },
   "payments": {
     "title": "To'lovlar",
@@ -226,7 +231,11 @@
     "newDesc": "Bemor va bo'limga bog'liq to'lovni qayd etish.",
     "methodCreditCard": "Kredit karta",
     "methodDebitCard": "Debit karta",
-    "methodPaypal": "PayPal"
+    "methodPaypal": "PayPal",
+    "minAmount": "Min narx",
+    "maxAmount": "Maks narx",
+    "dateFrom": "Dan",
+    "dateTo": "Gacha"
   },
   "cases": {
     "newCase": "Yangi ish",

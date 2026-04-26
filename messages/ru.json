@@ -36,7 +36,11 @@
     "optional": "(необязательно)",
     "notAssigned": "Не назначен",
     "areYouSure": "Вы уверены?",
-    "filterPlaceholder": "Поиск..."
+    "filterPlaceholder": "Поиск...",
+    "all": "Все",
+    "allDepartments": "Все отделы",
+    "reset": "Сброс",
+    "search": "Поиск"
   },
   "table": {
     "noResults": "Результаты не найдены.",
@@ -179,7 +183,8 @@
     "colSubDepartment": "Подотделение",
     "subDepartmentsDesc": "Подотделения в {name}.",
     "appointmentsDesc": "Последние приёмы в {name}.",
-    "noAppointments": "Для этого отделения записей о приёмах пока нет."
+    "noAppointments": "Для этого отделения записей о приёмах пока нет.",
+    "appointmentsDescWithChildren": "Все записи для {name} и его подразделений"
   },
   "payments": {
     "title": "Платежи",
@@ -226,7 +231,11 @@
     "newDesc": "Записать платёж, привязанный к пациенту и отделению.",
     "methodCreditCard": "Кредитная карта",
     "methodDebitCard": "Дебетовая карта",
-    "methodPaypal": "PayPal"
+    "methodPaypal": "PayPal",
+    "minAmount": "Минимальная сумма",
+    "maxAmount": "Максимальная сумма",
+    "dateFrom": "С",
+    "dateTo": "По"
   },
   "cases": {
     "newCase": "Новый случай",

@@ -44,15 +44,34 @@ export default function EmployeesPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>("");
 
+  // ✅ O'ZGARMADI
   const { data: rolesData = [] } = useQuery({
     queryKey: ["roles"],
     queryFn: () => api.get("/roles").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
+  // ✅ O'ZGARTIRILDI: filterText va selectedRole ni backendga yuboradi
+  // selectedRole bu role.name (masalan "DOCTOR"), backendga roleId kerak
+  // Shuning uchun rolesData dan roleId ni topamiz
+  const selectedRoleId = useMemo(
+    () => rolesData.find((r: Role) => r.name === selectedRole)?.id ?? "",
+    [rolesData, selectedRole]
+  );
+
   const { data: employeesData = [] } = useQuery({
-    queryKey: ["employees"],
-    queryFn: () => api.get("/users").then((res) => res.data),
+    // queryKey ichida filterText va selectedRoleId bo'lsa,
+    // ular o'zgarganda avtomatik qayta so'rov yuboriladi
+    queryKey: ["employees", { search: filterText, roleId: selectedRoleId }],
+    queryFn: () =>
+      api
+        .get("/users", {
+          params: {
+            ...(filterText && { search: filterText }),
+            ...(selectedRoleId && { roleId: selectedRoleId }),
+          },
+        })
+        .then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -64,19 +83,8 @@ export default function EmployeesPage() {
     },
   });
 
-  const filteredEmployees = useMemo(
-    () =>
-      employeesData.filter((e: Employee) => {
-        const matchSearch =
-          `${e.first_name} ${e.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
-          (e.phone ?? "").includes(filterText);
-
-        const matchRole = selectedRole ? e.role?.name === selectedRole : true;
-
-        return matchSearch && matchRole;
-      }),
-    [employeesData, filterText, selectedRole],
-  );
+  // ✅ O'CHIRILDI: filteredEmployees useMemo kerak emas endi
+  // Backend filter qilib qaytaradi, to'g'ridan-to'g'ri employeesData ishlatiladi
 
   const handleExport = () => {
     const headers = ["#", t("employees.colFullName"), t("employees.colPhone"), t("employees.colRole"), t("employees.colJoined")];
@@ -104,7 +112,6 @@ export default function EmployeesPage() {
     }
   };
 
-  // ✅ Filter toggle: yopilganda selectedRole reset bo'ladi
   const handleToggleFilter = () => {
     if (filterOpen) {
       setSelectedRole("");
@@ -219,7 +226,6 @@ export default function EmployeesPage() {
             className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
           />
 
-          {/* ✅ Role select — faqat filterOpen bo'lganda ko'rinadi, X tugmasi bilan reset */}
           {filterOpen && (
             <div className="flex items-center gap-1">
               <select
@@ -234,7 +240,6 @@ export default function EmployeesPage() {
                   </option>
                 ))}
               </select>
-              {/* ✅ Tanlangan roleni tozalash tugmasi */}
               {selectedRole && (
                 <button
                   onClick={() => setSelectedRole("")}
@@ -250,13 +255,12 @@ export default function EmployeesPage() {
           <button
             onClick={handleToggleFilter}
             className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || selectedRole
-                ? "bg-primary-50 border-primary text-primary hover:bg-primary-100"
-                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+              ? "bg-primary-50 border-primary text-primary hover:bg-primary-100"
+              : "bg-surface border-border text-secondary hover:bg-surface-hover"
               }`}
           >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
-            {/* ✅ Tanlangan rol nomi filter tugmasida ko'rsatiladi */}
             {selectedRole && (
               <span className="ml-0.5 font-semibold">
                 · {ROLE_STYLES[selectedRole]?.label ?? selectedRole}
@@ -283,7 +287,7 @@ export default function EmployeesPage() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-        <DataTable columns={columns} data={filteredEmployees} />
+        <DataTable columns={columns} data={employeesData} />
       </motion.div>
     </div>
   );

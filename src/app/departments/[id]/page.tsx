@@ -33,6 +33,7 @@ interface Appointment {
   status: AppointmentStatus;
   patient: { id: string; first_name: string; last_name: string };
   assignment: {
+    department?: { id: string; name: string } | null;
     user: { first_name: string; last_name: string };
     room?: { name: string } | null;
   };
@@ -73,11 +74,30 @@ export default function DepartmentDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: appointments = [], isLoading: loadingAppts } = useQuery<Appointment[]>({
-    queryKey: ["appointments", "department", id],
-    queryFn: () => api.get("/appointments", { params: { departmentId: id } }).then((res) => res.data),
+  const allDeptIds = useMemo(() => {
+    if (!department) return [id];
+    const childIds = (department.children ?? []).map((c) => c.id);
+    return [id, ...childIds];
+  }, [department, id]);
+
+  const appointmentQueries = useQuery<Appointment[]>({
+    queryKey: ["appointments", "department", id, allDeptIds],
+    queryFn: async () => {
+      const results = await Promise.all(
+        allDeptIds.map((deptId) =>
+          api.get("/appointments", { params: { departmentId: deptId } }).then((res) => res.data as Appointment[])
+        )
+      );
+      const merged = results.flat();
+      const unique = Array.from(new Map(merged.map((a) => [a.id, a])).values());
+      return unique.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+    },
+    enabled: allDeptIds.length > 0,
     refetchOnWindowFocus: false,
   });
+
+  const appointments = appointmentQueries.data ?? [];
+  const loadingAppts = appointmentQueries.isLoading;
 
   const { mutateAsync: addSubDept } = useMutation({
     mutationFn: (data: any) => api.post("/departments", { ...data, parentId: id }),
@@ -114,27 +134,11 @@ export default function DepartmentDetailPage() {
     }
   };
 
-  // const handleFormSubmit = (data: any) => {
-  //   if (editingSubDept) {
-  //     updateSubDept(data).then(() => {
-  //       setIsSheetOpen(false);
-  //       setEditingSubDept(null);
-  //     });
-  //   } else {
-  //     addSubDept(data).then(() => {
-  //       setIsSheetOpen(false);
-  //     });
-  //   }
-  // };
-
   const handleFormSubmit = (data: any) => {
     const payload = {
       ...data,
       price:
-        data.price === "" ||
-          data.price === undefined ||
-          data.price === null ||
-          Number(data.price) === 0
+        data.price === "" || data.price === undefined || data.price === null || Number(data.price) === 0
           ? null
           : Number(data.price),
     };
@@ -150,6 +154,7 @@ export default function DepartmentDetailPage() {
       });
     }
   };
+
   const columns = useMemo<ColumnDef<Department>[]>(
     () => [
       {
@@ -217,7 +222,6 @@ export default function DepartmentDetailPage() {
               <button
                 onClick={() => handleEditSubDept(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit"
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -227,7 +231,6 @@ export default function DepartmentDetailPage() {
                 onClick={() => handleDeleteSubDept(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-                title="Delete"
               >
                 {isDeleting && deletingId === row.original.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -260,21 +263,17 @@ export default function DepartmentDetailPage() {
   }
 
   const color = getDepartmentColor(department.id);
+  const hasChildren = (department.children ?? []).length > 0;
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
-      {/* Back */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <Link
-          href="/departments"
-          className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors"
-        >
+        <Link href="/departments" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors">
           <ArrowLeft className="w-4 h-4" />
           {t("departments.title")}
         </Link>
       </motion.div>
 
-      {/* Department Info */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -304,7 +303,6 @@ export default function DepartmentDetailPage() {
         </div>
       </motion.div>
 
-      {/* Sub-departments */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -321,15 +319,17 @@ export default function DepartmentDetailPage() {
             </button>
           </Can>
         </div>
-
         <DataTable columns={columns} data={department.children ?? []} />
       </motion.div>
 
-      {/* Appointments */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4">
         <div>
           <h3 className="text-base font-semibold text-text">{t("appointments.title")}</h3>
-          <p className="text-secondary text-sm mt-0.5">{t("departments.appointmentsDesc", { name: department.name })}</p>
+          <p className="text-secondary text-sm mt-0.5">
+            {hasChildren
+              ? t("departments.appointmentsDescWithChildren", { name: department.name })
+              : t("departments.appointmentsDesc", { name: department.name })}
+          </p>
         </div>
 
         {loadingAppts ? (
@@ -346,6 +346,9 @@ export default function DepartmentDetailPage() {
             {appointments.map((appt) => {
               const s = STATUS_STYLES[appt.status] ?? STATUS_STYLES.PENDING;
               const StatusIcon = s.icon;
+              const deptName = appt.assignment?.department?.name;
+              const isFromChild = deptName && deptName !== department.name;
+
               return (
                 <div key={appt.id} className={`flex items-center gap-4 rounded-lg border px-4 py-3 ${s.bg}`}>
                   <div className="shrink-0">
@@ -370,9 +373,16 @@ export default function DepartmentDetailPage() {
                       })}
                     </div>
                   </div>
-                  <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>
-                    {appt.status}
-                  </span>
+                  <div className="shrink-0 flex items-center gap-2">
+                    {isFromChild && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface border border-border text-secondary">
+                        {deptName}
+                      </span>
+                    )}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>
+                      {appt.status}
+                    </span>
+                  </div>
                 </div>
               );
             })}
@@ -380,25 +390,16 @@ export default function DepartmentDetailPage() {
         )}
       </motion.div>
 
-      {/* Sheet */}
       <Sheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
         title={editingSubDept ? t("departments.editSubTitle") : t("departments.addSubTitle", { name: department.name })}
-        description={
-          editingSubDept
-            ? t("departments.editSubDesc")
-            : t("departments.addSubDesc", { name: department.name })
-        }
+        description={editingSubDept ? t("departments.editSubDesc") : t("departments.addSubDesc", { name: department.name })}
       >
         <DepartmentForm
           initialData={
             editingSubDept
-              ? {
-                name: editingSubDept.name,
-                description: editingSubDept.description,
-                price: editingSubDept.price ?? undefined,
-              }
+              ? { name: editingSubDept.name, description: editingSubDept.description, price: editingSubDept.price ?? undefined }
               : undefined
           }
           hideParent

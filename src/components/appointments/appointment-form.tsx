@@ -1,9 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { Combobox } from "@/components/ui/combobox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Link2, User } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useTranslations } from "next-intl";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 type AppointmentFormValues = {
@@ -58,50 +59,70 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentSchema) as any,
     defaultValues: { dateTime: nowLocal(), ...initialData },
   });
 
+  const patientId = useWatch({ control, name: "patientId" });
+  const assignmentId = useWatch({ control, name: "assignmentId" });
+
   const isEditing = !!initialData;
+
+  const patientOptions = patients.map((p) => ({
+    value: p.id,
+    label: p.name,
+    avatar: p.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+  }));
+
+  const assignmentOptions = assignments.map((a) => ({
+    value: a.id,
+    label: a.label,
+  }));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      {/* Patient */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
           {t("forms.patient")}
         </label>
-        <select
-          {...register("patientId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectPatientOption")}</option>
-          {patients.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+        <Combobox
+          options={patientOptions}
+          value={patientId}
+          onChange={(val) => setValue("patientId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectPatientOption")}
+          searchPlaceholder={t("common.search")}
+          disabled={isPending}
+          error={!!errors.patientId}
+        />
         {errors.patientId && <p className="text-xs text-danger-600 font-medium">{errors.patientId.message}</p>}
       </div>
 
+      {/* Assignment */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Link2 className="w-4 h-4 text-primary-500" />
           {t("forms.assignmentDoctorDept")}
         </label>
-        <select
-          {...register("assignmentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectAssignment")}</option>
-          {assignments.map((a) => (
-            <option key={a.id} value={a.id}>{a.label}</option>
-          ))}
-        </select>
+        <Combobox
+          options={assignmentOptions}
+          value={assignmentId}
+          onChange={(val) => setValue("assignmentId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectAssignment")}
+          searchPlaceholder={t("common.search")}
+          disabled={isPending}
+          error={!!errors.assignmentId}
+        />
         {errors.assignmentId && <p className="text-xs text-danger-600 font-medium">{errors.assignmentId.message}</p>}
       </div>
 
+      {/* DateTime */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Calendar className="w-4 h-4 text-primary-500" />
@@ -115,6 +136,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
         {errors.dateTime && <p className="text-xs text-danger-600 font-medium">{errors.dateTime.message}</p>}
       </div>
 
+      {/* Status - faqat edit rejimida */}
       {isEditing && (
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text">{t("forms.status")}</label>

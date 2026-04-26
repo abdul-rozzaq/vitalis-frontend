@@ -37,7 +37,11 @@
     "optional": "(optional)",
     "notAssigned": "Not assigned",
     "areYouSure": "Are you sure?",
-    "filterPlaceholder": "Search..."
+    "filterPlaceholder": "Search...",
+    "all": "All",
+    "allDepartments": "All departments",
+    "reset": "Reset",
+    "search": "Search"
   },
   "table": {
     "noResults": "No results.",
@@ -181,7 +185,8 @@
     "colSubDepartment": "Sub-department",
     "subDepartmentsDesc": "Departments under {name}.",
     "appointmentsDesc": "Recent appointments in {name}.",
-    "noAppointments": "No appointments recorded for this department yet."
+    "noAppointments": "No appointments recorded for this department yet.",
+    "appointmentsDescWithChildren": "Все записи для {name} и его подразделений"
   },
   "payments": {
     "title": "Payments",
@@ -228,7 +233,11 @@
     "newDesc": "Record a payment linked to a patient and department.",
     "methodCreditCard": "Credit Card",
     "methodDebitCard": "Debit Card",
-    "methodPaypal": "PayPal"
+    "methodPaypal": "PayPal",
+    "minAmount": "Min amount",
+    "maxAmount": "Max amount",
+    "dateFrom": "From",
+    "dateTo": "To"
   },
   "cases": {
     "newCase": "New Case",
