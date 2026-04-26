@@ -88,8 +88,7 @@ export interface CaseStep {
       id: string;
       status: LabItemStatus;
       service: { id: string; name: string; price?: number | null };
-      fileUrl?: string | null;
-      fileName?: string | null;
+      files: { id: string; url: string; name: string }[];
       payment?: { id: string; amount: number; status: "PAID" | "UNPAID" } | null;
     }[];
   } | null;

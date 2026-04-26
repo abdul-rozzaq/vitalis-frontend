@@ -8,8 +8,6 @@ import {
   Download,
   Upload,
   CheckCircle2,
-  Clock,
-  XCircle,
   ChevronDown,
   ChevronUp,
   Loader2,
@@ -34,11 +32,9 @@ const ITEM_STATUS_STYLES: Record<LabItemStatus, string> = {
   CANCELLED: "bg-red-50 text-red-600",
 };
 
-interface ItemUpdateForm {
+interface ItemEditForm {
   status: LabItemStatus;
   note: string;
-  fileUrl: string;
-  fileName: string;
 }
 
 function LabOrderCard({ order }: { order: LabOrder }) {
@@ -47,15 +43,10 @@ function LabOrderCard({ order }: { order: LabOrder }) {
   const [expanded, setExpanded] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [form, setForm] = useState<ItemUpdateForm>({
-    status: "PENDING",
-    note: "",
-    fileUrl: "",
-    fileName: "",
-  });
+  const [form, setForm] = useState<ItemEditForm>({ status: "PENDING", note: "" });
 
   const { mutate: updateItem, isPending: isUpdating } = useMutation({
-    mutationFn: ({ itemId, data }: { itemId: string; data: Partial<ItemUpdateForm> }) =>
+    mutationFn: ({ itemId, data }: { itemId: string; data: Partial<ItemEditForm> }) =>
       api.patch(`/lab-orders/${order.id}/items/${itemId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
@@ -63,7 +54,13 @@ function LabOrderCard({ order }: { order: LabOrder }) {
     },
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { mutate: deleteFile, isPending: isDeletingFile } = useMutation({
+    mutationFn: ({ itemId, fileId }: { itemId: string; fileId: string }) =>
+      api.delete(`/lab-orders/${order.id}/items/${itemId}/files/${fileId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lab-orders"] }),
+  });
+
+  const handleFileUpload = async (itemId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
@@ -71,19 +68,19 @@ function LabOrderCard({ order }: { order: LabOrder }) {
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post("/uploads/file", formData);
-      setForm((prev) => ({ ...prev, fileUrl: res.data.url, fileName: res.data.name ?? file.name }));
+      await api.post(`/lab-orders/${order.id}/items/${itemId}/files`, {
+        url: res.data.url,
+        name: res.data.name ?? file.name,
+      });
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
     } finally {
       setIsUploading(false);
+      e.target.value = "";
     }
   };
 
   const openEdit = (item: LabOrderItem) => {
-    setForm({
-      status: item.status,
-      note: item.note ?? "",
-      fileUrl: item.fileUrl ?? "",
-      fileName: item.fileName ?? "",
-    });
+    setForm({ status: item.status, note: item.note ?? "" });
     setEditingItemId(item.id);
   };
 
@@ -151,30 +148,69 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                         {item.payment.status === "PAID" ? t("payments.statusPaid") : t("payments.statusUnpaid")}
                       </span>
                     )}
-                    {item.fileUrl && (
-                      <a
-                        href={resolveFileUrl(item.fileUrl)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
-                      >
-                        <Download className="w-3 h-3" />
-                        {item.fileName ?? t("lab.uploadResult")}
-                      </a>
-                    )}
                   </div>
+
+                  {/* Files list */}
+                  {item.files.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {item.files.map((f) => (
+                        <div key={f.id} className="flex items-center gap-1 bg-purple-50 rounded px-2 py-1">
+                          <a
+                            href={resolveFileUrl(f.url)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1 text-xs text-purple-700 hover:underline"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span className="max-w-[120px] truncate">{f.name}</span>
+                          </a>
+                          {item.status !== "CANCELLED" && (
+                            <button
+                              onClick={() => deleteFile({ itemId: item.id, fileId: f.id })}
+                              disabled={isDeletingFile}
+                              className="ml-1 text-purple-400 hover:text-red-500 transition-colors"
+                              title={t("lab.removeFile")}
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   {item.note && (
                     <p className="text-xs text-text-muted mt-1 italic">{item.note}</p>
                   )}
                 </div>
+
                 {editingItemId !== item.id && item.status !== "CANCELLED" && (
-                  <button
-                    onClick={() => openEdit(item)}
-                    className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors flex-shrink-0"
-                    title={t("lab.updateItem")}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Upload file button */}
+                    <label
+                      className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors cursor-pointer"
+                      title={t("lab.uploadResult")}
+                    >
+                      {isUploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5" />
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(item.id, e)}
+                        disabled={isUploading}
+                      />
+                    </label>
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors"
+                      title={t("lab.updateItem")}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -199,49 +235,6 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     </select>
                   </div>
 
-                  {/* File upload */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-text-muted uppercase tracking-wider">
-                      {t("lab.uploadResult")}
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <label className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline">
-                        {isUploading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4" />
-                        )}
-                        {form.fileName || t("lab.uploadResult")}
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleFileChange}
-                          disabled={isUploading}
-                        />
-                      </label>
-                      {form.fileUrl && (
-                        <>
-                          <a
-                            href={resolveFileUrl(form.fileUrl)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-text-muted hover:text-text"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => setForm((p) => ({ ...p, fileUrl: "", fileName: "" }))}
-                            className="text-text-muted hover:text-red-600 transition-colors"
-                            title={t("lab.removeFile")}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
                   {/* Note */}
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-text-muted uppercase tracking-wider">
@@ -262,15 +255,10 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                       onClick={() =>
                         updateItem({
                           itemId: item.id,
-                          data: {
-                            status: form.status,
-                            note: form.note || undefined,
-                            fileUrl: form.fileUrl || undefined,
-                            fileName: form.fileName || undefined,
-                          },
+                          data: { status: form.status, note: form.note || undefined },
                         })
                       }
-                      disabled={isUpdating || isUploading}
+                      disabled={isUpdating}
                       className="flex-1 flex items-center justify-center gap-2 text-sm bg-primary text-white rounded-lg px-3 py-2 hover:bg-primary-600 disabled:opacity-60 transition-colors"
                     >
                       {isUpdating ? (
@@ -308,13 +296,11 @@ export default function LabPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-text">{t("lab.title")}</h1>
         <p className="text-sm text-text-muted mt-1">{t("lab.description")}</p>
       </div>
 
-      {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

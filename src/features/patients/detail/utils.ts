@@ -49,9 +49,7 @@ export function formatTime(iso: string) {
 
 export function resolveFileUrl(url: string) {
   if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/api\/?$/, "");
-  if (!base) return url;
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+  return url.startsWith("/") ? url : `/${url}`;
 }
 
 export function toAssignmentOptions(assignments: AssignmentSource[]) {

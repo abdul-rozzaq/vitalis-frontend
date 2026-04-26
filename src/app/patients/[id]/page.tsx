@@ -173,11 +173,11 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
               >
                 <span className="text-purple-700 font-medium truncate">{item.service.name}</span>
                 <div className="flex items-center gap-2 shrink-0">
-                  {item.fileUrl && (
-                    <a href={resolveFileUrl(item.fileUrl)} target="_blank" rel="noreferrer">
+                  {item.files?.map((f) => (
+                    <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name}>
                       <Download className="w-3.5 h-3.5 text-purple-500" />
                     </a>
-                  )}
+                  ))}
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
                     {t(`lab.itemStatus.${item.status}`)}
                   </span>

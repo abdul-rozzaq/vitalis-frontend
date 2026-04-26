@@ -32,13 +32,19 @@ export interface LabPayment {
   method?: string | null;
 }
 
+export interface LabOrderItemFile {
+  id: string;
+  url: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface LabOrderItem {
   id: string;
   status: LabItemStatus;
   serviceId: string;
   service: { id: string; name: string; price?: number | null };
-  fileUrl?: string | null;
-  fileName?: string | null;
+  files: LabOrderItemFile[];
   note?: string | null;
   completedAt?: string | null;
   payment?: LabPayment | null;
