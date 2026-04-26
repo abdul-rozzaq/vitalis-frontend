@@ -3,8 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
+import { Combobox, ComboboxOption } from "../ui/combobox";
 
 const scheduleRowSchema = z.object({
   startTime: z.string().min(1, "Required"),
@@ -22,26 +24,16 @@ const assignmentSchema = z.object({
 export type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 type AssignmentFormInput = z.input<typeof assignmentSchema>;
 
-interface Role {
-  id: string;
-  name: string;
-}
-
-interface UserOption {
-  id: string;
-  first_name: string;
-  last_name: string;
-  role: Role;
-}
+interface Role { id: string; name: string; }
+interface UserOption { id: string; first_name: string; last_name: string; role: Role; }
 interface DeptOption {
   id: string;
   name: string;
   price?: number | null;
+  parentId?: string | null;
+  parent?: { id: string; name: string } | null;
 }
-interface RoomOption {
-  id: string;
-  name: string;
-}
+interface RoomOption { id: string; name: string; }
 
 interface AssignmentFormProps {
   initialData?: Partial<AssignmentFormValues>;
@@ -56,83 +48,108 @@ interface AssignmentFormProps {
 export function AssignmentForm({ initialData, users, departments, rooms, onSubmit, onCancel, isLoading }: AssignmentFormProps) {
   const t = useTranslations();
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<AssignmentFormInput, unknown, AssignmentFormValues>({
+  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<AssignmentFormInput, unknown, AssignmentFormValues>({
     resolver: zodResolver(assignmentSchema) as any,
     defaultValues: initialData ?? { isActive: true, schedules: [] },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "schedules" });
-
   const isEditing = !!initialData;
+
+  const userOptions: ComboboxOption[] = users.map((u) => ({
+    value: u.id,
+    label: `${u.first_name} ${u.last_name}`,
+    sublabel: u.role?.name,
+    avatar: `${u.first_name[0] ?? ""}${u.last_name[0] ?? ""}`.toUpperCase(),
+  }));
+
+  const departmentOptions: ComboboxOption[] = useMemo(() => {
+    const parents = departments.filter((d) => !d.parentId);
+    const children = departments.filter((d) => !!d.parentId);
+    const result: ComboboxOption[] = [];
+
+    for (const parent of parents) {
+      result.push({
+        value: parent.id,
+        label: parent.name,
+        sublabel: parent.price != null ? `${parent.price.toLocaleString()} UZS` : undefined,
+      });
+
+      const kids = children.filter((c) => c.parentId === parent.id);
+      for (const child of kids) {
+        result.push({
+          value: child.id,
+          label: child.name,
+          sublabel: child.price != null
+            ? `${parent.name}  ·  ${child.price.toLocaleString()} UZS`
+            : parent.name,
+          indent: true,
+        });
+      }
+    }
+
+    return result;
+  }, [departments]);
+
+  const roomOptions: ComboboxOption[] = rooms.map((r) => ({
+    value: r.id,
+    label: r.name,
+  }));
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Employee */}
+
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
           {t("forms.employee")}
         </label>
-        <select
-          {...register("userId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectEmployee")}</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.first_name} {u.last_name} ({u.role?.name})
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={userOptions}
+          value={watch("userId")}
+          onChange={(val) => setValue("userId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectEmployee")}
+          searchPlaceholder={t("common.search")}
+          disabled={isLoading}
+          error={!!errors.userId}
+        />
         {errors.userId && <p className="text-xs text-danger-600 font-medium">{errors.userId.message}</p>}
       </div>
 
-      {/* Department */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           {t("forms.department")}
         </label>
-        <select
-          {...register("departmentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectDepartmentOption")}</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name} — {d.price != null ? `${d.price.toLocaleString()} uzs` : t("forms.priceNotSet")}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={departmentOptions}
+          value={watch("departmentId")}
+          onChange={(val) => setValue("departmentId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectDepartmentOption")}
+          searchPlaceholder={t("common.search")}
+          disabled={isLoading}
+          error={!!errors.departmentId}
+        />
         {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
       </div>
 
-      {/* Room */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <DoorOpen className="w-4 h-4 text-primary-500" />
           {t("forms.room")}
         </label>
-        <select
-          {...register("roomId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectRoom")}</option>
-          {rooms.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={roomOptions}
+          value={watch("roomId")}
+          onChange={(val) => setValue("roomId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectRoom")}
+          searchPlaceholder={t("common.search")}
+          disabled={isLoading}
+          error={!!errors.roomId}
+        />
         {errors.roomId && <p className="text-xs text-danger-600 font-medium">{errors.roomId.message}</p>}
       </div>
 
-      {/* isActive */}
       <div className="flex items-center gap-3">
         <input {...register("isActive")} type="checkbox" id="isActive" className="w-4 h-4 accent-primary-600 cursor-pointer rounded" />
         <label htmlFor="isActive" className="text-sm font-medium text-text cursor-pointer">
@@ -140,7 +157,6 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         </label>
       </div>
 
-      {/* Schedules */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -166,16 +182,8 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
             </div>
             {fields.map((field, idx) => (
               <div key={field.id} className="grid grid-cols-[1fr_1fr_32px] gap-2 px-3 py-2 items-center border-t border-border">
-                <input
-                  {...register(`schedules.${idx}.startTime`)}
-                  type="time"
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-                <input
-                  {...register(`schedules.${idx}.endTime`)}
-                  type="time"
-                  className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
-                />
+                <input {...register(`schedules.${idx}.startTime`)} type="time" className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+                <input {...register(`schedules.${idx}.endTime`)} type="time" className="bg-surface border border-border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
                 <button type="button" onClick={() => remove(idx)} className="p-1 rounded hover:bg-red-50 text-text-muted hover:text-red-600 transition-colors cursor-pointer">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -192,18 +200,10 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
-        >
+        <button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer">
           {isLoading ? t("forms.saving") : isEditing ? t("forms.update") : t("forms.createAssignment")}
         </button>
       </div>

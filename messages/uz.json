@@ -37,7 +37,8 @@
     "filterPlaceholder": "Qidirish...",
     "all": "Hammasi",
     "allDepartments": "Barcha bo‘limlar",
-    "reset": "Tozalash"
+    "reset": "Tozalash",
+    "search": "Qidirish"
   },
   "table": {
     "noResults": "Natija topilmadi.",
@@ -180,7 +181,8 @@
     "colSubDepartment": "Quyi bo'lim",
     "subDepartmentsDesc": "{name} ostidagi bo'limlar.",
     "appointmentsDesc": "{name} bo'limidagi so'nggi qabullar.",
-    "noAppointments": "Bu bo'lim uchun hali qabullar qayd etilmagan."
+    "noAppointments": "Bu bo'lim uchun hali qabullar qayd etilmagan.",
+    "appointmentsDescWithChildren": "{name} va uning bo‘limlariga tegishli barcha yozuvlar"
   },
   "payments": {
     "title": "To'lovlar",

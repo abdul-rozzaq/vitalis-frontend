@@ -1,9 +1,10 @@
 "use client";
 
+import { Combobox } from "@/components/ui/combobox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, CreditCard, FileText, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 type PaymentFormValues = {
@@ -61,60 +62,65 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema) as any,
-    defaultValues: initialData || {
-      method: "CASH",
-      status: "UNPAID",
-    },
+    defaultValues: initialData || { method: "CASH", status: "UNPAID" },
   });
+
+  const patientId = useWatch({ control, name: "patientId" });
+  const departmentId = useWatch({ control, name: "departmentId" });
 
   const isEditing = !!initialData;
 
+  const patientOptions = patients.map((p) => ({
+    value: p.id,
+    label: `${p.first_name} ${p.last_name}`,
+    avatar: `${p.first_name[0] ?? ""}${p.last_name[0] ?? ""}`.toUpperCase(),
+  }));
+
+  const departmentOptions = departments.map((d) => ({
+    value: d.id,
+    label: d.name,
+  }));
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Patient */}
+
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Users className="w-4 h-4 text-primary-500" />
           {t("forms.patient")}
         </label>
-        <select
-          {...register("patientId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectPatientOption")}</option>
-          {patients.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.first_name} {p.last_name}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={patientOptions}
+          value={patientId}
+          onChange={(val) => setValue("patientId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectPatientOption")}
+          searchPlaceholder={t("common.search")}
+          error={!!errors.patientId}
+        />
         {errors.patientId && <p className="text-xs text-danger-600 font-medium">{errors.patientId.message}</p>}
       </div>
 
-      {/* Department */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Building2 className="w-4 h-4 text-primary-500" />
           {t("forms.department")}
         </label>
-        <select
-          {...register("departmentId")}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="">{t("forms.selectDepartmentOption")}</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={departmentOptions}
+          value={departmentId}
+          onChange={(val) => setValue("departmentId", val, { shouldValidate: true })}
+          placeholder={t("forms.selectDepartmentOption")}
+          searchPlaceholder={t("common.search")}
+          error={!!errors.departmentId}
+        />
         {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
       </div>
 
-      {/* Amount */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-primary-500" />
@@ -134,7 +140,6 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
         {errors.amount && <p className="text-xs text-danger-600 font-medium">{errors.amount.message}</p>}
       </div>
 
-      {/* Payment Method + Status side by side */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -146,9 +151,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
             {PAYMENT_METHODS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
+              <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
         </div>
@@ -163,15 +166,12 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
           >
             {PAYMENT_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
+              <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Description */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary-500" />
@@ -203,5 +203,3 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
     </form>
   );
 }
-
-

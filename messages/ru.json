@@ -37,7 +37,8 @@
     "filterPlaceholder": "Поиск...",
     "all": "Все",
     "allDepartments": "Все отделы",
-    "reset": "Сброс"
+    "reset": "Сброс",
+    "search": "Поиск"
   },
   "table": {
     "noResults": "Результаты не найдены.",
@@ -180,7 +181,8 @@
     "colSubDepartment": "Подотделение",
     "subDepartmentsDesc": "Подотделения в {name}.",
     "appointmentsDesc": "Последние приёмы в {name}.",
-    "noAppointments": "Для этого отделения записей о приёмах пока нет."
+    "noAppointments": "Для этого отделения записей о приёмах пока нет.",
+    "appointmentsDescWithChildren": "Все записи для {name} и его подразделений"
   },
   "payments": {
     "title": "Платежи",

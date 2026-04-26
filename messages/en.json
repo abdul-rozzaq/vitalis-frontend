@@ -38,7 +38,8 @@
     "filterPlaceholder": "Search...",
     "all": "All",
     "allDepartments": "All departments",
-    "reset": "Reset"
+    "reset": "Reset",
+    "search": "Search"
   },
   "table": {
     "noResults": "No results.",
@@ -182,7 +183,8 @@
     "colSubDepartment": "Sub-department",
     "subDepartmentsDesc": "Departments under {name}.",
     "appointmentsDesc": "Recent appointments in {name}.",
-    "noAppointments": "No appointments recorded for this department yet."
+    "noAppointments": "No appointments recorded for this department yet.",
+    "appointmentsDescWithChildren": "Все записи для {name} и его подразделений"
   },
   "payments": {
     "title": "Payments",
