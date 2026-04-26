@@ -7,6 +7,8 @@
     "departments": "Bo'limlar",
     "payments": "To'lovlar",
     "assignments": "Tayinlovlar",
+    "lab": "Laboratoriya",
+    "laboratories": "Laboratoriyalar",
     "signOut": "Chiqish"
   },
   "common": {
@@ -225,6 +227,45 @@
     "methodCreditCard": "Kredit karta",
     "methodDebitCard": "Debit karta",
     "methodPaypal": "PayPal"
+  },
+  "cases": {
+    "newCase": "Yangi ish",
+    "newCaseDesc": "Bu bemor uchun yangi tibbiy ish ochish.",
+    "startCase": "Ishni boshlash",
+    "checkin": "Ro'yxatga olish",
+    "chiefComplaint": "Asosiy shikoyat",
+    "chiefComplaintPlaceholder": "Tashrif sababi...",
+    "openedAt": "Ochildi",
+    "closedAt": "Yopildi",
+    "noActivity": "Ishlar yo'q",
+    "addStep": "Qadam qo'shish",
+    "addStepDesc": "Bu ishga qadam qo'shish (konsultatsiya, laboratoriya, protsedura, yo'naltirish yoki chiqarish).",
+    "stepTypeLabel": "Qadam turi",
+    "closeCase": "Ishni yopish",
+    "doctorPanel": "Shifokor amallar",
+    "markDone": "Bajarildi deb belgilash",
+    "addReferral": "Bo'limga yo'naltirish",
+    "requestLab": "Laboratoriya so'rovi",
+    "discharge": "Bemorni chiqarish",
+    "status": {
+      "ACTIVE": "Faol",
+      "COMPLETED": "Yakunlangan",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "stepType": {
+      "CHECKIN": "Ro'yxatga olish",
+      "CONSULTATION": "Konsultatsiya",
+      "LAB": "Laboratoriya",
+      "PROCEDURE": "Protsedura",
+      "REFERRAL": "Yo'llanma",
+      "DISCHARGE": "Chiqarish"
+    },
+    "stepStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "DONE": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    }
   },
   "appointments": {
     "title": "Uchrashuvlar",
@@ -517,7 +558,12 @@
     "docTypeForeignPassport": "Xorijiy pasport",
     "docTypeResidencePermit": "Yashash ruxsatnomasi",
     "bloodType": "Qon guruhi",
-    "selectBloodType": "Qon guruhini tanlang..."
+    "selectBloodType": "Qon guruhini tanlang...",
+    "select": "Tanlang...",
+    "doctor": "Shifokor / Tayinlov",
+    "note": "Izoh",
+    "notePlaceholder": "Qo'shimcha izohlar...",
+    "optional": "(ixtiyoriy)"
   },
   "notifications": {
     "title": "Bildirishnomalar",
@@ -575,5 +621,48 @@
     "signatures": "Imzolar",
     "doctorSignature": "Shifokor imzosi",
     "nurseSignature": "Hamshira imzosi"
+  },
+  "lab": {
+    "title": "Laboratoriya",
+    "description": "Laboratoriya buyurtmalarini boshqarish va natijalarni kiritish.",
+    "labDepartment": "Lab bo'limi",
+    "services": "Xizmatlar",
+    "servicesSelected": "ta xizmat tanlandi",
+    "noOrders": "Laboratoriya buyurtmalari yo'q.",
+    "updateItem": "Natijani kiritish",
+    "uploadResult": "Fayl yuklash",
+    "markDone": "Bajarildi",
+    "note": "Izoh",
+    "notePlaceholder": "Izoh kiriting...",
+    "orderStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "COMPLETED": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "itemStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "DONE": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    }
+  },
+  "laboratories": {
+    "title": "Laboratoriyalar",
+    "description": "Laboratoriyalar va ularning xizmatlarini boshqarish.",
+    "addLaboratory": "Laboratoriya qo'shish",
+    "editLaboratory": "Laboratoriyani tahrirlash",
+    "name": "Nomi",
+    "description_field": "Tavsif",
+    "services": "Xizmatlar",
+    "addService": "Xizmat qo'shish",
+    "editService": "Xizmatni tahrirlash",
+    "serviceName": "Xizmat nomi",
+    "servicePrice": "Narxi",
+    "noLaboratories": "Laboratoriyalar yo'q.",
+    "noServices": "Xizmatlar yo'q.",
+    "assignments": "ta xodim",
+    "deleteConfirm": "Ushbu laboratoriyani o'chirasizmi?",
+    "deleteServiceConfirm": "Ushbu xizmatni o'chirasizmi?"
   }
 }
