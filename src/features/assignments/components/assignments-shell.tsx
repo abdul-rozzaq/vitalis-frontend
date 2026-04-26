@@ -18,6 +18,7 @@ function getActiveTab(pathname: string): TabId {
   if (pathname.endsWith("/rooms")) return "rooms";
   if (pathname.endsWith("/roles")) return "roles";
   if (pathname.endsWith("/permissions")) return "permissions";
+  if (pathname.endsWith("/lab-assignments")) return "lab-assignments";
   return "assignments";
 }
 

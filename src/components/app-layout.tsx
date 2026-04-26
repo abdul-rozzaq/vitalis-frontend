@@ -138,7 +138,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 href={nav.href}
                 icon={nav.icon}
                 label={nav.label}
-                active={pathname.startsWith(nav.href)}
+                active={pathname === nav.href || (nav.href !== "/" && pathname.startsWith(nav.href + "/"))}
               />
             </Can>
           ))}

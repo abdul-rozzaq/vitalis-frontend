@@ -62,7 +62,7 @@ export interface DepartmentOption {
   price?: number | null;
 }
 
-export type TabId = "assignments" | "rooms" | "roles" | "permissions";
+export type TabId = "assignments" | "rooms" | "roles" | "permissions" | "lab-assignments";
 
 export interface SheetState<T> {
   open: boolean;

@@ -1,4 +1,4 @@
-import { DoorOpen, KeyRound, Shield, User } from "lucide-react";
+import { DoorOpen, FlaskConical, KeyRound, Shield, User } from "lucide-react";
 import { TabId } from "./types";
 
 export const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
@@ -36,6 +36,12 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
     label: t("assignments.tabPermissions"),
     icon: KeyRound,
   },
+  {
+    id: "lab-assignments" as TabId,
+    label: t("assignments.tabLabAssignments"),
+    icon: FlaskConical,
+  },
 ];
 
-export const getAssignmentsTabHref = (tabId: TabId) => (tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`);
+export const getAssignmentsTabHref = (tabId: TabId) =>
+  tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`;
