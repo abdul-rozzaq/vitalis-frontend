@@ -7,6 +7,8 @@
     "departments": "Departments",
     "payments": "Payments",
     "assignments": "Assignments",
+    "lab": "Laboratory",
+    "laboratories": "Laboratories",
     "signOut": "Sign Out"
   },
   "common": {
@@ -621,5 +623,48 @@
     "signatures": "Signatures",
     "doctorSignature": "Doctor Signature",
     "nurseSignature": "Nurse Signature"
+  },
+  "lab": {
+    "title": "Laboratory",
+    "description": "Manage lab orders and enter test results.",
+    "labDepartment": "Lab Department",
+    "services": "Services",
+    "servicesSelected": "services selected",
+    "noOrders": "No lab orders found.",
+    "updateItem": "Enter Result",
+    "uploadResult": "Upload File",
+    "markDone": "Mark Done",
+    "note": "Note",
+    "notePlaceholder": "Add a note...",
+    "orderStatus": {
+      "PENDING": "Pending",
+      "IN_PROGRESS": "In Progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "itemStatus": {
+      "PENDING": "Pending",
+      "IN_PROGRESS": "In Progress",
+      "DONE": "Done",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "laboratories": {
+    "title": "Laboratories",
+    "description": "Manage laboratory departments and their services.",
+    "addLaboratory": "Add Laboratory",
+    "editLaboratory": "Edit Laboratory",
+    "name": "Name",
+    "description_field": "Description",
+    "services": "Services",
+    "addService": "Add Service",
+    "editService": "Edit Service",
+    "serviceName": "Service Name",
+    "servicePrice": "Price",
+    "noLaboratories": "No laboratories yet.",
+    "noServices": "No services.",
+    "assignments": "staff assigned",
+    "deleteConfirm": "Delete this laboratory?",
+    "deleteServiceConfirm": "Delete this service?"
   }
 }

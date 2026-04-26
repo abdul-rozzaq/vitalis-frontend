@@ -56,6 +56,8 @@ export interface AppointmentTimelineItem {
 export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
 export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
 export type CaseStepStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 
 export interface CaseStep {
   id: string;
@@ -77,6 +79,19 @@ export interface CaseStep {
   prescription?: {
     id: string;
     items: { id: string; medicine: { name: string }; dosage: string; frequency: number }[];
+  } | null;
+  labOrder?: {
+    id: string;
+    status: LabOrderStatus;
+    laboratory: { id: string; name: string };
+    items: {
+      id: string;
+      status: LabItemStatus;
+      service: { id: string; name: string; price?: number | null };
+      fileUrl?: string | null;
+      fileName?: string | null;
+      payment?: { id: string; amount: number; status: "PAID" | "UNPAID" } | null;
+    }[];
   } | null;
 }
 

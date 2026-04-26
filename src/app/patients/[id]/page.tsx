@@ -9,10 +9,12 @@ import {
   CaseStep,
   CaseStepStatus,
   CaseStepType,
+  LabItemStatus,
   Patient,
   PatientCase,
   SheetMode,
 } from "@/features/patients/detail/types";
+import type { Laboratory } from "@/features/lab/types";
 import {
   APPOINTMENT_STATUS_STYLES,
   PAYMENT_STATUS_STYLES,
@@ -86,6 +88,13 @@ const CASE_STATUS_COLOR: Record<string, string> = {
   CANCELLED: "bg-surface-hover text-secondary border-border",
 };
 
+const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
+  PENDING: "bg-gray-100 text-gray-600",
+  IN_PROGRESS: "bg-blue-50 text-blue-600",
+  DONE: "bg-green-50 text-green-600",
+  CANCELLED: "bg-red-50 text-red-600",
+};
+
 function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
   const t = useTranslations();
   const Icon = STEP_ICONS[step.type];
@@ -148,6 +157,32 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
                 </div>
                 <Download className="w-3.5 h-3.5 text-secondary shrink-0" />
               </a>
+            ))}
+          </div>
+        )}
+
+        {step.labOrder && (
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+              {step.labOrder.laboratory.name}
+            </p>
+            {step.labOrder.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between text-xs bg-purple-50 rounded-md px-2.5 py-1.5 gap-2"
+              >
+                <span className="text-purple-700 font-medium truncate">{item.service.name}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.fileUrl && (
+                    <a href={resolveFileUrl(item.fileUrl)} target="_blank" rel="noreferrer">
+                      <Download className="w-3.5 h-3.5 text-purple-500" />
+                    </a>
+                  )}
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
+                    {t(`lab.itemStatus.${item.status}`)}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -395,6 +430,8 @@ export default function PatientDetailPage() {
   const [stepDateTime, setStepDateTime] = useState(() => new Date().toISOString().slice(0, 16));
   const [stepAmount, setStepAmount] = useState("");
   const [stepNote, setStepNote] = useState("");
+  const [labDepartmentId, setLabDepartmentId] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
   const resetStepForm = () => {
     setStepType("");
@@ -402,6 +439,8 @@ export default function PatientDetailPage() {
     setStepDateTime(new Date().toISOString().slice(0, 16));
     setStepAmount("");
     setStepNote("");
+    setLabDepartmentId("");
+    setSelectedServiceIds([]);
   };
 
   const { data: assignmentsDataRaw } = useQuery({
@@ -414,6 +453,13 @@ export default function PatientDetailPage() {
     [assignmentsDataRaw],
   );
   const assignmentOptions = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
+
+  const { data: labDepts = [] } = useQuery<Laboratory[]>({
+    queryKey: ["laboratories"],
+    queryFn: () => api.get("/laboratories").then((res) => res.data),
+    enabled: stepType === "LAB" && addStepCaseId !== null,
+    refetchOnWindowFocus: false,
+  });
 
   const { mutateAsync: addStep, isPending: isAddingStep } = useMutation({
     mutationFn: ({ caseId, payload }: { caseId: string; payload: Record<string, unknown> }) =>
@@ -429,9 +475,16 @@ export default function PatientDetailPage() {
     if (!addStepCaseId || !stepType) return;
     const payload: Record<string, unknown> = { type: stepType };
     if (stepNote) payload.note = stepNote;
-    if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
-    if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
-    if (stepAmount) payload.amount = Number(stepAmount);
+
+    if (stepType === "LAB") {
+      payload.laboratoryId = labDepartmentId;
+      payload.serviceIds = selectedServiceIds;
+    } else {
+      if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
+      if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
+      if (stepAmount) payload.amount = Number(stepAmount);
+    }
+
     addStep({ caseId: addStepCaseId, payload });
   };
 
@@ -928,8 +981,67 @@ export default function PatientDetailPage() {
             </>
           )}
 
-          {/* LAB / PROCEDURE: amount */}
-          {(stepType === "LAB" || stepType === "PROCEDURE") && (
+          {/* LAB: lab department + services multi-select */}
+          {stepType === "LAB" && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text">{t("lab.labDepartment")}</label>
+                <select
+                  value={labDepartmentId}
+                  onChange={(e) => { setLabDepartmentId(e.target.value); setSelectedServiceIds([]); }}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+                >
+                  <option value="">{t("forms.select")}</option>
+                  {labDepts.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {labDepartmentId && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-text">{t("lab.services")}</label>
+                  <div className="border border-border rounded-md overflow-hidden max-h-44 overflow-y-auto divide-y divide-border">
+                    {labDepts
+                      .find((d) => d.id === labDepartmentId)
+                      ?.services.map((svc) => (
+                        <label
+                          key={svc.id}
+                          className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedServiceIds.includes(svc.id)}
+                            onChange={(e) =>
+                              setSelectedServiceIds((prev) =>
+                                e.target.checked
+                                  ? [...prev, svc.id]
+                                  : prev.filter((i) => i !== svc.id),
+                              )
+                            }
+                            className="w-4 h-4 accent-primary-600"
+                          />
+                          <span className="text-sm text-text flex-1">{svc.name}</span>
+                          {svc.price != null && (
+                            <span className="text-xs text-text-muted font-mono">
+                              {svc.price.toLocaleString()} UZS
+                            </span>
+                          )}
+                        </label>
+                      ))}
+                  </div>
+                  {selectedServiceIds.length > 0 && (
+                    <p className="text-xs text-primary">
+                      {selectedServiceIds.length} {t("lab.servicesSelected")}
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* PROCEDURE: amount */}
+          {stepType === "PROCEDURE" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
               <input
@@ -990,7 +1102,11 @@ export default function PatientDetailPage() {
             </button>
             <button
               type="button"
-              disabled={!stepType || isAddingStep}
+              disabled={
+                !stepType ||
+                isAddingStep ||
+                (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0))
+              }
               onClick={handleAddStep}
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >

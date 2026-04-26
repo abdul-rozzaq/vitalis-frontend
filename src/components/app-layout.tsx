@@ -10,7 +10,9 @@ import {
   Building2,
   Calendar,
   CreditCard,
+  FlaskConical,
   GitFork,
+  Microscope,
   LogOut,
   Moon,
   Sun,
@@ -76,6 +78,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       icon: GitFork,
       method: "GET",
       path: "/api/assignments",
+    },
+    {
+      label: t("nav.lab"),
+      href: "/lab",
+      icon: FlaskConical,
+      method: "GET",
+      path: "/api/lab-orders",
+    },
+    {
+      label: t("nav.laboratories"),
+      href: "/laboratories",
+      icon: Microscope,
+      method: "GET",
+      path: "/api/laboratories",
     },
   ];
 

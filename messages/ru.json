@@ -7,6 +7,8 @@
     "departments": "Отделения",
     "payments": "Платежи",
     "assignments": "Назначения",
+    "lab": "Лаборатория",
+    "laboratories": "Лаборатории",
     "signOut": "Выйти"
   },
   "common": {
@@ -618,5 +620,48 @@
     "signatures": "Подписи",
     "doctorSignature": "Подпись врача",
     "nurseSignature": "Подпись медсестры"
+  },
+  "lab": {
+    "title": "Лаборатория",
+    "description": "Управление лабораторными заказами и ввод результатов.",
+    "labDepartment": "Лаборатория",
+    "services": "Услуги",
+    "servicesSelected": "услуг выбрано",
+    "noOrders": "Лабораторных заказов нет.",
+    "updateItem": "Ввести результат",
+    "uploadResult": "Загрузить файл",
+    "markDone": "Выполнено",
+    "note": "Примечание",
+    "notePlaceholder": "Добавьте примечание...",
+    "orderStatus": {
+      "PENDING": "Ожидание",
+      "IN_PROGRESS": "В процессе",
+      "COMPLETED": "Завершено",
+      "CANCELLED": "Отменено"
+    },
+    "itemStatus": {
+      "PENDING": "Ожидание",
+      "IN_PROGRESS": "В процессе",
+      "DONE": "Выполнено",
+      "CANCELLED": "Отменено"
+    }
+  },
+  "laboratories": {
+    "title": "Лаборатории",
+    "description": "Управление лабораториями и их услугами.",
+    "addLaboratory": "Добавить лабораторию",
+    "editLaboratory": "Изменить лабораторию",
+    "name": "Название",
+    "description_field": "Описание",
+    "services": "Услуги",
+    "addService": "Добавить услугу",
+    "editService": "Изменить услугу",
+    "serviceName": "Название услуги",
+    "servicePrice": "Цена",
+    "noLaboratories": "Лабораторий нет.",
+    "noServices": "Услуг нет.",
+    "assignments": "сотрудников",
+    "deleteConfirm": "Удалить эту лабораторию?",
+    "deleteServiceConfirm": "Удалить эту услугу?"
   }
 }

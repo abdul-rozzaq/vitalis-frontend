@@ -7,6 +7,8 @@
     "departments": "Bo'limlar",
     "payments": "To'lovlar",
     "assignments": "Tayinlovlar",
+    "lab": "Laboratoriya",
+    "laboratories": "Laboratoriyalar",
     "signOut": "Chiqish"
   },
   "common": {
@@ -619,5 +621,48 @@
     "signatures": "Imzolar",
     "doctorSignature": "Shifokor imzosi",
     "nurseSignature": "Hamshira imzosi"
+  },
+  "lab": {
+    "title": "Laboratoriya",
+    "description": "Laboratoriya buyurtmalarini boshqarish va natijalarni kiritish.",
+    "labDepartment": "Lab bo'limi",
+    "services": "Xizmatlar",
+    "servicesSelected": "ta xizmat tanlandi",
+    "noOrders": "Laboratoriya buyurtmalari yo'q.",
+    "updateItem": "Natijani kiritish",
+    "uploadResult": "Fayl yuklash",
+    "markDone": "Bajarildi",
+    "note": "Izoh",
+    "notePlaceholder": "Izoh kiriting...",
+    "orderStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "COMPLETED": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "itemStatus": {
+      "PENDING": "Kutilmoqda",
+      "IN_PROGRESS": "Jarayonda",
+      "DONE": "Bajarildi",
+      "CANCELLED": "Bekor qilingan"
+    }
+  },
+  "laboratories": {
+    "title": "Laboratoriyalar",
+    "description": "Laboratoriyalar va ularning xizmatlarini boshqarish.",
+    "addLaboratory": "Laboratoriya qo'shish",
+    "editLaboratory": "Laboratoriyani tahrirlash",
+    "name": "Nomi",
+    "description_field": "Tavsif",
+    "services": "Xizmatlar",
+    "addService": "Xizmat qo'shish",
+    "editService": "Xizmatni tahrirlash",
+    "serviceName": "Xizmat nomi",
+    "servicePrice": "Narxi",
+    "noLaboratories": "Laboratoriyalar yo'q.",
+    "noServices": "Xizmatlar yo'q.",
+    "assignments": "ta xodim",
+    "deleteConfirm": "Ushbu laboratoriyani o'chirasizmi?",
+    "deleteServiceConfirm": "Ushbu xizmatni o'chirasizmi?"
   }
 }
