@@ -665,6 +665,12 @@
     "noServices": "No services.",
     "assignments": "staff assigned",
     "deleteConfirm": "Delete this laboratory?",
-    "deleteServiceConfirm": "Delete this service?"
+    "deleteServiceConfirm": "Delete this service?",
+    "manageStaff": "Manage Staff",
+    "addStaff": "Add Staff",
+    "currentStaff": "Current Staff",
+    "noStaff": "No staff assigned.",
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

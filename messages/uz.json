@@ -663,6 +663,12 @@
     "noServices": "Xizmatlar yo'q.",
     "assignments": "ta xodim",
     "deleteConfirm": "Ushbu laboratoriyani o'chirasizmi?",
-    "deleteServiceConfirm": "Ushbu xizmatni o'chirasizmi?"
+    "deleteServiceConfirm": "Ushbu xizmatni o'chirasizmi?",
+    "manageStaff": "Xodimlarni boshqarish",
+    "addStaff": "Xodim qo'shish",
+    "currentStaff": "Joriy xodimlar",
+    "noStaff": "Xodim tayinlanmagan.",
+    "active": "Faol",
+    "inactive": "Faol emas"
   }
 }

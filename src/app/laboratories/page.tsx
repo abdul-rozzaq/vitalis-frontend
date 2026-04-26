@@ -6,21 +6,30 @@ import { useTranslations } from "next-intl";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
-import type { Laboratory, LaboratoryService } from "@/features/lab/types";
-import { FlaskConical, Microscope, Plus, Edit, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import type { Laboratory, LaboratoryService, LaboratoryAssignment } from "@/features/lab/types";
+import { FlaskConical, Microscope, Plus, Edit, Trash2, ChevronDown, ChevronUp, Loader2, Users } from "lucide-react";
 
 type ServiceSheetMode = { mode: "add"; labId: string } | { mode: "edit"; labId: string; svc: LaboratoryService } | null;
+
+interface UserOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: { name: string };
+}
 
 function LabCard({
   lab,
   onEdit,
   onDelete,
   onManageService,
+  onManageStaff,
 }: {
   lab: Laboratory;
   onEdit: (lab: Laboratory) => void;
   onDelete: (id: string) => void;
   onManageService: (mode: ServiceSheetMode) => void;
+  onManageStaff: (lab: Laboratory) => void;
 }) {
   const t = useTranslations();
   const queryClient = useQueryClient();
@@ -51,11 +60,20 @@ function LabCard({
         <div className="flex items-center gap-1 flex-shrink-0">
           <Can method="POST" path="/api/laboratories/:id/services">
             <button
-              onClick={() => { onManageService({ mode: "add", labId: lab.id }); setExpanded(true); }}
+              onClick={() => { onManageService({ mode: "add", labId: lab.id }); }}
               className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-surface-hover transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               {t("laboratories.addService")}
+            </button>
+          </Can>
+          <Can method="GET" path="/api/laboratory-assignments">
+            <button
+              onClick={() => onManageStaff(lab)}
+              className="flex items-center gap-1 text-xs text-secondary hover:text-text px-2 py-1 rounded hover:bg-surface-hover transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              {t("laboratories.manageStaff")}
             </button>
           </Can>
           <Can method="PATCH" path="/api/laboratories/:id">
@@ -120,20 +138,153 @@ function LabCard({
   );
 }
 
+function StaffSheet({
+  lab,
+  onClose,
+}: {
+  lab: Laboratory | null;
+  onClose: () => void;
+}) {
+  const t = useTranslations();
+  const queryClient = useQueryClient();
+  const [selectedUserId, setSelectedUserId] = useState("");
+
+  const { data: assignments = [], isLoading: loadingAssignments } = useQuery<LaboratoryAssignment[]>({
+    queryKey: ["lab-assignments", lab?.id],
+    queryFn: () => api.get(`/laboratory-assignments?laboratoryId=${lab!.id}`).then((r) => r.data),
+    enabled: lab !== null,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: users = [] } = useQuery<UserOption[]>({
+    queryKey: ["users"],
+    queryFn: () => api.get("/users").then((r) => r.data),
+    enabled: lab !== null,
+    refetchOnWindowFocus: false,
+  });
+
+  const assignedUserIds = new Set(assignments.map((a) => a.userId));
+  const availableUsers = users.filter((u) => !assignedUserIds.has(u.id));
+
+  const { mutate: addAssignment, isPending: isAdding } = useMutation({
+    mutationFn: () => api.post("/laboratory-assignments", { userId: selectedUserId, laboratoryId: lab!.id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-assignments", lab?.id] });
+      queryClient.invalidateQueries({ queryKey: ["laboratories"] });
+      setSelectedUserId("");
+    },
+  });
+
+  const { mutate: removeAssignment, isPending: isRemoving, variables: removingId } = useMutation({
+    mutationFn: (id: string) => api.delete(`/laboratory-assignments/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-assignments", lab?.id] });
+      queryClient.invalidateQueries({ queryKey: ["laboratories"] });
+    },
+  });
+
+  const { mutate: toggleAssignment } = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/laboratory-assignments/${id}`, { isActive }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lab-assignments", lab?.id] }),
+  });
+
+  return (
+    <Sheet isOpen={lab !== null} onClose={onClose} title={lab ? `${lab.name} — ${t("laboratories.manageStaff")}` : ""}>
+      <div className="space-y-5">
+        {/* Add staff */}
+        <Can method="POST" path="/api/laboratory-assignments">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("laboratories.addStaff")}</label>
+            <div className="flex gap-2">
+              <select
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className="flex-1 bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+              >
+                <option value="">{t("forms.select")}</option>
+                {availableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.first_name} {u.last_name} — {u.role.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => addAssignment()}
+                disabled={!selectedUserId || isAdding}
+                className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              >
+                {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {t("common.add")}
+              </button>
+            </div>
+          </div>
+        </Can>
+
+        {/* Current staff */}
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-text">{t("laboratories.currentStaff")}</p>
+          {loadingAssignments ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            </div>
+          ) : assignments.length === 0 ? (
+            <p className="text-xs text-text-muted italic">{t("laboratories.noStaff")}</p>
+          ) : (
+            <div className="border border-border rounded-lg divide-y divide-border overflow-hidden">
+              {assignments.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-text font-medium">
+                      {a.user.first_name} {a.user.last_name}
+                    </p>
+                    <p className="text-xs text-text-muted">{a.user.role.name}</p>
+                  </div>
+                  <button
+                    onClick={() => toggleAssignment({ id: a.id, isActive: !a.isActive })}
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium transition-colors ${
+                      a.isActive
+                        ? "bg-green-50 text-green-600 hover:bg-green-100"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {a.isActive ? t("laboratories.active") : t("laboratories.inactive")}
+                  </button>
+                  <Can method="DELETE" path="/api/laboratory-assignments/:id">
+                    <button
+                      onClick={() => removeAssignment(a.id)}
+                      disabled={isRemoving && removingId === a.id}
+                      className="p-1 hover:bg-red-50 rounded text-text-muted hover:text-red-600 transition-colors disabled:opacity-50"
+                    >
+                      {isRemoving && removingId === a.id
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <Trash2 className="w-3.5 h-3.5" />}
+                    </button>
+                  </Can>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
 export default function LaboratoriesPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
 
-  // Lab sheet
   const [labSheet, setLabSheet] = useState(false);
   const [editingLab, setEditingLab] = useState<Laboratory | null>(null);
   const [labName, setLabName] = useState("");
   const [labDesc, setLabDesc] = useState("");
 
-  // Service sheet
   const [svcSheet, setSvcSheet] = useState<ServiceSheetMode>(null);
   const [svcName, setSvcName] = useState("");
   const [svcPrice, setSvcPrice] = useState("");
+
+  const [staffLab, setStaffLab] = useState<Laboratory | null>(null);
 
   const { data: labs = [], isLoading } = useQuery<Laboratory[]>({
     queryKey: ["laboratories"],
@@ -219,7 +370,14 @@ export default function LaboratoriesPage() {
       ) : (
         <div className="space-y-3">
           {labs.map((lab) => (
-            <LabCard key={lab.id} lab={lab} onEdit={openEditLab} onDelete={(id) => { if (confirm(t("laboratories.deleteConfirm"))) deleteLab(id); }} onManageService={openSvcSheet} />
+            <LabCard
+              key={lab.id}
+              lab={lab}
+              onEdit={openEditLab}
+              onDelete={(id) => { if (confirm(t("laboratories.deleteConfirm"))) deleteLab(id); }}
+              onManageService={openSvcSheet}
+              onManageStaff={setStaffLab}
+            />
           ))}
         </div>
       )}
@@ -308,6 +466,9 @@ export default function LaboratoriesPage() {
           </div>
         </div>
       </Sheet>
+
+      {/* Staff management sheet */}
+      <StaffSheet lab={staffLab} onClose={() => setStaffLab(null)} />
     </div>
   );
 }

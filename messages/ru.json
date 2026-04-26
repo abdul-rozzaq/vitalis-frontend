@@ -662,6 +662,12 @@
     "noServices": "Услуг нет.",
     "assignments": "сотрудников",
     "deleteConfirm": "Удалить эту лабораторию?",
-    "deleteServiceConfirm": "Удалить эту услугу?"
+    "deleteServiceConfirm": "Удалить эту услугу?",
+    "manageStaff": "Управление персоналом",
+    "addStaff": "Добавить сотрудника",
+    "currentStaff": "Текущий персонал",
+    "noStaff": "Сотрудники не назначены.",
+    "active": "Активен",
+    "inactive": "Неактивен"
   }
 }
