@@ -1,9 +1,9 @@
-import { AppLayout } from "@/components/app-layout";
 import { Providers } from "@/app/providers";
+import { AppLayout } from "@/components/app-layout";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
+import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -12,6 +12,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Vitalis CRM | Hospital Management",
   description: "Minimalist Hospital CRM System",
+  icons: {
+    icon: "/logo.png",        // brauzer tab icon
+    apple: "/logo.png",       // iOS uchun
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { exportToExcel } from "@/lib/export-excel";
+
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
@@ -107,16 +109,9 @@ export default function AppointmentsPage() {
       `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.trim(),
       a.assignment ? `${a.assignment.user?.first_name} ${a.assignment.user?.last_name} — ${a.assignment.department?.name}` : "",
       a.dateTime ? new Date(a.dateTime).toLocaleString() : "",
-      a.status,
+      a.status ?? "",
     ]);
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const el = document.createElement("a");
-    el.href = url;
-    el.download = `appointments-${new Date().toISOString().slice(0, 10)}.csv`;
-    el.click();
-    URL.revokeObjectURL(url);
+    exportToExcel("appointments", headers, rows, t("appointments.title"));
   };
 
   const patients = useMemo(() => toPatientOptions(patientsData), [patientsData]);

@@ -1,5 +1,7 @@
 "use client";
 
+import { exportToExcel } from "@/lib/export-excel";
+
 import { PaymentForm } from "@/components/payments/payment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
@@ -11,6 +13,8 @@ import { Building2, CreditCard, Download, Edit, Loader2, Plus, SlidersHorizontal
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Payment {
   id: string;
@@ -27,15 +31,17 @@ interface Payment {
   department?: { id: string; name: string };
 }
 
+// Filter holati uchun tip - har bir filter maydoni uchun
 interface PaymentFilters {
-  status: string;
-  minAmount: string;
+  status: string;       // "PAID" | "UNPAID" | "" (bo'sh = hammasi)
+  minAmount: string;    // string chunki input dan string keladi
   maxAmount: string;
-  dateFrom: string;
+  dateFrom: string;     // "2026-01-01" formatida
   dateTo: string;
-  departmentId: string;
+  departmentId: string; // bo'lim UUID si
 }
 
+// Boshlang'ich filter holati - hamma bo'sh = filter yo'q
 const INITIAL_FILTERS: PaymentFilters = {
   status: "",
   minAmount: "",
@@ -59,6 +65,7 @@ function normalizePayment(p: any): Payment {
 interface PatientOption { id: string; first_name: string; last_name: string; }
 interface DepartmentOption { id: string; name: string; }
 
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const MOCK_PATIENTS: PatientOption[] = [
   { id: "p1", first_name: "Alice", last_name: "Johnson" },
@@ -98,6 +105,7 @@ const METHOD_STYLE_MAP: Record<string, { bg: string; text: string }> = {
   PAYPAL: { bg: "bg-slate-100", text: "text-slate-700" },
 };
 
+// ─── Summary Card ─────────────────────────────────────────────────────────────
 
 function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub?: string; icon: React.ElementType; color: string }) {
   return (
@@ -114,19 +122,26 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; 
   );
 }
 
+// ─── Filter Panel komponenti ──────────────────────────────────────────────────
+// Bu alohida komponent — filter maydonlarini ko'rsatadi
+// filters: joriy filter holati
+// onChange: biror maydon o'zgarganda chaqiriladi
+// onReset: "Tozalash" tugmasi bosilganda
+// departments: bo'limlar ro'yxati (select uchun)
 
 interface FilterPanelProps {
   filters: PaymentFilters;
   onChange: (key: keyof PaymentFilters, value: string) => void;
   onReset: () => void;
   departments: DepartmentOption[];
-  activeCount: number;
+  activeCount: number; // nechta filter faol ekanligini ko'rsatish uchun
 }
 
 function FilterPanel({ filters, onChange, onReset, departments, activeCount }: FilterPanelProps) {
   const t = useTranslations();
 
   return (
+    // AnimatePresence bilan ishlaydi — ochilish/yopilish animatsiyasi uchun
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
@@ -134,16 +149,19 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
       transition={{ duration: 0.18 }}
       className="bg-surface border border-border rounded-lg p-4"
     >
+      {/* Filter sarlavhasi va tozalash tugmasi */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium text-text flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-primary-500" />
           {t("common.filter")}
+          {/* Faol filterlar soni — biror narsa tanlanganda ko'rinadi */}
           {activeCount > 0 && (
             <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
               {activeCount}
             </span>
           )}
         </span>
+        {/* Tozalash tugmasi — faqat biror filter faol bo'lsa ko'rinadi */}
         {activeCount > 0 && (
           <button
             onClick={onReset}
@@ -155,12 +173,15 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
         )}
       </div>
 
+      {/* Filter maydonlari — grid layoutda */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
 
+        {/* 1. Holat bo'yicha filter (PAID / UNPAID) */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.colStatus")}</label>
           <select
             value={filters.status}
+            // value o'zgarganda onChange ni chaqiramiz "status" kaliti bilan
             onChange={(e) => onChange("status", e.target.value)}
             className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
           >
@@ -170,6 +191,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
           </select>
         </div>
 
+        {/* 2. Minimal narx */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.minAmount")}</label>
           <input
@@ -182,6 +204,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
           />
         </div>
 
+        {/* 3. Maksimal narx */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.maxAmount")}</label>
           <input
@@ -194,6 +217,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
           />
         </div>
 
+        {/* 4. Boshlanish sanasi */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.dateFrom")}</label>
           <input
@@ -204,6 +228,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
           />
         </div>
 
+        {/* 5. Tugash sanasi */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.dateTo")}</label>
           <input
@@ -214,6 +239,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
           />
         </div>
 
+        {/* 6. Bo'lim bo'yicha — 2 ustun egallaydi kenglikda */}
         <div className="space-y-1 col-span-2 sm:col-span-3 lg:col-span-5">
           <label className="text-xs font-medium text-secondary">{t("payments.colDepartment")}</label>
           <select
@@ -233,6 +259,7 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: F
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
@@ -241,8 +268,10 @@ export default function PaymentsPage() {
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Filter paneli ochiq/yopiq holati
   const [filterOpen, setFilterOpen] = useState(false);
 
+  // Barcha filter qiymatlari bitta state da saqlanadi
   const [filters, setFilters] = useState<PaymentFilters>(INITIAL_FILTERS);
 
   const STATUS_LABELS: Record<string, string> = {
@@ -257,8 +286,10 @@ export default function PaymentsPage() {
   };
 
   const { data: paymentsRaw, isLoading: isLoadingPayments } = useQuery({
+    // filters o'zgarganda React Query avtomatik qayta so'rov yuboradi
     queryKey: ["payments", filters],
     queryFn: () => {
+      // Faqat to'ldirilgan filterlarni URL ga qo'shamiz
       const params = new URLSearchParams();
       if (filters.status) params.set("status", filters.status);
       if (filters.minAmount) params.set("minAmount", filters.minAmount);
@@ -267,6 +298,7 @@ export default function PaymentsPage() {
       if (filters.dateTo) params.set("dateTo", filters.dateTo);
       if (filters.departmentId) params.set("departmentId", filters.departmentId);
 
+      // Masalan: GET /payments?status=PAID&minAmount=100
       return api.get(`/payments?${params.toString()}`).then((res) => res.data);
     },
     refetchOnWindowFocus: false,
@@ -309,19 +341,27 @@ export default function PaymentsPage() {
   const patients: PatientOption[] = patientsData || MOCK_PATIENTS;
   const departments: DepartmentOption[] = departmentsData || MOCK_DEPARTMENTS;
 
+  // ── Bitta filter maydoni o'zgarganda chaqiriladi ───────────────────────────
+  // key: qaysi maydon ("status", "minAmount" va h.k.)
+  // value: yangi qiymat
   const handleFilterChange = (key: keyof PaymentFilters, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Barcha filterlarni boshlang'ich holatga qaytarish
   const handleFilterReset = () => setFilters(INITIAL_FILTERS);
 
+  // Nechta filter faol ekanligini hisoblash (badge uchun)
   const activeFilterCount = useMemo(
     () => Object.values(filters).filter((v) => v !== "").length,
     [filters]
   );
 
+  // Backend allaqachon filtrlangan natijani qaytaradi —
+  // shuning uchun client-side filtrlash kerak emas
   const filteredPayments = payments;
 
+  // Summary stats — filterlangan ma'lumotlar asosida
   const totalRevenue = filteredPayments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0);
   const unpaidCount = filteredPayments.filter((p) => p.status === "UNPAID").length;
   const paidCount = filteredPayments.filter((p) => p.status === "PAID").length;
@@ -336,14 +376,7 @@ export default function PaymentsPage() {
       STATUS_LABELS[p.status] ?? p.status,
       p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
     ]);
-    const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `payments-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportToExcel("payments", headers, rows, t("payments.title"));
   };
 
   const handleAdd = () => { setEditingPayment(null); setIsSheetOpen(true); };
@@ -479,22 +512,25 @@ export default function PaymentsPage() {
 
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
+      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("payments.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("payments.description")}</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Filter tugmasi — faol filterlar bo'lsa badge ko'rsatadi */}
           <button
             onClick={() => setFilterOpen((v) => !v)}
             className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer
               ${filterOpen || activeFilterCount > 0
-                ? "bg-primary-50 border-primary-200 text-primary"
-                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+                ? "bg-primary-50 border-primary-200 text-primary"  // faol holat
+                : "bg-surface border-border text-secondary hover:bg-surface-hover"  // oddiy holat
               }`}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             {t("common.filter")}
+            {/* Faol filterlar soni badge */}
             {activeFilterCount > 0 && (
               <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-0.5">
                 {activeFilterCount}
@@ -521,6 +557,8 @@ export default function PaymentsPage() {
         </div>
       </motion.div>
 
+      {/* Filter Panel — faqat filterOpen=true bo'lganda ko'rinadi */}
+      {/* AnimatePresence ochilish/yopilish animatsiyasini boshqaradi */}
       <AnimatePresence>
         {filterOpen && (
           <FilterPanel
@@ -533,6 +571,7 @@ export default function PaymentsPage() {
         )}
       </AnimatePresence>
 
+      {/* Summary Cards — filterlangan ma'lumotlar asosida yangilanadi */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard label={t("payments.totalRevenue")} value={`${totalRevenue.toLocaleString("uz-UZ")} so'm`} sub={t("payments.paidPayments")} icon={TrendingUp} color="bg-green-100 text-green-600" />
         <SummaryCard label={t("payments.totalPayments")} value={String(filteredPayments.length)} sub={t("payments.allRecords")} icon={CreditCard} color="bg-blue-100 text-blue-600" />
@@ -540,6 +579,7 @@ export default function PaymentsPage() {
         <SummaryCard label={t("payments.pending")} value={String(unpaidCount)} sub={t("payments.awaitingPayment")} icon={Building2} color="bg-amber-100 text-amber-600" />
       </motion.div>
 
+      {/* Table */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         {isLoadingPayments ? (
           <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
@@ -550,6 +590,7 @@ export default function PaymentsPage() {
         )}
       </motion.div>
 
+      {/* Sheet */}
       <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title={editingPayment ? t("payments.editTitle") : t("payments.newPayment")} description={editingPayment ? t("payments.editDesc") : t("payments.newDesc")}>
         <PaymentForm
           patients={patients}

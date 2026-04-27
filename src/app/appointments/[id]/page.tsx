@@ -333,9 +333,12 @@ export default function AppointmentDetailPage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <Link href="/appointments" className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors">
+          <Link
+            href={appointment?.patientId ? `/patients/${appointment.patientId}` : "/appointments"}
+            className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
-            {t("appointments.backToList")}
+            {t("patients.backToPatient")}
           </Link>
 
           <div className="flex items-center gap-2">
