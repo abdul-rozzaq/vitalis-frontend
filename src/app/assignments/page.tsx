@@ -159,12 +159,12 @@ export default function AssignmentsPage() {
             <Link href={`/assignments/${row.original.id}`} className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors" title={t("assignments.viewAssignment")}>
               <ExternalLink className="w-4 h-4" />
             </Link>
-            <Can method="PATCH" path="/api/assignments/:id">
+            <Can roles={["ADMIN"]}>
               <button onClick={() => setSheet({ open: true, editing: row.original })} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("common.edit")}>
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can method="DELETE" path="/api/assignments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => {
                   if (confirm(t("assignments.confirmDelete"))) {
@@ -191,7 +191,7 @@ export default function AssignmentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Can method="POST" path="/api/assignments">
+        <Can roles={["ADMIN"]}>
           <button
             onClick={() => setSheet({ open: true, editing: null })}
             className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"

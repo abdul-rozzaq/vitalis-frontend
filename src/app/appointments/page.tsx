@@ -201,7 +201,7 @@ export default function AppointmentsPage() {
             >
               <ExternalLink className="w-4 h-4" />
             </Link>
-            <Can method="PATCH" path="/api/appointments/:id">
+            <Can roles={["ADMIN", "KASSIR"]}>
               <button
                 onClick={() => handleEdit(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
@@ -210,7 +210,7 @@ export default function AppointmentsPage() {
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can method="DELETE" path="/api/appointments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
@@ -260,7 +260,7 @@ export default function AppointmentsPage() {
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
-          <Can method="POST" path="/api/appointments">
+          <Can roles={["ADMIN", "KASSIR"]}>
             <button
               onClick={handleAdd}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"

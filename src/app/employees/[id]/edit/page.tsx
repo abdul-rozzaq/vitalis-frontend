@@ -1,11 +1,11 @@
 "use client";
 
 import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employee-form";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
@@ -18,12 +18,6 @@ export default function EditEmployeePage() {
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],
     queryFn: () => api.get(`/users/${id}`).then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: rolesData = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -73,13 +67,12 @@ export default function EditEmployeePage() {
               first_name: employee.first_name,
               last_name: employee.last_name,
               phone: employee.phone ?? undefined,
-              roleId: employee.role?.id,
+              role: employee.role,
               birthday: employee.birthday
                 ? new Date(employee.birthday).toISOString().split('T')[0]
                 : undefined,
               photo: employee.photo ?? undefined,
             }}
-            roles={rolesData}
             onSubmit={handleSubmit}
             onCancel={() => router.push("/employees")}
             isPending={isPending}

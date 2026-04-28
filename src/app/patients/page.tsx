@@ -120,14 +120,14 @@ export default function PatientsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="PATCH" path="/api/patients/:id">
+            <Can roles={["ADMIN", "KASSIR"]}>
               <Link href={`/patients/${row.original.id}/edit`}>
                 <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
             </Can>
-            <Can method="DELETE" path="/api/patients/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
@@ -180,7 +180,7 @@ export default function PatientsPage() {
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
-          <Can method="POST" path="/api/patients">
+          <Can roles={["ADMIN", "KASSIR"]}>
             <Link href="/patients/new">
               <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
                 <Plus className="w-3.5 h-3.5" />

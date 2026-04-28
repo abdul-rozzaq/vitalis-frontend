@@ -1,10 +1,10 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ export function PermissionsEditor({ roles, loadingRoles }: PermissionsEditorProp
             </p>
             <p className="text-xs text-text-muted mt-0.5">{loadingRoutes ? t("assignments.loading") : t("assignments.endpointsEnabled", { checked: totalChecked, total: totalEndpoints })}</p>
           </div>
-          <Can method="PUT" path="/api/roles/:id/permissions">
+          <Can roles={["ADMIN"]}>
             <button
               onClick={() => savePermissions()}
               disabled={!dirty || saving}

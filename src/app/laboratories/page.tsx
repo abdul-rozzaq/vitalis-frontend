@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
-import { api } from "@/lib/api";
 import type { Laboratory, LaboratoryService } from "@/features/lab/types";
-import { FlaskConical, Microscope, Plus, Edit, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp, Edit, FlaskConical, Loader2, Microscope, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 type ServiceSheetMode = { mode: "add"; labId: string } | { mode: "edit"; labId: string; svc: LaboratoryService } | null;
 
@@ -49,7 +49,7 @@ function LabCard({
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <Can method="POST" path="/api/laboratories/:id/services">
+          <Can roles={["ADMIN", "LABARANT"]}>
             <button
               onClick={() => onManageService({ mode: "add", labId: lab.id })}
               className="flex items-center gap-1 text-xs text-primary hover:underline px-2 py-1 rounded hover:bg-surface-hover transition-colors"
@@ -58,12 +58,12 @@ function LabCard({
               {t("laboratories.addService")}
             </button>
           </Can>
-          <Can method="PATCH" path="/api/laboratories/:id">
+          <Can roles={["ADMIN"]}>
             <button onClick={() => onEdit(lab)} className="p-1.5 hover:bg-surface-hover rounded text-text-muted hover:text-text transition-colors">
               <Edit className="w-4 h-4" />
             </button>
           </Can>
-          <Can method="DELETE" path="/api/laboratories/:id">
+          <Can roles={["ADMIN"]}>
             <button
               onClick={() => { if (confirm(t("laboratories.deleteConfirm"))) onDelete(lab.id); }}
               className="p-1.5 hover:bg-red-50 rounded text-text-muted hover:text-red-600 transition-colors"
@@ -90,7 +90,7 @@ function LabCard({
                     <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>
                   )}
                   <div className="flex items-center gap-0.5">
-                    <Can method="PATCH" path="/api/laboratories/:id/services/:id">
+                    <Can roles={["ADMIN", "LABARANT"]}>
                       <button
                         onClick={() => onManageService({ mode: "edit", labId: lab.id, svc })}
                         className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-text transition-colors"
@@ -98,7 +98,7 @@ function LabCard({
                         <Edit className="w-3.5 h-3.5" />
                       </button>
                     </Can>
-                    <Can method="DELETE" path="/api/laboratories/:id/services/:id">
+                    <Can roles={["ADMIN"]}>
                       <button
                         onClick={() => { if (confirm(t("laboratories.deleteServiceConfirm"))) deleteSvc(svc.id); }}
                         disabled={isDeletingSvc && deletingId === svc.id}
@@ -192,7 +192,7 @@ export default function LaboratoriesPage() {
           <h1 className="text-2xl font-bold text-text">{t("laboratories.title")}</h1>
           <p className="text-sm text-text-muted mt-1">{t("laboratories.description")}</p>
         </div>
-        <Can method="POST" path="/api/laboratories">
+        <Can roles={["ADMIN"]}>
           <button
             onClick={openCreateLab}
             className="flex items-center gap-2 bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm flex-shrink-0"

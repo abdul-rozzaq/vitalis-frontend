@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 import { Can } from "@/components/ui/can";
-import { Sheet } from "@/components/ui/sheet";
 import { DataTable } from "@/components/ui/data-table";
-import { api } from "@/lib/api";
-import type { LaboratoryAssignment } from "@/features/lab/types";
+import { Sheet } from "@/components/ui/sheet";
 import { ROLE_STYLES, asArray, getTableRowIndex } from "@/features/assignments/utils";
+import type { LaboratoryAssignment } from "@/features/lab/types";
+import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Edit, Loader2, Plus, Trash2, XCircle } from "lucide-react";
-import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 
 interface UserOption {
   id: string;
@@ -168,7 +167,7 @@ export default function LabAssignmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="PATCH" path="/api/laboratory-assignments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => openEdit(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
@@ -177,7 +176,7 @@ export default function LabAssignmentsPage() {
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can method="DELETE" path="/api/laboratory-assignments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => {
                   if (confirm(t("assignments.confirmDelete"))) {
@@ -204,7 +203,7 @@ export default function LabAssignmentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Can method="POST" path="/api/laboratory-assignments">
+        <Can roles={["ADMIN"]}>
           <button
             onClick={openCreate}
             className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"

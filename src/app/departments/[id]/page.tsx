@@ -218,7 +218,7 @@ export default function DepartmentDetailPage() {
             >
               <ExternalLink className="w-4 h-4" />
             </Link>
-            <Can method="PATCH" path="/api/departments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleEditSubDept(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
@@ -226,7 +226,7 @@ export default function DepartmentDetailPage() {
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can method="DELETE" path="/api/departments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDeleteSubDept(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
@@ -309,7 +309,7 @@ export default function DepartmentDetailPage() {
             <h3 className="text-base font-semibold text-text">{t("departments.subDepartments")}</h3>
             <p className="text-secondary text-sm mt-0.5">{t("departments.subDepartmentsDesc", { name: department.name })}</p>
           </div>
-          <Can method="POST" path="/api/departments">
+          <Can roles={["ADMIN"]}>
             <button
               onClick={handleAddSubDept}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"

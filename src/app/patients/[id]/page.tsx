@@ -4,6 +4,7 @@ import formatPhone from "@/components/formatPhone";
 import usePhoneFormatter from "@/components/formatPhoneinput";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import type { Laboratory } from "@/features/lab/types";
 import {
   AssignmentSource,
   CaseStep,
@@ -14,14 +15,12 @@ import {
   PatientCase,
   SheetMode,
 } from "@/features/patients/detail/types";
-import type { Laboratory } from "@/features/lab/types";
 import {
-  APPOINTMENT_STATUS_STYLES,
   PAYMENT_STATUS_STYLES,
   formatDate,
   formatTime,
   resolveFileUrl,
-  toAssignmentOptions,
+  toAssignmentOptions
 } from "@/features/patients/detail/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
@@ -82,17 +81,23 @@ const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
   CANCELLED: "bg-red-50 text-red-600",
 };
 
-const CASE_STATUS_COLOR: Record<string, string> = {
+const CASE_STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-blue-50 text-blue-700 border-blue-200",
   COMPLETED: "bg-green-50 text-green-700 border-green-200",
   CANCELLED: "bg-surface-hover text-secondary border-border",
 };
 
+const CASE_STATUS_BORDER: Record<string, string> = {
+  ACTIVE: "border-l-blue-400 dark:border-l-blue-600",
+  COMPLETED: "border-l-green-400 dark:border-l-green-600",
+  CANCELLED: "border-l-border",
+};
+
 const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-600",
-  IN_PROGRESS: "bg-blue-50 text-blue-600",
-  DONE: "bg-green-50 text-green-600",
-  CANCELLED: "bg-red-50 text-red-600",
+  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+  DONE: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
+  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
 };
 
 function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
@@ -162,28 +167,47 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
         )}
 
         {step.labOrder && (
-          <div className="space-y-1">
-            <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
-              {step.labOrder.laboratory.name}
-            </p>
-            {step.labOrder.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between text-xs bg-purple-50 rounded-md px-2.5 py-1.5 gap-2"
-              >
-                <span className="text-purple-700 font-medium truncate">{item.service.name}</span>
-                <div className="flex items-center gap-2 shrink-0">
-                  {item.files?.map((f) => (
-                    <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name}>
-                      <Download className="w-3.5 h-3.5 text-purple-500" />
-                    </a>
-                  ))}
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
-                    {t(`lab.itemStatus.${item.status}`)}
-                  </span>
+          <div className="rounded-lg border border-border overflow-hidden">
+            {/* Lab header */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover border-b border-border">
+              <FlaskConical className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 shrink-0" />
+              <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
+                {step.labOrder.laboratory.name}
+              </span>
+            </div>
+            {/* Items */}
+            <div className="divide-y divide-border">
+              {step.labOrder.items.map((item) => (
+                <div key={item.id} className="px-3 py-2 space-y-1.5 bg-surface">
+                  {/* Service name + status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-text truncate">{item.service.name}</span>
+                    <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
+                      {t(`lab.itemStatus.${item.status}`)}
+                    </span>
+                  </div>
+                  {/* Files */}
+                  {item.files && item.files.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      {item.files.map((f) => (
+                        <a
+                          key={f.id}
+                          href={resolveFileUrl(f.url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2 bg-surface-hover hover:bg-border border border-border rounded-md px-2 py-1.5 transition-colors group"
+                        >
+                          <Download className="w-3.5 h-3.5 text-secondary shrink-0 group-hover:text-primary transition-colors" />
+                          <span className="text-xs text-text truncate flex-1 group-hover:text-primary transition-colors">
+                            {f.name}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
@@ -218,10 +242,10 @@ function CaseCard({
   const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
-      <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}>
+      <div className={`px-4 py-3 border-b border-border bg-surface-hover flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}>
         <div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>
+            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${CASE_STATUS_BADGE[patientCase.status]}`}>
               {t(`cases.status.${patientCase.status}`)}
             </span>
             {patientCase.chiefComplaint && (
@@ -390,11 +414,10 @@ export default function PatientDetailPage() {
   const t = useTranslations();
   const { user } = useAuth();
 
-  // ADMIN, SUPERADMIN (isSuperUser), DIRECTOR rollari summani ko'ra oladi
-  const AMOUNT_ALLOWED_ROLES = ["ADMIN", "DIRECTOR"];
+  // ADMIN + DIREKTOR rollari summani ko'ra oladi
+  const AMOUNT_ALLOWED_ROLES = ["ADMIN", "DIREKTOR"];
   const canSeeAmount =
-    user?.isSuperUser === true ||
-    AMOUNT_ALLOWED_ROLES.includes(user?.role?.name?.toUpperCase() ?? "");
+    AMOUNT_ALLOWED_ROLES.includes((user?.role as string)?.toUpperCase() ?? "");
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode>(null);
@@ -758,7 +781,7 @@ export default function PatientDetailPage() {
               {t("common.actions")}
             </p>
 
-            <Can method="POST" path="/api/cases">
+            <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
               <button
                 onClick={() => setSheetMode("checkin")}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
@@ -768,7 +791,7 @@ export default function PatientDetailPage() {
               </button>
             </Can>
 
-            <Can method="PATCH" path="/api/patients/:id">
+            <Can roles={["ADMIN", "KASSIR"]}>
               <button
                 onClick={() => setSheetMode("edit")}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
@@ -823,7 +846,7 @@ export default function PatientDetailPage() {
         >
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
-            <Can method="POST" path="/api/cases">
+            <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
               <button
                 onClick={() => setSheetMode("checkin")}
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"

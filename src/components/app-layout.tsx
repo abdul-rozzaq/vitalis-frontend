@@ -35,63 +35,54 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const NAVIGATIONS = [
+  const NAVIGATIONS: { label: string; href: string; icon: React.ElementType; roles: string[] }[] = [
     {
       label: t("nav.patients"),
       href: "/patients",
       icon: Users,
-      method: "GET",
-      path: "/api/patients",
+      roles: ["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR"],
     },
     {
       label: t("nav.appointments"),
       href: "/appointments",
       icon: Calendar,
-      method: "GET",
-      path: "/api/appointments",
+      roles: ["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "DIREKTOR"],
     },
     {
       label: t("nav.employees"),
       href: "/employees",
       icon: UserPen,
-      method: "GET",
-      path: "/api/employees",
+      roles: ["ADMIN", "DIREKTOR"],
     },
     {
       label: t("nav.departments"),
       href: "/departments",
       icon: Building2,
-      method: "GET",
-      path: "/api/departments",
+      roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
     },
     {
       label: t("nav.payments"),
       href: "/payments",
       icon: CreditCard,
-      method: "GET",
-      path: "/api/payments",
+      roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR", "DOCTOR"],
     },
-
     {
       label: t("nav.lab"),
       href: "/lab",
       icon: FlaskConical,
-      method: "GET",
-      path: "/api/lab-orders",
+      roles: ["ADMIN", "DOCTOR", "LABARANT"],
     },
     {
       label: t("nav.laboratories"),
       href: "/laboratories",
       icon: Microscope,
-      method: "GET",
-      path: "/api/laboratories",
+      roles: ["ADMIN", "LABARANT", "DIREKTOR"],
     },
     {
       label: t("nav.assignments"),
       href: "/assignments",
       icon: GitFork,
-      method: "GET",
-      path: "/api/assignments",
+      roles: ["ADMIN"],
     },
   ];
 
@@ -112,7 +103,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  const roleName = user.role?.name;
+  const roleName = user.role;
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -133,7 +124,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Navigation */}
         <nav className="flex-1 flex flex-col px-3 py-4 gap-0.5">
           {NAVIGATIONS.map((nav) => (
-            <Can key={nav.href} method={nav.method} path={nav.path}>
+            <Can key={nav.href} roles={nav.roles as import("@/types/user").UserRole[]}>
               <NavItem
                 href={nav.href}
                 icon={nav.icon}
@@ -249,8 +240,8 @@ function NavItem({
     <Link href={href}>
       <button
         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${active
-            ? "bg-primary-50 text-primary"
-            : "text-secondary hover:bg-surface-hover hover:text-text"
+          ? "bg-primary-50 text-primary"
+          : "text-secondary hover:bg-surface-hover hover:text-text"
           }`}
       >
         <Icon className="w-[18px] h-[18px]" />
