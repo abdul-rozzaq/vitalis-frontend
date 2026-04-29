@@ -15,11 +15,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-interface Role {
-  id: string;
-  name: string;
-}
-
 interface Employee {
   id: string;
   first_name: string;
@@ -27,15 +22,19 @@ interface Employee {
   phone: string;
   birthday?: string | null;
   photo?: string | null;
-  role: Role;
+  role: string;
   createdAt: string;
 }
 
 const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700", label: "Admin" },
+  KASSIR: { bg: "bg-amber-100", text: "text-amber-700", label: "Kassir" },
   DOCTOR: { bg: "bg-blue-100", text: "text-blue-700", label: "Doctor" },
-  NURSE: { bg: "bg-green-100", text: "text-green-700", label: "Nurse" },
-  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700", label: "Receptionist" },
+  HAMSHIRA: { bg: "bg-green-100", text: "text-green-700", label: "Hamshira" },
+  LABARANT: { bg: "bg-cyan-100", text: "text-cyan-700", label: "Labarant" },
+  TEXNIK_HODIM: { bg: "bg-gray-100", text: "text-gray-700", label: "Texnik Hodim" },
+  DIREKTOR: { bg: "bg-rose-100", text: "text-rose-700", label: "Direktor" },
+  HISOBCHI: { bg: "bg-orange-100", text: "text-orange-700", label: "Hisobchi" },
 };
 
 export default function EmployeesPage() {
@@ -46,31 +45,14 @@ export default function EmployeesPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>("");
 
-  // ✅ O'ZGARMADI
-  const { data: rolesData = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
-
-  // ✅ O'ZGARTIRILDI: filterText va selectedRole ni backendga yuboradi
-  // selectedRole bu role.name (masalan "DOCTOR"), backendga roleId kerak
-  // Shuning uchun rolesData dan roleId ni topamiz
-  const selectedRoleId = useMemo(
-    () => rolesData.find((r: Role) => r.name === selectedRole)?.id ?? "",
-    [rolesData, selectedRole]
-  );
-
   const { data: employeesData = [] } = useQuery({
-    // queryKey ichida filterText va selectedRoleId bo'lsa,
-    // ular o'zgarganda avtomatik qayta so'rov yuboriladi
-    queryKey: ["employees", { search: filterText, roleId: selectedRoleId }],
+    queryKey: ["employees", { search: filterText, role: selectedRole }],
     queryFn: () =>
       api
         .get("/users", {
           params: {
             ...(filterText && { search: filterText }),
-            ...(selectedRoleId && { roleId: selectedRoleId }),
+            ...(selectedRole && { role: selectedRole }),
           },
         })
         .then((res) => res.data),
@@ -94,7 +76,7 @@ export default function EmployeesPage() {
       idx + 1,
       `${e.first_name} ${e.last_name}`,
       e.phone ?? "",
-      e.role?.name ?? "",
+      e.role ?? "",
       e.createdAt ? new Date(e.createdAt).toLocaleDateString() : "",
     ]);
     exportToExcel("employees", headers, rows, t("employees.title"));
@@ -157,8 +139,7 @@ export default function EmployeesPage() {
         accessorKey: "role",
         header: t("employees.colRole"),
         cell: (info: any) => {
-          const role = info.getValue() as Role;
-          const roleName = role?.name ?? "";
+          const roleName = (info.getValue() as string) ?? "";
           const style = ROLE_STYLES[roleName] ?? { bg: "bg-gray-100", text: "text-gray-700", label: roleName };
           return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>{style.label}</span>;
         },
@@ -177,14 +158,14 @@ export default function EmployeesPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can method="PATCH" path="/api/users/:id">
+            <Can roles={["ADMIN"]}>
               <Link href={`/employees/${row.original.id}/edit`}>
                 <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("employees.editTitle")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
             </Can>
-            <Can method="DELETE" path="/api/users/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
@@ -229,9 +210,9 @@ export default function EmployeesPage() {
                 className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer"
               >
                 <option value="">all</option>
-                {rolesData.map((role: Role) => (
-                  <option key={role.id} value={role.name}>
-                    {ROLE_STYLES[role.name]?.label ?? role.name}
+                {Object.entries(ROLE_STYLES).map(([value, style]) => (
+                  <option key={value} value={value}>
+                    {style.label}
                   </option>
                 ))}
               </select>
@@ -270,7 +251,7 @@ export default function EmployeesPage() {
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
-          <Can method="POST" path="/api/users">
+          <Can roles={["ADMIN"]}>
             <Link href="/employees/new">
               <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
                 <Plus className="w-3.5 h-3.5" />

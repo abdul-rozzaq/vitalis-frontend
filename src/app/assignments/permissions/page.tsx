@@ -1,26 +1,20 @@
 "use client";
 
-import { PermissionsEditor } from "@/components/assignments/permissions-editor";
-import { Role } from "@/features/assignments/types";
-import { asArray } from "@/features/assignments/utils";
-import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
+/**
+ * Permissions are now managed through role-based access control in code.
+ * This page is kept as a placeholder.
+ */
 export default function AssignmentPermissionsPage() {
-  const { data: rolesRaw, isLoading } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((r) => r.data as unknown),
-    refetchOnWindowFocus: false,
-  });
-
-  const roles = asArray<Role>(rolesRaw);
-
-  return isLoading ? (
-    <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-      <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+  return (
+    <div className="bg-surface border border-border rounded-lg p-12 flex flex-col items-center justify-center gap-3 text-center">
+      <ShieldCheck className="w-10 h-10 text-primary opacity-60" />
+      <h2 className="text-base font-semibold text-text">Role-based access control</h2>
+      <p className="text-sm text-text-muted max-w-sm">
+        Permissions are now enforced at the code level via roles. Use the Roles page
+        to manage user role assignments.
+      </p>
     </div>
-  ) : (
-    <PermissionsEditor roles={roles} loadingRoles={isLoading} />
   );
 }

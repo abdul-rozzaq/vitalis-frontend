@@ -2,13 +2,13 @@
 
 import { Can } from "@/components/ui/can";
 import { useAuth } from "@/hooks/use-auth";
-import { usePermissions } from "@/hooks/use-permissions";
-import { useTranslations } from "next-intl";
+import { useRole } from "@/hooks/use-permissions";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Calendar, ChevronRight, Clock, CreditCard, DoorOpen, Plus, Users, UserPen } from "lucide-react";
-import Link from "next/link";
+import { Calendar, ChevronRight, Clock, CreditCard, DoorOpen, Plus, UserPen, Users } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
@@ -129,9 +129,9 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { canRead } = usePermissions();
+  const { hasRole } = useRole();
   const t = useTranslations();
-  const canReadAssignments = canRead("/api/assignments");
+  const canReadAssignments = hasRole("ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR");
 
   const { data: stats, isLoading: statsLoading } = useQuery<StatsData>({
     queryKey: ["stats"],
@@ -189,7 +189,7 @@ export default function HomePage() {
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("dashboard.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("dashboard.welcome", { name: user.first_name })}</p>
         </div>
-        <Can method="POST" path="/api/patients">
+        <Can roles={["ADMIN", "KASSIR"]}>
           <Link href="/patients/new">
             <button className="bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
               <Plus className="w-4 h-4" />
@@ -350,7 +350,7 @@ export default function HomePage() {
       </div>
 
       {/* Weekly Schedule */}
-      <Can method="GET" path="/api/assignments">
+      <Can roles={["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR"]}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
           <div className="flex items-center justify-between mb-3">
             <div>

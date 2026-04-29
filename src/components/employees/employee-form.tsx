@@ -14,27 +14,33 @@ type EmployeeFormValues = {
   last_name: string;
   phone: string;
   password?: string;
-  roleId: string;
+  role: string;
   birthday: string;
   photo?: string;
 };
 
 export type EmployeeSubmitData = EmployeeFormValues & { photoFile?: File };
 
-interface RoleOption {
-  id: string;
-  name: string;
-}
+const ROLE_OPTIONS = [
+  { value: "ADMIN", label: "Admin" },
+  { value: "KASSIR", label: "Kassir" },
+  { value: "DOCTOR", label: "Doctor" },
+  { value: "HAMSHIRA", label: "Hamshira" },
+  { value: "LABARANT", label: "Labarant" },
+  { value: "TEXNIK_HODIM", label: "Texnik Hodim" },
+  { value: "DIREKTOR", label: "Direktor" },
+  { value: "HISOBCHI", label: "Hisobchi" },
+];
 
 interface EmployeeFormProps {
   initialData?: Partial<EmployeeFormValues>;
-  roles: RoleOption[];
+  roles?: never[];
   onSubmit: (data: EmployeeSubmitData) => void;
   onCancel: () => void;
   isPending?: boolean;
 }
 
-export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending }: EmployeeFormProps) {
+export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: EmployeeFormProps) {
   const t = useTranslations();
 
   const employeeSchema = z.object({
@@ -44,7 +50,7 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
     password: initialData
       ? z.string().optional()
       : z.string().min(6, t("forms.passwordTooShort")),
-    roleId: z.string().min(1, t("forms.roleRequired")),
+    role: z.string().min(1, t("forms.roleRequired")),
     birthday: z.string().min(1, t("forms.birthdayRequired")),
     photo: z.string().max(500).optional(),
   });
@@ -224,17 +230,17 @@ export function EmployeeForm({ initialData, roles, onSubmit, onCancel, isPending
           {t("forms.role")}
         </label>
         <select
-          {...register("roleId")}
+          {...register("role")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
           <option value="">{t("forms.selectRole")}</option>
-          {roles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
+          {ROLE_OPTIONS.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
             </option>
           ))}
         </select>
-        {errors.roleId && <p className="text-xs text-danger-600 font-medium">{errors.roleId.message}</p>}
+        {errors.role && <p className="text-xs text-danger-600 font-medium">{errors.role.message}</p>}
       </div>
 
       <div className="space-y-1.5">

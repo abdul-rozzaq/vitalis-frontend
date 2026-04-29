@@ -1,35 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import type { LabItemStatus, LabOrder, LabOrderItem } from "@/features/lab/types";
+import { resolveFileUrl } from "@/features/patients/detail/utils";
+import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  FlaskConical,
-  Download,
-  Upload,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Download,
+  FlaskConical,
   Loader2,
   Pencil,
   Trash2,
+  Upload,
 } from "lucide-react";
-import { api } from "@/lib/api";
-import { resolveFileUrl } from "@/features/patients/detail/utils";
-import type { LabOrder, LabOrderItem, LabItemStatus } from "@/features/lab/types";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 const ORDER_STATUS_STYLES = {
-  PENDING: "bg-gray-100 text-gray-600",
-  IN_PROGRESS: "bg-blue-50 text-blue-600",
-  COMPLETED: "bg-green-50 text-green-600",
-  CANCELLED: "bg-red-50 text-red-600",
+  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+  COMPLETED: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
+  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
 };
 
 const ITEM_STATUS_STYLES: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-600",
-  IN_PROGRESS: "bg-blue-50 text-blue-600",
-  DONE: "bg-green-50 text-green-600",
-  CANCELLED: "bg-red-50 text-red-600",
+  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
+  DONE: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
+  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
 };
 
 interface ItemEditForm {
@@ -89,8 +89,8 @@ function LabOrderCard({ order }: { order: LabOrder }) {
       {/* Header */}
       <div className="flex items-start justify-between px-4 py-3 gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <FlaskConical className="w-4 h-4 text-purple-600" />
+          <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <FlaskConical className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-text truncate">
@@ -138,11 +138,10 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     </span>
                     {item.payment && (
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          item.payment.status === "PAID"
-                            ? "bg-green-50 text-green-600"
-                            : "bg-amber-50 text-amber-600"
-                        }`}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.payment.status === "PAID"
+                            ? "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400"
+                            : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                          }`}
                       >
                         {item.payment.amount.toLocaleString()} UZS ·{" "}
                         {item.payment.status === "PAID" ? t("payments.statusPaid") : t("payments.statusUnpaid")}
@@ -154,13 +153,12 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   {item.files.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {item.files.map((f) => (
-                        <div key={f.id} className="flex items-center gap-1 bg-purple-50 rounded px-2 py-1">
+                        <div key={f.id} className="flex items-center gap-1 bg-purple-50 dark:bg-purple-950/40 rounded px-2 py-1">
                           <a
                             href={resolveFileUrl(f.url)}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center gap-1 text-xs text-purple-700 hover:underline"
-                          >
+                            className="flex items-center gap-1 text-xs text-purple-700 dark:text-purple-300 hover:underline">
                             <Download className="w-3 h-3" />
                             <span className="max-w-[120px] truncate">{f.name}</span>
                           </a>
@@ -307,8 +305,8 @@ export default function LabPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center mb-4">
-            <FlaskConical className="w-8 h-8 text-purple-400" />
+          <div className="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center mb-4">
+            <FlaskConical className="w-8 h-8 text-purple-400 dark:text-purple-500" />
           </div>
           <p className="text-text-muted text-sm">{t("lab.noOrders")}</p>
         </div>

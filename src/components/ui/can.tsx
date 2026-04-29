@@ -1,41 +1,32 @@
 "use client";
 
-import { usePermissions } from "@/hooks/use-permissions";
+import { useRole } from "@/hooks/use-permissions";
+import { UserRole } from "@/types/user";
 import React from "react";
 
 interface CanProps {
-  /** HTTP method: "GET" | "POST" | "PATCH" | "DELETE" */
-  method: string;
-  /** API path: "/api/users" | "/api/users/:id" */
-  path: string;
-  /** Content to show when permission granted */
+  /** Roles that are allowed to see the children */
+  roles: UserRole[];
+  /** Content to show when allowed */
   children: React.ReactNode;
-  /** Optional fallback when permission denied (default: nothing) */
+  /** Optional fallback when denied (default: nothing) */
   fallback?: React.ReactNode;
+  // Legacy props kept for compatibility but ignored
+  method?: string;
+  path?: string;
 }
 
 /**
- * Declarative permission gate component.
- * Renders children only if the current user has the given permission.
+ * Role-based gate component.
+ * Renders children only if the current user has one of the given roles.
+ * ADMIN always passes.
  *
  * @example
- * <Can method="POST" path="/api/users">
- *   <button>Add Employee</button>
- * </Can>
- *
- * <Can method="DELETE" path="/api/users/:id" fallback={<span>No access</span>}>
- *   <button onClick={handleDelete}>Delete</button>
+ * <Can roles={["ADMIN", "KASSIR"]}>
+ *   <button>Add Patient</button>
  * </Can>
  */
-export function Can({ method, path, children, fallback = null }: CanProps) {
-  const { can, isLoading } = usePermissions();
-
-  // While loading permissions, don't flash buttons
-  if (isLoading) return null;
-
-  const result = can(method, path);
-
-  console.log(method, path, result);
-
-  return result ? <>{children}</> : <>{fallback}</>;
+export function Can({ roles, children, fallback = null }: CanProps) {
+  const { hasRole } = useRole();
+  return hasRole(...roles) ? <>{children}</> : <>{fallback}</>;
 }

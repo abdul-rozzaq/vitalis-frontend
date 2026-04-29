@@ -171,7 +171,7 @@ export default function DepartmentsPage() {
             >
               <ChevronRight className="w-4 h-4" />
             </Link> */}
-            <Can method="PATCH" path="/api/departments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleEditDepartment(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
@@ -180,7 +180,7 @@ export default function DepartmentsPage() {
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can method="DELETE" path="/api/departments/:id">
+            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDeleteDepartment(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
@@ -215,7 +215,7 @@ export default function DepartmentsPage() {
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
           </button>
-          <Can method="POST" path="/api/departments">
+          <Can roles={["ADMIN"]}>
             <button
               onClick={handleAddDepartment}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"

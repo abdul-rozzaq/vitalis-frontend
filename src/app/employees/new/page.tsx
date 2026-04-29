@@ -1,23 +1,17 @@
 "use client";
 
 import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employee-form";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function NewEmployeePage() {
   const router = useRouter();
   const t = useTranslations();
-
-  const { data: rolesData = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => api.get("/roles").then((res) => res.data),
-    refetchOnWindowFocus: false,
-  });
 
   const { mutateAsync: addEmployee, isPending } = useMutation({
     mutationFn: (data: any) => api.post("/users", data),
@@ -27,7 +21,7 @@ export default function NewEmployeePage() {
   const handleSubmit = async (data: EmployeeSubmitData) => {
     const { photoFile, ...rest } = data;
     let photo = rest.photo;
-    
+
     if (photoFile) {
       const formData = new FormData();
       formData.append("photo", photoFile);
@@ -53,7 +47,7 @@ export default function NewEmployeePage() {
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
         <EmployeeForm
-          roles={rolesData}
+
           onSubmit={handleSubmit}
           onCancel={() => router.push("/employees")}
           isPending={isPending}

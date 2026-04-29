@@ -30,12 +30,12 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
     icon: User,
   },
   { id: "rooms" as TabId, label: t("assignments.tabRooms"), icon: DoorOpen },
-  { id: "roles" as TabId, label: t("assignments.tabRoles"), icon: Shield },
-  {
-    id: "permissions" as TabId,
-    label: t("assignments.tabPermissions"),
-    icon: KeyRound,
-  },
+  // { id: "roles" as TabId, label: t("assignments.tabRoles"), icon: Shield },
+  // {
+  //   id: "permissions" as TabId,
+  //   label: t("assignments.tabPermissions"),
+  //   icon: KeyRound,
+  // },
   {
     id: "lab-assignments" as TabId,
     label: t("assignments.tabLabAssignments"),

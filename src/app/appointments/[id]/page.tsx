@@ -13,8 +13,7 @@ import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, CreditCard, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Receipt, Scissors, Stethoscope, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
@@ -127,6 +126,7 @@ function AppointmentPaymentForm({ appointment, onSubmit, onCancel, isPending }: 
 export default function AppointmentDetailPage() {
   const t = useTranslations();
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<DetailSheetMode>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
@@ -333,13 +333,10 @@ export default function AppointmentDetailPage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <Link
-            href={appointment?.patientId ? `/patients/${appointment.patientId}` : "/appointments"}
-            className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
-          >
+          <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            {t("patients.backToPatient")}
-          </Link>
+            {t("appointments.backToList")}
+          </button>
 
           <div className="flex items-center gap-2">
             <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded ${STATUS_STYLES[appointment.status] ?? "bg-surface-hover text-secondary"}`}>
@@ -348,7 +345,7 @@ export default function AppointmentDetailPage() {
           </div>
         </div>
 
-        <Can method="PATCH" path="/api/appointments/:id">
+        <Can roles={["ADMIN", "KASSIR"]}>
           <button
             type="button"
             onClick={() => setSheetMode("editAppointment")}
@@ -389,7 +386,7 @@ export default function AppointmentDetailPage() {
               {t("appointments.payments")}
             </h3>
 
-            <Can method="POST" path="/api/payments">
+            <Can roles={["ADMIN", "KASSIR"]}>
               <button
                 type="button"
                 onClick={() => setSheetMode("addPayment")}
@@ -427,7 +424,7 @@ export default function AppointmentDetailPage() {
               {t("appointments.files")}
             </h3>
 
-            <Can method="POST" path="/api/appointments/:id/files">
+            <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
               <button
                 type="button"
                 onClick={() => setIsFileModalOpen(true)}
@@ -470,7 +467,7 @@ export default function AppointmentDetailPage() {
             <Printer className="w-4 h-4 text-primary" />
             {t("appointments.prescription")}
           </h3>
-          <Can method="GET" path="/api/prescriptions/:id/print">
+          <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
             <button
               type="button"
               onClick={handlePrintPrescription}
@@ -497,7 +494,7 @@ export default function AppointmentDetailPage() {
           <div className="flex flex-wrap gap-2">
             {/* Mark current step as Done */}
             {appointment.caseStep.status !== "DONE" && appointment.caseStep.status !== "CANCELLED" && (
-              <Can method="PATCH" path="/api/cases/:id/steps/:id">
+              <Can roles={["ADMIN", "DOCTOR"]}>
                 <button
                   type="button"
                   disabled={isMarkingDone}
@@ -507,7 +504,7 @@ export default function AppointmentDetailPage() {
                       stepId: appointment.caseStep!.id,
                     })
                   }
-                  className="inline-flex items-center gap-1.5 rounded-md bg-green-50 border border-green-200 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-100 transition-colors cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 px-3 py-2 text-sm font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-pointer disabled:opacity-60"
                 >
                   {isMarkingDone ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -519,11 +516,11 @@ export default function AppointmentDetailPage() {
               </Can>
             )}
             {/* Add follow-up steps */}
-            <Can method="POST" path="/api/cases/:id/steps">
+            <Can roles={["ADMIN", "DOCTOR"]}>
               <button
                 type="button"
                 onClick={() => { setStepType("LAB"); setSheetMode("addStep"); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 border border-purple-200 px-3 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-3 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors cursor-pointer"
               >
                 <FlaskConical className="w-3.5 h-3.5" />
                 {t("cases.requestLab")}
@@ -531,7 +528,7 @@ export default function AppointmentDetailPage() {
               <button
                 type="button"
                 onClick={() => { setStepType("PROCEDURE"); setSheetMode("addStep"); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-orange-50 border border-orange-200 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-3 py-2 text-sm font-medium text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors cursor-pointer"
               >
                 <Scissors className="w-3.5 h-3.5" />
                 {t("cases.stepType.PROCEDURE")}
@@ -539,7 +536,7 @@ export default function AppointmentDetailPage() {
               <button
                 type="button"
                 onClick={() => { setStepType("REFERRAL"); setSheetMode("addStep"); }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-yellow-50 border border-yellow-200 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors cursor-pointer"
               >
                 <ArrowRightCircle className="w-3.5 h-3.5" />
                 {t("cases.addReferral")}

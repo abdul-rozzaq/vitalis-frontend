@@ -1,13 +1,13 @@
 "use client";
 
+import { AssignmentForm, type AssignmentFormValues } from "@/components/assignments/assignment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
-import { AssignmentForm, type AssignmentFormValues } from "@/components/assignments/assignment-form";
-import { useTranslations } from "next-intl";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BedDouble, Building2, Calendar, CheckCircle2, Clock, DoorOpen, Edit, Loader2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -158,7 +158,7 @@ export default function AssignmentDetailPage() {
           <ArrowLeft className="w-4 h-4" />
           {t("assignments.backToAssignments")}
         </Link>
-        <Can method="PATCH" path="/api/assignments/:id">
+        <Can roles={["ADMIN"]}>
           <button
             onClick={() => setEditOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-surface border border-border hover:bg-surface-hover transition-colors text-text cursor-pointer"
