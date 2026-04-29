@@ -1,5 +1,7 @@
 "use client";
 
+import { exportToExcel } from "@/lib/export-excel";
+
 import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
@@ -77,14 +79,7 @@ export default function EmployeesPage() {
       e.role ?? "",
       e.createdAt ? new Date(e.createdAt).toLocaleDateString() : "",
     ]);
-    const csv = [headers, ...rows].map((row) => row.map((cell: string) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportToExcel("employees", headers, rows, t("employees.title"));
   };
 
   const handleDelete = (id: string) => {

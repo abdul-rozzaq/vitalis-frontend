@@ -1,5 +1,7 @@
 "use client";
 
+import { exportToExcel } from "@/lib/export-excel";
+
 import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
@@ -58,18 +60,11 @@ export default function PatientsPage() {
     const rows = patientsData.map((p: Patient) => [
       p.id,
       `${p.first_name} ${p.last_name}`,
-      p.gender,
+      p.gender ?? "",
       p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
-      p.phone_number,
+      p.phone_number ?? "",
     ]);
-    const csv = [headers, ...rows].map((row) => row.map((cell: string) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `patients-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
   const handleDelete = (id: string) => {
