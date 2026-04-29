@@ -8,6 +8,13 @@ async function handler(req: Request, { params }: { params: Promise<{ path: strin
   const headers = new Headers(req.headers);
   headers.delete("host");
 
+  // Next.js 15+ strips the Authorization header from incoming requests in route handlers.
+  // We read it directly from the raw request header and re-set it explicitly.
+  const authHeader = req.headers.get("authorization");
+  if (authHeader) {
+    headers.set("authorization", authHeader);
+  }
+
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
 
   const upstream = await fetch(target, {
@@ -28,4 +35,4 @@ async function handler(req: Request, { params }: { params: Promise<{ path: strin
   });
 }
 
-export { handler as DELETE, handler as GET, handler as POST, handler as PUT, handler as PATCH };
+export { handler as DELETE, handler as GET, handler as PATCH, handler as POST, handler as PUT };

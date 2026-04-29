@@ -1,96 +1,149 @@
 "use client";
 
-import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { UserRole } from "@/types/user";
 import { useAuth } from "./use-auth";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Role → allowed endpoints mapping ────────────────────────────────────────
+// Mirrors the @Roles() decorators defined in the NestJS backend controllers.
+// Each entry is [METHOD, path-pattern] — path patterns support :param wildcards.
 
-export interface Permission {
-  id: string;
-  method: string; // "GET" | "POST" | "PATCH" | "DELETE"
-  path: string; // "/api/users" | "/api/users/:id"
+const ROLE_PERMISSIONS: Record<UserRole, [string, string][]> = {
+  ADMIN: [], // ADMIN bypasses all checks — handled separately below
+
+  KASSIR: [
+    ["GET", "/api/patients"],
+    ["GET", "/api/patients/:id"],
+    ["POST", "/api/patients"],
+    ["PATCH", "/api/patients/:id"],
+    ["GET", "/api/appointments"],
+    ["GET", "/api/appointments/:id"],
+    ["POST", "/api/appointments"],
+    ["PATCH", "/api/appointments/:id"],
+    ["GET", "/api/payments"],
+    ["POST", "/api/payments/:id/pay"],
+    ["GET", "/api/assignments"],
+    ["GET", "/api/cases"],
+    ["GET", "/api/cases/:id"],
+    ["POST", "/api/cases"],
+    ["GET", "/api/patients/:patientId/cases"],
+  ],
+
+  DOCTOR: [
+    ["GET", "/api/patients"],
+    ["GET", "/api/patients/:id"],
+    ["GET", "/api/appointments"],
+    ["GET", "/api/appointments/:id"],
+    ["GET", "/api/payments"],
+    ["GET", "/api/assignments"],
+    ["GET", "/api/cases"],
+    ["GET", "/api/cases/:id"],
+    ["POST", "/api/cases"],
+    ["POST", "/api/cases/:id/steps"],
+    ["PATCH", "/api/cases/:id/steps/:stepId"],
+    ["PATCH", "/api/cases/:id/close"],
+    ["GET", "/api/patients/:patientId/cases"],
+    ["GET", "/api/prescriptions"],
+    ["GET", "/api/prescriptions/:id"],
+    ["POST", "/api/prescriptions"],
+    ["PATCH", "/api/prescriptions/:id"],
+    ["GET", "/api/medical-cards/003x"],
+    ["POST", "/api/patients/:patientId/medical-cards"],
+    ["GET", "/api/patients/:patientId/medical-cards"],
+    ["GET", "/api/lab-orders"],
+    ["GET", "/api/lab-orders/:id"],
+    ["POST", "/api/lab-orders"],
+    ["PATCH", "/api/lab-orders/:id"],
+    ["GET", "/api/medicines"],
+  ],
+
+  HAMSHIRA: [
+    ["GET", "/api/patients"],
+    ["GET", "/api/patients/:id"],
+    ["GET", "/api/appointments"],
+    ["GET", "/api/appointments/:id"],
+    ["GET", "/api/cases"],
+    ["GET", "/api/cases/:id"],
+    ["PATCH", "/api/cases/:id/steps/:stepId"],
+    ["GET", "/api/patients/:patientId/cases"],
+    ["GET", "/api/prescriptions"],
+    ["GET", "/api/prescriptions/:id"],
+    ["GET", "/api/medical-cards/003x"],
+    ["GET", "/api/patients/:patientId/medical-cards"],
+    ["GET", "/api/medicines"],
+  ],
+
+  LABARANT: [
+    ["GET", "/api/patients"],
+    ["GET", "/api/patients/:id"],
+    ["GET", "/api/lab-orders"],
+    ["GET", "/api/lab-orders/:id"],
+    ["PATCH", "/api/lab-orders/:id"],
+    ["GET", "/api/laboratories"],
+    ["GET", "/api/laboratories/:id"],
+  ],
+
+  DIREKTOR: [
+    ["GET", "/api/patients"],
+    ["GET", "/api/patients/:id"],
+    ["GET", "/api/appointments"],
+    ["GET", "/api/appointments/:id"],
+    ["GET", "/api/payments"],
+    ["GET", "/api/assignments"],
+    ["GET", "/api/departments"],
+    ["GET", "/api/departments/:id"],
+    ["GET", "/api/laboratories"],
+    ["GET", "/api/laboratories/:id"],
+    ["GET", "/api/stats"],
+  ],
+
+  HISOBCHI: [
+    ["GET", "/api/payments"],
+    ["GET", "/api/payments/:id"],
+    ["PATCH", "/api/payments/:id"],
+    ["GET", "/api/stats"],
+  ],
+
+  TEXNIK_HODIM: [],
+};
+
+// ─── Path matching ────────────────────────────────────────────────────────────
+
+function pathToRegex(template: string): RegExp {
+  const escaped = template.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/:[^/]+/g, "[^/]+");
+  return new RegExp(`^${escaped}$`);
 }
 
-// ─── Path normalization ───────────────────────────────────────────────────────
-// Strips the /api prefix for comparison since the backend stores full paths.
-// e.g. "/api/users/:id" matches "/api/users/:id"
-// Frontend uses short form like "users" → we match against "/api/users"
-
-/**
- * Converts a permission path template to a regex.
- * "/api/users/:id" → /^\/api\/users\/[^/]+$/
- */
-function pathToRegex(template: string): RegExp {
-  const escaped = template
-    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // escape special chars
-    .replace(/:[^/]+/g, "[^/]+"); // replace :param with wildcard
-  return new RegExp(`^${escaped}$`);
+function matchesPath(pattern: string, path: string): boolean {
+  if (pattern === path) return true;
+  try {
+    return pathToRegex(pattern).test(path) || pathToRegex(path).test(pattern);
+  } catch {
+    return false;
+  }
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function usePermissions() {
-  const { user } = useAuth();
-  const roleId = user?.role?.id;
+  const { user, isLoading } = useAuth();
 
-  const { data: permissions = [], isLoading } = useQuery<Permission[]>({
-    queryKey: ["permissions", roleId],
-    queryFn: async () => {
-      const { data } = await api.get(`/roles/${roleId}/permissions`);
-      return data;
-    },
-    enabled: !!roleId,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    retry: false,
-  });
-
-  /**
-   * Check if the current user has permission for a given HTTP method + path.
-   *
-   * @param method  - "GET" | "POST" | "PATCH" | "DELETE"
-   * @param path    - e.g. "/api/users" or "/api/users/:id"
-   *
-   * @example
-   * can("DELETE", "/api/users/:id")  // → true or false
-   * can("POST",   "/api/assignments") // → true or false
-   */
   function can(method: string, path: string): boolean {
-    console.log(method, path);
+    if (!user) return false;
 
-    if (user?.isSuperUser) return true;
+    // ADMIN bypasses everything
+    if (user.role === "ADMIN") return true;
 
-    if (!permissions.length) return false;
-
-    return permissions.some((p) => {
-      if (p.method.toUpperCase() !== method.toUpperCase()) return false;
-      // Exact match first
-      if (p.path === path) return true;
-      // Pattern match (:id params)
-      try {
-        return pathToRegex(p.path).test(path) || pathToRegex(path).test(p.path);
-      } catch {
-        return false;
-      }
-    });
+    const allowed = ROLE_PERMISSIONS[user.role as UserRole] ?? [];
+    return allowed.some(([m, p]) => m.toUpperCase() === method.toUpperCase() && matchesPath(p, path));
   }
 
-  /**
-   * Shorthand helpers for common actions.
-   * Each accepts a base path like "/api/users".
-   *
-   * @example
-   * const { canCreate, canEdit, canDelete, canRead } = usePermissions();
-   * canCreate("/api/users")  // checks POST /api/users
-   * canEdit("/api/users/:id") // checks PATCH /api/users/:id
-   */
   const canRead = (path: string) => can("GET", path);
   const canCreate = (path: string) => can("POST", path);
   const canEdit = (path: string) => can("PATCH", path);
   const canDelete = (path: string) => can("DELETE", path);
 
   return {
-    permissions,
+    permissions: [], // kept for API compatibility
     isLoading,
     can,
     canRead,
