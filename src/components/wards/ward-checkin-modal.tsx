@@ -17,30 +17,29 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
-  const [wardNumber, setWardNumber] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
 
-  // Bemorlar ro'yxati
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((r) => r.data),
     enabled: open,
   });
 
-  // Faqat WARD tipli xonalar — /api/rooms/wards endpointi
-  const { data: rooms = [] } = useQuery({
-    queryKey: ["rooms-wards"],
-    queryFn: () => api.get("/rooms/wards").then((r) => r.data),
+  // /rooms/wards emas — /rooms dan olib, WARD tiplilarni filter qilamiz
+  const { data: allRooms = [] } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: () => api.get("/rooms").then((r) => r.data),
     enabled: open,
   });
+
+  const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
       api.post("/wards/check-in", {
         patientId,
         roomId,
-        wardNumber: wardNumber || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
       }),
@@ -53,7 +52,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const handleClose = () => {
     setPatientId("");
     setRoomId("");
-    setWardNumber("");
     setExpectedOut("");
     setNote("");
     onClose();
@@ -72,7 +70,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -82,7 +79,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
               onChange={(e) => setPatientId(e.target.value)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
-              <option value="">{t("common.select")}</option>
+              <option value="">{t("forms.select")}</option>
               {patients.map((p: any) => (
                 <option key={p.id} value={p.id}>
                   {p.first_name} {p.last_name}
@@ -91,7 +88,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
             </select>
           </div>
 
-          {/* Xona — faqat WARD tiplilar */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colRoom")} *
@@ -101,33 +97,20 @@ export function WardCheckInModal({ open, onClose }: Props) {
               onChange={(e) => setRoomId(e.target.value)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
-              <option value="">{t("common.select")}</option>
+              <option value="">{t("forms.select")}</option>
               {rooms.map((r: any) => (
                 <option key={r.id} value={r.id} disabled={r.isFull}>
                   {r.name}
-                  {r.capacity ? ` (${r.occupiedCount}/${r.capacity})` : ""}
-                  {r.isFull ? ` — ${t("wards.roomFull")}` : ""}
+                  {r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}
+                  {r.isFull ? ` — ${t("wards.full")}` : ""}
                 </option>
               ))}
             </select>
+            {rooms.length === 0 && (
+              <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>
+            )}
           </div>
 
-          {/* Palata raqami */}
-          <div>
-            <label className="text-sm font-medium text-text mb-1 block">
-              {t("wards.colWardNumber")}
-            </label>
-            <input
-              type="text"
-              value={wardNumber}
-              onChange={(e) => setWardNumber(e.target.value)}
-              placeholder="12-A"
-              maxLength={20}
-              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
-            />
-          </div>
-
-          {/* Taxminiy chiqish */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colExpectedOut")}
@@ -136,11 +119,11 @@ export function WardCheckInModal({ open, onClose }: Props) {
               type="date"
               value={expectedOut}
               onChange={(e) => setExpectedOut(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
-          {/* Izoh */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.note")}

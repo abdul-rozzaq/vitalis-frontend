@@ -8,14 +8,26 @@ import { WardEditModal } from "@/components/wards/ward-edit-modal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Calendar, CalendarCheck, Clock, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  BedDouble,
+  Calendar,
+  CalendarCheck,
+  ChevronDown,
+  Clock,
+  Edit,
+  Filter,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Trash2,
+  X,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 interface Ward {
   id: string;
-  wardNumber: string | null;
   checkIn: string;
   expectedOut: string | null;
   actualOut: string | null;
@@ -23,52 +35,88 @@ interface Ward {
   status: "OCCUPIED" | "VACATED";
   note: string | null;
   patient: { id: string; first_name: string; last_name: string };
-  room: { id: string; name: string };
+  room: { id: string; name: string; roomType: string; capacity?: number | null };
 }
+
+interface Room {
+  id: string;
+  name: string;
+  roomType: string;
+  occupiedCount?: number;
+  freeSlots?: number;
+  isFull?: boolean;
+  capacity?: number | null;
+}
+
+// ─── Filter bar ───────────────────────────────────────────────────────────────
+interface Filters {
+  search: string;
+  status: "" | "OCCUPIED" | "VACATED";
+  roomId: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+const EMPTY_FILTERS: Filters = {
+  search: "",
+  status: "",
+  roomId: "",
+  dateFrom: "",
+  dateTo: "",
+};
 
 export default function WardsPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
-  const [filterText, setFilterText] = useState("");
+
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkingOutId, setCheckingOutId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [editingWard, setEditingWard] = useState<Ward | null>(null);
 
-  const { data: wardsData = [], isLoading } = useQuery<Ward[]>({
+  const set = <K extends keyof Filters>(key: K, val: Filters[K]) =>
+    setFilters((f) => ({ ...f, [key]: val }));
+
+  const hasFilters = Object.values(filters).some((v) => v !== "");
+
+  // ── Data ────────────────────────────────────────────────────────────────────
+  const { data: wardsRaw = [], isLoading } = useQuery<Ward[]>({
     queryKey: ["wards"],
-    queryFn: () => api.get("/wards").then((res) => res.data.data ?? res.data),
+    queryFn: () =>
+      api.get("/wards").then((res) => {
+        const d = res.data;
+        return Array.isArray(d) ? d : d?.data ?? [];
+      }),
     refetchOnWindowFocus: false,
   });
 
-  // Detail for single ward
+  const { data: roomsAll = [] } = useQuery<Room[]>({
+    queryKey: ["rooms"],
+    queryFn: () => api.get("/rooms").then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const wardRooms = roomsAll.filter((r) => r.roomType === "WARD");
+
   const { data: wardDetail, isLoading: isDetailLoading } = useQuery<Ward>({
     queryKey: ["ward", detailId],
-    queryFn: () => api.get(`/wards/${detailId}`).then((res) => res.data),
+    queryFn: () => api.get(`/wards/${detailId}`).then((r) => r.data),
     enabled: !!detailId,
   });
 
+  // ── Mutations ───────────────────────────────────────────────────────────────
   const { mutate: checkOut, isPending: isCheckingOut } = useMutation({
     mutationFn: (id: string) => api.patch(`/wards/${id}/check-out`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
-      setCheckingOutId(null);
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
       if (detailId) queryClient.invalidateQueries({ queryKey: ["ward", detailId] });
+      setCheckingOutId(null);
+      setDetailId(null);
     },
   });
-
-  const filtered = useMemo(
-    () =>
-      filterText.trim()
-        ? wardsData.filter((w) =>
-          `${w.patient.first_name} ${w.patient.last_name}`
-            .toLowerCase()
-            .includes(filterText.toLowerCase()),
-        )
-        : wardsData,
-    [wardsData, filterText],
-  );
 
   const handleCheckOut = (id: string) => {
     if (confirm(t("wards.checkOutConfirm"))) {
@@ -77,17 +125,45 @@ export default function WardsPage() {
     }
   };
 
+  // ── Stats ───────────────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const occupied = wardsRaw.filter((w) => w.status === "OCCUPIED").length;
+    const vacated = wardsRaw.filter((w) => w.status === "VACATED").length;
+    return { occupied, vacated, total: wardsRaw.length };
+  }, [wardsRaw]);
+
+  // ── Client-side filter ──────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    return wardsRaw.filter((w) => {
+      if (filters.status && w.status !== filters.status) return false;
+      if (filters.roomId && w.room.id !== filters.roomId) return false;
+      if (filters.dateFrom && new Date(w.checkIn) < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo) {
+        const end = new Date(filters.dateTo);
+        end.setHours(23, 59, 59);
+        if (new Date(w.checkIn) > end) return false;
+      }
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        const name = `${w.patient.first_name} ${w.patient.last_name}`.toLowerCase();
+        if (!name.includes(q) && !w.room.name.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+  }, [wardsRaw, filters]);
+
+  // ── Columns ─────────────────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<Ward>[]>(
     () => [
       {
         accessorKey: "id",
         header: "#",
         cell: ({ row, table }) => {
-          const pageIndex = table.getState().pagination.pageIndex;
-          const pageSize = table.getState().pagination.pageSize;
+          const pi = table.getState().pagination.pageIndex;
+          const ps = table.getState().pagination.pageSize;
           return (
             <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-              {pageIndex * pageSize + row.index + 1}
+              {pi * ps + row.index + 1}
             </span>
           );
         },
@@ -108,14 +184,10 @@ export default function WardsPage() {
         id: "room",
         header: t("wards.colRoom"),
         cell: ({ row }) => (
-          <span className="text-secondary text-sm">{row.original.room.name}</span>
-        ),
-      },
-      {
-        accessorKey: "wardNumber",
-        header: t("wards.colWardNumber"),
-        cell: (info: any) => (
-          <span className="text-sm">{info.getValue() ?? "—"}</span>
+          <div className="flex items-center gap-1.5">
+            <BedDouble className="w-3.5 h-3.5 text-secondary shrink-0" />
+            <span className="text-sm text-secondary">{row.original.room.name}</span>
+          </div>
         ),
       },
       {
@@ -123,25 +195,53 @@ export default function WardsPage() {
         header: t("wards.colCheckIn"),
         cell: (info: any) => (
           <span className="text-sm text-secondary">
-            {new Date(info.getValue()).toLocaleDateString()}
+            {new Date(info.getValue()).toLocaleDateString("uz-UZ")}
           </span>
         ),
       },
       {
         accessorKey: "expectedOut",
         header: t("wards.colExpectedOut"),
-        cell: (info: any) => (
-          <span className="text-sm text-secondary">
-            {info.getValue() ? new Date(info.getValue()).toLocaleDateString() : "—"}
-          </span>
-        ),
+        cell: (info: any) => {
+          const val = info.getValue() as string | null;
+          if (!val) return <span className="text-secondary text-sm">—</span>;
+          const isOverdue =
+            info.row.original.status === "OCCUPIED" && new Date(val) < new Date();
+          return (
+            <span className={`text-sm ${isOverdue ? "text-red-500 font-medium" : "text-secondary"}`}>
+              {new Date(val).toLocaleDateString("uz-UZ")}
+              {isOverdue && " ⚠️"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "actualOut",
+        header: t("wards.actualOut"),
+        cell: (info: any) => {
+          const val = info.getValue() as string | null;
+          return (
+            <span className="text-sm text-secondary">
+              {val ? new Date(val).toLocaleDateString("uz-UZ") : "—"}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "daysStayed",
         header: t("wards.colDays"),
-        cell: (info: any) => (
-          <span className="text-sm">{info.getValue() ?? "—"}</span>
-        ),
+        cell: ({ row }) => {
+          const w = row.original;
+          const days =
+            w.status === "OCCUPIED"
+              ? Math.max(1, Math.ceil((Date.now() - new Date(w.checkIn).getTime()) / 86400000))
+              : (w.daysStayed ?? "—");
+          return (
+            <span className={`text-sm font-medium ${w.status === "OCCUPIED" ? "text-primary" : "text-secondary"}`}>
+              {days} {w.status === "OCCUPIED" ? t("wards.currentDay") : ""}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "status",
@@ -150,9 +250,7 @@ export default function WardsPage() {
           const val = info.getValue() as string;
           return (
             <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-500"
+              className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                 }`}
             >
               {val === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
@@ -165,7 +263,7 @@ export default function WardsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA", "KASSIR"]}>
+            <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
               <button
                 onClick={() => setEditingWard(row.original)}
                 className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
@@ -174,7 +272,7 @@ export default function WardsPage() {
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
-            <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
+            <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
               {row.original.status === "OCCUPIED" && (
                 <button
                   onClick={() => handleCheckOut(row.original.id)}
@@ -197,39 +295,37 @@ export default function WardsPage() {
     [t, isCheckingOut, checkingOutId],
   );
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
+    <div className="p-6 space-y-5 max-w-7xl mx-auto w-full">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
       >
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">
-            {t("wards.title")}
-          </h2>
+          <h2 className="text-xl font-semibold text-text tracking-tight">{t("wards.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("wards.description")}</p>
         </div>
-
         <div className="flex items-center gap-2">
-          {filterOpen && (
-            <input
-              autoFocus
-              type="text"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              placeholder={t("common.filterPlaceholder")}
-              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
-            />
-          )}
           <button
             onClick={() => setFilterOpen((v) => !v)}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${hasFilters
+                ? "bg-primary-50 border-primary-200 text-primary"
+                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+              }`}
           >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
+            {hasFilters && (
+              <span className="ml-0.5 bg-primary text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+                {Object.values(filters).filter(Boolean).length}
+              </span>
+            )}
+            <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
           </button>
-          <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
+          <Can roles={["ADMIN", "KASSIR", "HAMSHIRA"]}>
             <button
               onClick={() => setCheckInOpen(true)}
               className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
@@ -241,6 +337,101 @@ export default function WardsPage() {
         </div>
       </motion.div>
 
+      {/* Stats cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.04 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
+        {[
+          { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600", bg: "bg-green-50" },
+          { label: t("wards.statusVacated"), value: stats.vacated, color: "text-gray-500", bg: "bg-gray-50" },
+          { label: t("wards.total"), value: stats.total, color: "text-primary", bg: "bg-primary-50" },
+        ].map((s) => (
+          <div key={s.label} className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-xs text-secondary mb-1">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </motion.div>
+
+      {/* Filter panel */}
+      {filterOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-surface border border-border rounded-xl p-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Qidiruv */}
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => set("search", e.target.value)}
+              placeholder={t("common.filterPlaceholder")}
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            />
+
+            {/* Status */}
+            <select
+              value={filters.status}
+              onChange={(e) => set("status", e.target.value as Filters["status"])}
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            >
+              <option value="">{t("wards.allStatuses")}</option>
+              <option value="OCCUPIED">{t("wards.statusOccupied")}</option>
+              <option value="VACATED">{t("wards.statusVacated")}</option>
+            </select>
+
+            {/* Xona */}
+            <select
+              value={filters.roomId}
+              onChange={(e) => set("roomId", e.target.value)}
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            >
+              <option value="">{t("wards.allRooms")}</option>
+              {wardRooms.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+
+            {/* Sana dan */}
+            <input
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => set("dateFrom", e.target.value)}
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            />
+
+            {/* Sana gacha */}
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => set("dateTo", e.target.value)}
+                className="flex-1 bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+              />
+              {hasFilters && (
+                <button
+                  onClick={() => setFilters(EMPTY_FILTERS)}
+                  className="px-2 py-1.5 rounded-md border border-border bg-background text-secondary hover:text-text hover:bg-surface-hover transition-colors"
+                  title={t("common.reset")}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filtered count */}
+          <p className="text-xs text-secondary mt-2">
+            {filtered.length} / {wardsRaw.length} {t("wards.records")}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Table */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -250,12 +441,25 @@ export default function WardsPage() {
           <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-surface border border-border rounded-xl h-48 flex flex-col items-center justify-center gap-2">
+            <BedDouble className="w-8 h-8 text-secondary" />
+            <p className="text-secondary text-sm">{t("wards.noWards")}</p>
+            {hasFilters && (
+              <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> {t("common.reset")}
+              </button>
+            )}
+          </div>
         ) : (
           <DataTable columns={columns} data={filtered} />
         )}
       </motion.div>
 
-      {/* Ward Detail Sheet */}
+      {/* Detail Sheet */}
       <Sheet
         isOpen={!!detailId}
         onClose={() => setDetailId(null)}
@@ -268,150 +472,126 @@ export default function WardsPage() {
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : wardDetail ? (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Status badge */}
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
+            <span
+              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
                   ? "bg-green-100 text-green-700"
                   : "bg-gray-100 text-gray-500"
-                  }`}
-              >
-                {wardDetail.status === "OCCUPIED"
-                  ? t("wards.statusOccupied")
-                  : t("wards.statusVacated")}
-              </span>
-            </div>
+                }`}
+            >
+              {wardDetail.status === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
+            </span>
 
-            {/* Patient info */}
-            <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-                {t("wards.colPatient")}
-              </h4>
-              <p className="text-text font-medium">
+            {/* Bemor */}
+            <div className="bg-surface-hover rounded-xl p-4 space-y-1">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.colPatient")}</p>
+              <p className="text-text font-semibold text-base">
                 {wardDetail.patient.first_name} {wardDetail.patient.last_name}
               </p>
             </div>
 
-            {/* Room & ward number */}
-            <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-                {t("wards.colRoom")}
-              </h4>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BedDouble className="w-4 h-4 text-primary" />
-                  <span className="text-text font-medium">{wardDetail.room.name}</span>
-                </div>
-                {wardDetail.wardNumber && (
-                  <span className="text-sm text-secondary">
-                    #{wardDetail.wardNumber}
-                  </span>
-                )}
+            {/* Xona */}
+            <div className="bg-surface-hover rounded-xl p-4 space-y-1">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.colRoom")}</p>
+              <div className="flex items-center gap-2">
+                <BedDouble className="w-4 h-4 text-primary" />
+                <span className="text-text font-medium">{wardDetail.room.name}</span>
               </div>
             </div>
 
-            {/* Dates */}
-            <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
-              <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-                {t("wards.dates")}
-              </h4>
+            {/* Sanalar */}
+            <div className="bg-surface-hover rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.dates")}</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-secondary">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {t("wards.colCheckIn")}
-                  </div>
-                  <span className="text-text">
-                    {new Date(wardDetail.checkIn).toLocaleDateString()}
+                  <span className="flex items-center gap-2 text-secondary">
+                    <Calendar className="w-3.5 h-3.5" /> {t("wards.colCheckIn")}
+                  </span>
+                  <span className="text-text font-medium">
+                    {new Date(wardDetail.checkIn).toLocaleDateString("uz-UZ")}
                   </span>
                 </div>
+
                 {wardDetail.expectedOut && (
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-secondary">
-                      <CalendarCheck className="w-3.5 h-3.5" />
-                      {t("wards.colExpectedOut")}
-                    </div>
-                    <span className="text-text">
-                      {new Date(wardDetail.expectedOut).toLocaleDateString()}
+                    <span className="flex items-center gap-2 text-secondary">
+                      <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.colExpectedOut")}
+                    </span>
+                    <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date()
+                        ? "text-red-500"
+                        : "text-text"
+                      }`}>
+                      {new Date(wardDetail.expectedOut).toLocaleDateString("uz-UZ")}
                     </span>
                   </div>
                 )}
+
                 {wardDetail.actualOut && (
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-secondary">
-                      <CalendarCheck className="w-3.5 h-3.5" />
-                      {t("wards.actualOut")}
-                    </div>
-                    <span className="text-text">
-                      {new Date(wardDetail.actualOut).toLocaleDateString()}
+                    <span className="flex items-center gap-2 text-secondary">
+                      <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.actualOut")}
+                    </span>
+                    <span className="text-text font-medium">
+                      {new Date(wardDetail.actualOut).toLocaleDateString("uz-UZ")}
                     </span>
                   </div>
                 )}
-                {wardDetail.daysStayed !== null && (
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-secondary">
-                      <Clock className="w-3.5 h-3.5" />
-                      {t("wards.colDays")}
-                    </div>
-                    <span className="text-text font-medium">{wardDetail.daysStayed}</span>
-                  </div>
-                )}
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-secondary">
+                    <Clock className="w-3.5 h-3.5" /> {t("wards.colDays")}
+                  </span>
+                  <span className="text-primary font-bold text-base">
+                    {wardDetail.status === "OCCUPIED"
+                      ? Math.max(1, Math.ceil((Date.now() - new Date(wardDetail.checkIn).getTime()) / 86400000))
+                      : wardDetail.daysStayed ?? "—"}
+                    {wardDetail.status === "OCCUPIED" && (
+                      <span className="text-xs font-normal text-secondary ml-1">{t("wards.currentDay")}</span>
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Note */}
+            {/* Izoh */}
             {wardDetail.note && (
-              <div className="bg-surface border border-border rounded-lg p-4 space-y-2">
-                <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-                  {t("wards.note")}
-                </h4>
+              <div className="bg-surface-hover rounded-xl p-4 space-y-1">
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.note")}</p>
                 <p className="text-sm text-secondary">{wardDetail.note}</p>
               </div>
             )}
 
-            {/* Actions */}
+            {/* Tugmalar */}
             <div className="flex gap-2 pt-1">
-              <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA", "KASSIR"]}>
+              <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
                 <button
-                  onClick={() => {
-                    setEditingWard(wardDetail);
-                    setDetailId(null);
-                  }}
-                  className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  onClick={() => { setEditingWard(wardDetail); setDetailId(null); }}
+                  className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Edit className="w-3.5 h-3.5" />
                   {t("common.edit")}
                 </button>
               </Can>
-              <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
-                {wardDetail.status === "OCCUPIED" && (
+              {wardDetail.status === "OCCUPIED" && (
+                <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
                   <button
-                    onClick={() => {
-                      setDetailId(null);
-                      handleCheckOut(wardDetail.id);
-                    }}
-                    className="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                    onClick={() => { setDetailId(null); handleCheckOut(wardDetail.id); }}
+                    disabled={isCheckingOut}
+                    className="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {isCheckingOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                     {t("wards.checkOut")}
                   </button>
-                )}
-              </Can>
+                </Can>
+              )}
             </div>
           </div>
         ) : null}
       </Sheet>
 
-      <WardCheckInModal
-        open={checkInOpen}
-        onClose={() => setCheckInOpen(false)}
-      />
-
-      <WardEditModal
-        ward={editingWard}
-        onClose={() => setEditingWard(null)}
-      />
+      <WardCheckInModal open={checkInOpen} onClose={() => setCheckInOpen(false)} />
+      <WardEditModal ward={editingWard} onClose={() => setEditingWard(null)} />
     </div>
   );
 }

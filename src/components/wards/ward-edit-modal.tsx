@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 
 interface Ward {
   id: string;
-  wardNumber: string | null;
   expectedOut: string | null;
   note: string | null;
   status: "OCCUPIED" | "VACATED";
@@ -25,16 +24,12 @@ export function WardEditModal({ ward, onClose }: Props) {
   const t = useTranslations();
   const queryClient = useQueryClient();
 
-  const [wardNumber, setWardNumber] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
 
   useEffect(() => {
     if (ward) {
-      setWardNumber(ward.wardNumber ?? "");
-      setExpectedOut(
-        ward.expectedOut ? ward.expectedOut.split("T")[0] : "",
-      );
+      setExpectedOut(ward.expectedOut ? ward.expectedOut.split("T")[0] : "");
       setNote(ward.note ?? "");
     }
   }, [ward]);
@@ -42,7 +37,6 @@ export function WardEditModal({ ward, onClose }: Props) {
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
       api.patch(`/wards/${ward!.id}`, {
-        wardNumber: wardNumber || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
       }),
@@ -76,22 +70,6 @@ export function WardEditModal({ ward, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Palata raqami */}
-          <div>
-            <label className="text-sm font-medium text-text mb-1 block">
-              {t("wards.colWardNumber")}
-            </label>
-            <input
-              type="text"
-              value={wardNumber}
-              onChange={(e) => setWardNumber(e.target.value)}
-              placeholder="12-A"
-              maxLength={20}
-              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
-            />
-          </div>
-
-          {/* Taxminiy chiqish */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colExpectedOut")}
@@ -104,7 +82,6 @@ export function WardEditModal({ ward, onClose }: Props) {
             />
           </div>
 
-          {/* Izoh */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.note")}

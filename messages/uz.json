@@ -713,8 +713,23 @@
     "detailTitle": "Palata tafsilotlari",
     "detailDescription": "Bemor va xona haqida to'liq ma'lumot",
     "editTitle": "Palatani tahrirlash",
-    "dates": "Sanalar",
     "actualOut": "Haqiqiy chiqish",
-    "roomFull": "Xona to'lgan"
+    "roomFull": "Xona to'lgan",
+    "checkOutTitle": "Bemorni palatadan chiqarish",
+    "expectedOut": "Taxminiy chiqish sanasi",
+    "daysStayed": "Necha kun yotdi",
+    "currentDay": "kun",
+    "dates": "Sanalar",
+    "allRooms": "Barcha xonalar",
+    "allStatuses": "Barcha holatlar",
+    "total": "Jami",
+    "avgDays": "O'rtacha kun",
+    "noWards": "Yozuvlar topilmadi",
+    "records": "ta yozuv",
+    "roomTypePalata": "Palata",
+    "roomTypeExam": "Ko'rik xonasi",
+    "full": "To'lgan",
+    "available": "Mavjud",
+    "freeSlots": "Bo'sh o'rin"
   }
 }
