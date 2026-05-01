@@ -9,7 +9,8 @@
     "assignments": "Назначения",
     "lab": "Лаборатория",
     "laboratories": "Лаборатории",
-    "signOut": "Выйти"
+    "signOut": "Выйти",
+    "wards": "Палаты"
   },
   "common": {
     "filter": "Фильтр",
@@ -40,7 +41,8 @@
     "all": "Все",
     "allDepartments": "Все отделы",
     "reset": "Сброс",
-    "search": "Поиск"
+    "search": "Поиск",
+    "info": "Информация"
   },
   "table": {
     "noResults": "Результаты не найдены.",
@@ -406,7 +408,13 @@
     "backToAssignments": "Назад к назначениям",
     "weeklySchedule": "Еженедельное расписание",
     "notFound": "Назначение не найдено.",
-    "createdAt": "Создано"
+    "createdAt": "Создано",
+    "colOccupancy": "Занятые места",
+    "occupied": "Занято",
+    "free": "Свободно",
+    "bedsOccupied": "мест занято",
+    "roomDetail": "Детали комнаты",
+    "roomDetailDesc": "Информация о комнате и её вместимости"
   },
   "forms": {
     "cancel": "Отмена",
@@ -683,5 +691,29 @@
     "noStaff": "Сотрудники не назначены.",
     "active": "Активен",
     "inactive": "Неактивен"
+  },
+  "wards": {
+    "title": "Размещение в палатах",
+    "description": "Управление госпитализацией и выпиской пациентов.",
+    "checkIn": "Госпитализировать",
+    "checkInTitle": "Госпитализация пациента",
+    "checkOut": "Выписать",
+    "checkOutConfirm": "Подтвердите выписку пациента?",
+    "colPatient": "Пациент",
+    "colRoom": "Комната",
+    "colWardNumber": "Номер палаты",
+    "colCheckIn": "Дата заезда",
+    "colExpectedOut": "Ожидаемый выезд",
+    "colDays": "Дней",
+    "colStatus": "Статус",
+    "statusOccupied": "В палате",
+    "statusVacated": "Выписан",
+    "note": "Примечание",
+    "detailTitle": "Детали палаты",
+    "detailDescription": "Полная информация о пациенте и палате",
+    "editTitle": "Редактировать палату",
+    "dates": "Даты",
+    "actualOut": "Фактическая выписка",
+    "roomFull": "Палата заполнена"
   }
 }

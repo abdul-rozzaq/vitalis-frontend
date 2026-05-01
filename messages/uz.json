@@ -9,7 +9,8 @@
     "assignments": "Tayinlovlar",
     "lab": "Laboratoriya",
     "laboratories": "Laboratoriyalar",
-    "signOut": "Chiqish"
+    "signOut": "Chiqish",
+    "wards": "Palatalar"
   },
   "common": {
     "filter": "Filtr",
@@ -40,7 +41,8 @@
     "all": "Hammasi",
     "allDepartments": "Barcha bo‘limlar",
     "reset": "Tozalash",
-    "search": "Qidirish"
+    "search": "Qidirish",
+    "info": "Ma'lumot"
   },
   "table": {
     "noResults": "Natija topilmadi.",
@@ -406,7 +408,13 @@
     "backToAssignments": "Tayinlashlarga qaytish",
     "weeklySchedule": "Haftalik jadval",
     "notFound": "Tayinlash topilmadi.",
-    "createdAt": "Yaratilgan"
+    "createdAt": "Yaratilgan",
+    "colOccupancy": "Band o'rinlar",
+    "occupied": "Band",
+    "free": "Bo'sh",
+    "bedsOccupied": "o'rin band",
+    "roomDetail": "Xona tafsilotlari",
+    "roomDetailDesc": "Xona va uning sig'imi haqida ma'lumot"
   },
   "forms": {
     "cancel": "Bekor qilish",
@@ -684,5 +692,29 @@
     "noStaff": "Xodim tayinlanmagan.",
     "active": "Faol",
     "inactive": "Faol emas"
+  },
+  "wards": {
+    "title": "Palata bandligi",
+    "description": "Bemorlarni palataga yotqizish va chiqarishni boshqarish.",
+    "checkIn": "Palataga yotqizish",
+    "checkInTitle": "Bemorni palataga yotqizish",
+    "checkOut": "Palatadan chiqarish",
+    "checkOutConfirm": "Bemorni palatadan chiqarishni tasdiqlaysizmi?",
+    "colPatient": "Bemor",
+    "colRoom": "Xona",
+    "colWardNumber": "Palata raqami",
+    "colCheckIn": "Yotgan sana",
+    "colExpectedOut": "Taxminiy chiqish",
+    "colDays": "Kun",
+    "colStatus": "Holat",
+    "statusOccupied": "Yotmoqda",
+    "statusVacated": "Chiqib ketgan",
+    "note": "Izoh",
+    "detailTitle": "Palata tafsilotlari",
+    "detailDescription": "Bemor va xona haqida to'liq ma'lumot",
+    "editTitle": "Palatani tahrirlash",
+    "dates": "Sanalar",
+    "actualOut": "Haqiqiy chiqish",
+    "roomFull": "Xona to'lgan"
   }
 }

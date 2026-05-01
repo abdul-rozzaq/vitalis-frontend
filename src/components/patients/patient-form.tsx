@@ -1,5 +1,6 @@
 "use client";
 
+import formatPhone from "@/components/formatPhone";
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -42,6 +43,12 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     initialData?.district?.regionId ?? ""
   );
 
+  useEffect(() => {
+    if (initialData?.district?.regionId) {
+      setSelectedRegionId(initialData.district.regionId);
+    }
+  }, [initialData?.district?.regionId]);
+
   const patientSchema = z.object({
     first_name: z.string().min(2, t("forms.firstNameTooShort")),
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
@@ -55,7 +62,6 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       .min(1, t("forms.birthDateRequired"))
       .transform((val) => new Date(val).toISOString()),
     address: z.string().optional().or(z.literal("")),
-    // bo'sh string "" ham qabul qilinadi
     blood_type: z
       .enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"])
       .nullable()
@@ -111,12 +117,31 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     }
   }, [districts, initialData?.districtId, setValue]);
 
+  useEffect(() => {
+    if (initialData?.phone_number) {
+      setValue("phone_number", formatPhone(initialData.phone_number));
+    }
+  }, [initialData?.phone_number, setValue]);
+
+  useEffect(() => {
+    if (initialData?.gender) {
+      setValue("gender", initialData.gender.toLowerCase() as "male" | "female");
+    }
+  }, [initialData?.gender, setValue]);
+
+  useEffect(() => {
+    if (initialData?.birth_date) {
+      const date = new Date(initialData.birth_date);
+      const formattedDate = date.toISOString().split('T')[0]; 
+      setValue("birth_date", formattedDate);
+    }
+  }, [initialData?.birth_date, setValue]);
+
   const handleFormSubmit = (data: PatientFormValues) => {
     const cleanedPhone = data.phone_number.replace(/\s|\(|\)|-/g, "");
     onSubmit({
       ...data,
       phone_number: cleanedPhone,
-      // bo'sh string "" => null ga o'giriladi
       blood_type: (data.blood_type as string) === "" ? null : data.blood_type,
       document_type: (data.document_type as string) === "" ? null : data.document_type,
       document_series: data.document_series || null,
