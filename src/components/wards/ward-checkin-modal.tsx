@@ -17,18 +17,15 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
-  const [wardNumber, setWardNumber] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
 
-  // Bemorlar ro'yxati
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((r) => r.data),
     enabled: open,
   });
 
-  // Faqat WARD tipli xonalar — /api/rooms/wards endpointi
   const { data: rooms = [] } = useQuery({
     queryKey: ["rooms-wards"],
     queryFn: () => api.get("/rooms/wards").then((r) => r.data),
@@ -40,7 +37,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
       api.post("/wards/check-in", {
         patientId,
         roomId,
-        wardNumber: wardNumber || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
       }),
@@ -53,7 +49,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const handleClose = () => {
     setPatientId("");
     setRoomId("");
-    setWardNumber("");
     setExpectedOut("");
     setNote("");
     onClose();
@@ -72,7 +67,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -82,7 +76,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
               onChange={(e) => setPatientId(e.target.value)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
-              <option value="">{t("common.select")}</option>
+              <option value="">{t("forms.select")}</option>
               {patients.map((p: any) => (
                 <option key={p.id} value={p.id}>
                   {p.first_name} {p.last_name}
@@ -91,7 +85,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
             </select>
           </div>
 
-          {/* Xona — faqat WARD tiplilar */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colRoom")} *
@@ -101,7 +94,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
               onChange={(e) => setRoomId(e.target.value)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
-              <option value="">{t("common.select")}</option>
+              <option value="">{t("forms.select")}</option>
               {rooms.map((r: any) => (
                 <option key={r.id} value={r.id} disabled={r.isFull}>
                   {r.name}
@@ -112,22 +105,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
             </select>
           </div>
 
-          {/* Palata raqami */}
-          <div>
-            <label className="text-sm font-medium text-text mb-1 block">
-              {t("wards.colWardNumber")}
-            </label>
-            <input
-              type="text"
-              value={wardNumber}
-              onChange={(e) => setWardNumber(e.target.value)}
-              placeholder="12-A"
-              maxLength={20}
-              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
-            />
-          </div>
-
-          {/* Taxminiy chiqish */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colExpectedOut")}
@@ -140,7 +117,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
             />
           </div>
 
-          {/* Izoh */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.note")}

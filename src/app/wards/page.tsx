@@ -15,7 +15,6 @@ import { useMemo, useState } from "react";
 
 interface Ward {
   id: string;
-  wardNumber: string | null;
   checkIn: string;
   expectedOut: string | null;
   actualOut: string | null;
@@ -42,7 +41,6 @@ export default function WardsPage() {
     refetchOnWindowFocus: false,
   });
 
-  // Detail for single ward
   const { data: wardDetail, isLoading: isDetailLoading } = useQuery<Ward>({
     queryKey: ["ward", detailId],
     queryFn: () => api.get(`/wards/${detailId}`).then((res) => res.data),
@@ -112,13 +110,6 @@ export default function WardsPage() {
         ),
       },
       {
-        accessorKey: "wardNumber",
-        header: t("wards.colWardNumber"),
-        cell: (info: any) => (
-          <span className="text-sm">{info.getValue() ?? "—"}</span>
-        ),
-      },
-      {
         accessorKey: "checkIn",
         header: t("wards.colCheckIn"),
         cell: (info: any) => (
@@ -151,8 +142,8 @@ export default function WardsPage() {
           return (
             <span
               className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-500"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-500"
                 }`}
             >
               {val === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
@@ -269,12 +260,11 @@ export default function WardsPage() {
           </div>
         ) : wardDetail ? (
           <div className="space-y-5">
-            {/* Status badge */}
             <div className="flex items-center gap-2">
               <span
                 className={`px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-500"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-500"
                   }`}
               >
                 {wardDetail.status === "OCCUPIED"
@@ -283,7 +273,6 @@ export default function WardsPage() {
               </span>
             </div>
 
-            {/* Patient info */}
             <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
               <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.colPatient")}
@@ -293,25 +282,16 @@ export default function WardsPage() {
               </p>
             </div>
 
-            {/* Room & ward number */}
             <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
               <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.colRoom")}
               </h4>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BedDouble className="w-4 h-4 text-primary" />
-                  <span className="text-text font-medium">{wardDetail.room.name}</span>
-                </div>
-                {wardDetail.wardNumber && (
-                  <span className="text-sm text-secondary">
-                    #{wardDetail.wardNumber}
-                  </span>
-                )}
+              <div className="flex items-center gap-2">
+                <BedDouble className="w-4 h-4 text-primary" />
+                <span className="text-text font-medium">{wardDetail.room.name}</span>
               </div>
             </div>
 
-            {/* Dates */}
             <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
               <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.dates")}
@@ -360,7 +340,6 @@ export default function WardsPage() {
               </div>
             </div>
 
-            {/* Note */}
             {wardDetail.note && (
               <div className="bg-surface border border-border rounded-lg p-4 space-y-2">
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
@@ -370,7 +349,6 @@ export default function WardsPage() {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA", "KASSIR"]}>
                 <button
@@ -384,8 +362,8 @@ export default function WardsPage() {
                   {t("common.edit")}
                 </button>
               </Can>
-              <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
-                {wardDetail.status === "OCCUPIED" && (
+              {wardDetail.status === "OCCUPIED" && (
+                <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
                   <button
                     onClick={() => {
                       setDetailId(null);
@@ -396,8 +374,8 @@ export default function WardsPage() {
                     <Trash2 className="w-3.5 h-3.5" />
                     {t("wards.checkOut")}
                   </button>
-                )}
-              </Can>
+                </Can>
+              )}
             </div>
           </div>
         ) : null}
