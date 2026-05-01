@@ -26,11 +26,14 @@ export function WardCheckInModal({ open, onClose }: Props) {
     enabled: open,
   });
 
-  const { data: rooms = [] } = useQuery({
-    queryKey: ["rooms-wards"],
-    queryFn: () => api.get("/rooms/wards").then((r) => r.data),
+  // /rooms/wards emas — /rooms dan olib, WARD tiplilarni filter qilamiz
+  const { data: allRooms = [] } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: () => api.get("/rooms").then((r) => r.data),
     enabled: open,
   });
+
+  const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
@@ -98,11 +101,14 @@ export function WardCheckInModal({ open, onClose }: Props) {
               {rooms.map((r: any) => (
                 <option key={r.id} value={r.id} disabled={r.isFull}>
                   {r.name}
-                  {r.capacity ? ` (${r.occupiedCount}/${r.capacity})` : ""}
-                  {r.isFull ? ` — ${t("wards.roomFull")}` : ""}
+                  {r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}
+                  {r.isFull ? ` — ${t("wards.full")}` : ""}
                 </option>
               ))}
             </select>
+            {rooms.length === 0 && (
+              <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>
+            )}
           </div>
 
           <div>
@@ -113,6 +119,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
               type="date"
               value={expectedOut}
               onChange={(e) => setExpectedOut(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>

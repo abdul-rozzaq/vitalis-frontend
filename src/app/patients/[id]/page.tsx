@@ -20,7 +20,7 @@ import {
   formatDate,
   formatTime,
   resolveFileUrl,
-  toAssignmentOptions
+  toAssignmentOptions,
 } from "@/features/patients/detail/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
@@ -29,6 +29,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRightCircle,
+  BedDouble,
   Building2,
   Calendar,
   CheckCircle2,
@@ -55,7 +56,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
-
 const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
   CHECKIN: ClipboardCheck,
   CONSULTATION: Stethoscope,
@@ -81,23 +81,17 @@ const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
   CANCELLED: "bg-red-50 text-red-600",
 };
 
-const CASE_STATUS_BADGE: Record<string, string> = {
+const CASE_STATUS_COLOR: Record<string, string> = {
   ACTIVE: "bg-blue-50 text-blue-700 border-blue-200",
   COMPLETED: "bg-green-50 text-green-700 border-green-200",
   CANCELLED: "bg-surface-hover text-secondary border-border",
 };
 
-const CASE_STATUS_BORDER: Record<string, string> = {
-  ACTIVE: "border-l-blue-400 dark:border-l-blue-600",
-  COMPLETED: "border-l-green-400 dark:border-l-green-600",
-  CANCELLED: "border-l-border",
-};
-
 const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
-  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
-  DONE: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
-  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
+  PENDING: "bg-gray-100 text-gray-600",
+  IN_PROGRESS: "bg-blue-50 text-blue-600",
+  DONE: "bg-green-50 text-green-600",
+  CANCELLED: "bg-red-50 text-red-600",
 };
 
 function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
@@ -117,11 +111,14 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
             <span className="text-sm font-medium text-text">{t(`cases.stepType.${step.type}`)}</span>
             {step.assignment && (
               <p className="text-xs text-secondary mt-0.5">
-                Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} — {step.assignment.department.name}
+                Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} —{" "}
+                {step.assignment.department.name}
               </p>
             )}
           </div>
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}>
+          <span
+            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}
+          >
             {t(`cases.stepStatus.${step.status}`)}
           </span>
         </div>
@@ -134,7 +131,10 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
               const style = PAYMENT_STATUS_STYLES[payment.status === "PAID" ? "PAID" : "PENDING"];
               const PayIcon = style.icon;
               return (
-                <div key={payment.id} className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border}`}>
+                <div
+                  key={payment.id}
+                  className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border}`}
+                >
                   <div className="flex items-center gap-1.5">
                     <PayIcon className={`w-3.5 h-3.5 ${style.text}`} />
                     <span className={`font-medium ${style.text}`}>{payment.status}</span>
@@ -154,8 +154,13 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
         {files.length > 0 && (
           <div className="space-y-1">
             {files.map((file) => (
-              <a key={file.id} href={resolveFileUrl(file.url)} target="_blank" rel="noreferrer"
-                className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors">
+              <a
+                key={file.id}
+                href={resolveFileUrl(file.url)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors"
+              >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Paperclip className="w-3.5 h-3.5 text-secondary shrink-0" />
                   <span className="text-xs text-text truncate">{file.name}</span>
@@ -167,53 +172,38 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
         )}
 
         {step.labOrder && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            {/* Lab header */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover border-b border-border">
-              <FlaskConical className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400 shrink-0" />
-              <span className="text-[11px] font-semibold text-secondary uppercase tracking-wider">
-                {step.labOrder.laboratory.name}
-              </span>
-            </div>
-            {/* Items */}
-            <div className="divide-y divide-border">
-              {step.labOrder.items.map((item) => (
-                <div key={item.id} className="px-3 py-2 space-y-1.5 bg-surface">
-                  {/* Service name + status */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-text truncate">{item.service.name}</span>
-                    <span className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
-                      {t(`lab.itemStatus.${item.status}`)}
-                    </span>
-                  </div>
-                  {/* Files */}
-                  {item.files && item.files.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      {item.files.map((f) => (
-                        <a
-                          key={f.id}
-                          href={resolveFileUrl(f.url)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-2 bg-surface-hover hover:bg-border border border-border rounded-md px-2 py-1.5 transition-colors group"
-                        >
-                          <Download className="w-3.5 h-3.5 text-secondary shrink-0 group-hover:text-primary transition-colors" />
-                          <span className="text-xs text-text truncate flex-1 group-hover:text-primary transition-colors">
-                            {f.name}
-                          </span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+              {step.labOrder.laboratory.name}
+            </p>
+            {step.labOrder.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between text-xs bg-purple-50 rounded-md px-2.5 py-1.5 gap-2"
+              >
+                <span className="text-purple-700 font-medium truncate">{item.service.name}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.files?.map((f) => (
+                    <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name}>
+                      <Download className="w-3.5 h-3.5 text-purple-500" />
+                    </a>
+                  ))}
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}
+                  >
+                    {t(`lab.itemStatus.${item.status}`)}
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
         {step.appointment && (
-          <Link href={`/appointments/${step.appointment.id}`}
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+          <Link
+            href={`/appointments/${step.appointment.id}`}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
             <FileText className="w-3 h-3" />
             {t("appointments.viewDetails")}
           </Link>
@@ -242,10 +232,14 @@ function CaseCard({
   const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
-      <div className={`px-4 py-3 border-b border-border bg-surface-hover flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}>
+      <div
+        className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}
+      >
         <div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${CASE_STATUS_BADGE[patientCase.status]}`}>
+            <span
+              className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}
+            >
               {t(`cases.status.${patientCase.status}`)}
             </span>
             {patientCase.chiefComplaint && (
@@ -310,23 +304,11 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         </div>
       </div>
 
-      {/* <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text flex items-center gap-2">
-          <Phone className="w-4 h-4 text-primary-500" />
-          {t("forms.phone")}
-        </label>
-        <input
-          defaultValue={patient.phone_number}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
-      </div> */}
-
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
         </label>
-
         <input
           value={phone.value}
           onChange={phone.onChange}
@@ -414,31 +396,24 @@ export default function PatientDetailPage() {
   const t = useTranslations();
   const { user } = useAuth();
 
-  // ADMIN + DIREKTOR rollari summani ko'ra oladi
   const AMOUNT_ALLOWED_ROLES = ["ADMIN", "DIREKTOR"];
-  const canSeeAmount =
-    AMOUNT_ALLOWED_ROLES.includes((user?.role as string)?.toUpperCase() ?? "");
+  const canSeeAmount = AMOUNT_ALLOWED_ROLES.includes(typeof user?.role === "string" ? user.role.toUpperCase() : "");
 
   const queryClient = useQueryClient();
-  const [sheetMode, setSheetMode] = useState<SheetMode>(null);
+  const [sheetMode, setSheetMode] = useState<SheetMode | "ward">(null);
 
-  // --- Pasport ma'lumotlari uchun yangi state'lar ---
   const [docRevealed, setDocRevealed] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
 
   const handleRevealDoc = async () => {
     setDocLoading(true);
     try {
-      // Real API endpoint bo'lsa:
-      // await api.get(`/patients/${id}/document`);
-      // Hozircha simulate qilinmoqda:
       await new Promise((resolve) => setTimeout(resolve, 1200));
       setDocRevealed(true);
     } finally {
       setDocLoading(false);
     }
   };
-  // -------------------------------------------------
 
   const { data: patientData } = useQuery({
     queryKey: ["patient", id],
@@ -527,11 +502,65 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
+  // ─── Palata ───────────────────────────────────────────────────────────────
+  const [wardRoomId, setWardRoomId] = useState("");
+  const [wardExpectedOut, setWardExpectedOut] = useState("");
+  const [wardNote, setWardNote] = useState("");
+
+  const { data: wardRoomsRaw = [] } = useQuery<any[]>({
+    queryKey: ["rooms-wards"],
+    queryFn: () => api.get("/rooms/wards").then((r) => r.data),
+    enabled: sheetMode === "ward",
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: activeWard } = useQuery<any>({
+    queryKey: ["patient-ward", id],
+    queryFn: () =>
+      api.get(`/wards?patientId=${id}&status=OCCUPIED&limit=1`).then((r) => {
+        const d = r.data?.data ?? r.data;
+        return Array.isArray(d) && d.length > 0 ? d[0] : null;
+      }),
+    refetchOnWindowFocus: false,
+  });
+
+  const { mutate: wardCheckIn, isPending: isWardCheckin } = useMutation({
+    mutationFn: () =>
+      api.post("/wards/check-in", {
+        patientId: id,
+        roomId: wardRoomId,
+        expectedOut: wardExpectedOut || undefined,
+        note: wardNote || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-ward", id] });
+      queryClient.invalidateQueries({ queryKey: ["wards"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms-wards"] });
+      setWardRoomId("");
+      setWardExpectedOut("");
+      setWardNote("");
+      setSheetMode(null);
+    },
+  });
+
+  const { mutate: wardCheckOut, isPending: isWardCheckout } = useMutation({
+    mutationFn: (wardId: string) => api.patch(`/wards/${wardId}/check-out`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-ward", id] });
+      queryClient.invalidateQueries({ queryKey: ["wards"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms-wards"] });
+    },
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   const patient: Patient =
     patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
 
   const cases = useMemo(
-    () => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()),
+    () =>
+      [...casesData].sort(
+        (a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime(),
+      ),
     [casesData],
   );
 
@@ -617,7 +646,6 @@ export default function PatientDetailPage() {
               </div>
             </div>
 
-            {/* Divider */}
             <div className="h-px bg-border" />
 
             {/* Details */}
@@ -633,18 +661,10 @@ export default function PatientDetailPage() {
                 </div>
               )}
 
-              {/* <div className="flex items-center gap-2.5 text-sm text-secondary">
-                <Phone className="w-4 h-4 text-text-muted shrink-0" />
-                <span className="font-mono">{patient.phone_number}</span>
-              </div> */}
-
               <div className="flex items-center gap-2.5 text-sm text-secondary">
                 <Phone className="w-4 h-4 text-text-muted shrink-0" />
-                <span className="font-mono">
-                  {formatPhone(patient.phone_number)}
-                </span>
+                <span className="font-mono">{formatPhone(patient.phone_number)}</span>
               </div>
-
 
               {patient.district?.region?.name && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
@@ -666,7 +686,7 @@ export default function PatientDetailPage() {
                 </div>
               )}
 
-              {/* ── Pasport / hujjat ma'lumotlari ── */}
+              {/* Pasport / hujjat ma'lumotlari */}
               {hasDocInfo && (
                 <div className="space-y-2 pt-1">
                   {!docRevealed ? (
@@ -741,10 +761,8 @@ export default function PatientDetailPage() {
                   )}
                 </div>
               )}
-              {/* ─────────────────────────────────── */}
             </div>
 
-            {/* Divider */}
             <div className="h-px bg-border" />
 
             {/* Stats */}
@@ -816,6 +834,47 @@ export default function PatientDetailPage() {
               <FileText className="w-4 h-4" />
               {t("medicalCard.myCards")}
             </Link>
+
+            {/* ── Palata ── */}
+            <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
+              {activeWard ? (
+                <div className="space-y-1.5">
+                  <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
+                    <BedDouble className="w-4 h-4 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{activeWard.room?.name}</p>
+                      <p className="text-xs font-normal text-green-600">
+                        {t("wards.statusOccupied")} ·{" "}
+                        {Math.max(
+                          1,
+                          Math.ceil(
+                            (Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000,
+                          ),
+                        )}{" "}
+                        {t("wards.colDays")}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm(t("wards.checkOutConfirm"))) wardCheckOut(activeWard.id);
+                    }}
+                    disabled={isWardCheckout}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition-colors cursor-pointer disabled:opacity-40"
+                  >
+                    {isWardCheckout ? t("common.loading") : t("wards.checkOut")}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSheetMode("ward")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+                >
+                  <BedDouble className="w-4 h-4" />
+                  {t("wards.checkIn")}
+                </button>
+              )}
+            </Can>
           </div>
 
           {/* Departments visited */}
@@ -860,10 +919,7 @@ export default function PatientDetailPage() {
           {isTimelineLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-surface border border-border rounded-xl p-4 animate-pulse"
-                >
+                <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse">
                   <div className="h-4 bg-border rounded w-1/3 mb-3" />
                   <div className="h-3 bg-border rounded w-2/3" />
                 </div>
@@ -943,29 +999,113 @@ export default function PatientDetailPage() {
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
 
+      {/* ── Palata yotqizish Sheet ── */}
+      <Sheet
+        isOpen={sheetMode === "ward"}
+        onClose={() => setSheetMode(null)}
+        title={t("wards.checkInTitle")}
+        description={t("wards.detailDescription")}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("wards.colRoom")} *</label>
+            <select
+              value={wardRoomId}
+              onChange={(e) => setWardRoomId(e.target.value)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            >
+              <option value="">{t("forms.select")}</option>
+              {wardRoomsRaw.map((r: any) => (
+                <option key={r.id} value={r.id} disabled={r.isFull}>
+                  {r.name}
+                  {r.capacity ? ` (${r.occupiedCount}/${r.capacity})` : ""}
+                  {r.isFull ? ` — ${t("wards.roomFull")}` : ""}
+                </option>
+              ))}
+            </select>
+            {wardRoomsRaw.length === 0 && (
+              <p className="text-xs text-text-muted">{t("common.loading")}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              {t("wards.colExpectedOut")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <input
+              type="date"
+              value={wardExpectedOut}
+              onChange={(e) => setWardExpectedOut(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              {t("wards.note")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <textarea
+              value={wardNote}
+              onChange={(e) => setWardNote(e.target.value)}
+              rows={3}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setSheetMode(null)}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              {t("forms.cancel")}
+            </button>
+            <button
+              type="button"
+              disabled={!wardRoomId || isWardCheckin}
+              onClick={() => wardCheckIn()}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
+              {isWardCheckin ? t("common.loading") : t("wards.checkIn")}
+            </button>
+          </div>
+        </div>
+      </Sheet>
+
       <Sheet
         isOpen={addStepCaseId !== null}
-        onClose={() => { setAddStepCaseId(null); resetStepForm(); }}
+        onClose={() => {
+          setAddStepCaseId(null);
+          resetStepForm();
+        }}
         title={t("cases.addStep")}
         description={t("cases.addStepDesc")}
       >
         <div className="space-y-4">
-          {/* Step type */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("cases.stepTypeLabel")}</label>
             <select
               value={stepType}
-              onChange={(e) => { setStepType(e.target.value as CaseStepType); setStepAssignmentId(""); }}
+              onChange={(e) => {
+                setStepType(e.target.value as CaseStepType);
+                setStepAssignmentId("");
+              }}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             >
               <option value="">{t("forms.select")}</option>
-              {(["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"] as CaseStepType[]).map((type) => (
-                <option key={type} value={type}>{t(`cases.stepType.${type}`)}</option>
-              ))}
+              {(["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"] as CaseStepType[]).map(
+                (type) => (
+                  <option key={type} value={type}>
+                    {t(`cases.stepType.${type}`)}
+                  </option>
+                ),
+              )}
             </select>
           </div>
 
-          {/* CONSULTATION: assignment + dateTime + amount */}
           {stepType === "CONSULTATION" && (
             <>
               <div className="space-y-1.5">
@@ -1004,14 +1144,16 @@ export default function PatientDetailPage() {
             </>
           )}
 
-          {/* LAB: lab department + services multi-select */}
           {stepType === "LAB" && (
             <>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-text">{t("lab.labDepartment")}</label>
                 <select
                   value={labDepartmentId}
-                  onChange={(e) => { setLabDepartmentId(e.target.value); setSelectedServiceIds([]); }}
+                  onChange={(e) => {
+                    setLabDepartmentId(e.target.value);
+                    setSelectedServiceIds([]);
+                  }}
                   className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
                 >
                   <option value="">{t("forms.select")}</option>
@@ -1063,7 +1205,6 @@ export default function PatientDetailPage() {
             </>
           )}
 
-          {/* PROCEDURE: amount */}
           {stepType === "PROCEDURE" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
@@ -1078,7 +1219,6 @@ export default function PatientDetailPage() {
             </div>
           )}
 
-          {/* REFERRAL: optional assignment */}
           {stepType === "REFERRAL" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">
@@ -1098,7 +1238,6 @@ export default function PatientDetailPage() {
             </div>
           )}
 
-          {/* Note (all types) */}
           {stepType && stepType !== "CHECKIN" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">
@@ -1118,7 +1257,10 @@ export default function PatientDetailPage() {
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={() => { setAddStepCaseId(null); resetStepForm(); }}
+              onClick={() => {
+                setAddStepCaseId(null);
+                resetStepForm();
+              }}
               className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
             >
               {t("forms.cancel")}
