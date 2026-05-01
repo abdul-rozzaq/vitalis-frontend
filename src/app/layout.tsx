@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   title: "Vitalis CRM | Hospital Management",
   description: "Minimalist Hospital CRM System",
   icons: {
-    icon: "/logo.png",        // brauzer tab icon
-    apple: "/logo.png",       // iOS uchun
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
