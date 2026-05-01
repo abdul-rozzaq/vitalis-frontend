@@ -9,7 +9,8 @@
     "assignments": "Assignments",
     "lab": "Laboratory",
     "laboratories": "Laboratories",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "wards": "Wards"
   },
   "common": {
     "filter": "Filter",
@@ -41,7 +42,8 @@
     "all": "All",
     "allDepartments": "All departments",
     "reset": "Reset",
-    "search": "Search"
+    "search": "Search",
+    "info": "Information"
   },
   "table": {
     "noResults": "No results.",
@@ -408,7 +410,13 @@
     "backToAssignments": "Back to Assignments",
     "weeklySchedule": "Weekly Schedule",
     "notFound": "Assignment not found.",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "colOccupancy": "Occupancy",
+    "occupied": "Occupied",
+    "free": "Free",
+    "bedsOccupied": "beds occupied",
+    "roomDetail": "Room Details",
+    "roomDetailDesc": "Information about the room and its capacity"
   },
   "forms": {
     "cancel": "Cancel",
@@ -686,5 +694,29 @@
     "noStaff": "No staff assigned.",
     "active": "Active",
     "inactive": "Inactive"
+  },
+  "wards": {
+    "title": "Ward Management",
+    "description": "Manage patient check-ins and check-outs.",
+    "checkIn": "Check In",
+    "checkInTitle": "Check In Patient",
+    "checkOut": "Check Out",
+    "checkOutConfirm": "Confirm patient check-out?",
+    "colPatient": "Patient",
+    "colRoom": "Room",
+    "colWardNumber": "Ward No.",
+    "colCheckIn": "Check-in Date",
+    "colExpectedOut": "Expected Out",
+    "colDays": "Days",
+    "colStatus": "Status",
+    "statusOccupied": "Occupied",
+    "statusVacated": "Vacated",
+    "note": "Note",
+    "detailTitle": "Ward Details",
+    "detailDescription": "Full information about the patient and ward",
+    "editTitle": "Edit Ward",
+    "dates": "Dates",
+    "actualOut": "Actual Discharge",
+    "roomFull": "Room is full"
   }
 }

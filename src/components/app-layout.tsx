@@ -5,19 +5,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import Lottie from "lottie-react";
 import {
-  Bell,
-  Building2,
-  Calendar,
-  CreditCard,
-  FlaskConical,
-  GitFork,
-  LogOut,
-  Microscope,
-  Moon,
-  Sun,
-  User,
-  UserPen,
-  Users,
+  BedDouble,
+  Bell, Building2, Calendar, CreditCard,
+  FlaskConical, GitFork, LogOut, Microscope,
+  Moon, Sun, User, UserPen, Users
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -66,6 +57,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       icon: CreditCard,
       roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR", "DOCTOR"],
     },
+    {
+  label: t("nav.wards"),
+  href: "/wards",
+  icon: BedDouble,
+  roles: ["ADMIN", "DOCTOR", "HAMSHIRA", "DIREKTOR"],
+},
     {
       label: t("nav.lab"),
       href: "/lab",
