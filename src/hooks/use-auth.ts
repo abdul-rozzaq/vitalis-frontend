@@ -49,8 +49,10 @@ export function useAuth() {
     router.push("/login");
   };
 
+  const PUBLIC_PATHS = ["/login", "/board"];
+
   useEffect(() => {
-    if (!isLoading && !user && pathname !== "/login") {
+    if (!isLoading && !user && !PUBLIC_PATHS.includes(pathname)) {
       router.push("/login");
     }
     if (!isLoading && user && pathname === "/login") {

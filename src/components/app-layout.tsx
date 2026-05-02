@@ -17,7 +17,7 @@ import React, { useState } from "react";
 import { Can } from "./ui/can";
 import { PatientSearch } from "./ui/patient-search";
 
-const IGNORE_PATHS = ["/login"];
+const IGNORE_PATHS = ["/login", "/board"];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
