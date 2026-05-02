@@ -717,6 +717,21 @@
     "editTitle": "Edit Ward",
     "dates": "Dates",
     "actualOut": "Actual Discharge",
-    "roomFull": "Room is full"
+    "roomFull": "Room is full",
+    "checkOutTitle": "Patient Discharge",
+    "expectedOut": "Expected Discharge Date",
+    "daysStayed": "Days Stayed",
+    "currentDay": "day",
+    "allRooms": "All Rooms",
+    "allStatuses": "All Statuses",
+    "total": "Total",
+    "avgDays": "Average Days",
+    "noWards": "No records found",
+    "records": "records",
+    "roomTypePalata": "Ward",
+    "roomTypeExam": "Examination Room",
+    "full": "Full",
+    "available": "Available",
+    "freeSlots": "Free Slots"
   }
 }
