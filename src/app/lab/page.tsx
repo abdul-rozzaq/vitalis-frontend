@@ -19,17 +19,17 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 const ORDER_STATUS_STYLES = {
-  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
-  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
-  COMPLETED: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
-  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
+  PENDING: "bg-amber-500 text-white dark:bg-amber-600 shadow-sm font-medium",
+  IN_PROGRESS: "bg-blue-600 text-white dark:bg-blue-500 shadow-sm font-medium",
+  COMPLETED: "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm font-medium",
+  CANCELLED: "bg-red-600 text-white dark:bg-red-500 shadow-sm font-medium",
 };
 
 const ITEM_STATUS_STYLES: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
-  IN_PROGRESS: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
-  DONE: "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400",
-  CANCELLED: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
+  PENDING: "bg-amber-500 text-white dark:bg-amber-600 shadow-sm font-medium",
+  IN_PROGRESS: "bg-blue-600 text-white dark:bg-blue-500 shadow-sm font-medium",
+  DONE: "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm font-medium",
+  CANCELLED: "bg-red-600 text-white dark:bg-red-500 shadow-sm font-medium",
 };
 
 interface ItemEditForm {
@@ -85,7 +85,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
   };
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden">
+    <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-start justify-between px-4 py-3 gap-3">
         <div className="flex items-start gap-3 min-w-0">
@@ -102,7 +102,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_STYLES[order.status]}`}
+            className={`px-2 py-0.5 rounded-full text-xs ${ORDER_STATUS_STYLES[order.status]}`}
           >
             {t(`lab.orderStatus.${order.status}`)}
           </span>
@@ -111,7 +111,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
           </p>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="p-1 hover:bg-surface-hover rounded"
+            className="p-1 hover:bg-surface-hover rounded transition-colors"
           >
             {expanded ? (
               <ChevronUp className="w-4 h-4 text-text-muted" />
@@ -124,7 +124,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
 
       {/* Items */}
       {expanded && (
-        <div className="border-t border-border divide-y divide-border">
+        <div className="border-t border-border/60 divide-y divide-border/60 bg-surface-secondary/30">
           {order.items.map((item) => (
             <div key={item.id} className="px-4 py-3">
               <div className="flex items-center justify-between gap-3">
@@ -132,15 +132,15 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   <p className="text-sm font-medium text-text">{item.service.name}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${ITEM_STATUS_STYLES[item.status]}`}
+                      className={`px-2 py-0.5 rounded-full text-xs ${ITEM_STATUS_STYLES[item.status]}`}
                     >
                       {t(`lab.itemStatus.${item.status}`)}
                     </span>
                     {item.payment && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.payment.status === "PAID"
-                            ? "bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400"
-                            : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                            ? "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm"
+                            : "bg-amber-600 text-white dark:bg-amber-500 shadow-sm"
                           }`}
                       >
                         {item.payment.amount.toLocaleString()} UZS ·{" "}
@@ -153,7 +153,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   {item.files.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                       {item.files.map((f) => (
-                        <div key={f.id} className="flex items-center gap-1 bg-purple-50 dark:bg-purple-950/40 rounded px-2 py-1">
+                        <div key={f.id} className="flex items-center gap-1 bg-purple-50 border border-purple-200/60 dark:border-none dark:bg-purple-950/40 rounded px-2 py-1">
                           <a
                             href={resolveFileUrl(f.url)}
                             target="_blank"
@@ -214,7 +214,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
 
               {/* Inline edit form */}
               {editingItemId === item.id && (
-                <div className="mt-3 p-3 bg-surface-secondary rounded-lg border border-border space-y-3">
+                <div className="mt-3 p-3 bg-surface-secondary rounded-lg border border-border/80 space-y-3">
                   {/* Status */}
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-text-muted uppercase tracking-wider">
@@ -223,7 +223,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     <select
                       value={form.status}
                       onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as LabItemStatus }))}
-                      className="w-full text-sm bg-input border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      className="w-full text-sm bg-input border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
                     >
                       {(["PENDING", "IN_PROGRESS", "DONE", "CANCELLED"] as LabItemStatus[]).map((s) => (
                         <option key={s} value={s}>
@@ -243,12 +243,12 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                       onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
                       placeholder={t("lab.notePlaceholder")}
                       rows={2}
-                      className="w-full text-sm bg-input border border-border rounded-lg px-3 py-2 text-text resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      className="w-full text-sm bg-input border border-border rounded-lg px-3 py-2 text-text resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-0.5">
                     <button
                       onClick={() =>
                         updateItem({
@@ -257,7 +257,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                         })
                       }
                       disabled={isUpdating}
-                      className="flex-1 flex items-center justify-center gap-2 text-sm bg-primary text-white rounded-lg px-3 py-2 hover:bg-primary-600 disabled:opacity-60 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 text-sm bg-primary text-white font-medium rounded-lg px-3 py-2 hover:bg-primary-600 disabled:opacity-60 transition-colors"
                     >
                       {isUpdating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -269,7 +269,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     <button
                       onClick={() => setEditingItemId(null)}
                       disabled={isUpdating}
-                      className="px-3 py-2 text-sm border border-border rounded-lg text-text hover:bg-surface-hover transition-colors"
+                      className="px-3 py-2 text-sm border border-border rounded-lg text-text hover:bg-surface-hover font-medium transition-colors"
                     >
                       {t("common.cancel")}
                     </button>
@@ -305,7 +305,7 @@ export default function LabPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-none flex items-center justify-center mb-4">
             <FlaskConical className="w-8 h-8 text-purple-400 dark:text-purple-500" />
           </div>
           <p className="text-text-muted text-sm">{t("lab.noOrders")}</p>
