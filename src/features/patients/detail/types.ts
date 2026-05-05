@@ -110,7 +110,7 @@ export type SheetMode = "checkin" | "visit" | "edit" | "editAppointment" | null;
 export interface AssignmentSource {
   id: string;
   user: { first_name: string; last_name: string };
-  department: { name: string };
+  department: { name: string; price: number };
   room?: { name: string } | null;
 }
 
