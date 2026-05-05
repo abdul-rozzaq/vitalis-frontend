@@ -1,5 +1,6 @@
 "use client";
 
+import { Combobox } from "@/components/ui/combobox"; // Loyihangizdagi Combobox komponenti yo'li
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";
@@ -34,6 +35,18 @@ export function WardCheckInModal({ open, onClose }: Props) {
   });
 
   const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
+
+  // Combobox uchun option'larni shakllantirish
+  const patientOptions = patients.map((p: any) => ({
+    label: `${p.first_name} ${p.last_name}`,
+    value: p.id,
+  }));
+
+  const roomOptions = rooms.map((r: any) => ({
+    label: `${r.name}${r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}${r.isFull ? ` — ${t("wards.full")}` : ""}`,
+    value: r.id,
+    disabled: r.isFull,
+  }));
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
@@ -74,38 +87,28 @@ export function WardCheckInModal({ open, onClose }: Props) {
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
             </label>
-            <select
+            <Combobox
+              options={patientOptions}
               value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
-            >
-              <option value="">{t("forms.select")}</option>
-              {patients.map((p: any) => (
-                <option key={p.id} value={p.id}>
-                  {p.first_name} {p.last_name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setPatientId(val as string)}
+              placeholder={t("forms.select")}
+              searchPlaceholder={t("common.search")}
+              disabled={isPending}
+            />
           </div>
 
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colRoom")} *
             </label>
-            <select
+            <Combobox
+              options={roomOptions}
               value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
-            >
-              <option value="">{t("forms.select")}</option>
-              {rooms.map((r: any) => (
-                <option key={r.id} value={r.id} disabled={r.isFull}>
-                  {r.name}
-                  {r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}
-                  {r.isFull ? ` — ${t("wards.full")}` : ""}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setRoomId(val as string)}
+              placeholder={t("forms.select")}
+              searchPlaceholder={t("common.search")}
+              disabled={isPending || rooms.length === 0}
+            />
             {rooms.length === 0 && (
               <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>
             )}
