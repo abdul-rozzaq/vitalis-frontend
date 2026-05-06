@@ -139,8 +139,8 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     {item.payment && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.payment.status === "PAID"
-                            ? "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm"
-                            : "bg-amber-600 text-white dark:bg-amber-500 shadow-sm"
+                          ? "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm"
+                          : "bg-amber-600 text-white dark:bg-amber-500 shadow-sm"
                           }`}
                       >
                         {item.payment.amount.toLocaleString()} UZS ·{" "}
@@ -248,7 +248,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-0.5">
+                  <div className="flex justify-end gap-2 pt-0.5">
                     <button
                       onClick={() =>
                         updateItem({
@@ -257,7 +257,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                         })
                       }
                       disabled={isUpdating}
-                      className="flex-1 flex items-center justify-center gap-2 text-sm bg-primary text-white font-medium rounded-lg px-3 py-2 hover:bg-primary-600 disabled:opacity-60 transition-colors"
+                      className="flex items-center justify-center gap-2 text-sm bg-primary text-white font-medium rounded-lg px-4 py-2 hover:bg-primary-600 disabled:opacity-60 transition-colors"
                     >
                       {isUpdating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -269,7 +269,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     <button
                       onClick={() => setEditingItemId(null)}
                       disabled={isUpdating}
-                      className="px-3 py-2 text-sm border border-border rounded-lg text-text hover:bg-surface-hover font-medium transition-colors"
+                      className="px-4 py-2 text-sm border border-border rounded-lg text-text hover:bg-surface-hover font-medium transition-colors"
                     >
                       {t("common.cancel")}
                     </button>
