@@ -732,6 +732,7 @@
     "roomTypeExam": "Examination Room",
     "full": "Full",
     "available": "Available",
-    "freeSlots": "Free Slots"
+    "freeSlots": "Free Slots",
+    "checkInHint": "If left empty, today's date will be used automatically"
   }
 }

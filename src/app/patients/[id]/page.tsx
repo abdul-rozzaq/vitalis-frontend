@@ -50,35 +50,36 @@ const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
   DISCHARGE: LogOut,
 };
 
+// ─── STEP TYPE COLORS ─────────────────────────────────────────────
 const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
-  CHECKIN: "bg-blue-50 text-blue-600",
-  CONSULTATION: "bg-primary-50 text-primary",
-  LAB: "bg-purple-50 text-purple-600",
-  PROCEDURE: "bg-orange-50 text-orange-600",
-  REFERRAL: "bg-yellow-50 text-yellow-600",
-  DISCHARGE: "bg-green-50 text-green-600",
+  CHECKIN:      "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
+  CONSULTATION: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+  LAB:          "bg-violet-200 text-violet-950 dark:bg-violet-900/40 dark:text-violet-200",
+  PROCEDURE:    "bg-orange-200 text-orange-950 dark:bg-orange-900/40 dark:text-orange-200",
+  REFERRAL:     "bg-yellow-200 text-yellow-950 dark:bg-yellow-900/40 dark:text-yellow-200",
+  DISCHARGE:    "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
 };
-
+// ─── STEP STATUS COLORS ───────────────────────────────────────────
 const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
-  PENDING: "bg-surface-hover text-secondary",
-  IN_PROGRESS: "bg-blue-50 text-blue-700",
-  DONE: "bg-green-50 text-green-700",
-  CANCELLED: "bg-red-50 text-red-600",
+  PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+  DONE: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
 };
 
+// ─── CASE STATUS COLORS ───────────────────────────────────────────
 const CASE_STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-green-50 text-green-700 border-green-200",
-  CANCELLED: "bg-surface-hover text-secondary border-border",
+  ACTIVE: "text-blue-700 border-blue-400 dark:text-blue-300 dark:border-blue-700",
+  COMPLETED: "text-green-700 border-green-400 dark:text-green-300 dark:border-green-700",
+  CANCELLED: "text-gray-500 border-gray-300 dark:text-neutral-400 dark:border-neutral-600",
 };
-
+// ─── LAB ITEM STATUS COLORS ───────────────────────────────────────
 const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-600",
-  IN_PROGRESS: "bg-blue-50 text-blue-600",
-  DONE: "bg-green-50 text-green-600",
-  CANCELLED: "bg-red-50 text-red-600",
+  PENDING:     "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200",
+  IN_PROGRESS: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
+  DONE:        "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+  CANCELLED:   "bg-red-200 text-red-950 dark:bg-red-900/40 dark:text-red-200",
 };
-
 function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
   const t = useTranslations();
   const Icon = STEP_ICONS[step.type];
@@ -100,7 +101,9 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
               </p>
             )}
           </div>
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}>{t(`cases.stepStatus.${step.status}`)}</span>
+          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}>
+            {t(`cases.stepStatus.${step.status}`)}
+          </span>
         </div>
 
         {step.note && <p className="text-xs text-text-muted italic">{step.note}</p>}
@@ -148,15 +151,17 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
           <div className="space-y-1">
             <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">{step.labOrder.laboratory.name}</p>
             {step.labOrder.items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-xs bg-purple-50 rounded-md px-2.5 py-1.5 gap-2">
-                <span className="text-purple-700 font-medium truncate">{item.service.name}</span>
-                <div className="flex items-center gap-2 shrink-0">
+              <div key={item.id} className="flex items-center justify-between text-xs bg-violet-200 dark:bg-violet-900/40 rounded-md px-2.5 py-1.5 gap-2">
+  <span className="text-violet-950 dark:text-violet-200 font-medium truncate">{item.service.name}</span>
+   <div className="flex items-center gap-2 shrink-0">
                   {item.files?.map((f) => (
                     <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name}>
-                      <Download className="w-3.5 h-3.5 text-purple-500" />
+                      <Download className="w-3.5 h-3.5 text-purple-400 dark:text-purple-300" />
                     </a>
                   ))}
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
+                    {t(`lab.itemStatus.${item.status}`)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -185,18 +190,19 @@ function CaseCard({ patientCase, showAmount, onAddStep }: { patientCase: Patient
   const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
-      <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>{t(`cases.status.${patientCase.status}`)}</span>
-            {patientCase.chiefComplaint && <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>}
-          </div>
-          {patientCase.closedAt && (
-            <p className="text-xs text-text-muted mt-0.5">
-              {t("cases.closedAt")}: {formatDate(patientCase.closedAt)}
-            </p>
-          )}
+      <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}> <div>
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>
+            {t(`cases.status.${patientCase.status}`)}
+          </span>
+          {patientCase.chiefComplaint && <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>}
         </div>
+        {patientCase.closedAt && (
+          <p className="text-xs text-text-muted mt-0.5">
+            {t("cases.closedAt")}: {formatDate(patientCase.closedAt)}
+          </p>
+        )}
+      </div>
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
           {patientCase.status === "ACTIVE" && onAddStep && (
@@ -276,7 +282,13 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         <div className="flex gap-4">
           {["male", "female"].map((g) => (
             <label key={g} className="flex items-center gap-2 cursor-pointer group">
-              <input type="radio" name="gender" value={g} defaultChecked={patient.gender === g} className="w-4 h-4 accent-primary-600 cursor-pointer" />
+              <input
+                type="radio"
+                name="gender"
+                value={g}
+                defaultChecked={patient.gender === g}
+                className="w-4 h-4 accent-primary-600 cursor-pointer"
+              />
               <span className="text-sm text-secondary capitalize">{g === "male" ? t("forms.male") : t("forms.female")}</span>
             </label>
           ))}
@@ -374,7 +386,10 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const assignmentsData = useMemo(() => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []), [assignmentsDataRaw]);
+  const assignmentsData = useMemo(
+    () => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []),
+    [assignmentsDataRaw]
+  );
 
   const assignmentOptions = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
 
@@ -435,6 +450,7 @@ export default function PatientDetailPage() {
 
   // ─── Palata ───────────────────────────────────────────────────────────────
   const [wardRoomId, setWardRoomId] = useState("");
+  const [wardCheckInDate, setWardCheckInDate] = useState("");   // ← QO'SHILDI (nom conflict yo'q)
   const [wardExpectedOut, setWardExpectedOut] = useState("");
   const [wardNote, setWardNote] = useState("");
 
@@ -455,11 +471,13 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { mutate: wardCheckIn, isPending: isWardCheckin } = useMutation({
+  // ← nom o'zgartirildi: wardCheckIn → doWardCheckIn (state bilan conflict yo'q)
+  const { mutate: doWardCheckIn, isPending: isWardCheckin } = useMutation({
     mutationFn: () =>
       api.post("/wards/check-in", {
         patientId: id,
         roomId: wardRoomId,
+        checkIn: wardCheckInDate || undefined,      // ← QO'SHILDI
         expectedOut: wardExpectedOut || undefined,
         note: wardNote || undefined,
       }),
@@ -468,6 +486,7 @@ export default function PatientDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
       queryClient.invalidateQueries({ queryKey: ["rooms-wards"] });
       setWardRoomId("");
+      setWardCheckInDate("");                       // ← QO'SHILDI
       setWardExpectedOut("");
       setWardNote("");
       setSheetMode(null);
@@ -486,17 +505,45 @@ export default function PatientDetailPage() {
 
   const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
 
-  const cases = useMemo(() => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()), [casesData]);
+  const cases = useMemo(
+    () => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()),
+    [casesData]
+  );
 
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
   const visitCount = cases.length;
-  const fileCount = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0), 0);
-  const totalPaid = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.payments ?? []).filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0), 0), 0);
+  const fileCount = cases.reduce(
+    (total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0),
+    0
+  );
+  const totalPaid = cases.reduce(
+    (total, c) =>
+      total +
+      c.steps.reduce(
+        (s, step) =>
+          s +
+          (step.appointment?.payments ?? [])
+            .filter((p) => p.status === "PAID")
+            .reduce((sum, p) => sum + Number(p.amount), 0),
+        0
+      ),
+    0
+  );
 
-  const visitedDepartments = useMemo(() => [...new Set(cases.flatMap((c) => c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)))], [cases]);
+  const visitedDepartments = useMemo(
+    () => [
+      ...new Set(
+        cases.flatMap((c) =>
+          c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)
+        )
+      ),
+    ],
+    [cases]
+  );
 
-  const hasDocInfo = patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
+  const hasDocInfo =
+    patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
@@ -581,7 +628,7 @@ export default function PatientDetailPage() {
                     >
                       {docLoading ? (
                         <>
-                          <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
@@ -595,7 +642,12 @@ export default function PatientDetailPage() {
                       )}
                     </button>
                   ) : (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-2.5">
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-2.5"
+                    >
                       {(patient.document_type || patient.document_series || patient.document_number) && (
                         <div className="flex items-start gap-2.5 text-sm text-secondary">
                           <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
@@ -700,7 +752,9 @@ export default function PatientDetailPage() {
                     <div className="min-w-0">
                       <p className="truncate font-medium">{activeWard.room?.name}</p>
                       <p className="text-xs font-normal text-green-600">
-                        {t("wards.statusOccupied")} · {Math.max(1, Math.ceil((Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000))} {t("wards.colDays")}
+                        {t("wards.statusOccupied")} ·{" "}
+                        {Math.max(1, Math.ceil((Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000))}{" "}
+                        {t("wards.colDays")}
                       </p>
                     </div>
                   </div>
@@ -822,6 +876,7 @@ export default function PatientDetailPage() {
       {/* ── Palata yotqizish Sheet ── */}
       <Sheet isOpen={sheetMode === "ward"} onClose={() => setSheetMode(null)} title={t("wards.checkInTitle")} description={t("wards.detailDescription")}>
         <div className="space-y-4">
+          {/* Xona tanlash */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("wards.colRoom")} *</label>
             <select
@@ -841,6 +896,23 @@ export default function PatientDetailPage() {
             {wardRoomsRaw.length === 0 && <p className="text-xs text-text-muted">{t("common.loading")}</p>}
           </div>
 
+          {/* Yotgan sana — QO'SHILDI */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              {t("wards.colCheckIn")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <input
+              type="date"
+              value={wardCheckInDate}
+              onChange={(e) => setWardCheckInDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+            <p className="text-xs text-text-muted">{t("wards.checkInHint")}</p>
+          </div>
+
+          {/* Kutilgan chiqish — min wardCheckInDate ga bog'landi */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.colExpectedOut")}
@@ -850,11 +922,12 @@ export default function PatientDetailPage() {
               type="date"
               value={wardExpectedOut}
               onChange={(e) => setWardExpectedOut(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
+              min={wardCheckInDate || new Date().toISOString().slice(0, 10)}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
           </div>
 
+          {/* Izoh */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.note")}
@@ -879,7 +952,7 @@ export default function PatientDetailPage() {
             <button
               type="button"
               disabled={!wardRoomId || isWardCheckin}
-              onClick={() => wardCheckIn()}
+              onClick={() => doWardCheckIn()}       // ← doWardCheckIn ishlatildi
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
               {isWardCheckin ? t("common.loading") : t("wards.checkIn")}
@@ -989,7 +1062,11 @@ export default function PatientDetailPage() {
                           <input
                             type="checkbox"
                             checked={selectedServiceIds.includes(svc.id)}
-                            onChange={(e) => setSelectedServiceIds((prev) => (e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)))}
+                            onChange={(e) =>
+                              setSelectedServiceIds((prev) =>
+                                e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)
+                              )
+                            }
                             className="w-4 h-4 accent-primary-600"
                           />
                           <span className="text-sm text-text flex-1">{svc.name}</span>

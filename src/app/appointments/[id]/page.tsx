@@ -11,7 +11,24 @@ import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, CreditCard, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Receipt, Scissors, Stethoscope, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRightCircle,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  CreditCard,
+  Edit,
+  FileText,
+  FlaskConical,
+  Loader2,
+  LogOut,
+  Printer,
+  Receipt,
+  Scissors,
+  Stethoscope,
+  Upload,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -146,6 +163,18 @@ export default function AppointmentDetailPage() {
     refetchOnWindowFocus: false,
   });
 
+  // Laboratoriya bo'limlarini yuklash uchun query
+  const { data: labDepartmentsData } = useQuery({
+    queryKey: ["laboratories"],
+    queryFn: () => api.get("/laboratories").then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const labDepts = useMemo(
+    () => (Array.isArray(labDepartmentsData) ? (labDepartmentsData as any[]) : []),
+    [labDepartmentsData]
+  );
+
   const assignmentsData = useMemo(
     () => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []),
     [assignmentsDataRaw],
@@ -160,6 +189,8 @@ export default function AppointmentDetailPage() {
       patientId ? queryClient.invalidateQueries({ queryKey: ["patient-appointments", patientId] }) : Promise.resolve(),
     ]);
   };
+
+
 
   const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useMutation({
     mutationFn: (data: { patientId: string; assignmentId: string; dateTime: string; status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" }) =>
@@ -191,12 +222,23 @@ export default function AppointmentDetailPage() {
   const [stepAmount, setStepAmount] = useState("");
   const [stepNote, setStepNote] = useState("");
 
+  // Yangi qo'shilgan holatlar (state)
+  const [labDepartmentId, setLabDepartmentId] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+
+  const selectedDept = useMemo(
+    () => labDepts.find((d: any) => d.id === labDepartmentId),
+    [labDepts, labDepartmentId]
+  );
+
   const resetStepForm = () => {
     setStepType("");
     setStepAssignmentId("");
     setStepDateTime(new Date().toISOString().slice(0, 16));
     setStepAmount("");
     setStepNote("");
+    setLabDepartmentId("");
+    setSelectedServiceIds([]);
   };
 
   const { mutateAsync: markStepDone, isPending: isMarkingDone } = useMutation({
@@ -227,7 +269,14 @@ export default function AppointmentDetailPage() {
     if (stepNote) payload.note = stepNote;
     if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
     if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
-    if (stepAmount) payload.amount = Number(stepAmount);
+
+    if (stepType === "LAB") {
+      payload.laboratoryId = labDepartmentId;
+      payload.serviceIds = selectedServiceIds;
+    } else if (stepAmount) {
+      payload.amount = Number(stepAmount);
+    }
+
     addCaseStep({ caseId, payload });
   };
 
@@ -416,7 +465,6 @@ export default function AppointmentDetailPage() {
           )}
         </div>
 
-        {/* ✅ FIX 1: File upload — yuklanayotganda Loader2 spinner ko'rsatiladi */}
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
@@ -480,11 +528,9 @@ export default function AppointmentDetailPage() {
           </Can>
         </div>
         {printError && <p className="mb-3 text-xs text-red-500">{printError}</p>}
-        {/* ✅ FIX 2: enterAddsRow prop — PrescriptionEditor'da Enter = yangi qator */}
         <PrescriptionEditor appointmentId={appointment.id} initialData={appointment.prescription} enterAddsRow />
       </div>
 
-      {/* Doctor Case Actions — only when appointment belongs to a case */}
       {appointment.caseStep && appointment.caseStep.case?.status === "ACTIVE" && (
         <div className="bg-surface border border-border rounded-xl p-5">
           <h3 className="text-base font-semibold text-text mb-4 inline-flex items-center gap-2">
@@ -492,7 +538,6 @@ export default function AppointmentDetailPage() {
             {t("cases.doctorPanel")}
           </h3>
           <div className="flex flex-wrap gap-2">
-            {/* Mark current step as Done */}
             {appointment.caseStep.status !== "DONE" && appointment.caseStep.status !== "CANCELLED" && (
               <Can roles={["ADMIN", "DOCTOR"]}>
                 <button
@@ -515,7 +560,6 @@ export default function AppointmentDetailPage() {
                 </button>
               </Can>
             )}
-            {/* Add follow-up steps */}
             <Can roles={["ADMIN", "DOCTOR"]}>
               <button
                 type="button"
@@ -602,7 +646,11 @@ export default function AppointmentDetailPage() {
             <label className="text-sm font-medium text-text">{t("cases.stepTypeLabel")}</label>
             <select
               value={stepType}
-              onChange={(e) => setStepType(e.target.value as StepType)}
+              onChange={(e) => {
+                setStepType(e.target.value as StepType);
+                setLabDepartmentId("");
+                setSelectedServiceIds([]);
+              }}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             >
               {(["LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"] as StepType[]).map((type) => (
@@ -630,7 +678,60 @@ export default function AppointmentDetailPage() {
             </div>
           )}
 
-          {(stepType === "LAB" || stepType === "PROCEDURE") && (
+          {stepType === "LAB" && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-text">{t("forms.department")}</label>
+                <select
+                  value={labDepartmentId}
+                  onChange={(e) => {
+                    setLabDepartmentId(e.target.value);
+                    setSelectedServiceIds([]);
+                  }}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+                >
+                  <option value="">{t("forms.select")}</option>
+                  {labDepts.map((dept: any) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedDept && selectedDept.services && selectedDept.services.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-text">{t("cases.stepType.LAB")}</label>
+                  <div className="border border-border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto bg-surface-hover/30">
+                    {selectedDept.services.map((service: any) => (
+                      <label key={service.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedServiceIds.includes(service.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedServiceIds([...selectedServiceIds, service.id]);
+                            } else {
+                              setSelectedServiceIds(selectedServiceIds.filter((id) => id !== service.id));
+                            }
+                          }}
+                          className="rounded border-border text-primary focus:ring-primary"
+                        />
+                        <span className="text-text">{service.name}</span>
+                        {service.price && (
+                          <span className="text-text-muted text-xs ml-auto">
+                            {service.price.toLocaleString()} UZS
+                          </span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {stepType === "PROCEDURE" && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
               <input
@@ -668,7 +769,7 @@ export default function AppointmentDetailPage() {
             </button>
             <button
               type="button"
-              disabled={!stepType || isAddingStep}
+              disabled={!stepType || isAddingStep || (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0))}
               onClick={handleAddCaseStep}
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
