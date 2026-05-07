@@ -206,10 +206,7 @@ function CaseCard({ patientCase, showAmount, onAddStep }: { patientCase: Patient
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
           {patientCase.status === "ACTIVE" && onAddStep && (
-            <button
-              onClick={onAddStep}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
-            >
+            <button onClick={onAddStep} className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer">
               <Plus className="w-3 h-3" />
               {t("cases.addStep")}
             </button>
@@ -320,17 +317,10 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button
-          type="button"
-          className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
-        >
+        <button type="button" className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
           {t("patients.saveChanges")}
         </button>
       </div>
@@ -418,8 +408,7 @@ export default function PatientDetailPage() {
   });
 
   const { mutateAsync: addStep, isPending: isAddingStep } = useMutation({
-    mutationFn: ({ caseId, payload }: { caseId: string; payload: Record<string, unknown> }) =>
-      api.post(`/cases/${caseId}/steps`, payload),
+    mutationFn: ({ caseId, payload }: { caseId: string; payload: Record<string, unknown> }) => api.post(`/cases/${caseId}/steps`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
       setAddStepCaseId(null);
@@ -445,8 +434,7 @@ export default function PatientDetailPage() {
   };
 
   const { mutateAsync: addCase, isPending: isAddingCase } = useMutation({
-    mutationFn: (complaint: string) =>
-      api.post("/cases", { patientId: id, chiefComplaint: complaint || undefined }),
+    mutationFn: (complaint: string) => api.post("/cases", { patientId: id, chiefComplaint: complaint || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
       setChiefComplaint("");
@@ -561,10 +549,7 @@ export default function PatientDetailPage() {
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
       {/* Back link */}
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
-        <Link
-          href="/patients"
-          className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group"
-        >
+        <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           {t("patients.backToPatients")}
         </Link>
@@ -573,19 +558,12 @@ export default function PatientDetailPage() {
       {/* Two-column layout */}
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ── LEFT SIDEBAR ───────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.04 }}
-          className="w-full lg:w-72 shrink-0 space-y-4"
-        >
+        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 }} className="w-full lg:w-72 shrink-0 space-y-4">
           {/* Patient card */}
           <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
             {/* Avatar + Name */}
             <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">
-                {initials}
-              </div>
+              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
               <div>
                 <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
                 <div className="flex items-center justify-center gap-2 text-xs text-text-muted capitalize">
@@ -624,8 +602,7 @@ export default function PatientDetailPage() {
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.region")}:</span>{" "}
-                    {patient.district.region.name}
+                    <span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}
                   </span>
                 </div>
               )}
@@ -634,8 +611,7 @@ export default function PatientDetailPage() {
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.district")}:</span>{" "}
-                    {patient.district.name}
+                    <span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}
                   </span>
                 </div>
               )}
@@ -710,9 +686,7 @@ export default function PatientDetailPage() {
               <div>
                 {canSeeAmount ? (
                   <>
-                    <p className="text-lg font-bold text-text">
-                      {totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS
-                    </p>
+                    <p className="text-lg font-bold text-text">{totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS</p>
                     <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
                   </>
                 ) : (
@@ -731,9 +705,7 @@ export default function PatientDetailPage() {
 
           {/* Action buttons */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
-              {t("common.actions")}
-            </p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
 
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
               <button
@@ -810,15 +782,10 @@ export default function PatientDetailPage() {
 
           {/* Departments visited */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              {t("patients.departmentsVisited")}
-            </p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t("patients.departmentsVisited")}</p>
             <div className="flex flex-wrap gap-1.5">
               {visitedDepartments.map((department) => (
-                <span
-                  key={department}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary"
-                >
+                <span key={department} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary">
                   <Building2 className="w-3 h-3" />
                   {department}
                 </span>
@@ -828,12 +795,7 @@ export default function PatientDetailPage() {
         </motion.div>
 
         {/* ── RIGHT TIMELINE ─────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="flex-1 min-w-0 space-y-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
@@ -863,17 +825,8 @@ export default function PatientDetailPage() {
           ) : (
             <div className="space-y-3">
               {cases.map((patientCase, index) => (
-                <motion.div
-                  key={patientCase.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
-                  <CaseCard
-                    patientCase={patientCase}
-                    showAmount={canSeeAmount}
-                    onAddStep={() => setAddStepCaseId(patientCase.id)}
-                  />
+                <motion.div key={patientCase.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }}>
+                  <CaseCard patientCase={patientCase} showAmount={canSeeAmount} onAddStep={() => setAddStepCaseId(patientCase.id)} />
                 </motion.div>
               ))}
             </div>
@@ -882,12 +835,7 @@ export default function PatientDetailPage() {
       </div>
 
       {/* ── SHEETS ─────────────────────────────────────────────────────────── */}
-      <Sheet
-        isOpen={sheetMode === "checkin"}
-        onClose={() => setSheetMode(null)}
-        title={t("cases.newCase")}
-        description={t("cases.newCaseDesc")}
-      >
+      <Sheet isOpen={sheetMode === "checkin"} onClose={() => setSheetMode(null)} title={t("cases.newCase")} description={t("cases.newCaseDesc")}>
         <div className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
@@ -921,22 +869,12 @@ export default function PatientDetailPage() {
         </div>
       </Sheet>
 
-      <Sheet
-        isOpen={sheetMode === "edit"}
-        onClose={() => setSheetMode(null)}
-        title={t("patients.editPatientSheet")}
-        description={t("patients.editPatientDesc")}
-      >
+      <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title={t("patients.editPatientSheet")} description={t("patients.editPatientDesc")}>
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
 
       {/* ── Palata yotqizish Sheet ── */}
-      <Sheet
-        isOpen={sheetMode === "ward"}
-        onClose={() => setSheetMode(null)}
-        title={t("wards.checkInTitle")}
-        description={t("wards.detailDescription")}
-      >
+      <Sheet isOpen={sheetMode === "ward"} onClose={() => setSheetMode(null)} title={t("wards.checkInTitle")} description={t("wards.detailDescription")}>
         <div className="space-y-4">
           {/* Xona tanlash */}
           <div className="space-y-1.5">
@@ -955,9 +893,7 @@ export default function PatientDetailPage() {
                 </option>
               ))}
             </select>
-            {wardRoomsRaw.length === 0 && (
-              <p className="text-xs text-text-muted">{t("common.loading")}</p>
-            )}
+            {wardRoomsRaw.length === 0 && <p className="text-xs text-text-muted">{t("common.loading")}</p>}
           </div>
 
           {/* Yotgan sana — QO'SHILDI */}
@@ -1122,10 +1058,7 @@ export default function PatientDetailPage() {
                     {labDepts
                       .find((d) => d.id === labDepartmentId)
                       ?.services.map((svc) => (
-                        <label
-                          key={svc.id}
-                          className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
-                        >
+                        <label key={svc.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors">
                           <input
                             type="checkbox"
                             checked={selectedServiceIds.includes(svc.id)}
@@ -1137,11 +1070,7 @@ export default function PatientDetailPage() {
                             className="w-4 h-4 accent-primary-600"
                           />
                           <span className="text-sm text-text flex-1">{svc.name}</span>
-                          {svc.price != null && (
-                            <span className="text-xs text-text-muted font-mono">
-                              {svc.price.toLocaleString()} UZS
-                            </span>
-                          )}
+                          {svc.price != null && <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>}
                         </label>
                       ))}
                   </div>
@@ -1219,11 +1148,7 @@ export default function PatientDetailPage() {
             </button>
             <button
               type="button"
-              disabled={
-                !stepType ||
-                isAddingStep ||
-                (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0))
-              }
+              disabled={!stepType || isAddingStep || (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0))}
               onClick={handleAddStep}
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
