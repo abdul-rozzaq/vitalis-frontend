@@ -35,7 +35,7 @@ function LabCard({
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#f3e8ff] dark:bg-[#3b0764]/40 flex items-center justify-center flex-shrink-0">
             <FlaskConical className="w-4 h-4 text-purple-600" />
           </div>
           <div className="min-w-0">
@@ -209,7 +209,7 @@ export default function LaboratoriesPage() {
         </div>
       ) : labs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center mb-3">
+          <div className="w-14 h-14 rounded-full bg-[#f3e8ff] dark:bg-[#3b0764]/40 flex items-center justify-center mb-3">
             <Microscope className="w-7 h-7 text-purple-400" />
           </div>
           <p className="text-text-muted text-sm">{t("laboratories.noLaboratories")}</p>

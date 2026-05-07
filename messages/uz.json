@@ -730,6 +730,7 @@
     "roomTypeExam": "Ko'rik xonasi",
     "full": "To'lgan",
     "available": "Mavjud",
-    "freeSlots": "Bo'sh o'rin"
+    "freeSlots": "Bo'sh o'rin",
+    "checkInHint": "Bo'sh qoldirsangiz, bugungi sana avtomatik qo'yiladi"
   }
 }

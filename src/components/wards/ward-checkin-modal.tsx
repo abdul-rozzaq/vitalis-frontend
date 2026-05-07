@@ -1,6 +1,6 @@
 "use client";
 
-import { Combobox } from "@/components/ui/combobox"; // Loyihangizdagi Combobox komponenti yo'li
+import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";
@@ -18,6 +18,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [checkIn, setCheckIn] = useState("");          // ← QO'SHILDI
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
 
@@ -27,7 +28,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
     enabled: open,
   });
 
-  // /rooms/wards emas — /rooms dan olib, WARD tiplilarni filter qilamiz
   const { data: allRooms = [] } = useQuery({
     queryKey: ["rooms"],
     queryFn: () => api.get("/rooms").then((r) => r.data),
@@ -36,7 +36,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
-  // Combobox uchun option'larni shakllantirish
   const patientOptions = patients.map((p: any) => ({
     label: `${p.first_name} ${p.last_name}`,
     value: p.id,
@@ -53,11 +52,13 @@ export function WardCheckInModal({ open, onClose }: Props) {
       api.post("/wards/check-in", {
         patientId,
         roomId,
+        checkIn: checkIn || undefined,               // ← QO'SHILDI
         expectedOut: expectedOut || undefined,
         note: note || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
       handleClose();
     },
   });
@@ -65,6 +66,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const handleClose = () => {
     setPatientId("");
     setRoomId("");
+    setCheckIn("");                                   // ← QO'SHILDI
     setExpectedOut("");
     setNote("");
     onClose();
@@ -83,6 +85,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
+          {/* Bemor */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -97,6 +100,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
             />
           </div>
 
+          {/* Xona */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colRoom")} *
@@ -114,6 +118,23 @@ export function WardCheckInModal({ open, onClose }: Props) {
             )}
           </div>
 
+          {/* Yotgan sana — QO'SHILDI */}
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">
+              {t("wards.colCheckIn")}
+              <span className="text-secondary font-normal ml-1">({t("common.optional")})</span>
+            </label>
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}   // kelajak sana kiritilmasin
+              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+            <p className="text-xs text-secondary mt-1">{t("wards.checkInHint")}</p>
+          </div>
+
+          {/* Kutilgan chiqish */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colExpectedOut")}
@@ -122,11 +143,12 @@ export function WardCheckInModal({ open, onClose }: Props) {
               type="date"
               value={expectedOut}
               onChange={(e) => setExpectedOut(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
+              min={checkIn || new Date().toISOString().slice(0, 10)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
+          {/* Izoh */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.note")}
