@@ -7,7 +7,7 @@ import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { Appointment } from "@/features/appointments/types";
-import { STATUS_STYLES } from "@/features/appointments/utils";
+import { CASE_STATUS_STYLES } from "@/features/appointments/utils";
 import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
@@ -132,6 +132,7 @@ export default function AppointmentDetailPage() {
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [isPrintingPrescription, setIsPrintingPrescription] = useState(false);
   const [printError, setPrintError] = useState<string | null>(null);
+  const [conclusionDraft, setConclusionDraft] = useState<string | null>(null);
 
   const { data: appointment, isLoading } = useQuery<Appointment>({
     queryKey: ["appointments", id],
@@ -158,10 +159,18 @@ export default function AppointmentDetailPage() {
   };
 
   const { mutateAsync: updateAppointment, isPending: isUpdatingAppointment } = useMutation({
-    mutationFn: (data: { patientId: string; assignmentId: string; dateTime: string; status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" }) => api.patch(`/appointments/${id}`, data),
+    mutationFn: (data: { patientId: string; assignmentId: string; dateTime: string; conclusion?: string }) => api.patch(`/appointments/${id}`, data),
     onSuccess: async () => {
       await invalidateAppointmentData(appointment?.patientId);
       setSheetMode(null);
+    },
+  });
+
+  const { mutateAsync: saveConclusion, isPending: isSavingConclusion } = useMutation({
+    mutationFn: (conclusion: string) => api.patch(`/appointments/${id}`, { conclusion }),
+    onSuccess: async () => {
+      await invalidateAppointmentData(appointment?.patientId);
+      setConclusionDraft(null);
     },
   });
 
@@ -299,7 +308,11 @@ export default function AppointmentDetailPage() {
           </button>
 
           <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded ${STATUS_STYLES[appointment.status] ?? "bg-surface-hover text-secondary"}`}>{appointment.status}</span>
+            {(() => {
+              const caseStatus = appointment.caseStep?.case?.status;
+              if (!caseStatus) return null;
+              return <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded ${CASE_STATUS_STYLES[caseStatus] ?? "bg-surface-hover text-secondary"}`}>{caseStatus}</span>;
+            })()}
           </div>
         </div>
 
@@ -333,6 +346,12 @@ export default function AppointmentDetailPage() {
             <Building2 className="w-3.5 h-3.5" />
             {appointment.assignment?.department?.name}
           </p>
+          {appointment.conclusion && (
+            <div className="mt-2 rounded-md border border-border bg-surface-hover/60 p-3">
+              <p className="text-xs font-medium text-text-muted mb-1">{t("appointments.conclusion")}</p>
+              <p className="text-sm text-text whitespace-pre-wrap">{appointment.conclusion}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -431,11 +450,40 @@ export default function AppointmentDetailPage() {
       </div>
 
       {appointment.caseStep && appointment.caseStep.case?.status === "ACTIVE" && (
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <h3 className="text-base font-semibold text-text mb-4 inline-flex items-center gap-2">
+        <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
+          <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-primary" />
             {t("cases.doctorPanel")}
           </h3>
+
+          <Can roles={["ADMIN", "DOCTOR"]}>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-text">{t("appointments.conclusion")}</label>
+              <textarea
+                rows={4}
+                value={conclusionDraft ?? appointment.conclusion ?? ""}
+                onChange={(e) => setConclusionDraft(e.target.value)}
+                placeholder={t("appointments.conclusionPlaceholder")}
+                className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
+              />
+              {conclusionDraft !== null && conclusionDraft !== (appointment.conclusion ?? "") && (
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setConclusionDraft(null)} className="px-3 py-1.5 rounded-md border border-border text-sm text-secondary hover:bg-surface-hover transition-colors cursor-pointer">
+                    {t("forms.cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingConclusion}
+                    onClick={() => saveConclusion(conclusionDraft)}
+                    className="px-3 py-1.5 rounded-md bg-primary text-white text-sm font-medium hover:bg-primary-700 transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {isSavingConclusion ? t("common.loading") : t("common.save")}
+                  </button>
+                </div>
+              )}
+            </div>
+          </Can>
+
           <div className="flex flex-wrap gap-2">
             {appointment.caseStep.status !== "DONE" && appointment.caseStep.status !== "CANCELLED" && (
               <Can roles={["ADMIN", "DOCTOR"]}>
@@ -513,7 +561,6 @@ export default function AppointmentDetailPage() {
             patientId: appointment.patientId,
             assignmentId: appointment.assignmentId,
             dateTime: new Date(appointment.dateTime).toISOString().slice(0, 16),
-            status: appointment.status,
           }}
           patients={[{ id: appointment.patient.id, name: `${appointment.patient.first_name} ${appointment.patient.last_name}` }]}
           assignments={assignmentOptions}

@@ -18,8 +18,8 @@ const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
 };
 
 const APPT_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING: { bg: "bg-warning-50", text: "text-warning-600", label: "Pending" },
-  CONFIRMED: { bg: "bg-info-50", text: "text-info-600", label: "Confirmed" },
+  ACTIVE: { bg: "bg-primary-50", text: "text-primary", label: "Active" },
+  COMPLETED: { bg: "bg-info-50", text: "text-info-600", label: "Completed" },
   CANCELLED: { bg: "bg-danger-50", text: "text-danger-600", label: "Cancelled" },
 };
 
@@ -47,9 +47,9 @@ interface StatsData {
   recentAppointments: {
     id: string;
     dateTime: string;
-    status: string;
     patient: { id: string; first_name: string; last_name: string };
     assignment: { department: { name: string }; user: { first_name: string; last_name: string } };
+    caseStep?: { case?: { status: string } | null } | null;
   }[];
 }
 
@@ -80,10 +80,7 @@ function WeeklySchedule({ assignments }: { assignments: Assignment[] }) {
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       <div className="grid grid-cols-7 border-b border-border">
         {days.map((d) => (
-          <div
-            key={d}
-            className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-secondary bg-background"}`}
-          >
+          <div key={d} className={`px-3 py-2.5 text-xs font-semibold text-center border-r last:border-r-0 border-border ${d >= 6 ? "text-danger-600 bg-danger-50/30" : "text-secondary bg-background"}`}>
             {FULL_DAY_LABELS[d]}
           </div>
         ))}
@@ -202,34 +199,21 @@ export default function HomePage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            className="bg-surface p-4 rounded-lg border border-border"
-          >
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-surface p-4 rounded-lg border border-border">
             <div className="flex items-center justify-between mb-3">
               <div className={`${stat.bg} ${stat.color} p-2 rounded-md`}>
                 <stat.icon className="w-4 h-4" />
               </div>
             </div>
             <p className="text-secondary text-xs font-medium">{stat.label}</p>
-            <h3 className="text-2xl font-semibold text-text mt-0.5">
-              {statsLoading ? <span className="inline-block w-10 h-6 bg-border animate-pulse rounded" /> : stat.value}
-            </h3>
+            <h3 className="text-2xl font-semibold text-text mt-0.5">{statsLoading ? <span className="inline-block w-10 h-6 bg-border animate-pulse rounded" /> : stat.value}</h3>
           </motion.div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Patients */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-surface rounded-lg border border-border overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface rounded-lg border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-text">{t("dashboard.recentPatients")}</h3>
             <Link href="/patients" className="text-primary text-xs font-medium hover:underline cursor-pointer">
@@ -256,9 +240,7 @@ export default function HomePage() {
                   <Link key={patient.id} href={`/patients/${patient.id}`}>
                     <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">
-                          {initials}
-                        </div>
+                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
                         <div>
                           <p className="text-sm font-medium text-text">
                             {patient.first_name} {patient.last_name}
@@ -283,12 +265,7 @@ export default function HomePage() {
         </motion.div>
 
         {/* Recent Appointments */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14 }}
-          className="bg-surface rounded-lg border border-border overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="bg-surface rounded-lg border border-border overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-text">{t("dashboard.recentAppointments")}</h3>
             <Link href="/appointments" className="text-primary text-xs font-medium hover:underline cursor-pointer">
@@ -310,15 +287,13 @@ export default function HomePage() {
               <div className="px-4 py-8 text-center text-sm text-text-muted">{t("dashboard.noRecentAppointments")}</div>
             ) : (
               stats.recentAppointments.map((appt) => {
-                const statusStyle = APPT_STATUS_STYLES[appt.status] ?? { bg: "bg-gray-100", text: "text-gray-600", label: appt.status };
+                const statusStyle = APPT_STATUS_STYLES[appt.caseStep?.case?.status ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-600", label: appt.caseStep?.case?.status ?? "" };
                 const initials = `${appt.patient.first_name[0]}${appt.patient.last_name[0]}`.toUpperCase();
                 return (
                   <Link key={appt.id} href={`/patients/${appt.patient.id}`}>
                     <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">
-                          {initials}
-                        </div>
+                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
                         <div>
                           <p className="text-sm font-medium text-text">
                             {appt.patient.first_name} {appt.patient.last_name}
@@ -330,9 +305,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2.5">
                         <div className="text-right hidden sm:block">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusStyle.bg} ${statusStyle.text}`}>
-                            {statusStyle.label}
-                          </span>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusStyle.bg} ${statusStyle.text}`}>{statusStyle.label}</span>
                           <div className="flex items-center gap-1 text-text-muted text-[10px] mt-0.5 justify-end">
                             <Clock className="w-3 h-3" />
                             {new Date(appt.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}

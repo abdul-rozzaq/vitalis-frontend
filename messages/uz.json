@@ -305,6 +305,8 @@
     "noFiles": "Fayllar biriktirilmagan.",
     "noPrescription": "Retsept satrlari hali yo'q.",
     "notFound": "Uchrashuv topilmadi.",
+    "conclusion": "Shifokor xulosasi",
+    "conclusionPlaceholder": "Shifokor xulosa yoki izohlarini kiriting...",
     "uploadFileDesc": "Fayl tanlang va yuklashdan oldin ixtiyoriy ravishda nomini o'zgartiring.",
     "clickToSelectFile": "Fayl tanlash uchun bosing",
     "fileName": "Fayl nomi",

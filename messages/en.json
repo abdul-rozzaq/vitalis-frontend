@@ -307,6 +307,8 @@
     "noFiles": "No files attached.",
     "noPrescription": "No prescription items yet.",
     "notFound": "Appointment not found.",
+    "conclusion": "Doctor's conclusion",
+    "conclusionPlaceholder": "Enter doctor's conclusion or notes...",
     "uploadFileDesc": "Select a file and optionally rename it before uploading.",
     "clickToSelectFile": "Click to select a file",
     "fileName": "File name",

@@ -11,7 +11,6 @@ type AppointmentFormValues = {
   patientId: string;
   assignmentId: string;
   dateTime: string;
-  status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 };
 
 interface SelectOption {
@@ -40,15 +39,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
     patientId: z.string().min(1, t("forms.patientRequired")),
     assignmentId: z.string().min(1, t("forms.assignmentRequired")),
     dateTime: z.string().min(1, t("forms.dateTimeRequired")),
-    status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]).optional(),
   });
-
-  const STATUS_OPTIONS = [
-    { value: "PENDING", label: t("forms.apptStatusPending") },
-    { value: "CONFIRMED", label: t("forms.apptStatusConfirmed") },
-    { value: "CANCELLED", label: t("forms.apptStatusCancelled") },
-    { value: "COMPLETED", label: t("forms.apptStatusCompleted") },
-  ];
 
   function nowLocal() {
     const now = new Date();
@@ -75,7 +66,12 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
   const patientOptions = patients.map((p) => ({
     value: p.id,
     label: p.name,
-    avatar: p.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+    avatar: p.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2),
   }));
 
   const assignmentOptions = assignments.map((a) => ({
@@ -85,7 +81,6 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
       {/* Patient */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -136,27 +131,8 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
         {errors.dateTime && <p className="text-xs text-danger-600 font-medium">{errors.dateTime.message}</p>}
       </div>
 
-      {/* Status - faqat edit rejimida */}
-      {isEditing && (
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text">{t("forms.status")}</label>
-          <select
-            {...register("status")}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
         <button

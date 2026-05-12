@@ -43,7 +43,7 @@ export interface AppointmentTimelineItem {
   id: string;
   assignmentId?: string;
   dateTime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  conclusion?: string | null;
   files?: AppointmentFile[];
   assignment: {
     id?: string;
@@ -51,6 +51,7 @@ export interface AppointmentTimelineItem {
     user: { first_name: string; last_name: string };
   };
   payments?: AppointmentPayment[];
+  caseStep?: { case?: { id: string; status: CaseStatus } | null } | null;
 }
 
 export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";

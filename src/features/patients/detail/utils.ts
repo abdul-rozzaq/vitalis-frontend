@@ -26,11 +26,10 @@ export const PAYMENT_STATUS_STYLES = {
   },
 } as const;
 
-export const APPOINTMENT_STATUS_STYLES: Record<AppointmentTimelineItem["status"], string> = {
-  PENDING: "bg-warning-50 dark:bg-amber-950/40 text-warning-600 dark:text-amber-400",
-  CONFIRMED: "bg-primary-50 dark:bg-emerald-950/40 text-primary dark:text-emerald-400",
+export const APPOINTMENT_STATUS_STYLES: Record<string, string> = {
+  ACTIVE: "bg-primary-50 dark:bg-emerald-950/40 text-primary dark:text-emerald-400",
+  COMPLETED: "bg-info-50 dark:bg-blue-950/40 text-info-600 dark:text-blue-400",
   CANCELLED: "bg-danger-50 dark:bg-red-950/40 text-danger-600 dark:text-red-400",
-  COMPLETED: "bg-primary-50 dark:bg-emerald-950/40 text-primary dark:text-emerald-400",
 };
 
 export function formatDate(iso: string) {

@@ -7,12 +7,7 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
-import {
-  STATUS_STYLES,
-  filterAppointmentsByPatientName,
-  toAssignmentOptions,
-  toPatientOptions,
-} from "@/features/appointments/utils";
+import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -77,12 +72,15 @@ export default function AppointmentsPage() {
     setIsSheetOpen(true);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    if (confirm(t("appointments.deleteConfirm"))) {
-      setDeletingId(id);
-      deleteAppointment(id);
-    }
-  }, [deleteAppointment, t]);
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (confirm(t("appointments.deleteConfirm"))) {
+        setDeletingId(id);
+        deleteAppointment(id);
+      }
+    },
+    [deleteAppointment, t],
+  );
 
   const handleFormSubmit = (data: AppointmentFormPayload) => {
     if (editingAppointment) {
@@ -97,10 +95,7 @@ export default function AppointmentsPage() {
     }
   };
 
-  const filteredAppointments = useMemo(
-    () => filterAppointmentsByPatientName(appointmentsData ?? [], filterText),
-    [appointmentsData, filterText],
-  );
+  const filteredAppointments = useMemo(() => filterAppointmentsByPatientName(appointmentsData ?? [], filterText), [appointmentsData, filterText]);
 
   const handleExport = () => {
     const appts = appointmentsData ?? [];
@@ -109,7 +104,7 @@ export default function AppointmentsPage() {
       `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.trim(),
       a.assignment ? `${a.assignment.user?.first_name} ${a.assignment.user?.last_name} — ${a.assignment.department?.name}` : "",
       a.dateTime ? new Date(a.dateTime).toLocaleString() : "",
-      a.status ?? "",
+      a.caseStep?.case?.status ?? "",
     ]);
     exportToExcel("appointments", headers, rows, t("appointments.title"));
   };
@@ -134,7 +129,9 @@ export default function AppointmentsPage() {
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <User className="w-3.5 h-3.5 text-text-muted shrink-0" />
-            <span className="font-medium text-text">{row.original.patient?.first_name} {row.original.patient?.last_name}</span>
+            <span className="font-medium text-text">
+              {row.original.patient?.first_name} {row.original.patient?.last_name}
+            </span>
           </div>
         ),
       },
@@ -148,7 +145,9 @@ export default function AppointmentsPage() {
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <Stethoscope className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                <span className="text-secondary text-sm">Dr. {a.user?.first_name} {a.user?.last_name}</span>
+                <span className="text-secondary text-sm">
+                  Dr. {a.user?.first_name} {a.user?.last_name}
+                </span>
               </div>
               <div className="flex items-center gap-1.5 ml-5">
                 <Building2 className="w-3 h-3 text-text-muted shrink-0" />
@@ -173,15 +172,12 @@ export default function AppointmentsPage() {
         },
       },
       {
-        accessorKey: "status",
+        id: "caseStatus",
         header: t("appointments.colStatus"),
         cell: ({ row }) => {
-          const status = row.original.status;
-          return (
-            <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>
-              {status}
-            </span>
-          );
+          const status = row.original.caseStep?.case?.status;
+          if (!status) return <span className="text-[10px] text-secondary">—</span>;
+          return <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>{status}</span>;
         },
       },
       {
@@ -189,19 +185,11 @@ export default function AppointmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Link
-              href={`/appointments/${row.original.id}`}
-              className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors"
-              title={t("appointments.viewDetails")}
-            >
+            <Link href={`/appointments/${row.original.id}`} className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors" title={t("appointments.viewDetails")}>
               <ExternalLink className="w-4 h-4" />
             </Link>
             <Can roles={["ADMIN", "KASSIR"]}>
-              <button
-                onClick={() => handleEdit(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title="Edit"
-              >
+              <button onClick={() => handleEdit(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title="Edit">
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
@@ -287,11 +275,11 @@ export default function AppointmentsPage() {
           initialData={
             editingAppointment
               ? {
-                patientId: editingAppointment.patientId,
-                assignmentId: editingAppointment.assignmentId,
-                dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                status: editingAppointment.status,
-              }
+                  patientId: editingAppointment.patientId,
+                  assignmentId: editingAppointment.assignmentId,
+                  dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
+                  status: editingAppointment.status,
+                }
               : undefined
           }
           patients={patients}

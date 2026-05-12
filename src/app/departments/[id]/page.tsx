@@ -24,24 +24,24 @@ interface Department {
   children?: Department[];
 }
 
-type AppointmentStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
+type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
 
 interface Appointment {
   id: string;
   dateTime: string;
   createdAt: string;
-  status: AppointmentStatus;
   patient: { id: string; first_name: string; last_name: string };
   assignment: {
     department?: { id: string; name: string } | null;
     user: { first_name: string; last_name: string };
     room?: { name: string } | null;
   };
+  caseStep?: { case?: { status: CaseStatus } | null } | null;
 }
 
-const STATUS_STYLES: Record<AppointmentStatus, { bg: string; text: string; icon: React.ElementType }> = {
-  PENDING: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: Clock },
-  CONFIRMED: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: CheckCircle2 },
+const STATUS_STYLES: Record<CaseStatus, { bg: string; text: string; icon: React.ElementType }> = {
+  ACTIVE: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: Clock },
+  COMPLETED: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: CheckCircle2 },
   CANCELLED: { bg: "bg-red-50 border-red-200", text: "text-red-600", icon: XCircle },
 };
 
@@ -83,11 +83,7 @@ export default function DepartmentDetailPage() {
   const appointmentQueries = useQuery<Appointment[]>({
     queryKey: ["appointments", "department", id, allDeptIds],
     queryFn: async () => {
-      const results = await Promise.all(
-        allDeptIds.map((deptId) =>
-          api.get("/appointments", { params: { departmentId: deptId } }).then((res) => res.data as Appointment[])
-        )
-      );
+      const results = await Promise.all(allDeptIds.map((deptId) => api.get("/appointments", { params: { departmentId: deptId } }).then((res) => res.data as Appointment[])));
       const merged = results.flat();
       const unique = Array.from(new Map(merged.map((a) => [a.id, a])).values());
       return unique.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
@@ -137,10 +133,7 @@ export default function DepartmentDetailPage() {
   const handleFormSubmit = (data: any) => {
     const payload = {
       ...data,
-      price:
-        data.price === "" || data.price === undefined || data.price === null || Number(data.price) === 0
-          ? null
-          : Number(data.price),
+      price: data.price === "" || data.price === undefined || data.price === null || Number(data.price) === 0 ? null : Number(data.price),
     };
 
     if (editingSubDept) {
@@ -163,11 +156,7 @@ export default function DepartmentDetailPage() {
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
-          return (
-            <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-              {pageIndex * pageSize + row.index + 1}
-            </span>
-          );
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
         },
       },
       {
@@ -184,9 +173,7 @@ export default function DepartmentDetailPage() {
                 <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
                   {row.original.name}
                 </Link>
-                {row.original.description && (
-                  <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>
-                )}
+                {row.original.description && <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>}
               </div>
             </div>
           );
@@ -197,13 +184,7 @@ export default function DepartmentDetailPage() {
         header: t("departments.colPrice"),
         cell: ({ row }) => {
           const price = row.original.price;
-          return price != null ? (
-            <span className="text-sm text-text font-medium">
-              {Number(price).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          ) : (
-            <span className="text-xs text-secondary italic">—</span>
-          );
+          return price != null ? <span className="text-sm text-text font-medium">{Number(price).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> : <span className="text-xs text-secondary italic">—</span>;
         },
       },
       {
@@ -211,18 +192,11 @@ export default function DepartmentDetailPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            <Link
-              href={`/departments/${row.original.id}`}
-              className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors"
-              title={t("departments.viewDepartment")}
-            >
+            <Link href={`/departments/${row.original.id}`} className="p-1 rounded-md hover:bg-surface-hover text-secondary hover:text-primary transition-colors" title={t("departments.viewDepartment")}>
               <ExternalLink className="w-4 h-4" />
             </Link>
             <Can roles={["ADMIN"]}>
-              <button
-                onClick={() => handleEditSubDept(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-              >
+              <button onClick={() => handleEditSubDept(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
@@ -232,11 +206,7 @@ export default function DepartmentDetailPage() {
                 disabled={isDeleting && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
               >
-                {isDeleting && deletingId === row.original.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -274,12 +244,7 @@ export default function DepartmentDetailPage() {
         </Link>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.04 }}
-        className="bg-surface border border-border rounded-lg p-5 flex flex-col sm:flex-row sm:items-center gap-4"
-      >
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="bg-surface border border-border rounded-lg p-5 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className={`w-12 h-12 rounded-xl ${color.bg} flex items-center justify-center shrink-0`}>
           <Building2 className={`w-6 h-6 ${color.icon}`} />
         </div>
@@ -325,11 +290,7 @@ export default function DepartmentDetailPage() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="space-y-4">
         <div>
           <h3 className="text-base font-semibold text-text">{t("appointments.title")}</h3>
-          <p className="text-secondary text-sm mt-0.5">
-            {hasChildren
-              ? t("departments.appointmentsDescWithChildren", { name: department.name })
-              : t("departments.appointmentsDesc", { name: department.name })}
-          </p>
+          <p className="text-secondary text-sm mt-0.5">{hasChildren ? t("departments.appointmentsDescWithChildren", { name: department.name }) : t("departments.appointmentsDesc", { name: department.name })}</p>
         </div>
 
         {loadingAppts ? (
@@ -344,7 +305,7 @@ export default function DepartmentDetailPage() {
         ) : (
           <div className="space-y-2">
             {appointments.map((appt) => {
-              const s = STATUS_STYLES[appt.status] ?? STATUS_STYLES.PENDING;
+              const s = STATUS_STYLES[appt.caseStep?.case?.status ?? "ACTIVE"] ?? STATUS_STYLES.ACTIVE;
               const StatusIcon = s.icon;
               const deptName = appt.assignment?.department?.name;
               const isFromChild = deptName && deptName !== department.name;
@@ -368,20 +329,17 @@ export default function DepartmentDetailPage() {
                     <div className="flex items-center gap-1.5 text-sm text-secondary">
                       <Calendar className="w-3.5 h-3.5 text-text-muted shrink-0" />
                       {new Date(appt.dateTime).toLocaleString("uz-UZ", {
-                        year: "numeric", month: "short", day: "numeric",
-                        hour: "2-digit", minute: "2-digit",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </div>
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
-                    {isFromChild && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface border border-border text-secondary">
-                        {deptName}
-                      </span>
-                    )}
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>
-                      {appt.status}
-                    </span>
+                    {isFromChild && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface border border-border text-secondary">{deptName}</span>}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>{appt.status}</span>
                   </div>
                 </div>
               );
@@ -397,11 +355,7 @@ export default function DepartmentDetailPage() {
         description={editingSubDept ? t("departments.editSubDesc") : t("departments.addSubDesc", { name: department.name })}
       >
         <DepartmentForm
-          initialData={
-            editingSubDept
-              ? { name: editingSubDept.name, description: editingSubDept.description, price: editingSubDept.price ?? undefined }
-              : undefined
-          }
+          initialData={editingSubDept ? { name: editingSubDept.name, description: editingSubDept.description, price: editingSubDept.price ?? undefined } : undefined}
           hideParent
           onSubmit={handleFormSubmit}
           onCancel={() => setIsSheetOpen(false)}

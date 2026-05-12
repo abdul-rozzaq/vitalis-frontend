@@ -52,7 +52,7 @@ export interface Prescription {
 export interface Appointment {
   id: string;
   dateTime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  conclusion?: string | null;
   patient: { id: string; first_name: string; last_name: string };
   patientId: string;
   assignment: Assignment;
@@ -65,7 +65,7 @@ export interface Appointment {
     caseId: string;
     type: string;
     status: "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
-    case?: { id: string; status: string } | null;
+    case?: { id: string; status: "ACTIVE" | "COMPLETED" | "CANCELLED" } | null;
   } | null;
 }
 
@@ -79,5 +79,4 @@ export interface AppointmentFormPayload {
   patientId: string;
   assignmentId: string;
   dateTime: string;
-  status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
 }
