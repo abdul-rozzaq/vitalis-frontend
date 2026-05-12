@@ -54,7 +54,7 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   const roomOptions = wardRooms.map((r: any) => ({
     // Hozirgi xona to'lgan bo'lsa ham tanlash mumkin bo'lsin (u allaqachon shu xonada)
-    label: `${r.name}${r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}${r.isFull && r.id !== ward?.room.id ? ` — ${t("wards.full")}` : ""}`,
+    label: `${r.name}${r.department ? ` (${r.department.name})` : ""}${r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}${r.isFull && r.id !== ward?.room.id ? ` ⛔ ${t("wards.full")}` : ""}`,
     value: r.id,
     disabled: r.isFull && r.id !== ward?.room.id,
   }));

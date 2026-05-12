@@ -1,8 +1,10 @@
 "use client";
 
+import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, BedDouble, Hash, LayoutGrid } from "lucide-react";
+import { AlignLeft, BedDouble, Building2, Hash, LayoutGrid } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
@@ -11,6 +13,7 @@ type RoomFormInput = {
   roomType: "WARD" | "EXAMINATION" | "";
   capacity?: number | string;
   description?: string;
+  departmentId?: string;
 };
 
 type RoomFormValues = {
@@ -18,6 +21,7 @@ type RoomFormValues = {
   roomType: "WARD" | "EXAMINATION";
   capacity?: number;
   description?: string;
+  departmentId?: string | null;
 };
 
 interface RoomFormProps {
@@ -30,11 +34,18 @@ interface RoomFormProps {
 export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFormProps) {
   const t = useTranslations();
 
+  const { data: departments = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+
   const roomSchema = z.object({
     name: z.string().min(1, t("forms.roomNameRequired")),
     roomType: z.enum(["WARD", "EXAMINATION"], { message: t("forms.roomTypeRequired") }),
     capacity: z.coerce.number().min(1, t("forms.capacityMin")).optional(),
     description: z.string().optional(),
+    departmentId: z.string().uuid().optional().nullable(),
   });
 
   const {
@@ -74,7 +85,9 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           {...register("roomType")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
         >
-          <option value="" disabled hidden>{t("forms.selectType")}</option>
+          <option value="" disabled hidden>
+            {t("forms.selectType")}
+          </option>
           <option value="EXAMINATION">{t("forms.roomTypeExamination")}</option>
           <option value="WARD">{t("forms.roomTypeWard")}</option>
         </select>
@@ -82,20 +95,40 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
       </div>
 
       {roomType === "WARD" && (
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text flex items-center gap-2">
-            <BedDouble className="w-4 h-4 text-primary-500" />
-            {t("forms.capacity")}
-          </label>
-          <input
-            {...register("capacity")}
-            type="number"
-            min={1}
-            placeholder="1"
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
-          {errors.capacity && <p className="text-xs text-danger-600 font-medium">{errors.capacity.message}</p>}
-        </div>
+        <>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-2">
+              <BedDouble className="w-4 h-4 text-primary-500" />
+              {t("forms.capacity")}
+            </label>
+            <input
+              {...register("capacity")}
+              type="number"
+              min={1}
+              placeholder="1"
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+            {errors.capacity && <p className="text-xs text-danger-600 font-medium">{errors.capacity.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary-500" />
+              {t("forms.department")} <span className="text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <select
+              {...register("departmentId")}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
+            >
+              <option value="">{t("forms.selectDepartment")}</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
       <div className="space-y-1.5">
@@ -112,11 +145,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
         <button

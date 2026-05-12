@@ -9,7 +9,7 @@ import { asArray, formatShortDate, getTableRowIndex } from "@/features/assignmen
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Edit, Loader2, Plus, Trash2 } from "lucide-react";
+import { BedDouble, Building2, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -121,6 +121,20 @@ export default function AssignmentsRoomsPage() {
         accessorKey: "description",
         header: t("common.description"),
         cell: ({ row }) => <span className="text-secondary text-sm">{row.original.description || "—"}</span>,
+      },
+      {
+        id: "department",
+        header: t("forms.department"),
+        cell: ({ row }) => {
+          const r = row.original;
+          if (r.roomType !== "WARD" || !r.department) return <span className="text-secondary text-sm">—</span>;
+          return (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+              <Building2 className="w-3 h-3" />
+              {r.department.name}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "createdAt",
@@ -257,6 +271,15 @@ export default function AssignmentsRoomsPage() {
                 <span className="text-secondary">{t("forms.capacity")}</span>
                 <span className="text-text">{roomDetail.capacity ?? "—"}</span>
               </div>
+              {roomDetail.roomType === "WARD" && roomDetail.department && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-secondary">{t("forms.department")}</span>
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+                    <Building2 className="w-3 h-3" />
+                    {roomDetail.department.name}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-secondary">{t("common.created")}</span>
                 <span className="text-text">{formatShortDate(roomDetail.createdAt)}</span>
@@ -312,6 +335,7 @@ export default function AssignmentsRoomsPage() {
                 roomType: sheet.editing.roomType,
                 capacity: sheet.editing.capacity ?? undefined,
                 description: sheet.editing.description ?? "",
+                departmentId: sheet.editing.department?.id ?? "",
               }
               : undefined
           }

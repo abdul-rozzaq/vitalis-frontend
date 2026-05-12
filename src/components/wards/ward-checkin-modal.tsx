@@ -42,7 +42,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
   }));
 
   const roomOptions = rooms.map((r: any) => ({
-    label: `${r.name}${r.capacity ? ` (${r.occupiedCount ?? 0}/${r.capacity})` : ""}${r.isFull ? ` — ${t("wards.full")}` : ""}`,
+    label: `${r.name}${r.department ? ` (${r.department.name})` : ""}${r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}${r.isFull ? ` ⛔ ${t("wards.full")}` : ""}`,
     value: r.id,
     disabled: r.isFull,
   }));

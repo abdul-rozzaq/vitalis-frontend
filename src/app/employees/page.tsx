@@ -72,13 +72,7 @@ export default function EmployeesPage() {
 
   const handleExport = () => {
     const headers = ["#", t("employees.colFullName"), t("employees.colPhone"), t("employees.colRole"), t("employees.colJoined")];
-    const rows = employeesData.map((e: Employee, idx: number) => [
-      idx + 1,
-      `${e.first_name} ${e.last_name}`,
-      e.phone ?? "",
-      e.role ?? "",
-      e.createdAt ? new Date(e.createdAt).toLocaleDateString() : "",
-    ]);
+    const rows = employeesData.map((e: Employee, idx: number) => [idx + 1, `${e.first_name} ${e.last_name}`, e.phone ?? "", e.role ?? "", e.createdAt ? new Date(e.createdAt).toLocaleDateString() : ""]);
     exportToExcel("employees", headers, rows, t("employees.title"));
   };
 
@@ -122,10 +116,19 @@ export default function EmployeesPage() {
                 {photoUrl ? (
                   <Image src={photoUrl} alt={name} width={28} height={28} className="object-cover w-full h-full" unoptimized />
                 ) : (
-                  name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+                  name
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)
                 )}
               </div>
-              <span className="font-medium text-text">{name}</span>
+              {/* <Can roles={["ADMIN"]}> */}
+              <Link href={`/employees/${info.row.original.id}/edit`} className="font-medium text-text hover:text-primary transition-colors">
+                {name}
+              </Link>
+              {/* </Can> */}
             </div>
           );
         },
@@ -147,11 +150,7 @@ export default function EmployeesPage() {
       {
         accessorKey: "createdAt",
         header: t("employees.colJoined"),
-        cell: (info: any) => (
-          <span className="text-secondary text-sm">
-            {new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-          </span>
-        ),
+        cell: (info: any) => <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>,
       },
       {
         id: "actions",
@@ -159,22 +158,13 @@ export default function EmployeesPage() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN"]}>
-              <Link href={`/employees/${row.original.id}/edit`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("employees.editTitle")}>
-                  <Edit className="w-4 h-4" />
-                </button>
-              </Link>
-            </Can>
-            <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("employees.deleteEmployee")}
               >
-                {isDeleting && deletingId === row.original.id
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Trash2 className="w-4 h-4" />}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -217,11 +207,7 @@ export default function EmployeesPage() {
                 ))}
               </select>
               {selectedRole && (
-                <button
-                  onClick={() => setSelectedRole("")}
-                  className="p-1.5 rounded-md hover:bg-surface-hover text-secondary hover:text-text transition-colors cursor-pointer"
-                  title="clear"
-                >
+                <button onClick={() => setSelectedRole("")} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary hover:text-text transition-colors cursor-pointer" title="clear">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -230,18 +216,13 @@ export default function EmployeesPage() {
 
           <button
             onClick={handleToggleFilter}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || selectedRole
-              ? "bg-primary-50 border-primary text-primary hover:bg-primary-100"
-              : "bg-surface border-border text-secondary hover:bg-surface-hover"
-              }`}
+            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+              filterOpen || selectedRole ? "bg-primary-50 border-primary text-primary hover:bg-primary-100" : "bg-surface border-border text-secondary hover:bg-surface-hover"
+            }`}
           >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
-            {selectedRole && (
-              <span className="ml-0.5 font-semibold">
-                · {ROLE_STYLES[selectedRole]?.label ?? selectedRole}
-              </span>
-            )}
+            {selectedRole && <span className="ml-0.5 font-semibold">· {ROLE_STYLES[selectedRole]?.label ?? selectedRole}</span>}
           </button>
 
           <button

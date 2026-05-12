@@ -14,12 +14,13 @@ type EmployeeFormValues = {
   last_name: string;
   phone: string;
   password?: string;
+  confirm_password?: string;
   role: string;
   birthday: string;
   photo?: string;
 };
 
-export type EmployeeSubmitData = EmployeeFormValues & { photoFile?: File };
+export type EmployeeSubmitData = Omit<EmployeeFormValues, "confirm_password"> & { photoFile?: File };
 
 const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Admin" },
@@ -43,17 +44,34 @@ interface EmployeeFormProps {
 export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: EmployeeFormProps) {
   const t = useTranslations();
 
-  const employeeSchema = z.object({
-    first_name: z.string().min(2, t("forms.firstNameTooShort")),
-    last_name: z.string().min(2, t("forms.lastNameTooShort")),
-    phone: z.string().min(1, t("forms.phoneRequired")).regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
-    password: initialData
-      ? z.string().optional()
-      : z.string().min(6, t("forms.passwordTooShort")),
-    role: z.string().min(1, t("forms.roleRequired")),
-    birthday: z.string().min(1, t("forms.birthdayRequired")),
-    photo: z.string().max(500).optional(),
-  });
+  const employeeSchema = z
+    .object({
+      first_name: z.string().min(2, t("forms.firstNameTooShort")),
+      last_name: z.string().min(2, t("forms.lastNameTooShort")),
+      phone: z
+        .string()
+        .min(1, t("forms.phoneRequired"))
+        .regex(/^\+998[0-9]{9}$/, t("forms.phoneInvalidUzbekistan")),
+      password: initialData
+        ? z
+            .string()
+            .optional()
+            .refine((v) => !v || v.length >= 6, { message: t("forms.passwordTooShort") })
+        : z.string().min(6, t("forms.passwordTooShort")),
+      confirm_password: z.string().optional(),
+      role: z.string().min(1, t("forms.roleRequired")),
+      birthday: z.string().min(1, t("forms.birthdayRequired")),
+      photo: z.string().max(500).optional(),
+    })
+    .refine(
+      (data) => {
+        if (initialData && data.password) {
+          return data.confirm_password === data.password;
+        }
+        return true;
+      },
+      { message: t("forms.passwordsMismatch"), path: ["confirm_password"] },
+    );
 
   const {
     register,
@@ -85,7 +103,12 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
   };
 
   const handleFormSubmit = (data: EmployeeFormValues) => {
-    onSubmit({ ...data, photoFile: photoFile ?? undefined });
+    const { confirm_password, password, ...rest } = data;
+    onSubmit({
+      ...rest,
+      ...(password ? { password } : {}),
+      photoFile: photoFile ?? undefined,
+    });
   };
 
   return (
@@ -100,11 +123,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
           {photoPreview ? (
             <div className="relative w-16 h-16 rounded-full overflow-hidden border border-border shrink-0">
               <Image src={photoPreview} alt="Preview" fill className="object-cover" unoptimized />
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                className="absolute top-0 right-0 w-5 h-5 bg-danger-600 rounded-full flex items-center justify-center"
-              >
+              <button type="button" onClick={handleRemovePhoto} className="absolute top-0 right-0 w-5 h-5 bg-danger-600 rounded-full flex items-center justify-center">
                 <X className="w-3 h-3 text-white" />
               </button>
             </div>
@@ -114,14 +133,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             </div>
           )}
           <div className="flex-1">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-              id="photo-upload"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="photo-upload" />
             <label
               htmlFor="photo-upload"
               className="cursor-pointer inline-flex items-center gap-1.5 bg-surface border border-border hover:bg-surface-hover text-secondary px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
@@ -199,11 +211,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
 
-            {errors.phone && (
-              <p className="text-xs text-danger-600 font-medium">
-                {errors.phone.message}
-              </p>
-            )}
+            {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
           </div>
         )}
       />
@@ -221,6 +229,38 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
           {errors.password && <p className="text-xs text-danger-600 font-medium">{errors.password.message}</p>}
+        </div>
+      )}
+
+      {isEditing && (
+        <div className="space-y-3 pt-1 border-t border-border">
+          <p className="text-xs text-secondary pt-1">{t("forms.resetPasswordHint")}</p>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary-500" />
+              {t("forms.newPassword")}
+            </label>
+            <input
+              {...register("password")}
+              type="password"
+              placeholder="••••••••"
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+            {errors.password && <p className="text-xs text-danger-600 font-medium">{errors.password.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary-500" />
+              {t("forms.confirmPassword")}
+            </label>
+            <input
+              {...register("confirm_password")}
+              type="password"
+              placeholder="••••••••"
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
+            {errors.confirm_password && <p className="text-xs text-danger-600 font-medium">{errors.confirm_password.message}</p>}
+          </div>
         </div>
       )}
 
@@ -257,11 +297,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
         <button

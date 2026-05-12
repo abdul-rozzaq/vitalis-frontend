@@ -13,6 +13,7 @@ export interface Room {
   roomType: RoomType;
   capacity?: number | null;
   description?: string;
+  department?: { id: string; name: string } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +75,7 @@ export type RoomPayload = {
   roomType: "WARD" | "EXAMINATION";
   capacity?: number;
   description?: string;
+  departmentId?: string | null;
 };
 
 export type RolePayload = {
