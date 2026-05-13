@@ -1,6 +1,7 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
+import { Combobox } from "@/components/ui/combobox";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { ROLE_STYLES, asArray, getTableRowIndex } from "@/features/assignments/utils";
@@ -107,6 +108,18 @@ export default function LabAssignmentsPage() {
     setIsActive(true);
   };
 
+  const labOptions = laboratories.map((l) => ({
+    value: l.id,
+    label: l.name,
+    avatar: l.name[0],
+  }));
+
+  const userOptions = users.map((u) => ({
+    value: u.id,
+    label: `${u.first_name} ${u.last_name}`,
+    sublabel: u.role.name,
+    avatar: u.first_name[0],
+  }));
   const isSaving = isCreating || isUpdating;
 
   const columns = useMemo<ColumnDef<LaboratoryAssignment>[]>(
@@ -230,38 +243,38 @@ export default function LabAssignmentsPage() {
         <div className="space-y-5">
           {/* User select — disabled when editing */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("assignments.colEmployee")}</label>
-            <select
+            <label className="text-sm font-medium text-text">
+              {t("assignments.colEmployee")}
+            </label>
+
+            <Combobox
+              options={userOptions}
               value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+              onChange={(val) => setUserId(val)}
               disabled={!!sheet.editing}
-              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm disabled:opacity-60"
-            >
-              <option value="">{t("forms.select")}</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.first_name} {u.last_name} — {u.role.name}
-                </option>
-              ))}
-            </select>
+              placeholder={t("forms.select")}
+              searchPlaceholder={t("common.search")}
+              className="w-full"
+            />
           </div>
 
           {/* Laboratory select — disabled when editing */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("assignments.colLaboratory")}</label>
-            <select
-              value={laboratoryId}
-              onChange={(e) => setLaboratoryId(e.target.value)}
-              disabled={!!sheet.editing}
-              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm disabled:opacity-60"
-            >
-              <option value="">{t("forms.select")}</option>
-              {laboratories.map((l) => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-          </div>
+            <label className="text-sm font-medium text-text">
+              {t("assignments.colLaboratory")}
+            </label>
 
+            <Combobox
+              options={labOptions}
+              value={laboratoryId}
+              onChange={(val) => setLaboratoryId(val)}
+              disabled={!!sheet.editing}
+              placeholder={t("forms.select")}
+              searchPlaceholder={t("common.search")}
+              className="w-full"
+              error={false}
+            />
+          </div>
           {/* isActive toggle */}
           <div className="flex items-center gap-3">
             <button

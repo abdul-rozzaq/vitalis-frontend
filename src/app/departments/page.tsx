@@ -7,7 +7,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, Filter, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { Building2, Download, Edit, GitBranch, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -20,6 +20,7 @@ interface Department {
   price?: number | null;
   parentId?: string | null;
   parent?: { id: string; name: string } | null;
+  children?: Department[];
 }
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
@@ -36,6 +37,53 @@ function getDepartmentColor(id: string) {
   return DEPARTMENT_COLORS[index];
 }
 
+/**
+ * Recursively flattens departments tree into a flat list.
+ * Each child keeps a reference to its parent for display.
+ */
+function flattenDepartments(departments: Department[]): Department[] {
+  const result: Department[] = [];
+
+  function traverse(dept: Department) {
+    result.push(dept);
+    if (dept.children && dept.children.length > 0) {
+      dept.children.forEach((child) => {
+        // Ensure child has parent reference for display
+        const childWithParent: Department = {
+          ...child,
+          parent: child.parent ?? { id: dept.id, name: dept.name },
+        };
+        traverse(childWithParent);
+      });
+    }
+  }
+
+  departments.forEach(traverse);
+  return result;
+}
+
+/**
+ * Filters departments by search query.
+ * Searches through: name, description, parent name.
+ * Also returns parent departments if any child matches.
+ */
+function filterDepartments(departments: Department[], query: string): Department[] {
+  if (!query.trim()) return departments;
+
+  const q = query.toLowerCase().trim();
+
+  // Use flattened list for searching — find all matching entries
+  const flat = flattenDepartments(departments);
+  const matched = flat.filter((dept) => {
+    return (
+      dept.name.toLowerCase().includes(q) ||
+      dept.description?.toLowerCase().includes(q) ||
+      dept.parent?.name.toLowerCase().includes(q)
+    );
+  });
+
+  return matched;
+}
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
@@ -44,6 +92,7 @@ export default function DepartmentsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: departmentsData, isLoading } = useQuery<Department[]>({
     queryKey: ["departments"],
@@ -99,6 +148,15 @@ export default function DepartmentsPage() {
     }
   };
 
+  // Filtered data: when search is active, show flat list with matched departments
+  const filteredData = useMemo(() => {
+    const source = departmentsData ?? [];
+    if (!searchQuery.trim()) return source;
+    return filterDepartments(source, searchQuery);
+  }, [departmentsData, searchQuery]);
+
+  const isSearching = searchQuery.trim().length > 0;
+
   const columns = useMemo<ColumnDef<Department>[]>(
     () => [
       {
@@ -107,7 +165,11 @@ export default function DepartmentsPage() {
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
-          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
+          return (
+            <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
+              {pageIndex * pageSize + row.index + 1}
+            </span>
+          );
         },
       },
       {
@@ -121,10 +183,15 @@ export default function DepartmentsPage() {
                 <Building2 className={`w-4 h-4 ${color.icon}`} />
               </div>
               <div>
-                <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+                <Link
+                  href={`/departments/${row.original.id}`}
+                  className="font-medium text-text hover:text-primary transition-colors"
+                >
                   {row.original.name}
                 </Link>
-                {row.original.description && <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>}
+                {row.original.description && (
+                  <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>
+                )}
               </div>
             </div>
           );
@@ -138,7 +205,12 @@ export default function DepartmentsPage() {
           return parent ? (
             <div className="flex items-center gap-1.5 text-secondary text-sm">
               <GitBranch className="w-3.5 h-3.5 shrink-0" />
-              <span>{parent.name}</span>
+              <Link
+                href={`/departments/${parent.id}`}
+                className="hover:text-primary transition-colors"
+              >
+                {parent.name}
+              </Link>
             </div>
           ) : (
             <span className="text-xs text-secondary italic">—</span>
@@ -164,13 +236,6 @@ export default function DepartmentsPage() {
         header: () => <div className="text-right">{t("common.actions")}</div>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
-            {/* <Link
-              href={`/departments/${row.original.id}`}
-              className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
-              title={t("departments.viewDepartment")}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Link> */}
             <Can roles={["ADMIN"]}>
               <button
                 onClick={() => handleEditDepartment(row.original)}
@@ -187,7 +252,11 @@ export default function DepartmentsPage() {
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("departments.deleteDepartment")}
               >
-                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {isDeleting && deletingId === row.original.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
               </button>
             </Can>
           </div>
@@ -200,17 +269,35 @@ export default function DepartmentsPage() {
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
       {/* Header Area */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+      >
         <div>
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("departments.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("departments.description")}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
-            <Filter className="w-3.5 h-3.5" />
-            {t("common.filter")}
-          </button>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("common.search")}
+              className="bg-surface border border-border text-sm text-text placeholder:text-text-muted rounded-md pl-8 pr-7 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:w-64 transition-all duration-200"
+            />
+            {isSearching && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
             <Download className="w-3.5 h-3.5" />
             {t("common.export")}
@@ -234,7 +321,7 @@ export default function DepartmentsPage() {
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={departmentsData ?? []} />
+          <DataTable columns={columns} data={filteredData} />
         )}
       </motion.div>
 
@@ -249,11 +336,11 @@ export default function DepartmentsPage() {
           initialData={
             editingDepartment
               ? {
-                name: editingDepartment.name,
-                description: editingDepartment.description,
-                price: editingDepartment.price ?? undefined,
-                parentId: editingDepartment.parentId ?? undefined,
-              }
+                  name: editingDepartment.name,
+                  description: editingDepartment.description,
+                  price: editingDepartment.price ?? undefined,
+                  parentId: editingDepartment.parentId ?? undefined,
+                }
               : undefined
           }
           departments={departmentsData ?? []}
