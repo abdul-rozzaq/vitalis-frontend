@@ -339,7 +339,7 @@ export default function DepartmentDetailPage() {
                   </div>
                   <div className="shrink-0 flex items-center gap-2">
                     {isFromChild && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface border border-border text-secondary">{deptName}</span>}
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>{appt.status}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.text}`}>{appt.caseStep?.case?.status}</span>
                   </div>
                 </div>
               );

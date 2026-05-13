@@ -278,7 +278,7 @@ export default function AppointmentsPage() {
                   patientId: editingAppointment.patientId,
                   assignmentId: editingAppointment.assignmentId,
                   dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                  status: editingAppointment.status,
+                  // status: editingAppointment.status,
                 }
               : undefined
           }
