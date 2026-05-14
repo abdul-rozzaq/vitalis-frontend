@@ -7,7 +7,7 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
-import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
+import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, getAppointmentStatus, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
@@ -175,9 +175,13 @@ export default function AppointmentsPage() {
         id: "caseStatus",
         header: t("appointments.colStatus"),
         cell: ({ row }) => {
-          const status = row.original.caseStep?.case?.status;
+          const status = getAppointmentStatus(row.original);
           if (!status) return <span className="text-[10px] text-secondary">—</span>;
-          return <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>{status}</span>;
+          return (
+            <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>
+              {status}
+            </span>
+          );
         },
       },
       {
@@ -275,11 +279,11 @@ export default function AppointmentsPage() {
           initialData={
             editingAppointment
               ? {
-                  patientId: editingAppointment.patientId,
-                  assignmentId: editingAppointment.assignmentId,
-                  dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                  // status: editingAppointment.status,
-                }
+                patientId: editingAppointment.patientId,
+                assignmentId: editingAppointment.assignmentId,
+                dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
+                // status: editingAppointment.status,
+              }
               : undefined
           }
           patients={patients}

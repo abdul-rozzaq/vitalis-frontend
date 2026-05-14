@@ -53,7 +53,12 @@ export interface Appointment {
   id: string;
   dateTime: string;
   conclusion?: string | null;
-  patient: { id: string; first_name: string; last_name: string };
+  patient: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    cases?: { id: string; status: string }[]; // ← shu qator
+  };
   patientId: string;
   assignment: Assignment;
   assignmentId: string;
@@ -62,13 +67,12 @@ export interface Appointment {
   prescription?: Prescription | null;
   caseStep?: {
     id: string;
-    caseId: string;
     type: string;
-    status: "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
-    case?: { id: string; status: "ACTIVE" | "COMPLETED" | "CANCELLED" } | null;
+    status: string;
+    caseId: string;
+    case?: { id: string; status: string };
   } | null;
 }
-
 export interface Patient {
   id: string;
   first_name: string;
