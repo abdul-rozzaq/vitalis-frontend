@@ -237,7 +237,18 @@
     "minAmount": "Min narx",
     "maxAmount": "Maks narx",
     "dateFrom": "Dan",
-    "dateTo": "Gacha"
+    "dateTo": "Gacha",
+    "quickPay": "To'lash",
+    "paying": "To'lanmoqda...",
+    "qp": {
+      "title": "To'lovni tasdiqlash",
+      "amount": "To'lov miqdori",
+      "method": "To'lov usuli",
+      "confirm": "To'lovni amalga oshirish",
+      "amountChanged": "Dastlabki miqdor: {original} so'm",
+      "invalidAmount": "Miqdor 0 dan katta bo'lishi kerak",
+      "error": "Xatolik yuz berdi, qayta urinib ko'ring"
+    }
   },
   "cases": {
     "newCase": "Yangi ish",

@@ -11,7 +11,7 @@ type PaymentFormValues = {
   patientId: string;
   departmentId: string;
   amount: number;
-  method: "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
+  method: "CASH" | "CREDIT_CARD" ;
   status: "PAID" | "UNPAID";
   description?: string;
 };
@@ -42,7 +42,7 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
     patientId: z.string().min(1, t("forms.selectPatient")),
     departmentId: z.string().min(1, t("forms.selectDepartment")),
     amount: z.number().positive(t("forms.amountRequired")),
-    method: z.enum(["CASH", "CREDIT_CARD", "DEBIT_CARD", "PAYPAL"]),
+    method: z.enum(["CASH", "CREDIT_CARD"]),
     status: z.enum(["PAID", "UNPAID"]),
     description: z.string().optional(),
   });
@@ -50,8 +50,6 @@ export function PaymentForm({ initialData, patients, departments, onSubmit, onCa
   const PAYMENT_METHODS = [
     { value: "CASH", label: t("forms.methodCash") },
     { value: "CREDIT_CARD", label: t("forms.methodCreditCard") },
-    { value: "DEBIT_CARD", label: t("forms.methodDebitCard") },
-    { value: "PAYPAL", label: t("forms.methodPaypal") },
   ];
 
   const PAYMENT_STATUSES = [
