@@ -239,7 +239,18 @@
     "minAmount": "Min amount",
     "maxAmount": "Max amount",
     "dateFrom": "From",
-    "dateTo": "To"
+    "dateTo": "To",
+    "quickPay": "Pay Now",
+    "paying": "Processing...",
+    "qp": {
+      "title": "Confirm Payment",
+      "amount": "Payment Amount",
+      "method": "Payment Method",
+      "confirm": "Confirm Payment",
+      "amountChanged": "Original amount: {original} UZS",
+      "invalidAmount": "Amount must be greater than 0",
+      "error": "Something went wrong, please try again"
+    }
   },
   "cases": {
     "newCase": "New Case",

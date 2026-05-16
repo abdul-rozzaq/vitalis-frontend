@@ -17,7 +17,7 @@ import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-type PaymentMethod = "CASH" | "CREDIT_CARD" | "DEBIT_CARD" | "PAYPAL";
+type PaymentMethod = "CASH" | "CREDIT_CARD";
 type PaymentStatus = "PAID" | "UNPAID";
 type DetailSheetMode = "editAppointment" | "addPayment" | "addStep" | null;
 type StepType = "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
@@ -39,8 +39,7 @@ function AppointmentPaymentForm({ appointment, onSubmit, onCancel, isPending }: 
   const paymentMethodOptions = [
     { value: "CASH" as const, label: t("forms.methodCash") },
     { value: "CREDIT_CARD" as const, label: t("forms.methodCreditCard") },
-    { value: "DEBIT_CARD" as const, label: t("forms.methodDebitCard") },
-    { value: "PAYPAL" as const, label: t("forms.methodPaypal") },
+   
   ];
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

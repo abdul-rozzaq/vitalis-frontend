@@ -1,9 +1,14 @@
 import { Appointment, Assignment, Patient } from "./types";
 
 export const CASE_STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-primary-50 text-primary",
-  COMPLETED: "bg-info-50 text-info-600",
-  CANCELLED: "bg-danger-50 text-danger-600",
+  // PatientCase statuslari
+  ACTIVE: "bg-blue-50 text-blue-700",
+  COMPLETED: "bg-green-50 text-green-700",
+  CANCELLED: "bg-gray-100 text-gray-500",
+  // CaseStep statuslari
+  PENDING: "bg-yellow-50 text-yellow-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700",
+  DONE: "bg-green-50 text-green-700",
 };
 
 export const toPatientOptions = (patients: Patient[]) =>
@@ -25,3 +30,15 @@ export const filterAppointmentsByPatientName = (appointments: Appointment[], fil
 
   return appointments.filter((appointment) => `${appointment.patient?.first_name ?? ""} ${appointment.patient?.last_name ?? ""}`.toLowerCase().includes(lowered));
 };
+
+export function getAppointmentStatus(appointment: Appointment) {
+  // Avval CaseStep.status ni ko'rsat (IN_PROGRESS, DONE, PENDING)
+  if (appointment.caseStep?.status) {
+    return appointment.caseStep.status;
+  }
+  // Fallback — patient.cases dan
+  if (appointment.patient?.cases?.length) {
+    return appointment.patient.cases[0].status;
+  }
+  return null;
+}
