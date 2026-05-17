@@ -750,6 +750,9 @@
     "full": "Full",
     "available": "Available",
     "freeSlots": "Free Slots",
-    "checkInHint": "If left empty, today's date will be used automatically"
+    "checkInHint": "If left empty, today's date will be used automatically",
+    "companionsCount": "Number of companions",
+    "maxCompanions": "Maximum",
+    "person": "person"
   }
 }

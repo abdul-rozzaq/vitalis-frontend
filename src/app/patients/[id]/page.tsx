@@ -1,8 +1,8 @@
 "use client";
 
+import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import formatPhone from "@/components/formatPhone";
 import usePhoneFormatter from "@/components/formatPhoneinput";
-import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { CaseStep, CaseStepStatus, CaseStepType, LabItemStatus, Patient, PatientCase, SheetMode } from "@/features/patients/detail/types";
@@ -28,12 +28,14 @@ import {
   Hash,
   LogOut,
   MapPin,
+  Minus,
   Paperclip,
   Phone,
   Plus,
   Scissors,
   Stethoscope,
   User,
+  Users,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -50,7 +52,6 @@ const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
   DISCHARGE: LogOut,
 };
 
-// ─── STEP TYPE COLORS ─────────────────────────────────────────────
 const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
   CHECKIN: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
   CONSULTATION: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
@@ -59,7 +60,7 @@ const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
   REFERRAL: "bg-yellow-200 text-yellow-950 dark:bg-yellow-900/40 dark:text-yellow-200",
   DISCHARGE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
 };
-// ─── STEP STATUS COLORS ───────────────────────────────────────────
+
 const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
   PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
@@ -67,13 +68,12 @@ const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
   CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
 };
 
-// ─── CASE STATUS COLORS ───────────────────────────────────────────
 const CASE_STATUS_COLOR: Record<string, string> = {
   ACTIVE: "text-blue-700 border-blue-400 dark:text-blue-300 dark:border-blue-700",
   COMPLETED: "text-green-700 border-green-400 dark:text-green-300 dark:border-green-700",
   CANCELLED: "text-gray-500 border-gray-300 dark:text-neutral-400 dark:border-neutral-600",
 };
-// ─── LAB ITEM STATUS COLORS ───────────────────────────────────────
+
 const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
   PENDING: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200",
   IN_PROGRESS: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
@@ -129,13 +129,7 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
         {files.length > 0 && (
           <div className="space-y-1">
             {files.map((file) => (
-              <a
-                key={file.id}
-                href={resolveFileUrl(file.url)}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors"
-              >
+              <a key={file.id} href={resolveFileUrl(file.url)} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Paperclip className="w-3.5 h-3.5 text-secondary shrink-0" />
                   <span className="text-xs text-text truncate">{file.name}</span>
@@ -232,20 +226,14 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
             <User className="w-4 h-4 text-primary-500" />
             {t("forms.firstName")}
           </label>
-          <input
-            defaultValue={patient.first_name}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
+          <input defaultValue={patient.first_name} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text flex items-center gap-2">
             <User className="w-4 h-4 text-primary-500" />
             {t("forms.lastName")}
           </label>
-          <input
-            defaultValue={patient.last_name}
-            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-          />
+          <input defaultValue={patient.last_name} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
         </div>
       </div>
 
@@ -254,12 +242,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
         </label>
-        <input
-          value={phone.value}
-          onChange={phone.onChange}
-          placeholder="+998 (__) ___-__-__"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
+        <input value={phone.value} onChange={phone.onChange} placeholder="+998 (__) ___-__-__" className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
       </div>
 
       <div className="space-y-1.5">
@@ -267,11 +250,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
           <Calendar className="w-4 h-4 text-primary-500" />
           {t("forms.birthDate")}
         </label>
-        <input
-          type="date"
-          defaultValue={patient.birth_date ?? ""}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
+        <input type="date" defaultValue={patient.birth_date ?? ""} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
       </div>
 
       <div className="space-y-1.5">
@@ -291,10 +270,7 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
           <Droplet className="w-4 h-4 text-primary-500" />
           {t("forms.bloodType")}
         </label>
-        <select
-          defaultValue={patient.blood_type ?? ""}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        >
+        <select defaultValue={patient.blood_type ?? ""} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm">
           <option value="">{t("forms.selectBloodType")}</option>
           <option value="O_POSITIVE">O+</option>
           <option value="O_NEGATIVE">O-</option>
@@ -371,16 +347,26 @@ export default function PatientDetailPage() {
 
   // ─── Palata ───────────────────────────────────────────────────────────────
   const [wardRoomId, setWardRoomId] = useState("");
-  const [wardCheckInDate, setWardCheckInDate] = useState(""); // ← QO'SHILDI (nom conflict yo'q)
+  const [wardCheckInDate, setWardCheckInDate] = useState("");
   const [wardExpectedOut, setWardExpectedOut] = useState("");
   const [wardNote, setWardNote] = useState("");
+  const [wardCompanionsCount, setWardCompanionsCount] = useState(0);
 
-  const { data: wardRoomsRaw = [] } = useQuery<any[]>({
-    queryKey: ["rooms-wards"],
-    queryFn: () => api.get("/rooms/wards").then((r) => r.data),
+  // Barcha xonalar — WARD turini filter qilamiz (WardCheckInModal kabi)
+  const { data: allRoomsRaw = [] } = useQuery<any[]>({
+    queryKey: ["rooms"],
+    queryFn: () => api.get("/rooms").then((r) => r.data),
     enabled: sheetMode === "ward",
     refetchOnWindowFocus: false,
   });
+  const wardRoomsRaw = allRoomsRaw.filter((r: any) => r.roomType === "WARD");
+
+  // Tanlangan xona — maxCompanions hisoblash uchun
+  const selectedWardRoom = wardRoomsRaw.find((r: any) => r.id === wardRoomId) as any | undefined;
+  // Bemor o'zi 1 o'rin egallaydi, qolgan bo'sh o'rinlar sheriq uchun
+  const wardMaxCompanions = selectedWardRoom
+    ? Math.max(0, (selectedWardRoom.freeSlots ?? selectedWardRoom.capacity ?? 0) - 1)
+    : 0;
 
   const { data: activeWard } = useQuery<any>({
     queryKey: ["patient-ward", id],
@@ -392,24 +378,25 @@ export default function PatientDetailPage() {
     refetchOnWindowFocus: false,
   });
 
-  // ← nom o'zgartirildi: wardCheckIn → doWardCheckIn (state bilan conflict yo'q)
   const { mutate: doWardCheckIn, isPending: isWardCheckin } = useMutation({
     mutationFn: () =>
       api.post("/wards/check-in", {
         patientId: id,
         roomId: wardRoomId,
-        checkIn: wardCheckInDate || undefined, // ← QO'SHILDI
+        companionsCount: wardCompanionsCount || 0,
+        checkIn: wardCheckInDate || undefined,
         expectedOut: wardExpectedOut || undefined,
         note: wardNote || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-ward", id] });
       queryClient.invalidateQueries({ queryKey: ["wards"] });
-      queryClient.invalidateQueries({ queryKey: ["rooms-wards"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
       setWardRoomId("");
-      setWardCheckInDate(""); // ← QO'SHILDI
+      setWardCheckInDate("");
       setWardExpectedOut("");
       setWardNote("");
+      setWardCompanionsCount(0);
       setSheetMode(null);
     },
   });
@@ -419,12 +406,14 @@ export default function PatientDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-ward", id] });
       queryClient.invalidateQueries({ queryKey: ["wards"] });
-      queryClient.invalidateQueries({ queryKey: ["rooms-wards"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] });
     },
   });
   // ─────────────────────────────────────────────────────────────────────────
 
   const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
+
+  const hasDocInfo = patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
 
   const cases = useMemo(() => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()), [casesData]);
 
@@ -432,11 +421,11 @@ export default function PatientDetailPage() {
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
   const visitCount = cases.length;
   const fileCount = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0), 0);
-  const totalPaid = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.payments ?? []).filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0), 0), 0);
-
+  const totalPaid = cases.reduce(
+    (total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.payments ?? []).filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0), 0),
+    0,
+  );
   const visitedDepartments = useMemo(() => [...new Set(cases.flatMap((c) => c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)))], [cases]);
-
-  const hasDocInfo = patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
 
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
@@ -448,13 +437,11 @@ export default function PatientDetailPage() {
         </Link>
       </motion.div>
 
-      {/* Two-column layout */}
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ── LEFT SIDEBAR ───────────────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 }} className="w-full lg:w-72 shrink-0 space-y-4">
           {/* Patient card */}
           <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
-            {/* Avatar + Name */}
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
               <div>
@@ -473,16 +460,11 @@ export default function PatientDetailPage() {
 
             <div className="h-px bg-border" />
 
-            {/* Details */}
             <div className="space-y-2.5">
               {patient.birth_date && (
                 <div className="flex items-center gap-2.5 text-sm text-secondary">
                   <Calendar className="w-4 h-4 text-text-muted shrink-0" />
-                  {new Date(patient.birth_date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {new Date(patient.birth_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                 </div>
               )}
 
@@ -509,7 +491,6 @@ export default function PatientDetailPage() {
                 </div>
               )}
 
-              {/* Pasport / hujjat ma'lumotlari */}
               {hasDocInfo && (
                 <div className="space-y-2 pt-1">
                   {!docRevealed ? (
@@ -565,7 +546,6 @@ export default function PatientDetailPage() {
 
             <div className="h-px bg-border" />
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="text-lg font-bold text-text">{visitCount}</p>
@@ -596,37 +576,25 @@ export default function PatientDetailPage() {
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
 
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
-              <button
-                onClick={() => setSheetMode("checkin")}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
-              >
+              <button onClick={() => setSheetMode("checkin")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20">
                 <Plus className="w-4 h-4" />
                 {t("cases.newCase")}
               </button>
             </Can>
 
             <Can roles={["ADMIN", "KASSIR"]}>
-              <button
-                onClick={() => setSheetMode("edit")}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
-              >
+              <button onClick={() => setSheetMode("edit")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
                 <Edit className="w-4 h-4" />
                 {t("patients.editPatientInfo")}
               </button>
             </Can>
 
-            <Link
-              href={`/patients/${id}/medical-cards/new`}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
-            >
+            <Link href={`/patients/${id}/medical-cards/new`} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
               <ClipboardList className="w-4 h-4" />
               {t("medicalCard.newCard")}
             </Link>
 
-            <Link
-              href={`/patients/${id}/medical-cards`}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
-            >
+            <Link href={`/patients/${id}/medical-cards`} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
               <FileText className="w-4 h-4" />
               {t("medicalCard.myCards")}
             </Link>
@@ -637,17 +605,21 @@ export default function PatientDetailPage() {
                 <div className="space-y-1.5">
                   <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
                     <BedDouble className="w-4 h-4 shrink-0" />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{activeWard.room?.name}</p>
                       <p className="text-xs font-normal text-green-600">
                         {t("wards.statusOccupied")} · {Math.max(1, Math.ceil((Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000))} {t("wards.colDays")}
                       </p>
+                      {activeWard.companionsCount > 0 && (
+                        <p className="text-xs font-normal text-amber-600 flex items-center gap-1 mt-0.5">
+                          <Users className="w-3 h-3" />
+                          {activeWard.companionsCount} ta sheriq
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      if (confirm(t("wards.checkOutConfirm"))) wardCheckOut(activeWard.id);
-                    }}
+                    onClick={() => { if (confirm(t("wards.checkOutConfirm"))) wardCheckOut(activeWard.id); }}
                     disabled={isWardCheckout}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition-colors cursor-pointer disabled:opacity-40"
                   >
@@ -655,10 +627,7 @@ export default function PatientDetailPage() {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setSheetMode("ward")}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
-                >
+                <button onClick={() => setSheetMode("ward")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
                   <BedDouble className="w-4 h-4" />
                   {t("wards.checkIn")}
                 </button>
@@ -685,10 +654,7 @@ export default function PatientDetailPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-text">{t("patients.activityTimeline")}</h2>
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
-              <button
-                onClick={() => setSheetMode("checkin")}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-              >
+              <button onClick={() => setSheetMode("checkin")} className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer">
                 <Plus className="w-3.5 h-3.5" />
                 {t("cases.newCase")}
               </button>
@@ -736,19 +702,10 @@ export default function PatientDetailPage() {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setSheetMode(null)}
-              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-            >
+            <button type="button" onClick={() => setSheetMode(null)} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
               {t("forms.cancel")}
             </button>
-            <button
-              type="button"
-              disabled={isAddingCase}
-              onClick={() => addCase(chiefComplaint)}
-              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
-            >
+            <button type="button" disabled={isAddingCase} onClick={() => addCase(chiefComplaint)} className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
               {isAddingCase ? t("common.loading") : t("cases.startCase")}
             </button>
           </div>
@@ -762,27 +719,63 @@ export default function PatientDetailPage() {
       {/* ── Palata yotqizish Sheet ── */}
       <Sheet isOpen={sheetMode === "ward"} onClose={() => setSheetMode(null)} title={t("wards.checkInTitle")} description={t("wards.detailDescription")}>
         <div className="space-y-4">
+
           {/* Xona tanlash */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("wards.colRoom")} *</label>
             <select
               value={wardRoomId}
-              onChange={(e) => setWardRoomId(e.target.value)}
+              onChange={(e) => { setWardRoomId(e.target.value); setWardCompanionsCount(0); }}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             >
               <option value="">{t("forms.select")}</option>
               {wardRoomsRaw.map((r: any) => (
                 <option key={r.id} value={r.id} disabled={r.isFull}>
                   {r.name}
-                  {r.capacity ? ` (${r.occupiedCount}/${r.capacity})` : ""}
-                  {r.isFull ? ` — ${t("wards.roomFull")}` : ""}
+                  {r.department ? ` (${r.department.name})` : ""}
+                  {r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}
+                  {r.isFull ? ` ⛔ ${t("wards.full")}` : ""}
                 </option>
               ))}
             </select>
-            {wardRoomsRaw.length === 0 && <p className="text-xs text-text-muted">{t("common.loading")}</p>}
+            {wardRoomsRaw.length === 0 && <p className="text-xs text-text-muted">{t("wards.noWards")}</p>}
           </div>
 
-          {/* Yotgan sana — QO'SHILDI */}
+          {/* Sheriqlar soni */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              {t("wards.companionsCount")}
+              <span className="ml-1 text-text-muted font-normal text-xs">({t("common.optional")})</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setWardCompanionsCount((c) => Math.max(0, c - 1))}
+                disabled={wardCompanionsCount === 0}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-lg font-semibold text-text w-6 text-center">{wardCompanionsCount}</span>
+              <button
+                type="button"
+                onClick={() => setWardCompanionsCount((c) => Math.min(wardMaxCompanions, c + 1))}
+                disabled={!wardRoomId || wardCompanionsCount >= wardMaxCompanions}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              {wardRoomId && (
+                <span className="text-xs text-secondary ml-1">
+                  {t("wards.maxCompanions")}: {wardMaxCompanions}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-text-muted">Sheriq ro&apos;yxatga olinmaydi, lekin joy egallaydi</p>
+          </div>
+
+          {/* Yotgan sana */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.colCheckIn")}
@@ -798,7 +791,7 @@ export default function PatientDetailPage() {
             <p className="text-xs text-text-muted">{t("wards.checkInHint")}</p>
           </div>
 
-          {/* Kutilgan chiqish — min wardCheckInDate ga bog'landi */}
+          {/* Kutilgan chiqish */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.colExpectedOut")}
@@ -828,17 +821,13 @@ export default function PatientDetailPage() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setSheetMode(null)}
-              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-            >
+            <button type="button" onClick={() => setSheetMode(null)} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
               {t("forms.cancel")}
             </button>
             <button
               type="button"
               disabled={!wardRoomId || isWardCheckin}
-              onClick={() => doWardCheckIn()} // ← doWardCheckIn ishlatildi
+              onClick={() => doWardCheckIn()}
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
               {isWardCheckin ? t("common.loading") : t("wards.checkIn")}
