@@ -39,7 +39,6 @@ function AppointmentPaymentForm({ appointment, onSubmit, onCancel, isPending }: 
   const paymentMethodOptions = [
     { value: "CASH" as const, label: t("forms.methodCash") },
     { value: "CREDIT_CARD" as const, label: t("forms.methodCreditCard") },
-   
   ];
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -588,6 +587,7 @@ export default function AppointmentDetailPage() {
           defaultStepType={(stepType as "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE") || undefined}
           onClose={() => setSheetMode(null)}
           onSuccess={() => invalidateAppointmentData(appointment?.patientId)}
+          appointmentId={appointment.id}
         />
       </Sheet>
 

@@ -16,11 +16,12 @@ interface AddCaseStepFormProps {
   caseId: string;
   availableStepTypes?: AvailableStepType[];
   defaultStepType?: AvailableStepType;
+  appointmentId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, defaultStepType, onClose, onSuccess }: AddCaseStepFormProps) {
+export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, defaultStepType, onClose, onSuccess, appointmentId }: AddCaseStepFormProps) {
   const t = useTranslations();
 
   const [stepType, setStepType] = useState<AvailableStepType | "">(defaultStepType ?? "");
@@ -79,12 +80,19 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
 
   const handleSubmit = () => {
     if (!stepType) return;
+
     const payload: Record<string, unknown> = { type: stepType };
+
     if (stepNote) payload.note = stepNote;
 
     if (stepType === "LAB") {
       payload.laboratoryId = labDepartmentId;
       payload.serviceIds = selectedServiceIds;
+
+    } else if (stepType === "PROCEDURE") {
+      payload.appointmentId = appointmentId;
+      payload.amount = stepAmount ? Number(stepAmount) : 0;
+    
     } else {
       if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
       if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();

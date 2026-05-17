@@ -41,46 +41,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
-const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
-  CHECKIN: ClipboardCheck,
-  CONSULTATION: Stethoscope,
-  LAB: FlaskConical,
-  PROCEDURE: Scissors,
-  REFERRAL: ArrowRightCircle,
-  DISCHARGE: LogOut,
-};
-
-// ─── STEP TYPE COLORS ─────────────────────────────────────────────
-const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
-  CHECKIN: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
-  CONSULTATION: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
-  LAB: "bg-violet-200 text-violet-950 dark:bg-violet-900/40 dark:text-violet-200",
-  PROCEDURE: "bg-orange-200 text-orange-950 dark:bg-orange-900/40 dark:text-orange-200",
-  REFERRAL: "bg-yellow-200 text-yellow-950 dark:bg-yellow-900/40 dark:text-yellow-200",
-  DISCHARGE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
-};
-// ─── STEP STATUS COLORS ───────────────────────────────────────────
-const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  DONE: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-};
-
-// ─── CASE STATUS COLORS ───────────────────────────────────────────
-const CASE_STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "text-blue-700 border-blue-400 dark:text-blue-300 dark:border-blue-700",
-  COMPLETED: "text-green-700 border-green-400 dark:text-green-300 dark:border-green-700",
-  CANCELLED: "text-gray-500 border-gray-300 dark:text-neutral-400 dark:border-neutral-600",
-};
-// ─── LAB ITEM STATUS COLORS ───────────────────────────────────────
-const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200",
-  IN_PROGRESS: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
-  DONE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
-  CANCELLED: "bg-red-200 text-red-950 dark:bg-red-900/40 dark:text-red-200",
-};
-
 function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
   const t = useTranslations();
   const Icon = STEP_ICONS[step.type];
@@ -848,8 +808,53 @@ export default function PatientDetailPage() {
       </Sheet>
 
       <Sheet isOpen={addStepCaseId !== null} onClose={() => setAddStepCaseId(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
-        <AddCaseStepForm caseId={addStepCaseId ?? ""} onClose={() => setAddStepCaseId(null)} onSuccess={() => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] })} />
+        <AddCaseStepForm
+          caseId={addStepCaseId ?? ""}
+          availableStepTypes={["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
+          onClose={() => setAddStepCaseId(null)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] })}
+        />
       </Sheet>
     </div>
   );
 }
+
+const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
+  CHECKIN: ClipboardCheck,
+  CONSULTATION: Stethoscope,
+  LAB: FlaskConical,
+  PROCEDURE: Scissors,
+  REFERRAL: ArrowRightCircle,
+  DISCHARGE: LogOut,
+};
+
+// ─── STEP TYPE COLORS ─────────────────────────────────────────────
+const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
+  CHECKIN: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
+  CONSULTATION: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+  LAB: "bg-violet-200 text-violet-950 dark:bg-violet-900/40 dark:text-violet-200",
+  PROCEDURE: "bg-orange-200 text-orange-950 dark:bg-orange-900/40 dark:text-orange-200",
+  REFERRAL: "bg-yellow-200 text-yellow-950 dark:bg-yellow-900/40 dark:text-yellow-200",
+  DISCHARGE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+};
+// ─── STEP STATUS COLORS ───────────────────────────────────────────
+const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
+  PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+  DONE: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+};
+
+// ─── CASE STATUS COLORS ───────────────────────────────────────────
+const CASE_STATUS_COLOR: Record<string, string> = {
+  ACTIVE: "text-blue-700 border-blue-400 dark:text-blue-300 dark:border-blue-700",
+  COMPLETED: "text-green-700 border-green-400 dark:text-green-300 dark:border-green-700",
+  CANCELLED: "text-gray-500 border-gray-300 dark:text-neutral-400 dark:border-neutral-600",
+};
+// ─── LAB ITEM STATUS COLORS ───────────────────────────────────────
+const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
+  PENDING: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200",
+  IN_PROGRESS: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
+  DONE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+  CANCELLED: "bg-red-200 text-red-950 dark:bg-red-900/40 dark:text-red-200",
+};
