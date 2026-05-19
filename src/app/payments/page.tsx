@@ -9,10 +9,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Building2, CheckCircle2, CreditCard, Download, Edit,
-  Loader2, Plus, SlidersHorizontal, Trash2, TrendingUp, Users, X,
-} from "lucide-react";
+import { Building2, CheckCircle2, CreditCard, Download, Edit, Loader2, Plus, SlidersHorizontal, Trash2, TrendingUp, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -26,9 +23,9 @@ interface Payment {
   department_id: string;
   department_name?: string;
   amount: number;
-  method: "CASH" | "CREDIT_CARD";
+  method: "CASH" | "CREDIT_CARD" | null;
   status: "PAID" | "UNPAID";
-  description?: string;
+  note?: string;
   createdAt: string;
   patient?: { id: string; first_name: string; last_name: string };
   department?: { id: string; name: string };
@@ -44,7 +41,12 @@ interface PaymentFilters {
 }
 
 const INITIAL_FILTERS: PaymentFilters = {
-  status: "", minAmount: "", maxAmount: "", dateFrom: "", dateTo: "", departmentId: "",
+  status: "",
+  minAmount: "",
+  maxAmount: "",
+  dateFrom: "",
+  dateTo: "",
+  departmentId: "",
 };
 
 function normalizePayment(p: any): Payment {
@@ -58,8 +60,15 @@ function normalizePayment(p: any): Payment {
   };
 }
 
-interface PatientOption { id: string; first_name: string; last_name: string }
-interface DepartmentOption { id: string; name: string }
+interface PatientOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+interface DepartmentOption {
+  id: string;
+  name: string;
+}
 
 const MOCK_PATIENTS: PatientOption[] = [
   { id: "p1", first_name: "Alice", last_name: "Johnson" },
@@ -70,16 +79,12 @@ const MOCK_PATIENTS: PatientOption[] = [
 ];
 
 const MOCK_DEPARTMENTS: DepartmentOption[] = [
-  { id: "d1", name: "Cardiology" }, { id: "d2", name: "Neurology" },
-  { id: "d3", name: "Pediatrics" }, { id: "d4", name: "Orthopedics" },
-  { id: "d5", name: "Emergency" }, { id: "d6", name: "Radiology" },
-];
-
-const MOCK_PAYMENTS: Payment[] = [
-  { id: "pay-001", patient_id: "p1", patient_name: "Alice Johnson", department_id: "d1", department_name: "Cardiology", amount: 450.0, method: "CREDIT_CARD", status: "PAID", description: "Routine cardiac checkup", createdAt: "2026-02-20T10:30:00.000Z" },
-  { id: "pay-002", patient_id: "p2", patient_name: "Bob Smith", department_id: "d5", department_name: "Emergency", amount: 1200.0, method: "CASH", status: "UNPAID", description: "Emergency room visit", createdAt: "2026-02-21T14:15:00.000Z" },
-  { id: "pay-003", patient_id: "p3", patient_name: "Carol Williams", department_id: "d3", department_name: "Pediatrics", amount: 280.5, method: "CASH", status: "PAID", description: "Pediatric consultation", createdAt: "2026-02-22T09:00:00.000Z" },
-  { id: "pay-005", patient_id: "p5", patient_name: "Eva Martinez", department_id: "d6", department_name: "Radiology", amount: 320.0, method: "CREDIT_CARD", status: "UNPAID", description: "MRI scan", createdAt: "2026-02-24T16:00:00.000Z" },
+  { id: "d1", name: "Cardiology" },
+  { id: "d2", name: "Neurology" },
+  { id: "d3", name: "Pediatrics" },
+  { id: "d4", name: "Orthopedics" },
+  { id: "d5", name: "Emergency" },
+  { id: "d6", name: "Radiology" },
 ];
 
 const STATUS_STYLE_MAP: Record<string, { bg: string; text: string; dot: string }> = {
@@ -96,9 +101,7 @@ const METHOD_STYLE_MAP: Record<string, { bg: string; text: string }> = {
 
 // ─── Summary Card ─────────────────────────────────────────────────────────────
 
-function SummaryCard({ label, value, sub, icon: Icon, color }: {
-  label: string; value: string; sub?: string; icon: React.ElementType; color: string;
-}) {
+function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub?: string; icon: React.ElementType; color: string }) {
   return (
     <div className="bg-surface border border-border rounded-lg px-4 py-3.5 flex items-center gap-3">
       <div className={`w-9 h-9 rounded-lg ${color} flex items-center justify-center shrink-0`}>
@@ -115,7 +118,13 @@ function SummaryCard({ label, value, sub, icon: Icon, color }: {
 
 // ─── Filter Panel ─────────────────────────────────────────────────────────────
 
-function FilterPanel({ filters, onChange, onReset, departments, activeCount }: {
+function FilterPanel({
+  filters,
+  onChange,
+  onReset,
+  departments,
+  activeCount,
+}: {
   filters: PaymentFilters;
   onChange: (key: keyof PaymentFilters, value: string) => void;
   onReset: () => void;
@@ -124,30 +133,28 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: {
 }) {
   const t = useTranslations();
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}
-      className="bg-surface border border-border rounded-lg p-4"
-    >
+    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="bg-surface border border-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium text-text flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-primary-500" />
           {t("common.filter")}
-          {activeCount > 0 && (
-            <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">{activeCount}</span>
-          )}
+          {activeCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">{activeCount}</span>}
         </span>
         {activeCount > 0 && (
           <button onClick={onReset} className="text-xs text-secondary hover:text-danger-600 flex items-center gap-1 transition-colors cursor-pointer">
-            <X className="w-3 h-3" />{t("common.reset")}
+            <X className="w-3 h-3" />
+            {t("common.reset")}
           </button>
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.colStatus")}</label>
-          <select value={filters.status} onChange={(e) => onChange("status", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer">
+          <select
+            value={filters.status}
+            onChange={(e) => onChange("status", e.target.value)}
+            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+          >
             <option value="">{t("common.all")}</option>
             <option value="PAID">{t("payments.statusPaid")}</option>
             <option value="UNPAID">{t("payments.statusUnpaid")}</option>
@@ -155,30 +162,57 @@ function FilterPanel({ filters, onChange, onReset, departments, activeCount }: {
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.minAmount")}</label>
-          <input type="number" min="0" value={filters.minAmount} onChange={(e) => onChange("minAmount", e.target.value)} placeholder="0"
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all" />
+          <input
+            type="number"
+            min="0"
+            value={filters.minAmount}
+            onChange={(e) => onChange("minAmount", e.target.value)}
+            placeholder="0"
+            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          />
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.maxAmount")}</label>
-          <input type="number" min="0" value={filters.maxAmount} onChange={(e) => onChange("maxAmount", e.target.value)} placeholder="∞"
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all" />
+          <input
+            type="number"
+            min="0"
+            value={filters.maxAmount}
+            onChange={(e) => onChange("maxAmount", e.target.value)}
+            placeholder="∞"
+            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          />
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.dateFrom")}</label>
-          <input type="date" value={filters.dateFrom} onChange={(e) => onChange("dateFrom", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer" />
+          <input
+            type="date"
+            value={filters.dateFrom}
+            onChange={(e) => onChange("dateFrom", e.target.value)}
+            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+          />
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-secondary">{t("payments.dateTo")}</label>
-          <input type="date" value={filters.dateTo} onChange={(e) => onChange("dateTo", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer" />
+          <input
+            type="date"
+            value={filters.dateTo}
+            onChange={(e) => onChange("dateTo", e.target.value)}
+            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+          />
         </div>
         <div className="space-y-1 col-span-2 sm:col-span-3 lg:col-span-5">
           <label className="text-xs font-medium text-secondary">{t("payments.colDepartment")}</label>
-          <select value={filters.departmentId} onChange={(e) => onChange("departmentId", e.target.value)}
-            className="w-full sm:w-72 bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer">
+          <select
+            value={filters.departmentId}
+            onChange={(e) => onChange("departmentId", e.target.value)}
+            className="w-full sm:w-72 bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+          >
             <option value="">{t("common.allDepartments")}</option>
-            {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -245,8 +279,7 @@ export default function PaymentsPage() {
   });
 
   const { mutateAsync: updatePayment } = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.patch(`/payments/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.patch(`/payments/${id}`, data),
 
     // ── Optimistic update — server javobi kutmasdan UI yangilaydi ──────────
     onMutate: async ({ id, data }) => {
@@ -259,8 +292,7 @@ export default function PaymentsPage() {
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous)
-        queryClient.setQueryData(["payments", filters], context.previous);
+      if (context?.previous) queryClient.setQueryData(["payments", filters], context.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["payments"] });
@@ -275,19 +307,13 @@ export default function PaymentsPage() {
     },
   });
 
-  const payments: Payment[] = useMemo(
-    () => Array.isArray(paymentsRaw) ? paymentsRaw.map(normalizePayment) : MOCK_PAYMENTS,
-    [paymentsRaw]
-  );
+  const payments: Payment[] = useMemo(() => (Array.isArray(paymentsRaw) ? paymentsRaw.map(normalizePayment) : []), [paymentsRaw]);
   const patients: PatientOption[] = patientsData || MOCK_PATIENTS;
   const departments: DepartmentOption[] = departmentsData || MOCK_DEPARTMENTS;
 
-  const handleFilterChange = (key: keyof PaymentFilters, value: string) =>
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const handleFilterChange = (key: keyof PaymentFilters, value: string) => setFilters((prev) => ({ ...prev, [key]: value }));
   const handleFilterReset = () => setFilters(INITIAL_FILTERS);
-  const activeFilterCount = useMemo(
-    () => Object.values(filters).filter((v) => v !== "").length, [filters]
-  );
+  const activeFilterCount = useMemo(() => Object.values(filters).filter((v) => v !== "").length, [filters]);
   const filteredPayments = payments;
 
   const totalRevenue = filteredPayments.filter((p) => p.status === "PAID").reduce((s, p) => s + Number(p.amount), 0);
@@ -296,14 +322,32 @@ export default function PaymentsPage() {
 
   const handleExport = () => {
     const headers = [t("payments.colPatient"), t("payments.colDepartment"), t("payments.colAmount"), t("payments.colMethod"), t("payments.colStatus"), t("payments.colDate")];
-    const rows = filteredPayments.map((p: Payment) => [p.patient_name ?? "", p.department_name ?? "", p.amount, METHOD_LABELS[p.method] ?? p.method, STATUS_LABELS[p.status] ?? p.status, p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""]);
+
+    const rows = filteredPayments.map((p: Payment) => [
+      p.patient_name ?? "",
+      p.department_name ?? "",
+      p.amount,
+      p.method ? METHOD_LABELS[p.method] : p.method,
+      STATUS_LABELS[p.status] ?? p.status,
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+    ]);
+
     exportToExcel("payments", headers, rows, t("payments.title"));
   };
 
-  const handleAdd = () => { setEditingPayment(null); setIsSheetOpen(true); };
-  const handleEdit = (p: Payment) => { setEditingPayment(p); setIsSheetOpen(true); };
+  const handleAdd = () => {
+    setEditingPayment(null);
+    setIsSheetOpen(true);
+  };
+  const handleEdit = (p: Payment) => {
+    setEditingPayment(p);
+    setIsSheetOpen(true);
+  };
   const handleDelete = (id: string) => {
-    if (confirm(t("payments.deleteConfirm"))) { setDeletingId(id); deletePayment(id); }
+    if (confirm(t("payments.deleteConfirm"))) {
+      setDeletingId(id);
+      deletePayment(id);
+    }
   };
 
   // ── Dialog tasdiqlaganda chaqiriladi ───────────────────────────────────────
@@ -318,166 +362,176 @@ export default function PaymentsPage() {
 
   const handleSubmit = (data: any) => {
     const payload = { patientId: data.patientId, departmentId: data.departmentId, amount: Number(data.amount), method: data.method, status: data.status, description: data.description };
-    const action = editingPayment
-      ? updatePayment({ id: editingPayment.id, data: payload })
-      : addPayment(payload);
-    action.then(() => { setIsSheetOpen(false); setEditingPayment(null); });
+    const action = editingPayment ? updatePayment({ id: editingPayment.id, data: payload }) : addPayment(payload);
+    action.then(() => {
+      setIsSheetOpen(false);
+      setEditingPayment(null);
+    });
   };
 
-  const columns = useMemo<ColumnDef<Payment>[]>(() => [
-    {
-      accessorKey: "id", header: "#",
-      cell: ({ row, table }) => {
-        const idx = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1;
-        return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{idx}</span>;
+  const columns = useMemo<ColumnDef<Payment>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: "#",
+        cell: ({ row, table }) => {
+          const idx = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1;
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{idx}</span>;
+        },
       },
-    },
-    {
-      accessorKey: "patient_name", header: t("payments.colPatient"),
-      cell: ({ row }) => {
-        const name = row.original.patient_name || "—";
-        return (
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
-              {name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+      {
+        accessorKey: "patient_name",
+        header: t("payments.colPatient"),
+        cell: ({ row }) => {
+          const name = row.original.patient_name || "—";
+          return (
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
+                {name
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </div>
+              <span className="font-medium text-text text-sm">{name}</span>
             </div>
-            <span className="font-medium text-text text-sm">{name}</span>
+          );
+        },
+      },
+      {
+        accessorKey: "department_name",
+        header: t("payments.colDepartment"),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1.5 text-secondary text-sm">
+            <Building2 className="w-3.5 h-3.5 shrink-0" />
+            {row.original.department_name || "—"}
           </div>
-        );
+        ),
       },
-    },
-    {
-      accessorKey: "department_name", header: t("payments.colDepartment"),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5 text-secondary text-sm">
-          <Building2 className="w-3.5 h-3.5 shrink-0" />{row.original.department_name || "—"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "amount", header: t("payments.colAmount"),
-      cell: (info: any) => (
-        <span className="font-semibold text-text text-sm">{Number(info.getValue()).toLocaleString("uz-UZ")} so'm</span>
-      ),
-    },
-    {
-      accessorKey: "method", header: t("payments.colMethod"),
-      cell: (info: any) => {
-        const method = info.getValue() as string;
-        const s = METHOD_STYLE_MAP[method] ?? { bg: "bg-gray-100", text: "text-gray-700" };
-        return (
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
-            <CreditCard className="w-3 h-3" />{METHOD_LABELS[method] ?? method}
-          </span>
-        );
+      {
+        accessorKey: "amount",
+        header: t("payments.colAmount"),
+        cell: (info: any) => <span className="font-semibold text-text text-sm">{Number(info.getValue()).toLocaleString("uz-UZ")} so'm</span>,
       },
-    },
-    {
-      accessorKey: "status", header: t("payments.colStatus"),
-      cell: (info: any) => {
-        const status = info.getValue() as string;
-        const s = STATUS_STYLE_MAP[status] ?? { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
-        return (
-          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />{STATUS_LABELS[status] ?? status}
-          </span>
-        );
+      {
+        accessorKey: "method",
+        header: t("payments.colMethod"),
+        cell: (info: any) => {
+          const method = info.getValue() as string;
+          const s = METHOD_STYLE_MAP[method] ?? { bg: "bg-gray-100", text: "text-gray-700" };
+          return (
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
+              <CreditCard className="w-3 h-3" />
+              {METHOD_LABELS[method] ?? method}
+            </span>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "createdAt", header: t("payments.colDate"),
-      cell: (info: any) => (
-        <span className="text-secondary text-sm">
-          {new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-        </span>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">{t("common.actions")}</div>,
-      cell: ({ row }) => {
-        const payment = row.original;
-        return (
-          <div className="flex justify-end items-center gap-1">
-            {/* ── "To'lash" tugmasi — faqat UNPAID qatorlarda ko'rinadi ── */}
-            <Can roles={["ADMIN", "KASSIR"]}>
-              {payment.status === "UNPAID" && (
-                <button
-                  onClick={() => setQuickPayTarget(payment)}
-                  title={t("payments.quickPay")}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 transition-all cursor-pointer"
-                >
-                  <CheckCircle2 className="w-3 h-3" />
-                  {t("payments.quickPay")}
+      {
+        accessorKey: "status",
+        header: t("payments.colStatus"),
+        cell: (info: any) => {
+          const status = info.getValue() as string;
+          const s = STATUS_STYLE_MAP[status] ?? { bg: "bg-gray-50", text: "text-gray-700", dot: "bg-gray-500" };
+          return (
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+              {STATUS_LABELS[status] ?? status}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "createdAt",
+        header: t("payments.colDate"),
+        cell: (info: any) => <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>,
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">{t("common.actions")}</div>,
+        cell: ({ row }) => {
+          const payment = row.original;
+          return (
+            <div className="flex justify-end items-center gap-1">
+              {/* ── "To'lash" tugmasi — faqat UNPAID qatorlarda ko'rinadi ── */}
+              <Can roles={["ADMIN", "KASSIR"]}>
+                {payment.status === "UNPAID" && (
+                  <button
+                    onClick={() => setQuickPayTarget(payment)}
+                    title={t("payments.quickPay")}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    {t("payments.quickPay")}
+                  </button>
+                )}
+              </Can>
+
+              <Can roles={["ADMIN", "KASSIR", "HISOBCHI"]}>
+                <button onClick={() => handleEdit(payment)} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("payments.editPayment")}>
+                  <Edit className="w-4 h-4" />
                 </button>
-              )}
-            </Can>
+              </Can>
 
-            <Can roles={["ADMIN", "KASSIR", "HISOBCHI"]}>
-              <button onClick={() => handleEdit(payment)}
-                className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title={t("payments.editPayment")}>
-                <Edit className="w-4 h-4" />
-              </button>
-            </Can>
-
-            <Can roles={["ADMIN"]}>
-              <button onClick={() => handleDelete(payment.id)}
-                disabled={isDeleting && deletingId === payment.id}
-                className="p-1.5 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
-                title={t("payments.deletePayment")}>
-                {isDeleting && deletingId === payment.id
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Trash2 className="w-4 h-4" />}
-              </button>
-            </Can>
-          </div>
-        );
+              <Can roles={["ADMIN"]}>
+                <button
+                  onClick={() => handleDelete(payment.id)}
+                  disabled={isDeleting && deletingId === payment.id}
+                  className="p-1.5 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                  title={t("payments.deletePayment")}
+                >
+                  {isDeleting && deletingId === payment.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                </button>
+              </Can>
+            </div>
+          );
+        },
       },
-    },
-  ], [t, isDeleting, deletingId, STATUS_LABELS, METHOD_LABELS]);
+    ],
+    [t, isDeleting, deletingId, STATUS_LABELS, METHOD_LABELS],
+  );
 
   return (
     <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("payments.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("payments.description")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setFilterOpen((v) => !v)}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary-200 text-primary" : "bg-surface border-border text-secondary hover:bg-surface-hover"}`}>
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary-200 text-primary" : "bg-surface border-border text-secondary hover:bg-surface-hover"}`}
+          >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             {t("common.filter")}
-            {activeFilterCount > 0 && (
-              <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-0.5">{activeFilterCount}</span>
-            )}
+            {activeFilterCount > 0 && <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-0.5">{activeFilterCount}</span>}
           </button>
-          <button onClick={handleExport}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
-            <Download className="w-3.5 h-3.5" />{t("common.export")}
+          <button
+            onClick={handleExport}
+            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {t("common.export")}
           </button>
           <Can roles={["ADMIN", "KASSIR"]}>
-            <button onClick={handleAdd}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
-              <Plus className="w-3.5 h-3.5" />{t("payments.newPayment")}
+            <button
+              onClick={handleAdd}
+              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t("payments.newPayment")}
             </button>
           </Can>
         </div>
       </motion.div>
 
-      <AnimatePresence>
-        {filterOpen && (
-          <FilterPanel filters={filters} onChange={handleFilterChange}
-            onReset={handleFilterReset} departments={departments} activeCount={activeFilterCount} />
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{filterOpen && <FilterPanel filters={filters} onChange={handleFilterChange} onReset={handleFilterReset} departments={departments} activeCount={activeFilterCount} />}</AnimatePresence>
 
       {/* Summary Cards */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <SummaryCard label={t("payments.totalRevenue")} value={`${totalRevenue.toLocaleString("uz-UZ")} so'm`} sub={t("payments.paidPayments")} icon={TrendingUp} color="bg-green-100 text-green-600" />
         <SummaryCard label={t("payments.totalPayments")} value={String(filteredPayments.length)} sub={t("payments.allRecords")} icon={CreditCard} color="bg-blue-100 text-blue-600" />
         <SummaryCard label={t("payments.paid")} value={String(paidCount)} sub={t("payments.completed")} icon={Users} color="bg-primary-100 text-primary" />
@@ -496,26 +550,32 @@ export default function PaymentsPage() {
       </motion.div>
 
       {/* ── Quick Pay Dialog ─────────────────────────────────────────────── */}
-      <QuickPayDialog
-        open={!!quickPayTarget}
-        onClose={() => setQuickPayTarget(null)}
-        onConfirm={handleQuickPayConfirm}
-        initialAmount={quickPayTarget?.amount ?? 0}
-        patientName={quickPayTarget?.patient_name}
-      />
+      <QuickPayDialog open={!!quickPayTarget} onClose={() => setQuickPayTarget(null)} onConfirm={handleQuickPayConfirm} initialAmount={quickPayTarget?.amount ?? 0} patientName={quickPayTarget?.patient_name} />
 
       {/* Edit / Add Sheet */}
-      <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}
+      <Sheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
         title={editingPayment ? t("payments.editTitle") : t("payments.newPayment")}
-        description={editingPayment ? t("payments.editDesc") : t("payments.newDesc")}>
+        description={editingPayment ? t("payments.editDesc") : t("payments.newDesc")}
+      >
         <PaymentForm
-          patients={patients} departments={departments}
-          initialData={editingPayment ? {
-            patientId: editingPayment.patient_id, departmentId: editingPayment.department_id,
-            amount: editingPayment.amount, method: editingPayment.method,
-            status: editingPayment.status, description: editingPayment.description,
-          } : undefined}
-          onSubmit={handleSubmit} onCancel={() => setIsSheetOpen(false)}
+          patients={patients}
+          departments={departments}
+          initialData={
+            editingPayment
+              ? {
+                  patientId: editingPayment.patient_id,
+                  departmentId: editingPayment.department_id,
+                  amount: editingPayment.amount,
+                  method: editingPayment.method,
+                  status: editingPayment.status,
+                  note: editingPayment.note,
+                }
+              : undefined
+          }
+          onSubmit={handleSubmit}
+          onCancel={() => setIsSheetOpen(false)}
         />
       </Sheet>
     </div>
