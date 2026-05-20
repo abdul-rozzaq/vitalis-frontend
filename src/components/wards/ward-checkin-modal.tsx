@@ -21,12 +21,16 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const [checkIn, setCheckIn] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
-  const [companionsCount, setCompanionsCount] = useState(0); // ← QO'SHILDI
+  const [companionsCount, setCompanionsCount] = useState(0);
 
+  // Alohida queryKey — boshqa ["patients"] cache ga tegmaydi
+  // staleTime: 0 — modal ochilganda har doim yangi so'rov ketadi
   const { data: patients = [] } = useQuery({
-    queryKey: ["patients"],
-    queryFn: () => api.get("/patients").then((r) => r.data),
+    queryKey: ["patients-available-for-ward"],
+    queryFn: () =>
+      api.get("/patients", { params: { excludeOccupied: "true" } }).then((r) => r.data),
     enabled: open,
+    staleTime: 0,
   });
 
   const { data: allRooms = [] } = useQuery({
@@ -37,9 +41,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
-  // Tanlangan xona ma'lumoti — max sherik sonini hisoblash uchun
   const selectedRoom = rooms.find((r: any) => r.id === roomId) as any | undefined;
-  // Xonada nechta bo'sh o'rin bor (1 ta bemor o'zi egallaydi)
   const maxCompanions = selectedRoom
     ? Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) - 1)
     : 0;
@@ -63,11 +65,13 @@ export function WardCheckInModal({ open, onClose }: Props) {
         checkIn: checkIn || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
-        companionsCount,                             // ← QO'SHILDI
+        companionsCount,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Modal keyingi ochilishida yangi ro'yxat oladi
+      queryClient.invalidateQueries({ queryKey: ["patients-available-for-ward"] });
       handleClose();
     },
   });
@@ -78,11 +82,10 @@ export function WardCheckInModal({ open, onClose }: Props) {
     setCheckIn("");
     setExpectedOut("");
     setNote("");
-    setCompanionsCount(0);                           // ← QO'SHILDI
+    setCompanionsCount(0);
     onClose();
   };
 
-  // Xona o'zgarganda sherik sonini reset qilish
   const handleRoomChange = (val: string) => {
     setRoomId(val);
     setCompanionsCount(0);
@@ -101,7 +104,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor */}
+          {/* Bemor — faqat hozir palatada yotmaganlar */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -134,7 +137,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
             )}
           </div>
 
-          {/* Sheriklar soni — QO'SHILDI */}
+          {/* Qarovchilar soni */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" />
@@ -164,7 +167,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
                 <Plus className="w-3.5 h-3.5" />
               </button>
 
-              {/* Bo'sh o'rinlar ko'rsatgichi */}
               {roomId && (
                 <span className="text-xs text-secondary ml-1">
                   {t("wards.maxCompanions")}: {maxCompanions}
