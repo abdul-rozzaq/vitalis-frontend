@@ -3,16 +3,17 @@
 import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Minus, Plus, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 interface Ward {
   id: string;
-  checkIn: string;                                    // ← QO'SHILDI
+  checkIn: string;
   expectedOut: string | null;
   note: string | null;
   status: "OCCUPIED" | "VACATED";
+  companionsCount: number;                           // ← QO'SHILDI
   patient: { id: string; first_name: string; last_name: string };
   room: { id: string; name: string };
 }
@@ -26,13 +27,13 @@ export function WardEditModal({ ward, onClose }: Props) {
   const t = useTranslations();
   const queryClient = useQueryClient();
 
-  const [patientId, setPatientId] = useState("");     // ← QO'SHILDI
-  const [roomId, setRoomId] = useState("");           // ← QO'SHILDI
-  const [checkIn, setCheckIn] = useState("");         // ← QO'SHILDI
+  const [patientId, setPatientId] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [checkIn, setCheckIn] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
+  const [companionsCount, setCompanionsCount] = useState(0); // ← QO'SHILDI
 
-  // Xonalar va bemorlar — edit ochilganda yuklanadi
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((r) => r.data),
@@ -47,13 +48,21 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   const wardRooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
+  // Tanlangan xona bo'sh o'rinlari
+  const selectedRoom = wardRooms.find((r: any) => r.id === roomId) as any | undefined;
+  const maxCompanions = selectedRoom
+    ? selectedRoom.id === ward?.room.id
+      // Xuddi shu xona — hozirgi companionsCount ni ham hisobga olish
+      ? Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) + (ward?.companionsCount ?? 0))
+      : Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) - 1)
+    : 0;
+
   const patientOptions = patients.map((p: any) => ({
     label: `${p.first_name} ${p.last_name}`,
     value: p.id,
   }));
 
   const roomOptions = wardRooms.map((r: any) => ({
-    // Hozirgi xona to'lgan bo'lsa ham tanlash mumkin bo'lsin (u allaqachon shu xonada)
     label: `${r.name}${r.department ? ` (${r.department.name})` : ""}${r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}${r.isFull && r.id !== ward?.room.id ? ` ⛔ ${t("wards.full")}` : ""}`,
     value: r.id,
     disabled: r.isFull && r.id !== ward?.room.id,
@@ -61,22 +70,30 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   useEffect(() => {
     if (ward) {
-      setPatientId(ward.patient.id);                 // ← QO'SHILDI
-      setRoomId(ward.room.id);                       // ← QO'SHILDI
-      setCheckIn(ward.checkIn.split("T")[0]);        // ← QO'SHILDI
+      setPatientId(ward.patient.id);
+      setRoomId(ward.room.id);
+      setCheckIn(ward.checkIn.split("T")[0]);
       setExpectedOut(ward.expectedOut ? ward.expectedOut.split("T")[0] : "");
       setNote(ward.note ?? "");
+      setCompanionsCount(ward.companionsCount ?? 0);  // ← QO'SHILDI
     }
   }, [ward]);
+
+  // Xona o'zgarganda sherik sonini reset
+  const handleRoomChange = (val: string) => {
+    setRoomId(val);
+    setCompanionsCount(0);
+  };
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
       api.patch(`/wards/${ward!.id}`, {
-        patientId: patientId !== ward!.patient.id ? patientId : undefined,   // ← faqat o'zgargan bo'lsa
-        roomId: roomId !== ward!.room.id ? roomId : undefined,               // ← faqat o'zgargan bo'lsa
-        checkIn: checkIn !== ward!.checkIn.split("T")[0] ? checkIn : undefined, // ← faqat o'zgargan bo'lsa
+        patientId: patientId !== ward!.patient.id ? patientId : undefined,
+        roomId: roomId !== ward!.room.id ? roomId : undefined,
+        checkIn: checkIn !== ward!.checkIn.split("T")[0] ? checkIn : undefined,
         expectedOut: expectedOut || null,
         note: note || undefined,
+        companionsCount,                             // ← QO'SHILDI (har doim yuboriladi)
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
@@ -90,7 +107,7 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-text">{t("wards.editTitle")}</h3>
@@ -104,7 +121,7 @@ export function WardEditModal({ ward, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor — QO'SHILDI */}
+          {/* Bemor */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -119,7 +136,7 @@ export function WardEditModal({ ward, onClose }: Props) {
             />
           </div>
 
-          {/* Xona — QO'SHILDI */}
+          {/* Xona */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colRoom")} *
@@ -127,14 +144,51 @@ export function WardEditModal({ ward, onClose }: Props) {
             <Combobox
               options={roomOptions}
               value={roomId}
-              onChange={(val) => setRoomId(val as string)}
+              onChange={(val) => handleRoomChange(val as string)}
               placeholder={t("forms.select")}
               searchPlaceholder={t("common.search")}
               disabled={isPending}
             />
           </div>
 
-          {/* Yotgan sana — QO'SHILDI */}
+          {/* Sheriklar soni — QO'SHILDI */}
+          <div>
+            <label className="text-sm font-medium text-text mb-1 flex items-center gap-1.5 block">
+              <Users className="w-3.5 h-3.5" />
+              {t("wards.companionsCount")}
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCompanionsCount((v) => Math.max(0, v - 1))}
+                disabled={companionsCount === 0 || isPending}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="text-lg font-semibold text-text w-6 text-center">
+                {companionsCount}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setCompanionsCount((v) => Math.min(maxCompanions, v + 1))}
+                disabled={companionsCount >= maxCompanions || isPending}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+
+              {roomId && (
+                <span className="text-xs text-secondary ml-1">
+                  {t("wards.maxCompanions")}: {maxCompanions}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Yotgan sana */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colCheckIn")} *

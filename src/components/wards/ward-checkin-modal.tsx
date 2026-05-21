@@ -3,7 +3,7 @@
 import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Minus, Plus, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -18,14 +18,19 @@ export function WardCheckInModal({ open, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
-  const [checkIn, setCheckIn] = useState("");          // ← QO'SHILDI
+  const [checkIn, setCheckIn] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
+  const [companionsCount, setCompanionsCount] = useState(0);
 
+  // Alohida queryKey — boshqa ["patients"] cache ga tegmaydi
+  // staleTime: 0 — modal ochilganda har doim yangi so'rov ketadi
   const { data: patients = [] } = useQuery({
-    queryKey: ["patients"],
-    queryFn: () => api.get("/patients").then((r) => r.data),
+    queryKey: ["patients-available-for-ward"],
+    queryFn: () =>
+      api.get("/patients", { params: { excludeOccupied: "true" } }).then((r) => r.data),
     enabled: open,
+    staleTime: 0,
   });
 
   const { data: allRooms = [] } = useQuery({
@@ -35,6 +40,11 @@ export function WardCheckInModal({ open, onClose }: Props) {
   });
 
   const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
+
+  const selectedRoom = rooms.find((r: any) => r.id === roomId) as any | undefined;
+  const maxCompanions = selectedRoom
+    ? Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) - 1)
+    : 0;
 
   const patientOptions = patients.map((p: any) => ({
     label: `${p.first_name} ${p.last_name}`,
@@ -52,13 +62,16 @@ export function WardCheckInModal({ open, onClose }: Props) {
       api.post("/wards/check-in", {
         patientId,
         roomId,
-        checkIn: checkIn || undefined,               // ← QO'SHILDI
+        checkIn: checkIn || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
+        companionsCount,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      // Modal keyingi ochilishida yangi ro'yxat oladi
+      queryClient.invalidateQueries({ queryKey: ["patients-available-for-ward"] });
       handleClose();
     },
   });
@@ -66,17 +79,23 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const handleClose = () => {
     setPatientId("");
     setRoomId("");
-    setCheckIn("");                                   // ← QO'SHILDI
+    setCheckIn("");
     setExpectedOut("");
     setNote("");
+    setCompanionsCount(0);
     onClose();
+  };
+
+  const handleRoomChange = (val: string) => {
+    setRoomId(val);
+    setCompanionsCount(0);
   };
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-text">{t("wards.checkInTitle")}</h3>
           <button onClick={handleClose} className="text-secondary hover:text-text transition-colors">
@@ -85,7 +104,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor */}
+          {/* Bemor — faqat hozir palatada yotmaganlar */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -108,7 +127,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
             <Combobox
               options={roomOptions}
               value={roomId}
-              onChange={(val) => setRoomId(val as string)}
+              onChange={(val) => handleRoomChange(val as string)}
               placeholder={t("forms.select")}
               searchPlaceholder={t("common.search")}
               disabled={isPending || rooms.length === 0}
@@ -118,7 +137,45 @@ export function WardCheckInModal({ open, onClose }: Props) {
             )}
           </div>
 
-          {/* Yotgan sana — QO'SHILDI */}
+          {/* Qarovchilar soni */}
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              {t("wards.companionsCount")}
+              <span className="text-secondary font-normal ml-1">({t("common.optional")})</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setCompanionsCount((v) => Math.max(0, v - 1))}
+                disabled={companionsCount === 0 || isPending}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="text-lg font-semibold text-text w-6 text-center">
+                {companionsCount}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setCompanionsCount((v) => Math.min(maxCompanions, v + 1))}
+                disabled={!roomId || companionsCount >= maxCompanions || isPending}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+
+              {roomId && (
+                <span className="text-xs text-secondary ml-1">
+                  {t("wards.maxCompanions")}: {maxCompanions}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Yotgan sana */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colCheckIn")}
@@ -128,7 +185,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
               type="date"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              max={new Date().toISOString().slice(0, 10)}   // kelajak sana kiritilmasin
+              max={new Date().toISOString().slice(0, 10)}
               className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
             <p className="text-xs text-secondary mt-1">{t("wards.checkInHint")}</p>

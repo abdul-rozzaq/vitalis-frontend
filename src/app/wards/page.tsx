@@ -8,13 +8,26 @@ import { WardEditModal } from "@/components/wards/ward-edit-modal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Calendar, CalendarCheck, ChevronDown, Clock, Edit, Filter, Loader2, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import {
+  BedDouble,
+  Calendar,
+  CalendarCheck,
+  ChevronDown,
+  Clock,
+  Edit,
+  Filter,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-// 1. Ward interface — checkIn edit uchun room.id to'g'ri kelishi kerak
 interface Ward {
   id: string;
   checkIn: string;
@@ -23,8 +36,15 @@ interface Ward {
   daysStayed: number | null;
   status: "OCCUPIED" | "VACATED";
   note: string | null;
+  companionsCount: number;
   patient: { id: string; first_name: string; last_name: string };
-  room: { id: string; name: string; roomType: string; capacity?: number | null; department?: { id: string; name: string } | null };
+  room: {
+    id: string;
+    name: string;
+    roomType: string;
+    capacity?: number | null;
+    department?: { id: string; name: string } | null;
+  };
 }
 
 interface Room {
@@ -38,7 +58,6 @@ interface Room {
   department?: { id: string; name: string } | null;
 }
 
-// ─── Filter bar ───────────────────────────────────────────────────────────────
 interface Filters {
   search: string;
   status: "" | "OCCUPIED" | "VACATED";
@@ -68,11 +87,11 @@ export default function WardsPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [editingWard, setEditingWard] = useState<Ward | null>(null);
 
-  const set = <K extends keyof Filters>(key: K, val: Filters[K]) => setFilters((f) => ({ ...f, [key]: val }));
+  const set = <K extends keyof Filters>(key: K, val: Filters[K]) =>
+    setFilters((f) => ({ ...f, [key]: val }));
 
   const hasFilters = Object.values(filters).some((v) => v !== "");
 
-  // ── Data ────────────────────────────────────────────────────────────────────
   const { data: wardsRaw = [], isLoading } = useQuery<Ward[]>({
     queryKey: ["wards"],
     queryFn: () =>
@@ -97,7 +116,6 @@ export default function WardsPage() {
     enabled: !!detailId,
   });
 
-  // ── Mutations ───────────────────────────────────────────────────────────────
   const { mutate: checkOut, isPending: isCheckingOut } = useMutation({
     mutationFn: (id: string) => api.patch(`/wards/${id}/check-out`, {}),
     onSuccess: () => {
@@ -116,14 +134,12 @@ export default function WardsPage() {
     }
   };
 
-  // ── Stats ───────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const occupied = wardsRaw.filter((w) => w.status === "OCCUPIED").length;
     const vacated = wardsRaw.filter((w) => w.status === "VACATED").length;
     return { occupied, vacated, total: wardsRaw.length };
   }, [wardsRaw]);
 
-  // ── Client-side filter ──────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return wardsRaw.filter((w) => {
       if (filters.status && w.status !== filters.status) return false;
@@ -139,13 +155,13 @@ export default function WardsPage() {
         const q = filters.search.toLowerCase();
         const name = `${w.patient.first_name} ${w.patient.last_name}`.toLowerCase();
         const deptName = w.room.department?.name?.toLowerCase() ?? "";
-        if (!name.includes(q) && !w.room.name.toLowerCase().includes(q) && !deptName.includes(q)) return false;
+        if (!name.includes(q) && !w.room.name.toLowerCase().includes(q) && !deptName.includes(q))
+          return false;
       }
       return true;
     });
   }, [wardsRaw, filters]);
 
-  // ── Columns ─────────────────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<Ward>[]>(
     () => [
       {
@@ -154,14 +170,21 @@ export default function WardsPage() {
         cell: ({ row, table }) => {
           const pi = table.getState().pagination.pageIndex;
           const ps = table.getState().pagination.pageSize;
-          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pi * ps + row.index + 1}</span>;
+          return (
+            <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
+              {pi * ps + row.index + 1}
+            </span>
+          );
         },
       },
       {
         id: "patient",
         header: t("wards.colPatient"),
         cell: ({ row }) => (
-          <button onClick={() => setDetailId(row.original.id)} className="font-medium text-text hover:text-primary transition-colors text-left">
+          <button
+            onClick={() => setDetailId(row.original.id)}
+            className="font-medium text-text hover:text-primary transition-colors text-left"
+          >
             {row.original.patient.first_name} {row.original.patient.last_name}
           </button>
         ),
@@ -179,7 +202,11 @@ export default function WardsPage() {
       {
         accessorKey: "checkIn",
         header: t("wards.colCheckIn"),
-        cell: (info: any) => <span className="text-sm text-secondary">{new Date(info.getValue()).toLocaleDateString("uz-UZ")}</span>,
+        cell: (info: any) => (
+          <span className="text-sm text-secondary">
+            {new Date(info.getValue()).toLocaleDateString("uz-UZ")}
+          </span>
+        ),
       },
       {
         accessorKey: "expectedOut",
@@ -187,7 +214,8 @@ export default function WardsPage() {
         cell: (info: any) => {
           const val = info.getValue() as string | null;
           if (!val) return <span className="text-secondary text-sm">—</span>;
-          const isOverdue = info.row.original.status === "OCCUPIED" && new Date(val) < new Date();
+          const isOverdue =
+            info.row.original.status === "OCCUPIED" && new Date(val) < new Date();
           return (
             <span className={`text-sm ${isOverdue ? "text-red-500 font-medium" : "text-secondary"}`}>
               {new Date(val).toLocaleDateString("uz-UZ")}
@@ -201,7 +229,11 @@ export default function WardsPage() {
         header: t("wards.actualOut"),
         cell: (info: any) => {
           const val = info.getValue() as string | null;
-          return <span className="text-sm text-secondary">{val ? new Date(val).toLocaleDateString("uz-UZ") : "—"}</span>;
+          return (
+            <span className="text-sm text-secondary">
+              {val ? new Date(val).toLocaleDateString("uz-UZ") : "—"}
+            </span>
+          );
         },
       },
       {
@@ -209,10 +241,30 @@ export default function WardsPage() {
         header: t("wards.colDays"),
         cell: ({ row }) => {
           const w = row.original;
-          const days = w.status === "OCCUPIED" ? Math.max(1, Math.ceil((Date.now() - new Date(w.checkIn).getTime()) / 86400000)) : (w.daysStayed ?? "—");
+          const days =
+            w.status === "OCCUPIED"
+              ? Math.max(1, Math.ceil((Date.now() - new Date(w.checkIn).getTime()) / 86400000))
+              : (w.daysStayed ?? "—");
           return (
-            <span className={`text-sm font-medium ${w.status === "OCCUPIED" ? "text-primary" : "text-secondary"}`}>
+            <span
+              className={`text-sm font-medium ${w.status === "OCCUPIED" ? "text-primary" : "text-secondary"}`}
+            >
               {days} {w.status === "OCCUPIED" ? t("wards.currentDay") : ""}
+            </span>
+          );
+        },
+      },
+      {
+        // ← QO'SHILDI: jadvalda ham ko'rinadi
+        accessorKey: "companionsCount",
+        header: t("wards.companionsCount"),
+        cell: ({ row }) => {
+          const count = row.original.companionsCount;
+          if (!count) return <span className="text-secondary text-sm">—</span>;
+          return (
+            <span className="inline-flex items-center gap-1 text-sm text-secondary">
+              <Users className="w-3.5 h-3.5" />
+              {count}
             </span>
           );
         },
@@ -223,7 +275,10 @@ export default function WardsPage() {
         cell: (info: any) => {
           const val = info.getValue() as string;
           return (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                }`}
+            >
               {val === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
             </span>
           );
@@ -235,7 +290,11 @@ export default function WardsPage() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
-              <button onClick={() => setEditingWard(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("common.edit")}>
+              <button
+                onClick={() => setEditingWard(row.original)}
+                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
+                title={t("common.edit")}
+              >
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
@@ -247,7 +306,11 @@ export default function WardsPage() {
                   className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                   title={t("wards.checkOut")}
                 >
-                  {isCheckingOut && checkingOutId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  {isCheckingOut && checkingOutId === row.original.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </button>
               )}
             </Can>
@@ -258,11 +321,14 @@ export default function WardsPage() {
     [t, isCheckingOut, checkingOutId],
   );
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 space-y-5 max-w-7xl mx-auto w-full">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+      >
         <div>
           <h2 className="text-xl font-semibold text-text tracking-tight">{t("wards.title")}</h2>
           <p className="text-secondary text-sm mt-0.5">{t("wards.description")}</p>
@@ -270,13 +336,18 @@ export default function WardsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setFilterOpen((v) => !v)}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-              hasFilters ? "bg-primary-50 border-primary-200 text-primary" : "bg-surface border-border text-secondary hover:bg-surface-hover"
-            }`}
+            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${hasFilters
+                ? "bg-primary-50 border-primary-200 text-primary"
+                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+              }`}
           >
             <Filter className="w-3.5 h-3.5" />
             {t("common.filter")}
-            {hasFilters && <span className="ml-0.5 bg-primary text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{Object.values(filters).filter(Boolean).length}</span>}
+            {hasFilters && (
+              <span className="ml-0.5 bg-primary text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+                {Object.values(filters).filter(Boolean).length}
+              </span>
+            )}
             <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
           </button>
           <Can roles={["ADMIN", "KASSIR", "HAMSHIRA"]}>
@@ -291,12 +362,17 @@ export default function WardsPage() {
         </div>
       </motion.div>
 
-      {/* Stats cards */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Stats */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.04 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
         {[
-          { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600", bg: "bg-green-50" },
-          { label: t("wards.statusVacated"), value: stats.vacated, color: "text-gray-500", bg: "bg-gray-50" },
-          { label: t("wards.total"), value: stats.total, color: "text-primary", bg: "bg-primary-50" },
+          { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600" },
+          { label: t("wards.statusVacated"), value: stats.vacated, color: "text-gray-500" },
+          { label: t("wards.total"), value: stats.total, color: "text-primary" },
         ].map((s) => (
           <div key={s.label} className="bg-surface border border-border rounded-xl p-4">
             <p className="text-xs text-secondary mb-1">{s.label}</p>
@@ -307,9 +383,12 @@ export default function WardsPage() {
 
       {/* Filter panel */}
       {filterOpen && (
-        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-surface border border-border rounded-xl p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-surface border border-border rounded-xl p-4"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-            {/* Qidiruv */}
             <input
               type="text"
               value={filters.search}
@@ -317,8 +396,6 @@ export default function WardsPage() {
               placeholder={t("common.filterPlaceholder")}
               className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
-
-            {/* Status */}
             <select
               value={filters.status}
               onChange={(e) => set("status", e.target.value as Filters["status"])}
@@ -328,26 +405,26 @@ export default function WardsPage() {
               <option value="OCCUPIED">{t("wards.statusOccupied")}</option>
               <option value="VACATED">{t("wards.statusVacated")}</option>
             </select>
-
-            {/* Bo'lim */}
             <select
               value={filters.departmentId}
               onChange={(e) => set("departmentId", e.target.value)}
               className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             >
-              <option value="">{t("forms.department")}: {t("common.all") ?? "All"}</option>
+              <option value="">
+                {t("forms.department")}: {t("common.all") ?? "All"}
+              </option>
               {Array.from(
                 new Map(
                   wardRooms
                     .filter((r) => r.department)
-                    .map((r) => [r.department!.id, r.department!])
-                ).values()
+                    .map((r) => [r.department!.id, r.department!]),
+                ).values(),
               ).map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
               ))}
             </select>
-
-            {/* Xona */}
             <select
               value={filters.roomId}
               onChange={(e) => set("roomId", e.target.value)}
@@ -362,16 +439,12 @@ export default function WardsPage() {
                   </option>
                 ))}
             </select>
-
-            {/* Sana dan */}
             <input
               type="date"
               value={filters.dateFrom}
               onChange={(e) => set("dateFrom", e.target.value)}
               className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
-
-            {/* Sana gacha */}
             <div className="flex gap-2">
               <input
                 type="date"
@@ -390,8 +463,6 @@ export default function WardsPage() {
               )}
             </div>
           </div>
-
-          {/* Filtered count */}
           <p className="text-xs text-secondary mt-2">
             {filtered.length} / {wardsRaw.length} {t("wards.records")}
           </p>
@@ -409,7 +480,10 @@ export default function WardsPage() {
             <BedDouble className="w-8 h-8 text-secondary" />
             <p className="text-secondary text-sm">{t("wards.noWards")}</p>
             {hasFilters && (
-              <button onClick={() => setFilters(EMPTY_FILTERS)} className="text-xs text-primary hover:underline flex items-center gap-1">
+              <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 <X className="w-3 h-3" /> {t("common.reset")}
               </button>
             )}
@@ -420,7 +494,13 @@ export default function WardsPage() {
       </motion.div>
 
       {/* Detail Sheet */}
-      <Sheet isOpen={!!detailId} onClose={() => setDetailId(null)} title={t("wards.detailTitle")} description={t("wards.detailDescription")} className="max-w-md">
+      <Sheet
+        isOpen={!!detailId}
+        onClose={() => setDetailId(null)}
+        title={t("wards.detailTitle")}
+        description={t("wards.detailDescription")}
+        className="max-w-md"
+      >
         {isDetailLoading ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
@@ -428,21 +508,35 @@ export default function WardsPage() {
         ) : wardDetail ? (
           <div className="space-y-4">
             {/* Status badge */}
-            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-              {wardDetail.status === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
+            <span
+              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-500"
+                }`}
+            >
+              {wardDetail.status === "OCCUPIED"
+                ? t("wards.statusOccupied")
+                : t("wards.statusVacated")}
             </span>
 
             {/* Bemor */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-1">
-              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.colPatient")}</p>
-              <Link href={`/patients/${wardDetail.patient.id}`} className="text-text font-semibold text-base hover:text-primary transition-colors">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                {t("wards.colPatient")}
+              </p>
+              <Link
+                href={`/patients/${wardDetail.patient.id}`}
+                className="text-text font-semibold text-base hover:text-primary transition-colors"
+              >
                 {wardDetail.patient.first_name} {wardDetail.patient.last_name}
               </Link>
             </div>
 
             {/* Xona */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-1">
-              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.colRoom")}</p>
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                {t("wards.colRoom")}
+              </p>
               <div className="flex items-center gap-2">
                 <BedDouble className="w-4 h-4 text-primary" />
                 <span className="text-text font-medium">{wardDetail.room.name}</span>
@@ -452,15 +546,34 @@ export default function WardsPage() {
               )}
             </div>
 
+            {/* ← QO'SHILDI: Qarovchilar soni */}
+            {wardDetail.companionsCount > 0 && (
+              <div className="bg-surface-hover rounded-xl p-4 space-y-1">
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                  {t("wards.companionsCount")}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-text font-medium">
+                    {wardDetail.companionsCount} {t("wards.person")}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Sanalar */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-3">
-              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.dates")}</p>
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                {t("wards.dates")}
+              </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-secondary">
                     <Calendar className="w-3.5 h-3.5" /> {t("wards.colCheckIn")}
                   </span>
-                  <span className="text-text font-medium">{new Date(wardDetail.checkIn).toLocaleDateString("uz-UZ")}</span>
+                  <span className="text-text font-medium">
+                    {new Date(wardDetail.checkIn).toLocaleDateString("uz-UZ")}
+                  </span>
                 </div>
 
                 {wardDetail.expectedOut && (
@@ -468,7 +581,13 @@ export default function WardsPage() {
                     <span className="flex items-center gap-2 text-secondary">
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.colExpectedOut")}
                     </span>
-                    <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date() ? "text-red-500" : "text-text"}`}>
+                    <span
+                      className={`font-medium ${wardDetail.status === "OCCUPIED" &&
+                          new Date(wardDetail.expectedOut) < new Date()
+                          ? "text-red-500"
+                          : "text-text"
+                        }`}
+                    >
                       {new Date(wardDetail.expectedOut).toLocaleDateString("uz-UZ")}
                     </span>
                   </div>
@@ -479,7 +598,9 @@ export default function WardsPage() {
                     <span className="flex items-center gap-2 text-secondary">
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.actualOut")}
                     </span>
-                    <span className="text-text font-medium">{new Date(wardDetail.actualOut).toLocaleDateString("uz-UZ")}</span>
+                    <span className="text-text font-medium">
+                      {new Date(wardDetail.actualOut).toLocaleDateString("uz-UZ")}
+                    </span>
                   </div>
                 )}
 
@@ -488,8 +609,19 @@ export default function WardsPage() {
                     <Clock className="w-3.5 h-3.5" /> {t("wards.colDays")}
                   </span>
                   <span className="text-primary font-bold text-base">
-                    {wardDetail.status === "OCCUPIED" ? Math.max(1, Math.ceil((Date.now() - new Date(wardDetail.checkIn).getTime()) / 86400000)) : (wardDetail.daysStayed ?? "—")}
-                    {wardDetail.status === "OCCUPIED" && <span className="text-xs font-normal text-secondary ml-1">{t("wards.currentDay")}</span>}
+                    {wardDetail.status === "OCCUPIED"
+                      ? Math.max(
+                        1,
+                        Math.ceil(
+                          (Date.now() - new Date(wardDetail.checkIn).getTime()) / 86400000,
+                        ),
+                      )
+                      : (wardDetail.daysStayed ?? "—")}
+                    {wardDetail.status === "OCCUPIED" && (
+                      <span className="text-xs font-normal text-secondary ml-1">
+                        {t("wards.currentDay")}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -498,7 +630,9 @@ export default function WardsPage() {
             {/* Izoh */}
             {wardDetail.note && (
               <div className="bg-surface-hover rounded-xl p-4 space-y-1">
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.note")}</p>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                  {t("wards.note")}
+                </p>
                 <p className="text-sm text-secondary">{wardDetail.note}</p>
               </div>
             )}
@@ -527,7 +661,11 @@ export default function WardsPage() {
                     disabled={isCheckingOut}
                     className="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
                   >
-                    {isCheckingOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    {isCheckingOut ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
                     {t("wards.checkOut")}
                   </button>
                 </Can>

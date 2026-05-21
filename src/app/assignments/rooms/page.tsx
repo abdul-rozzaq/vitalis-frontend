@@ -9,23 +9,73 @@ import { asArray, formatShortDate, getTableRowIndex } from "@/features/assignmen
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { BedDouble, Building2, Edit, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  BedDouble,
+  Building2,
+  ChevronDown,
+  Clock,
+  Edit,
+  Filter,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Trash2,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 interface RoomWithOccupancy extends Room {
   occupiedCount: number;
+  freeSlots: number;
   freeCount: number;
   isFull: boolean;
 }
+
+interface WardPatient {
+  id: string;
+  checkIn: string;
+  expectedOut: string | null;
+  daysStayed: number | null;
+  companionsCount: number;
+  status: "OCCUPIED" | "VACATED";
+  note: string | null;
+  patient: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    birth_date: string;
+    blood_type: string;
+  };
+  room: {
+    id: string;
+    name: string;
+    roomType: string;
+    capacity: number | null;
+    department: { id: string; name: string } | null;
+  };
+}
+
+type FilterStatus = "" | "OCCUPIED" | "VACATED";
 
 export default function AssignmentsRoomsPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
 
-  const [sheet, setSheet] = useState<{ open: boolean; editing: Room | null }>({ open: false, editing: null });
+  const [sheet, setSheet] = useState<{ open: boolean; editing: Room | null }>({
+    open: false,
+    editing: null,
+  });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+
+  // Ward bemorlar filter
+  const [wardFilter, setWardFilter] = useState<FilterStatus>("");
+  const [wardFilterOpen, setWardFilterOpen] = useState(false);
 
   const { data: roomsRaw, isLoading } = useQuery({
     queryKey: ["rooms"],
@@ -35,12 +85,27 @@ export default function AssignmentsRoomsPage() {
 
   const rooms = asArray<RoomWithOccupancy>(roomsRaw);
 
-  // Room detail — GET /api/rooms/:id
   const { data: roomDetail, isLoading: isDetailLoading } = useQuery<RoomWithOccupancy>({
     queryKey: ["room", detailId],
     queryFn: () => api.get(`/rooms/${detailId}`).then((r) => r.data),
     enabled: !!detailId,
   });
+
+  // Xonadagi bemorlar — faqat WARD tipli xona tanlanganda
+  const { data: roomWards = [], isLoading: isWardsLoading } = useQuery<WardPatient[]>({
+    queryKey: ["room-wards", detailId],
+    queryFn: () =>
+      api.get(`/wards/room/${detailId}`).then((r) => {
+        const d = r.data;
+        return Array.isArray(d) ? d : (d?.data ?? []);
+      }),
+    enabled: !!detailId && roomDetail?.roomType === "WARD",
+  });
+
+  const filteredWards = useMemo(() => {
+    if (!wardFilter) return roomWards;
+    return roomWards.filter((w) => w.status === wardFilter);
+  }, [roomWards, wardFilter]);
 
   const { mutateAsync: createRoom, isPending: creatingRoom } = useMutation({
     mutationFn: (data: RoomPayload) => api.post("/rooms", data),
@@ -63,6 +128,12 @@ export default function AssignmentsRoomsPage() {
     },
   });
 
+  const handleOpenDetail = (id: string) => {
+    setDetailId(id);
+    setWardFilter("");
+    setWardFilterOpen(false);
+  };
+
   const columns = useMemo<ColumnDef<RoomWithOccupancy>[]>(
     () => [
       {
@@ -70,7 +141,11 @@ export default function AssignmentsRoomsPage() {
         header: "#",
         cell: ({ row, table }) => (
           <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-            {getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}
+            {getTableRowIndex(
+              table.getState().pagination.pageIndex,
+              table.getState().pagination.pageSize,
+              row.index,
+            )}
           </span>
         ),
       },
@@ -79,9 +154,10 @@ export default function AssignmentsRoomsPage() {
         header: t("assignments.colRoom"),
         cell: ({ row }) => (
           <button
-            onClick={() => setDetailId(row.original.id)}
+            onClick={() => handleOpenDetail(row.original.id)}
             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary-50 text-primary-700 text-sm font-medium hover:bg-primary-100 transition-colors"
           >
+            <BedDouble className="w-3.5 h-3.5" />
             {row.original.name}
           </button>
         ),
@@ -89,28 +165,36 @@ export default function AssignmentsRoomsPage() {
       {
         accessorKey: "roomType",
         header: t("forms.roomType"),
-        cell: ({ row }) => <span className="text-secondary text-sm">{row.original.roomType}</span>,
+        cell: ({ row }) => (
+          <span className="text-secondary text-sm">{row.original.roomType}</span>
+        ),
       },
       {
         accessorKey: "capacity",
         header: t("forms.capacity"),
-        cell: ({ row }) => <span className="text-secondary text-sm">{row.original.capacity ?? "—"}</span>,
+        cell: ({ row }) => (
+          <span className="text-secondary text-sm">{row.original.capacity ?? "—"}</span>
+        ),
       },
       {
         id: "occupancy",
         header: t("assignments.colOccupancy"),
         cell: ({ row }) => {
           const r = row.original;
-          if (r.roomType !== "WARD" || !r.capacity) return <span className="text-secondary text-sm">—</span>;
+          if (r.roomType !== "WARD" || !r.capacity)
+            return <span className="text-secondary text-sm">—</span>;
+          const pct = Math.min(100, (r.occupiedCount / r.capacity) * 100);
           return (
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-border rounded-full h-1.5 max-w-20">
                 <div
                   className={`h-1.5 rounded-full transition-all ${r.isFull ? "bg-red-500" : "bg-green-500"}`}
-                  style={{ width: `${Math.min(100, (r.occupiedCount / r.capacity) * 100)}%` }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className={`text-xs font-medium ${r.isFull ? "text-red-600" : "text-secondary"}`}>
+              <span
+                className={`text-xs font-medium ${r.isFull ? "text-red-600" : "text-secondary"}`}
+              >
                 {r.occupiedCount}/{r.capacity}
               </span>
             </div>
@@ -120,14 +204,17 @@ export default function AssignmentsRoomsPage() {
       {
         accessorKey: "description",
         header: t("common.description"),
-        cell: ({ row }) => <span className="text-secondary text-sm">{row.original.description || "—"}</span>,
+        cell: ({ row }) => (
+          <span className="text-secondary text-sm">{row.original.description || "—"}</span>
+        ),
       },
       {
         id: "department",
         header: t("forms.department"),
         cell: ({ row }) => {
           const r = row.original;
-          if (r.roomType !== "WARD" || !r.department) return <span className="text-secondary text-sm">—</span>;
+          if (r.roomType !== "WARD" || !r.department)
+            return <span className="text-secondary text-sm">—</span>;
           return (
             <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
               <Building2 className="w-3 h-3" />
@@ -139,7 +226,9 @@ export default function AssignmentsRoomsPage() {
       {
         accessorKey: "createdAt",
         header: t("common.created"),
-        cell: ({ row }) => <span className="text-text-muted text-xs">{formatShortDate(row.original.createdAt)}</span>,
+        cell: ({ row }) => (
+          <span className="text-text-muted text-xs">{formatShortDate(row.original.createdAt)}</span>
+        ),
       },
       {
         id: "actions",
@@ -183,6 +272,9 @@ export default function AssignmentsRoomsPage() {
 
   const isSheetLoading = creatingRoom || updatingRoom;
 
+  const bloodTypeLabel = (bt: string) =>
+    bt?.replace("_POSITIVE", "+").replace("_NEGATIVE", "-") ?? "—";
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -211,18 +303,21 @@ export default function AssignmentsRoomsPage() {
         onClose={() => setDetailId(null)}
         title={t("assignments.roomDetail")}
         description={t("assignments.roomDetailDesc")}
-        className="max-w-md"
+        className="max-w-lg"
       >
         {isDetailLoading ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
           </div>
         ) : roomDetail ? (
-          <div className="space-y-5">
-            {/* Room name & type */}
+          <div className="space-y-4">
+            {/* Xona nomi va tur */}
             <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-base font-semibold text-text">{roomDetail.name}</h4>
+                <div className="flex items-center gap-2">
+                  <BedDouble className="w-4 h-4 text-primary" />
+                  <h4 className="text-base font-semibold text-text">{roomDetail.name}</h4>
+                </div>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 font-medium">
                   {roomDetail.roomType}
                 </span>
@@ -232,37 +327,200 @@ export default function AssignmentsRoomsPage() {
               )}
             </div>
 
-            {/* Occupancy — only for WARD type */}
+            {/* Sig'im statistikasi — faqat WARD */}
             {roomDetail.roomType === "WARD" && roomDetail.capacity && (
               <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
                 <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                   {t("assignments.colOccupancy")}
                 </h4>
-                <div className="flex items-center gap-3">
-                  <BedDouble className="w-4 h-4 text-primary" />
-                  <div className="flex-1">
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-secondary">{t("assignments.occupied")}: <span className="text-text font-medium">{roomDetail.occupiedCount}</span></span>
-                      <span className="text-secondary">{t("assignments.free")}: <span className="text-green-600 font-medium">{roomDetail.freeCount}</span></span>
-                    </div>
-                    <div className="bg-border rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${roomDetail.isFull ? "bg-red-500" : "bg-green-500"}`}
-                        style={{ width: `${Math.min(100, (roomDetail.occupiedCount / roomDetail.capacity) * 100)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-text-muted mt-1">
-                      {roomDetail.occupiedCount}/{roomDetail.capacity} {t("assignments.bedsOccupied")}
-                    </p>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-surface-hover rounded-lg p-2">
+                    <p className="text-xl font-bold text-text">{roomDetail.capacity}</p>
+                    <p className="text-xs text-secondary mt-0.5">{t("forms.capacity")}</p>
+                  </div>
+                  <div className="bg-surface-hover rounded-lg p-2">
+                    <p className="text-xl font-bold text-red-500">{roomDetail.occupiedCount}</p>
+                    <p className="text-xs text-secondary mt-0.5">{t("assignments.occupied")}</p>
+                  </div>
+                  <div className="bg-surface-hover rounded-lg p-2">
+                    <p className="text-xl font-bold text-green-600">{roomDetail.freeSlots ?? roomDetail.freeCount}</p>
+                    <p className="text-xs text-secondary mt-0.5">{t("assignments.free")}</p>
                   </div>
                 </div>
+                <div className="bg-border rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${roomDetail.isFull ? "bg-red-500" : "bg-green-500"}`}
+                    style={{
+                      width: `${Math.min(100, (roomDetail.occupiedCount / roomDetail.capacity) * 100)}%`,
+                    }}
+                  />
+                </div>
                 {roomDetail.isFull && (
-                  <p className="text-xs text-red-600 font-medium">{t("wards.roomFull")}</p>
+                  <p className="text-xs text-red-600 font-medium text-center">
+                    {t("wards.roomFull")}
+                  </p>
                 )}
               </div>
             )}
 
-            {/* Meta */}
+            {/* Bemorlar ro'yxati — faqat WARD */}
+            {roomDetail.roomType === "WARD" && (
+              <div className="bg-surface border border-border rounded-lg overflow-hidden">
+                {/* Header + filter */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                    {t("wards.colPatient")}
+                    {roomWards.length > 0 && (
+                      <span className="ml-1.5 bg-primary-50 text-primary-700 rounded-full px-1.5 py-0.5 text-[10px] font-bold">
+                        {filteredWards.length}
+                      </span>
+                    )}
+                  </h4>
+                  {/* Status filter */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setWardFilterOpen((v) => !v)}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-colors ${
+                        wardFilter
+                          ? "bg-primary-50 border-primary-200 text-primary"
+                          : "bg-background border-border text-secondary hover:bg-surface-hover"
+                      }`}
+                    >
+                      <Filter className="w-3 h-3" />
+                      {wardFilter
+                        ? wardFilter === "OCCUPIED"
+                          ? t("wards.statusOccupied")
+                          : t("wards.statusVacated")
+                        : t("wards.allStatuses")}
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${wardFilterOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {wardFilterOpen && (
+                      <div className="absolute right-0 top-full mt-1 bg-surface border border-border rounded-lg shadow-lg z-10 w-36 overflow-hidden">
+                        {(["", "OCCUPIED", "VACATED"] as FilterStatus[]).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              setWardFilter(s);
+                              setWardFilterOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-surface-hover ${
+                              wardFilter === s ? "text-primary font-medium" : "text-secondary"
+                            }`}
+                          >
+                            {s === ""
+                              ? t("wards.allStatuses")
+                              : s === "OCCUPIED"
+                              ? t("wards.statusOccupied")
+                              : t("wards.statusVacated")}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bemorlar */}
+                {isWardsLoading ? (
+                  <div className="flex items-center justify-center h-20">
+                    <Loader2 className="w-4 h-4 animate-spin text-text-muted" />
+                  </div>
+                ) : filteredWards.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-20 gap-1">
+                    <BedDouble className="w-5 h-5 text-secondary" />
+                    <p className="text-xs text-secondary">{t("wards.noWards")}</p>
+                    {wardFilter && (
+                      <button
+                        onClick={() => setWardFilter("")}
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        <X className="w-3 h-3" /> {t("common.reset")}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredWards.map((ward) => {
+                      const days =
+                        ward.status === "OCCUPIED"
+                          ? Math.max(
+                              1,
+                              Math.ceil(
+                                (Date.now() - new Date(ward.checkIn).getTime()) / 86400000,
+                              ),
+                            )
+                          : (ward.daysStayed ?? 1);
+
+                      return (
+                        <div key={ward.id} className="px-4 py-3 hover:bg-surface-hover transition-colors">
+                          <div className="flex items-start justify-between gap-2">
+                            {/* Bemor ismi — bosganda patient sahifasiga o'tadi */}
+                            <Link
+                              href={`/patients/${ward.patient.id}`}
+                              className="flex items-center gap-2 group flex-1 min-w-0"
+                            >
+                              <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center shrink-0 group-hover:bg-primary-100 transition-colors">
+                                <User className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-text group-hover:text-primary transition-colors truncate">
+                                  {ward.patient.first_name} {ward.patient.last_name}
+                                </p>
+                                <p className="text-xs text-secondary truncate">
+                                  {ward.patient.phone_number} · {bloodTypeLabel(ward.patient.blood_type)}
+                                </p>
+                              </div>
+                            </Link>
+
+                            {/* Status badge */}
+                            <span
+                              className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                ward.status === "OCCUPIED"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-500"
+                              }`}
+                            >
+                              {ward.status === "OCCUPIED"
+                                ? t("wards.statusOccupied")
+                                : t("wards.statusVacated")}
+                            </span>
+                          </div>
+
+                          {/* Meta: kun + qarovchilar */}
+                          <div className="flex items-center gap-3 mt-1.5 ml-9">
+                            <span className="flex items-center gap-1 text-xs text-secondary">
+                              <Clock className="w-3 h-3" />
+                              {days} {t("wards.currentDay")}
+                            </span>
+                            {ward.companionsCount > 0 && (
+                              <span className="flex items-center gap-1 text-xs text-secondary">
+                                <Users className="w-3 h-3" />
+                                {ward.companionsCount} {t("wards.person")}
+                              </span>
+                            )}
+                            {ward.expectedOut && ward.status === "OCCUPIED" && (
+                              <span
+                                className={`text-xs ${
+                                  new Date(ward.expectedOut) < new Date()
+                                    ? "text-red-500 font-medium"
+                                    : "text-secondary"
+                                }`}
+                              >
+                                → {new Date(ward.expectedOut).toLocaleDateString("uz-UZ")}
+                                {new Date(ward.expectedOut) < new Date() && " ⚠️"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Meta info */}
             <div className="bg-surface border border-border rounded-lg p-4 space-y-2">
               <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
                 {t("common.info")}
@@ -286,7 +544,7 @@ export default function AssignmentsRoomsPage() {
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Tugmalar */}
             <Can roles={["ADMIN"]}>
               <div className="flex gap-2 pt-1">
                 <button
@@ -323,7 +581,9 @@ export default function AssignmentsRoomsPage() {
         isOpen={sheet.open}
         onClose={() => setSheet({ open: false, editing: null })}
         title={sheet.editing ? t("assignments.editRoom") : t("assignments.newRoom")}
-        description={sheet.editing ? t("assignments.editRoomDesc") : t("assignments.newRoomDesc")}
+        description={
+          sheet.editing ? t("assignments.editRoomDesc") : t("assignments.newRoomDesc")
+        }
         className="max-w-lg"
       >
         <RoomForm
@@ -331,12 +591,12 @@ export default function AssignmentsRoomsPage() {
           initialData={
             sheet.editing
               ? {
-                name: sheet.editing.name,
-                roomType: sheet.editing.roomType,
-                capacity: sheet.editing.capacity ?? undefined,
-                description: sheet.editing.description ?? "",
-                departmentId: sheet.editing.department?.id ?? "",
-              }
+                  name: sheet.editing.name,
+                  roomType: sheet.editing.roomType,
+                  capacity: sheet.editing.capacity ?? undefined,
+                  description: sheet.editing.description ?? "",
+                  departmentId: sheet.editing.department?.id ?? "",
+                }
               : undefined
           }
           onSubmit={(data) => {
