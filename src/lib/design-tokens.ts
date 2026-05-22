@@ -192,7 +192,7 @@ export const components = {
     shadow: shadows.md,
   },
   input: {
-    paddingY: spacing[2.5],
+    paddingY: spacing[2],
     paddingX: spacing[3],
     borderRadius: borderRadius.md,
     fontSize: typography.fontSize.base,
