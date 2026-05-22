@@ -16,15 +16,12 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  EyeOff,
-  Filter,
   MoreHorizontal,
   Settings,
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 interface EnterpriseDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -78,11 +75,15 @@ export function EnterpriseDataTable<TData extends { id?: string | number }, TVal
     globalFilterFn: "auto",
   });
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+  const selectedRows = useMemo(
+    () => table.getFilteredSelectedRowModel().rows.map((row) => row.original),
+    [rowSelection]
+  );
 
+  // Notify parent of row selection changes
   React.useEffect(() => {
     onRowSelect?.(selectedRows);
-  }, [selectedRows, onRowSelect]);
+  }, [selectedRows.length, onRowSelect]);
 
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize_ = table.getState().pagination.pageSize;
