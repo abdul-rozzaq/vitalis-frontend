@@ -9,7 +9,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, CheckCircle2, CreditCard, Download, Edit, Loader2, Plus, SlidersHorizontal, Trash2, TrendingUp, Users, X } from "lucide-react";
+import { Building2, CheckCircle2, CreditCard, Download, Edit, Loader2, Plus, SlidersHorizontal, Trash2, TrendingUp, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -88,28 +88,28 @@ const MOCK_DEPARTMENTS: DepartmentOption[] = [
 ];
 
 const STATUS_STYLE_MAP: Record<string, { bg: string; text: string; dot: string }> = {
-  PAID: { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
-  UNPAID: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+  PAID: { bg: "bg-success-50", text: "text-success", dot: "bg-success" },
+  UNPAID: { bg: "bg-warning-50", text: "text-warning", dot: "bg-warning" },
 };
 
 const METHOD_STYLE_MAP: Record<string, { bg: string; text: string }> = {
-  CASH: { bg: "bg-emerald-100", text: "text-emerald-700" },
-  CREDIT_CARD: { bg: "bg-blue-100", text: "text-blue-700" },
-  DEBIT_CARD: { bg: "bg-indigo-100", text: "text-indigo-700" },
-  PAYPAL: { bg: "bg-slate-100", text: "text-slate-700" },
+  CASH: { bg: "bg-primary-50", text: "text-primary" },
+  CREDIT_CARD: { bg: "bg-info-50", text: "text-info" },
+  DEBIT_CARD: { bg: "bg-primary-50", text: "text-primary" },
+  PAYPAL: { bg: "bg-surface-hover", text: "text-text-muted" },
 };
 
 // ─── Summary Card ─────────────────────────────────────────────────────────────
 
 function SummaryCard({ label, value, sub, icon: Icon, color }: { label: string; value: string; sub?: string; icon: React.ElementType; color: string }) {
   return (
-    <div className="bg-surface border border-border rounded-lg px-4 py-3.5 flex items-center gap-3">
-      <div className={`w-9 h-9 rounded-lg ${color} flex items-center justify-center shrink-0`}>
-        <Icon className="w-4.5 h-4.5" />
+    <div className="bg-surface border border-border rounded-lg px-4 py-3 flex items-center gap-3">
+      <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
+        <Icon className="w-4 h-4" />
       </div>
-      <div>
-        <p className="text-xs text-secondary font-medium">{label}</p>
-        <p className="text-base font-semibold text-text leading-tight">{value}</p>
+      <div className="min-w-0">
+        <p className="text-xs text-text-muted font-medium">{label}</p>
+        <p className="text-sm font-semibold text-text leading-tight">{value}</p>
         {sub && <p className="text-[11px] text-text-muted">{sub}</p>}
       </div>
     </div>
@@ -133,79 +133,79 @@ function FilterPanel({
 }) {
   const t = useTranslations();
   return (
-    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="bg-surface border border-border rounded-lg p-4">
+    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="bg-surface border border-border rounded-lg p-3">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-text flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-primary-500" />
+        <span className="text-xs font-medium text-text-muted flex items-center gap-2">
+          <SlidersHorizontal className="w-3.5 h-3.5" />
           {t("common.filter")}
-          {activeCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">{activeCount}</span>}
+          {activeCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">{activeCount}</span>}
         </span>
         {activeCount > 0 && (
-          <button onClick={onReset} className="text-xs text-secondary hover:text-danger-600 flex items-center gap-1 transition-colors cursor-pointer">
+          <button onClick={onReset} className="text-xs text-text-muted hover:text-danger transition-colors cursor-pointer flex items-center gap-1">
             <X className="w-3 h-3" />
             {t("common.reset")}
           </button>
         )}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-secondary">{t("payments.colStatus")}</label>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="space-y-0.5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.colStatus")}</label>
           <select
             value={filters.status}
             onChange={(e) => onChange("status", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
           >
             <option value="">{t("common.all")}</option>
             <option value="PAID">{t("payments.statusPaid")}</option>
             <option value="UNPAID">{t("payments.statusUnpaid")}</option>
           </select>
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-secondary">{t("payments.minAmount")}</label>
+        <div className="space-y-0.5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.minAmount")}</label>
           <input
             type="number"
             min="0"
             value={filters.minAmount}
             onChange={(e) => onChange("minAmount", e.target.value)}
             placeholder="0"
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-secondary">{t("payments.maxAmount")}</label>
+        <div className="space-y-0.5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.maxAmount")}</label>
           <input
             type="number"
             min="0"
             value={filters.maxAmount}
             onChange={(e) => onChange("maxAmount", e.target.value)}
             placeholder="∞"
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-secondary">{t("payments.dateFrom")}</label>
+        <div className="space-y-0.5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.dateFrom")}</label>
           <input
             type="date"
             value={filters.dateFrom}
             onChange={(e) => onChange("dateFrom", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-secondary">{t("payments.dateTo")}</label>
+        <div className="space-y-0.5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.dateTo")}</label>
           <input
             type="date"
             value={filters.dateTo}
             onChange={(e) => onChange("dateTo", e.target.value)}
-            className="w-full bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
           />
         </div>
-        <div className="space-y-1 col-span-2 sm:col-span-3 lg:col-span-5">
-          <label className="text-xs font-medium text-secondary">{t("payments.colDepartment")}</label>
+        <div className="space-y-0.5 col-span-2 sm:col-span-3 lg:col-span-5">
+          <label className="text-xs font-medium text-text-muted">{t("payments.colDepartment")}</label>
           <select
             value={filters.departmentId}
             onChange={(e) => onChange("departmentId", e.target.value)}
-            className="w-full sm:w-72 bg-surface border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all cursor-pointer"
+            className="w-full sm:w-72 bg-surface-hover border border-border rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
           >
             <option value="">{t("common.allDepartments")}</option>
             {departments.map((d) => (
@@ -376,7 +376,7 @@ export default function PaymentsPage() {
         header: "#",
         cell: ({ row, table }) => {
           const idx = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + row.index + 1;
-          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{idx}</span>;
+          return <span className="font-mono text-xs text-text-muted">{String(idx).padStart(3, "0")}</span>;
         },
       },
       {
@@ -385,8 +385,8 @@ export default function PaymentsPage() {
         cell: ({ row }) => {
           const name = row.original.patient_name || "—";
           return (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
                 {name
                   .split(" ")
                   .map((n: string) => n[0])
@@ -460,7 +460,7 @@ export default function PaymentsPage() {
                   <button
                     onClick={() => setQuickPayTarget(payment)}
                     title={t("payments.quickPay")}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success-50 text-success border border-success/20 hover:bg-success/10 transition-colors cursor-pointer"
                   >
                     <CheckCircle2 className="w-3 h-3" />
                     {t("payments.quickPay")}
@@ -469,7 +469,7 @@ export default function PaymentsPage() {
               </Can>
 
               <Can roles={["ADMIN", "KASSIR", "HISOBCHI"]}>
-                <button onClick={() => handleEdit(payment)} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("payments.editPayment")}>
+                <button onClick={() => handleEdit(payment)} className="p-1.5 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text transition-colors cursor-pointer" title={t("payments.editPayment")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Can>
@@ -478,7 +478,7 @@ export default function PaymentsPage() {
                 <button
                   onClick={() => handleDelete(payment.id)}
                   disabled={isDeleting && deletingId === payment.id}
-                  className="p-1.5 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                  className="p-1.5 rounded-lg hover:bg-danger-50 text-text-muted hover:text-danger transition-colors cursor-pointer disabled:opacity-40"
                   title={t("payments.deletePayment")}
                 >
                   {isDeleting && deletingId === payment.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -493,61 +493,70 @@ export default function PaymentsPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("payments.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("payments.description")}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary-200 text-primary" : "bg-surface border-border text-secondary hover:bg-surface-hover"}`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            {t("common.filter")}
-            {activeFilterCount > 0 && <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ml-0.5">{activeFilterCount}</span>}
-          </button>
-          <button
-            onClick={handleExport}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {t("common.export")}
-          </button>
-          <Can roles={["ADMIN", "KASSIR"]}>
+      <div className="px-6 py-4 border-b border-border">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <h1 className="text-2xl font-bold text-text">{t("payments.title")}</h1>
+            <p className="text-sm text-text-muted mt-1">{t("payments.description")}</p>
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              onClick={handleAdd}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
             >
-              <Plus className="w-3.5 h-3.5" />
-              {t("payments.newPayment")}
+              <Download className="w-4 h-4" />
+              <span>Export</span>
             </button>
-          </Can>
+            <Can roles={["ADMIN", "KASSIR"]}>
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t("payments.newPayment")}</span>
+              </button>
+            </Can>
+          </div>
         </div>
-      </motion.div>
 
-      <AnimatePresence>{filterOpen && <FilterPanel filters={filters} onChange={handleFilterChange} onReset={handleFilterReset} departments={departments} activeCount={activeFilterCount} />}</AnimatePresence>
+        {/* Filter toggle button */}
+        <button
+          onClick={() => setFilterOpen((v) => !v)}
+          className={`text-xs font-medium flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary text-primary" : "bg-surface-hover border-border text-text-muted hover:text-text"}`}
+        >
+          <SlidersHorizontal className="w-3 h-3" />
+          {t("common.filter")}
+          {activeFilterCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>}
+        </button>
+      </div>
+
+      {/* Filter Panel */}
+      <div className="px-6 py-3 bg-background">
+        <AnimatePresence>{filterOpen && <FilterPanel filters={filters} onChange={handleFilterChange} onReset={handleFilterReset} departments={departments} activeCount={activeFilterCount} />}</AnimatePresence>
+      </div>
 
       {/* Summary Cards */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard label={t("payments.totalRevenue")} value={`${totalRevenue.toLocaleString("uz-UZ")} so'm`} sub={t("payments.paidPayments")} icon={TrendingUp} color="bg-green-100 text-green-600" />
-        <SummaryCard label={t("payments.totalPayments")} value={String(filteredPayments.length)} sub={t("payments.allRecords")} icon={CreditCard} color="bg-blue-100 text-blue-600" />
-        <SummaryCard label={t("payments.paid")} value={String(paidCount)} sub={t("payments.completed")} icon={Users} color="bg-primary-100 text-primary" />
-        <SummaryCard label={t("payments.pending")} value={String(unpaidCount)} sub={t("payments.awaitingPayment")} icon={Building2} color="bg-amber-100 text-amber-600" />
-      </motion.div>
+      <div className="px-6 py-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <SummaryCard label={t("payments.totalRevenue")} value={`${totalRevenue.toLocaleString("uz-UZ")} so'm`} icon={TrendingUp} color="bg-success-50 text-success" />
+          <SummaryCard label={t("payments.totalPayments")} value={String(filteredPayments.length)} icon={CreditCard} color="bg-info-50 text-info" />
+          <SummaryCard label={t("payments.paid")} value={String(paidCount)} icon={CheckCircle2} color="bg-success-50 text-success" />
+          <SummaryCard label={t("payments.pending")} value={String(unpaidCount)} icon={Building2} color="bg-warning-50 text-warning" />
+        </div>
+      </div>
 
       {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <div className="flex-1 px-6 py-3 overflow-auto">
         {isLoadingPayments ? (
-          <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
           <DataTable columns={columns} data={filteredPayments} />
         )}
-      </motion.div>
+      </div>
 
       {/* ── Quick Pay Dialog ─────────────────────────────────────────────── */}
       <QuickPayDialog open={!!quickPayTarget} onClose={() => setQuickPayTarget(null)} onConfirm={handleQuickPayConfirm} initialAmount={quickPayTarget?.amount ?? 0} patientName={quickPayTarget?.patient_name} />
