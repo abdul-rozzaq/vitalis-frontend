@@ -1,18 +1,17 @@
 "use client";
 
 import { exportToExcel } from "@/lib/export-excel";
-
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { Can } from "@/components/ui/can";
-import { DataTable } from "@/components/ui/data-table";
+import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
 import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, getAppointmentStatus, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Calendar as CalendarIcon, Download, Edit, ExternalLink, Filter, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
-import { motion } from "motion/react";
+import { Building2, Calendar as CalendarIcon, Download, Edit, ExternalLink, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
@@ -215,59 +214,47 @@ export default function AppointmentsPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("appointments.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("appointments.description")}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {filterOpen && (
-            <input
-              autoFocus
-              type="text"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              placeholder={t("common.filterPlaceholder")}
-              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
-            />
-          )}
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Filter className="w-3.5 h-3.5" />
-            {t("common.filter")}
-          </button>
-          <button
-            onClick={handleExport}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {t("common.export")}
-          </button>
-          <Can roles={["ADMIN", "KASSIR"]}>
+    <div className="flex flex-col min-h-screen">
+      <PageHeader
+        title={t("appointments.title")}
+        subtitle={t("appointments.description")}
+        actions={
+          <div className="flex gap-2">
             <button
-              onClick={handleAdd}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
             >
-              <Plus className="w-3.5 h-3.5" />
-              {t("appointments.newAppointment")}
+              <Download className="w-4 h-4" />
+              <span>Export</span>
             </button>
-          </Can>
-        </div>
-      </motion.div>
+            <Can roles={["ADMIN", "KASSIR"]}>
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t("appointments.newAppointment")}</span>
+              </button>
+            </Can>
+          </div>
+        }
+      />
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      <PageContent>
         {isLoading ? (
-          <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={filteredAppointments} />
+          <EnterpriseDataTable
+            columns={columns}
+            data={filteredAppointments}
+            pageSize={20}
+            searchKey="patient"
+            searchPlaceholder={t("common.filterPlaceholder")}
+          />
         )}
-      </motion.div>
+      </PageContent>
 
       <Sheet
         isOpen={isSheetOpen}
