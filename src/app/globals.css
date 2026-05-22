@@ -2,15 +2,16 @@
 
 /* ─── Static tokens: fixed brand shades & radius ─────────────────────────────
    These never change between light and dark mode.
+   Enterprise Healthcare CRM Design System
 ───────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-primary-700: #047857;
-
+  --color-primary-700: #15803d;
+  --color-success-500: #22c55e;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
-
+  --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
-
+  --color-info-500: #3b82f6;
   --color-info-600: #2563eb;
 
   /* Border radius scale */
@@ -18,8 +19,19 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
-  --radius-xl: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
+
+  /* Spacing scale */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
 }
 
 /* ─── Semantic tokens: runtime-overrideable via CSS custom properties ─────────
@@ -27,10 +39,11 @@
    allowing @layer base to swap values for dark mode without any dark: variants.
 ───────────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  /* Surfaces */
+  /* Surfaces & Backgrounds */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-secondary: var(--surface-secondary);
   --color-surface-dark: var(--surface-dark);
 
   /* Borders */
@@ -40,50 +53,74 @@
   /* Text */
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-text-secondary: var(--text-secondary);
   --color-secondary: var(--secondary);
 
-  /* Brand */
+  /* Brand Colors */
   --color-primary: var(--primary);
-  --color-primary-500: var(--primary-500);
   --color-primary-50: var(--primary-50);
   --color-primary-100: var(--primary-100);
+  --color-primary-500: var(--primary-500);
   --color-accent: var(--accent);
 
-  /* Status (light tints change between themes) */
+  /* Status Colors */
+  --color-success: var(--success);
+  --color-success-50: var(--success-50);
+  --color-success-100: var(--success-100);
+  --color-danger: var(--danger);
   --color-danger-50: var(--danger-50);
   --color-danger-100: var(--danger-100);
+  --color-warning: var(--warning);
   --color-warning-50: var(--warning-50);
+  --color-warning-100: var(--warning-100);
+  --color-info: var(--info);
   --color-info-50: var(--info-50);
+  --color-info-100: var(--info-100);
 }
 
-/* ─── Light / dark values ──────────────────────────────────────────────────── */
+/* ─── Light mode values ────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --background: #f9fafb;
+    /* Backgrounds & Surfaces */
+    --background: #f8fafc;
     --surface: #ffffff;
-    --surface-hover: #f4f4f5;
-    --surface-dark: #18181b;
+    --surface-hover: #f1f5f9;
+    --surface-secondary: #f0f4f8;
+    --surface-dark: #0f172a;
 
-    --border: #e4e4e7;
-    --border-light: #f4f4f5;
+    /* Borders */
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
 
-    --text: #18181b;
-    --text-muted: #a1a1aa;
-    --secondary: #71717a;
+    /* Text */
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-secondary: #475569;
+    --secondary: #64748b;
 
-    --primary: #059669;
-    --primary-500: #10b981;
-    --primary-50: #ecfdf5;
-    --primary-100: #d1fae5;
-    --accent: #10b981;
+    /* Brand Colors - Professional Green */
+    --primary: #16a34a;
+    --primary-50: #f0fdf4;
+    --primary-100: #dcfce7;
+    --primary-500: #22c55e;
+    --accent: #22c55e;
 
+    /* Status Colors */
+    --success: #22c55e;
+    --success-50: #f0fdf4;
+    --success-100: #dcfce7;
+    --danger: #ef4444;
     --danger-50: #fef2f2;
     --danger-100: #fee2e2;
+    --warning: #f59e0b;
     --warning-50: #fffbeb;
+    --warning-100: #fef3c7;
+    --info: #3b82f6;
     --info-50: #eff6ff;
+    --info-100: #dbeafe;
   }
 
-  /* Global input/select/textarea text and placeholder colors */
+  /* Global input/select/textarea styling */
   input,
   select,
   textarea {
@@ -95,28 +132,120 @@
     color: var(--text-muted);
   }
 
+  select option {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  /* ─── Dark mode values ──────────────────────────────────────────────────── */
   .dark {
-    --background: #09090b;
-    --surface: #18181b;
-    --surface-hover: #27272a;
-    --surface-dark: #27272a;
+    /* Backgrounds & Surfaces */
+    --background: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --surface-secondary: #1a222f;
+    --surface-dark: #0f172a;
 
-    --border: #27272a;
-    --border-light: #3f3f46;
+    /* Borders */
+    --border: #334155;
+    --border-light: #475569;
 
-    --text: #fafafa;
-    --text-muted: #52525b;
-    --secondary: #a1a1aa;
+    /* Text */
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-secondary: #cbd5e1;
+    --secondary: #cbd5e1;
 
-    --primary: #10b981;
-    --primary-500: #10b981;
-    --primary-50: #022c22;
-    --primary-100: #064e3b;
-    --accent: #059669;
+    /* Brand Colors */
+    --primary: #22c55e;
+    --primary-50: #051f1a;
+    --primary-100: #0d3d2f;
+    --primary-500: #22c55e;
+    --accent: #34d399;
 
-    --danger-50: #2d0c0c;
-    --danger-100: #450a0a;
-    --warning-50: #1c1100;
-    --info-50: #0c1a2e;
+    /* Status Colors */
+    --success: #34d399;
+    --success-50: #051f1a;
+    --success-100: #0d3d2f;
+    --danger: #f87171;
+    --danger-50: #3f0f0f;
+    --danger-100: #5a1515;
+    --warning: #fbbf24;
+    --warning-50: #3f2e0a;
+    --warning-100: #664d15;
+    --info: #60a5fa;
+    --info-50: #0f2347;
+    --info-100: #1e3a5f;
+  }
+}
+
+/* ─── Typography Foundation ────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-text transition-colors duration-200;
+  }
+
+  /* Headings */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-3xl sm:text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl sm:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl sm:text-2xl;
+  }
+
+  h4 {
+    @apply text-lg;
+  }
+
+  /* Focus styles for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+
+  .dark button:focus-visible,
+  .dark a:focus-visible,
+  .dark input:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible {
+    @apply ring-offset-surface;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-muted;
   }
 }
