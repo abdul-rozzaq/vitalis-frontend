@@ -24,10 +24,10 @@ export function Topbar() {
         {/* Right: Actions & Settings */}
         <div className="flex items-center gap-2">
           {/* Quick Create Button */}
-          <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary text-sm font-medium transition-colors">
+          {/* <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary text-sm font-medium transition-colors">
             <Plus className="w-4 h-4" />
             <span>New</span>
-          </button>
+          </button> */}
 
           {/* Command Palette */}
           <button
@@ -35,7 +35,7 @@ export function Topbar() {
             className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-secondary hover:text-text hover:border-text-muted transition-colors text-sm"
           >
             <Command className="w-4 h-4" />
-            <span>⌘K</span>
+            <span>K</span>
           </button>
 
           {/* Notifications */}

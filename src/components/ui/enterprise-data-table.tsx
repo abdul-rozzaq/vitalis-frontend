@@ -45,7 +45,7 @@ export function EnterpriseDataTable<TData extends { id?: string | number }, TVal
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [density, setDensity] = useState<"compact" | "comfortable" | "spacious">("comfortable");
+  const [density, setDensity] = useState<"compact" | "comfortable" | "spacious">("compact");
   const [searchValue, setSearchValue] = useState("");
   const [columnSettingsOpen, setColumnSettingsOpen] = useState(false);
 

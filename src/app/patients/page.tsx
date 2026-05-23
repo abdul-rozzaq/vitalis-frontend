@@ -43,20 +43,8 @@ export default function PatientsPage() {
   });
 
   const handleExport = () => {
-    const headers = [
-      t("patients.colId"),
-      t("patients.colName"),
-      t("patients.colGender"),
-      t("patients.colBirthDate"),
-      t("patients.colPhone"),
-    ];
-    const rows = patientsData.map((p: Patient) => [
-      p.id,
-      `${p.first_name} ${p.last_name}`,
-      p.gender ?? "",
-      p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
-      p.phone_number ?? "",
-    ]);
+    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colBirthDate"), t("patients.colPhone")];
+    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
@@ -72,12 +60,13 @@ export default function PatientsPage() {
       {
         accessorKey: "id",
         header: "ID",
-        cell: ({ row, table }) => {
-          const pageIndex = table.getState().pagination.pageIndex;
-          const pageSize = table.getState().pagination.pageSize;
+        cell: ({ row }) => {
+          // const pageIndex = table.getState().pagination.pageIndex;
+          // const pageSize = table.getState().pagination.pageSize;
           return (
             <span className="font-mono text-xs text-text-muted">
-              {String(pageIndex * pageSize + row.index + 1).padStart(4, "0")}
+              {/* {String(pageIndex * pageSize + row.index + 1).padStart(4, "0")} */}
+              {String(row.original.id).slice(0, 6).toUpperCase()}
             </span>
           );
         },
@@ -95,31 +84,17 @@ export default function PatientsPage() {
       {
         accessorKey: "gender",
         header: t("patients.colGender"),
-        cell: (info: any) => (
-          <span className="capitalize px-2 py-1 rounded-full bg-surface-hover text-xs text-text-muted">
-            {info.getValue() as string}
-          </span>
-        ),
+        cell: (info: any) => <span className="capitalize px-2 py-1 rounded-full bg-surface-hover text-xs text-text-muted">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "birth_date",
         header: t("patients.colBirthDate"),
-        cell: (info: any) => (
-          <span className="text-text-muted text-sm">
-            {info.getValue()
-              ? new Date(info.getValue()).toLocaleDateString()
-              : t("common.na")}
-          </span>
-        ),
+        cell: (info: any) => <span className="text-text-muted text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : t("common.na")}</span>,
       },
       {
         accessorKey: "phone_number",
         header: t("patients.colPhone"),
-        cell: (info: any) => (
-          <span className="text-text-muted font-mono text-xs">
-            {formatPhone(info.getValue() as string)}
-          </span>
-        ),
+        cell: (info: any) => <span className="text-text-muted font-mono text-xs">{formatPhone(info.getValue() as string)}</span>,
       },
       {
         id: "actions",
@@ -128,10 +103,7 @@ export default function PatientsPage() {
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN", "KASSIR"]}>
               <Link href={`/patients/${row.original.id}/edit`}>
-                <button
-                  className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors cursor-pointer"
-                  title={t("patients.editPatient")}
-                >
+                <button className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
@@ -143,11 +115,7 @@ export default function PatientsPage() {
                 className="p-1 rounded-lg hover:bg-danger-50 text-text-muted hover:text-danger-500 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("patients.deletePatient")}
               >
-                {isDeleting && deletingId === row.original.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -165,10 +133,7 @@ export default function PatientsPage() {
         subtitle={t("patients.description")}
         actions={
           <div className="flex gap-2">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
-            >
+            <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
               <Download className="w-4 h-4" />
               <span>Export</span>
             </button>
@@ -191,14 +156,7 @@ export default function PatientsPage() {
             <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <EnterpriseDataTable
-            columns={columns}
-            data={patientsData}
-            onRowSelect={setSelectedPatients}
-            pageSize={20}
-            searchKey="name"
-            searchPlaceholder={t("common.filterPlaceholder")}
-          />
+          <EnterpriseDataTable columns={columns} data={patientsData} onRowSelect={setSelectedPatients} pageSize={20} searchKey="name" searchPlaceholder={t("common.filterPlaceholder")} />
         )}
       </PageContent>
     </div>
