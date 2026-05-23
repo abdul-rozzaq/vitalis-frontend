@@ -85,7 +85,7 @@ export default function AssignmentsPage() {
         cell: ({ row }) => {
           const user = row.original.user;
           if (!user) return <span className="text-text-muted text-sm">—</span>;
-          const style = ROLE_STYLES[user.role.name] ?? { bg: "bg-gray-100", text: "text-gray-700" };
+          const style = ROLE_STYLES[user.role] ?? { bg: "bg-gray-100", text: "text-gray-700" };
           return (
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
@@ -94,7 +94,7 @@ export default function AssignmentsPage() {
               </div>
               <div>
                 <p className="font-medium text-text text-sm">{user.first_name} {user.last_name}</p>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${style.bg} ${style.text}`}>{user.role.name}</span>
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${style.bg} ${style.text}`}>{user.role}</span>
               </div>
             </div>
           );

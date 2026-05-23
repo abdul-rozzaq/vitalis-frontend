@@ -82,12 +82,6 @@ export function Sidebar() {
           icon: FlaskConical,
           roles: ["ADMIN", "DOCTOR", "LABARANT"],
         },
-        {
-          label: t("nav.laboratories"),
-          href: "/laboratories",
-          icon: Microscope,
-          roles: ["ADMIN", "LABARANT", "DIREKTOR"],
-        },
       ],
     },
     {

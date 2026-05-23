@@ -24,8 +24,12 @@ const assignmentSchema = z.object({
 export type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 type AssignmentFormInput = z.input<typeof assignmentSchema>;
 
-interface Role { id: string; name: string; }
-interface UserOption { id: string; first_name: string; last_name: string; role: Role; }
+interface UserOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+}
 interface DeptOption {
   id: string;
   name: string;
@@ -33,7 +37,10 @@ interface DeptOption {
   parentId?: string | null;
   parent?: { id: string; name: string } | null;
 }
-interface RoomOption { id: string; name: string; }
+interface RoomOption {
+  id: string;
+  name: string;
+}
 
 interface AssignmentFormProps {
   initialData?: Partial<AssignmentFormValues>;
@@ -48,7 +55,14 @@ interface AssignmentFormProps {
 export function AssignmentForm({ initialData, users, departments, rooms, onSubmit, onCancel, isLoading }: AssignmentFormProps) {
   const t = useTranslations();
 
-  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<AssignmentFormInput, unknown, AssignmentFormValues>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<AssignmentFormInput, unknown, AssignmentFormValues>({
     resolver: zodResolver(assignmentSchema) as any,
     defaultValues: initialData ?? { isActive: true, schedules: [] },
   });
@@ -59,7 +73,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
   const userOptions: ComboboxOption[] = users.map((u) => ({
     value: u.id,
     label: `${u.first_name} ${u.last_name}`,
-    sublabel: u.role?.name,
+    sublabel: u.role,
     avatar: `${u.first_name[0] ?? ""}${u.last_name[0] ?? ""}`.toUpperCase(),
   }));
 
@@ -80,9 +94,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
         result.push({
           value: child.id,
           label: child.name,
-          sublabel: child.price != null
-            ? `${parent.name}  ·  ${child.price.toLocaleString()} UZS`
-            : parent.name,
+          sublabel: child.price != null ? `${parent.name}  ·  ${child.price.toLocaleString()} UZS` : parent.name,
           indent: true,
         });
       }
@@ -98,7 +110,6 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <User className="w-4 h-4 text-primary-500" />
@@ -192,18 +203,18 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           </div>
         )}
 
-        {fields.length === 0 && (
-          <p className="text-xs text-text-muted italic text-center py-2 border border-dashed border-border rounded-lg">
-            {t("forms.noScheduleSlots")}
-          </p>
-        )}
+        {fields.length === 0 && <p className="text-xs text-text-muted italic text-center py-2 border border-dashed border-border rounded-lg">{t("forms.noScheduleSlots")}</p>}
       </div>
 
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
+        >
           {isLoading ? t("forms.saving") : isEditing ? t("forms.update") : t("forms.createAssignment")}
         </button>
       </div>

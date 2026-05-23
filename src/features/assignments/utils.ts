@@ -30,12 +30,7 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
     icon: User,
   },
   { id: "rooms" as TabId, label: t("assignments.tabRooms"), icon: DoorOpen },
-  // { id: "roles" as TabId, label: t("assignments.tabRoles"), icon: Shield },
-  // {
-  //   id: "permissions" as TabId,
-  //   label: t("assignments.tabPermissions"),
-  //   icon: KeyRound,
-  // },
+  { id: "laboratories" as TabId, label: t("assignments.tabLaboratories"), icon: FlaskConical },
   {
     id: "lab-assignments" as TabId,
     label: t("assignments.tabLabAssignments"),

@@ -360,6 +360,7 @@
     "tabRoles": "Roles",
     "tabPermissions": "Permissions",
     "tabLabAssignments": "Lab Assignments",
+    "tabLaboratories": "Laboratories",
     "colLaboratory": "Laboratory",
     "newLabAssignment": "New Lab Assignment",
     "editLabAssignment": "Edit Lab Assignment",

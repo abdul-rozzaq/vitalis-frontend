@@ -17,7 +17,7 @@ interface UserOption {
   id: string;
   first_name: string;
   last_name: string;
-  role: { name: string };
+  role: string;
 }
 
 interface LaboratoryOption {
@@ -117,7 +117,7 @@ export default function LabAssignmentsPage() {
   const userOptions = users.map((u) => ({
     value: u.id,
     label: `${u.first_name} ${u.last_name}`,
-    sublabel: u.role.name,
+    sublabel: u.role,
     avatar: u.first_name[0],
   }));
   const isSaving = isCreating || isUpdating;
@@ -128,9 +128,7 @@ export default function LabAssignmentsPage() {
         accessorKey: "id",
         header: "#",
         cell: ({ row, table }) => (
-          <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-            {getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}
-          </span>
+          <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{getTableRowIndex(table.getState().pagination.pageIndex, table.getState().pagination.pageSize, row.index)}</span>
         ),
       },
       {
@@ -138,17 +136,18 @@ export default function LabAssignmentsPage() {
         header: t("assignments.colEmployee"),
         cell: ({ row }) => {
           const user = row.original.user;
-          const style = ROLE_STYLES[user.role.name] ?? { bg: "bg-gray-100", text: "text-gray-700" };
+          const style = ROLE_STYLES[user.role] ?? { bg: "bg-gray-100", text: "text-gray-700" };
           return (
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-xs font-semibold shrink-0">
-                {user.first_name[0]}{user.last_name[0]}
+                {user.first_name[0]}
+                {user.last_name[0]}
               </div>
               <div>
-                <p className="font-medium text-text text-sm">{user.first_name} {user.last_name}</p>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${style.bg} ${style.text}`}>
-                  {user.role.name}
-                </span>
+                <p className="font-medium text-text text-sm">
+                  {user.first_name} {user.last_name}
+                </p>
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${style.bg} ${style.text}`}>{user.role}</span>
               </div>
             </div>
           );
@@ -157,9 +156,7 @@ export default function LabAssignmentsPage() {
       {
         id: "laboratory",
         header: t("assignments.colLaboratory"),
-        cell: ({ row }) => (
-          <span className="text-sm text-text">{row.original.laboratory.name}</span>
-        ),
+        cell: ({ row }) => <span className="text-sm text-text">{row.original.laboratory.name}</span>,
       },
       {
         id: "isActive",
@@ -181,11 +178,7 @@ export default function LabAssignmentsPage() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN"]}>
-              <button
-                onClick={() => openEdit(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title={t("common.edit")}
-              >
+              <button onClick={() => openEdit(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("common.edit")}>
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
@@ -201,9 +194,7 @@ export default function LabAssignmentsPage() {
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("common.delete")}
               >
-                {isDeleting && deletingId === row.original.id
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Trash2 className="w-4 h-4" />}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -235,34 +226,18 @@ export default function LabAssignmentsPage() {
         <DataTable columns={columns} data={assignments} />
       )}
 
-      <Sheet
-        isOpen={sheet.open}
-        onClose={closeSheet}
-        title={sheet.editing ? t("assignments.editLabAssignment") : t("assignments.newLabAssignment")}
-      >
+      <Sheet isOpen={sheet.open} onClose={closeSheet} title={sheet.editing ? t("assignments.editLabAssignment") : t("assignments.newLabAssignment")}>
         <div className="space-y-5">
           {/* User select — disabled when editing */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">
-              {t("assignments.colEmployee")}
-            </label>
+            <label className="text-sm font-medium text-text">{t("assignments.colEmployee")}</label>
 
-            <Combobox
-              options={userOptions}
-              value={userId}
-              onChange={(val) => setUserId(val)}
-              disabled={!!sheet.editing}
-              placeholder={t("forms.select")}
-              searchPlaceholder={t("common.search")}
-              className="w-full"
-            />
+            <Combobox options={userOptions} value={userId} onChange={(val) => setUserId(val)} disabled={!!sheet.editing} placeholder={t("forms.select")} searchPlaceholder={t("common.search")} className="w-full" />
           </div>
 
           {/* Laboratory select — disabled when editing */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">
-              {t("assignments.colLaboratory")}
-            </label>
+            <label className="text-sm font-medium text-text">{t("assignments.colLaboratory")}</label>
 
             <Combobox
               options={labOptions}
@@ -290,17 +265,13 @@ export default function LabAssignmentsPage() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={closeSheet}
-              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-            >
+            <button type="button" onClick={closeSheet} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
               {t("forms.cancel")}
             </button>
             <button
               type="button"
               disabled={(!sheet.editing && (!userId || !laboratoryId)) || isSaving}
-              onClick={() => sheet.editing ? void updateAssignment() : void createAssignment()}
+              onClick={() => (sheet.editing ? void updateAssignment() : void createAssignment())}
               className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm cursor-pointer"
             >
               {isSaving ? t("common.loading") : t("common.save")}
