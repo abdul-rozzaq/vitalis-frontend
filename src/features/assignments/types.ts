@@ -1,9 +1,4 @@
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-}
+ 
 
 export type RoomType = "WARD" | "EXAMINATION";
 
@@ -36,7 +31,7 @@ export interface Assignment {
     id: string;
     first_name: string;
     last_name: string;
-    role: Role;
+    role: string;
   };
   department?: {
     id: string;
@@ -54,7 +49,7 @@ export interface UserOption {
   id: string;
   first_name: string;
   last_name: string;
-  role: Role;
+  role: string;
 }
 
 export interface DepartmentOption {
@@ -63,7 +58,7 @@ export interface DepartmentOption {
   price?: number | null;
 }
 
-export type TabId = "assignments" | "rooms" | "roles" | "permissions" | "lab-assignments";
+export type TabId = "assignments" | "rooms" | "roles" | "permissions" | "lab-assignments" | "laboratories";
 
 export interface SheetState<T> {
   open: boolean;

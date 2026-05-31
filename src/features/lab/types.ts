@@ -21,7 +21,7 @@ export interface LaboratoryAssignment {
   userId: string;
   laboratoryId: string;
   isActive: boolean;
-  user: { id: string; first_name: string; last_name: string; role: { name: string } };
+  user: { id: string; first_name: string; last_name: string; role: string };
   laboratory: { id: string; name: string };
 }
 

@@ -19,17 +19,17 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 const ORDER_STATUS_STYLES = {
-  PENDING: "bg-amber-500 text-white dark:bg-amber-600 shadow-sm font-medium",
-  IN_PROGRESS: "bg-blue-600 text-white dark:bg-blue-500 shadow-sm font-medium",
-  COMPLETED: "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm font-medium",
-  CANCELLED: "bg-red-600 text-white dark:bg-red-500 shadow-sm font-medium",
+  PENDING: "bg-warning text-white font-medium",
+  IN_PROGRESS: "bg-info text-white font-medium",
+  COMPLETED: "bg-success text-white font-medium",
+  CANCELLED: "bg-danger text-white font-medium",
 };
 
 const ITEM_STATUS_STYLES: Record<LabItemStatus, string> = {
-  PENDING: "bg-amber-500 text-white dark:bg-amber-600 shadow-sm font-medium",
-  IN_PROGRESS: "bg-blue-600 text-white dark:bg-blue-500 shadow-sm font-medium",
-  DONE: "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm font-medium",
-  CANCELLED: "bg-red-600 text-white dark:bg-red-500 shadow-sm font-medium",
+  PENDING: "bg-warning text-white font-medium",
+  IN_PROGRESS: "bg-info text-white font-medium",
+  DONE: "bg-success text-white font-medium",
+  CANCELLED: "bg-danger text-white font-medium",
 };
 
 interface ItemEditForm {
@@ -85,40 +85,32 @@ function LabOrderCard({ order }: { order: LabOrder }) {
   };
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-surface border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
-      <div className="flex items-start justify-between px-4 py-3 gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-[#f3e8ff] dark:bg-[#3b0764]/40 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <span className="text-sm font-bold text-purple-700 dark:text-purple-300">
-              {order.patient.first_name[0]}{order.patient.last_name[0]}
-            </span>
+      <div className="flex items-center justify-between px-4 py-3 gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0 text-xs font-semibold text-primary">
+            {order.patient.first_name[0]}{order.patient.last_name[0]}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-text truncate">
               {order.patient.first_name} {order.patient.last_name}
             </p>
-            <p className="text-xs text-text-muted">{order.patient.phone_number}</p>
-            <p className="text-xs text-text-muted mt-0.5">{order.laboratory.name}</p>
+            <p className="text-xs text-text-muted">{order.laboratory.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs ${ORDER_STATUS_STYLES[order.status]}`}
-          >
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${ORDER_STATUS_STYLES[order.status]}`}>
             {t(`lab.orderStatus.${order.status}`)}
           </span>
-          <p className="text-xs text-text-muted hidden sm:block">
-            {new Date(order.createdAt).toLocaleDateString()}
-          </p>
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="p-1 hover:bg-surface-hover rounded transition-colors"
+            className="p-1 hover:bg-surface-hover rounded-md text-text-muted transition-colors"
           >
             {expanded ? (
-              <ChevronUp className="w-4 h-4 text-text-muted" />
+              <ChevronUp className="w-4 h-4" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-text-muted" />
+              <ChevronDown className="w-4 h-4" />
             )}
           </button>
         </div>
@@ -126,49 +118,41 @@ function LabOrderCard({ order }: { order: LabOrder }) {
 
       {/* Items */}
       {expanded && (
-        <div className="border-t border-border/60 divide-y divide-border/60 bg-surface">
+        <div className="border-t border-border divide-y divide-border bg-surface-hover/50">
           {order.items.map((item) => (
-            <div key={item.id} className="px-4 py-3">
+            <div key={item.id} className="px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-text">{item.service.name}</p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs ${ITEM_STATUS_STYLES[item.status]}`}
-                    >
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${ITEM_STATUS_STYLES[item.status]}`}>
                       {t(`lab.itemStatus.${item.status}`)}
                     </span>
                     {item.payment && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.payment.status === "PAID"
-                          ? "bg-emerald-600 text-white dark:bg-emerald-500 shadow-sm"
-                          : "bg-amber-600 text-white dark:bg-amber-500 shadow-sm"
-                          }`}
-                      >
-                        {item.payment.amount.toLocaleString()} UZS ·{" "}
-                        {item.payment.status === "PAID" ? t("payments.statusPaid") : t("payments.statusUnpaid")}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.payment.status === "PAID" ? "bg-success text-white" : "bg-warning text-white"}`}>
+                        {item.payment.amount.toLocaleString()} UZS
                       </span>
                     )}
                   </div>
 
                   {/* Files list */}
                   {item.files.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    <div className="flex flex-wrap gap-1.5 mt-1">
                       {item.files.map((f) => (
-                        <div key={f.id} style={{backgroundColor: 'var(--surface)', border: '1px solid var(--border)'}} className="flex items-center gap-1 rounded px-2 py-1">
+                        <div key={f.id} className="flex items-center gap-1 rounded px-2 py-1 bg-surface border border-border text-xs">
                           <a
                             href={resolveFileUrl(f.url)}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center gap-1 text-xs text-secondary hover:text-text transition-colors hover:underline">
-                            <Download className="w-3 h-3 text-primary" />
-                            <span className="max-w-[120px] truncate">{f.name}</span>
+                            className="flex items-center gap-1 text-text-muted hover:text-primary transition-colors hover:underline">
+                            <Download className="w-3 h-3" />
+                            <span className="max-w-[100px] truncate">{f.name}</span>
                           </a>
                           {item.status !== "CANCELLED" && (
                             <button
                               onClick={() => deleteFile({ itemId: item.id, fileId: f.id })}
                               disabled={isDeletingFile}
-                              className="ml-1 text-text-muted hover:text-red-500 transition-colors"
+                              className="ml-1 text-text-muted hover:text-danger transition-colors"
                               title={t("lab.removeFile")}
                             >
                               <Trash2 className="w-2.5 h-2.5" />
@@ -180,21 +164,21 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   )}
 
                   {item.note && (
-                    <p className="text-xs text-text-muted mt-1 italic">{item.note}</p>
+                    <p className="text-xs text-text-muted mt-1">{item.note}</p>
                   )}
                 </div>
 
                 {editingItemId !== item.id && item.status !== "CANCELLED" && (
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     {/* Upload file button */}
                     <label
-                      className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors cursor-pointer"
+                      className="p-1.5 hover:bg-surface-hover rounded-lg text-text-muted hover:text-primary transition-colors cursor-pointer"
                       title={t("lab.uploadResult")}
                     >
                       {isUploading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Upload className="w-3.5 h-3.5" />
+                        <Upload className="w-4 h-4" />
                       )}
                       <input
                         type="file"
@@ -205,10 +189,10 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     </label>
                     <button
                       onClick={() => openEdit(item)}
-                      className="p-1 hover:bg-surface-hover rounded text-text-muted hover:text-primary transition-colors"
+                      className="p-1.5 hover:bg-surface-hover rounded-lg text-text-muted hover:text-primary transition-colors"
                       title={t("lab.updateItem")}
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Pencil className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -220,7 +204,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   <select
                     value={form.status}
                     onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as LabItemStatus }))}
-                    className="text-xs bg-surface border border-border rounded-md px-2 py-1.5 text-text focus:outline-none focus:ring-1 focus:ring-primary/40 shrink-0"
+                    className="text-xs bg-surface border border-border rounded-lg px-2.5 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shrink-0"
                   >
                     {(["PENDING", "IN_PROGRESS", "DONE", "CANCELLED"] as LabItemStatus[]).map((s) => (
                       <option key={s} value={s}>
@@ -232,12 +216,12 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                     value={form.note}
                     onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
                     placeholder={t("lab.notePlaceholder")}
-                    className="flex-1 min-w-0 text-xs bg-surface border border-border rounded-md px-2 py-1.5 text-text focus:outline-none focus:ring-1 focus:ring-primary/40"
+                    className="flex-1 min-w-0 text-xs bg-surface border border-border rounded-lg px-2.5 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                   <button
                     onClick={() => updateItem({ itemId: item.id, data: { status: form.status, note: form.note || undefined } })}
                     disabled={isUpdating}
-                    className="flex items-center gap-1 text-xs bg-primary text-white font-medium rounded-md px-2.5 py-1.5 hover:bg-primary/90 disabled:opacity-60 transition-colors shrink-0"
+                    className="flex items-center gap-1.5 text-xs bg-primary text-white font-medium rounded-lg px-3 py-2 hover:bg-primary transition-colors disabled:opacity-60 shrink-0"
                   >
                     {isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                     {t("common.save")}
@@ -245,7 +229,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                   <button
                     onClick={() => setEditingItemId(null)}
                     disabled={isUpdating}
-                    className="px-2.5 py-1.5 text-xs border border-border rounded-md text-secondary hover:bg-surface-hover font-medium transition-colors shrink-0"
+                    className="px-3 py-2 text-xs border border-border rounded-lg text-text-muted hover:text-text hover:bg-surface-hover font-medium transition-colors shrink-0"
                   >
                     {t("common.cancel")}
                   </button>
@@ -268,30 +252,34 @@ export default function LabPage() {
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
+    <div className="flex flex-col min-h-screen">
+      {/* Header Section */}
+      <div className="px-6 py-4 border-b border-border">
         <h1 className="text-2xl font-bold text-text">{t("lab.title")}</h1>
         <p className="text-sm text-text-muted mt-1">{t("lab.description")}</p>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-none flex items-center justify-center mb-4">
-            <FlaskConical className="w-8 h-8 text-purple-400 dark:text-purple-500" />
+      {/* Content Section */}
+      <div className="flex-1 px-6 py-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-          <p className="text-text-muted text-sm">{t("lab.noOrders")}</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <LabOrderCard key={order.id} order={order} />
-          ))}
-        </div>
-      )}
+        ) : orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-14 h-14 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center mb-3">
+              <FlaskConical className="w-7 h-7 text-primary" />
+            </div>
+            <p className="text-text-muted text-sm">{t("lab.noOrders")}</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-w-4xl">
+            {orders.map((order) => (
+              <LabOrderCard key={order.id} order={order} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

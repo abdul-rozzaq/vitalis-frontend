@@ -1,15 +1,14 @@
 "use client";
 
-import { exportToExcel } from "@/lib/export-excel";
-
 import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
-import { DataTable } from "@/components/ui/data-table";
+import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
+import { exportToExcel } from "@/lib/export-excel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Filter, Loader2, Plus, Trash2 } from "lucide-react";
-import { motion } from "motion/react";
+import { Download, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -27,8 +26,7 @@ export default function PatientsPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [filterText, setFilterText] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedPatients, setSelectedPatients] = useState<Patient[]>([]);
 
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
     queryKey: ["patients"],
@@ -44,26 +42,9 @@ export default function PatientsPage() {
     },
   });
 
-  const filteredPatients = useMemo(
-    () =>
-      filterText.trim()
-        ? patientsData.filter((p: Patient) =>
-          `${p.first_name} ${p.last_name}`.toLowerCase().includes(filterText.toLowerCase()) ||
-          (p.phone_number ?? "").includes(filterText),
-        )
-        : patientsData,
-    [patientsData, filterText],
-  );
-
   const handleExport = () => {
     const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colBirthDate"), t("patients.colPhone")];
-    const rows = patientsData.map((p: Patient) => [
-      p.id,
-      `${p.first_name} ${p.last_name}`,
-      p.gender ?? "",
-      p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
-      p.phone_number ?? "",
-    ]);
+    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
@@ -78,11 +59,16 @@ export default function PatientsPage() {
     () => [
       {
         accessorKey: "id",
-        header: t("patients.colId"),
-        cell: ({ row, table }) => {
-          const pageIndex = table.getState().pagination.pageIndex;
-          const pageSize = table.getState().pagination.pageSize;
-          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
+        header: "ID",
+        cell: ({ row }) => {
+          // const pageIndex = table.getState().pagination.pageIndex;
+          // const pageSize = table.getState().pagination.pageSize;
+          return (
+            <span className="font-mono text-xs text-text-muted">
+              {/* {String(pageIndex * pageSize + row.index + 1).padStart(4, "0")} */}
+              {String(row.original.id).slice(0, 6).toUpperCase()}
+            </span>
+          );
         },
       },
       {
@@ -98,26 +84,26 @@ export default function PatientsPage() {
       {
         accessorKey: "gender",
         header: t("patients.colGender"),
-        cell: (info: any) => <span className="capitalize">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="capitalize px-2 py-1 rounded-full bg-surface-hover text-xs text-text-muted">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "birth_date",
         header: t("patients.colBirthDate"),
-        cell: (info: any) => <span className="text-secondary text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : t("common.na")}</span>,
+        cell: (info: any) => <span className="text-text-muted text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : t("common.na")}</span>,
       },
       {
         accessorKey: "phone_number",
         header: t("patients.colPhone"),
-        cell: (info: any) => <span className="text-secondary font-mono text-xs">{formatPhone(info.getValue() as string)}</span>,
+        cell: (info: any) => <span className="text-text-muted font-mono text-xs">{formatPhone(info.getValue() as string)}</span>,
       },
       {
         id: "actions",
-        header: () => <div className="text-right">{t("common.actions")}</div>,
+        header: () => <span className="text-right">{t("common.actions")}</span>,
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN", "KASSIR"]}>
               <Link href={`/patients/${row.original.id}/edit`}>
-                <button className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("patients.editPatient")}>
+                <button className="p-1 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors cursor-pointer" title={t("patients.editPatient")}>
                   <Edit className="w-4 h-4" />
                 </button>
               </Link>
@@ -126,12 +112,10 @@ export default function PatientsPage() {
               <button
                 onClick={() => handleDelete(row.original.id)}
                 disabled={isDeleting && deletingId === row.original.id}
-                className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
+                className="p-1 rounded-lg hover:bg-danger-50 text-text-muted hover:text-danger-500 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("patients.deletePatient")}
               >
-                {isDeleting && deletingId === row.original.id
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Trash2 className="w-4 h-4" />}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -142,60 +126,39 @@ export default function PatientsPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-      {/* Header Area */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("patients.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("patients.description")}</p>
-        </div>
+    <div className="flex flex-col min-h-screen">
+      {/* Page Header */}
+      <PageHeader
+        title={t("patients.title")}
+        subtitle={t("patients.description")}
+        actions={
+          <div className="flex gap-2">
+            <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
+              <Download className="w-4 h-4" />
+              <span>Export</span>
+            </button>
+            <Can roles={["ADMIN", "KASSIR"]}>
+              <Link href="/patients/new">
+                <button className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium">
+                  <Plus className="w-4 h-4" />
+                  <span>{t("patients.addPatient")}</span>
+                </button>
+              </Link>
+            </Can>
+          </div>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          {filterOpen && (
-            <input
-              autoFocus
-              type="text"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-              placeholder={t("common.filterPlaceholder")}
-              className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
-            />
-          )}
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Filter className="w-3.5 h-3.5" />
-            {t("common.filter")}
-          </button>
-          <button
-            onClick={handleExport}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {t("common.export")}
-          </button>
-          <Can roles={["ADMIN", "KASSIR"]}>
-            <Link href="/patients/new">
-              <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
-                <Plus className="w-3.5 h-3.5" />
-                {t("patients.addPatient")}
-              </button>
-            </Link>
-          </Can>
-        </div>
-      </motion.div>
-
-      {/* Main Table Content */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      {/* Page Content */}
+      <PageContent>
         {isLoadingPatients ? (
-          <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={filteredPatients} />
+          <EnterpriseDataTable columns={columns} data={patientsData} onRowSelect={setSelectedPatients} pageSize={20} searchKey="name" searchPlaceholder={t("common.filterPlaceholder")} />
         )}
-      </motion.div>
+      </PageContent>
     </div>
   );
 }

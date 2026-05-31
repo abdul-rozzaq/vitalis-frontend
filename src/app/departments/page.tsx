@@ -3,12 +3,12 @@
 import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, GitBranch, Loader2, Plus, Search, Trash2, X } from "lucide-react";
-import { motion } from "motion/react";
+import { Building2, Download, Edit, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -24,12 +24,12 @@ interface Department {
 }
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
-  { bg: "bg-blue-100", icon: "text-blue-600" },
-  { bg: "bg-purple-100", icon: "text-purple-600" },
-  { bg: "bg-green-100", icon: "text-green-600" },
-  { bg: "bg-amber-100", icon: "text-amber-600" },
-  { bg: "bg-rose-100", icon: "text-rose-600" },
-  { bg: "bg-cyan-100", icon: "text-cyan-600" },
+  { bg: "bg-primary-50", icon: "text-primary" },
+  { bg: "bg-info-50", icon: "text-info" },
+  { bg: "bg-success-50", icon: "text-success" },
+  { bg: "bg-warning-50", icon: "text-warning" },
+  { bg: "bg-danger-50", icon: "text-danger" },
+  { bg: "bg-surface-hover", icon: "text-text-muted" },
 ];
 
 function getDepartmentColor(id: string) {
@@ -267,63 +267,41 @@ export default function DepartmentsPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-      {/* Header Area */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-      >
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("departments.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("departments.description")}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("common.search")}
-              className="bg-surface border border-border text-sm text-text placeholder:text-text-muted rounded-md pl-8 pr-7 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:w-64 transition-all duration-200"
-            />
-            {isSearching && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-          <button className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
-            <Download className="w-3.5 h-3.5" />
-            {t("common.export")}
-          </button>
-          <Can roles={["ADMIN"]}>
+    <div className="flex flex-col min-h-screen">
+      <PageHeader
+        title={t("departments.title")}
+        subtitle={t("departments.description")}
+        actions={
+          <div className="flex gap-2">
             <button
-              onClick={handleAddDepartment}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              onClick={() => {}}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
             >
-              <Plus className="w-3.5 h-3.5" />
-              {t("departments.addDepartment")}
+              <Download className="w-4 h-4" />
+              <span>Export</span>
             </button>
-          </Can>
-        </div>
-      </motion.div>
+            <Can roles={["ADMIN"]}>
+              <button
+                onClick={handleAddDepartment}
+                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t("departments.addDepartment")}</span>
+              </button>
+            </Can>
+          </div>
+        }
+      />
 
-      {/* Main Table Content */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      <PageContent>
         {isLoading ? (
-          <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
           <DataTable columns={columns} data={filteredData} />
         )}
-      </motion.div>
+      </PageContent>
 
       {/* Slide-over Sheet */}
       <Sheet

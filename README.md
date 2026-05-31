@@ -1,6 +1,25 @@
 # Vitalis Frontend
 
-A Next.js 16 frontend for a hospital CRM system. It includes authentication, role-based UI permissions, and management modules for patients, employees, departments, payments, assignments, and schedules.
+A Next.js 16 frontend for an enterprise healthcare CRM system. It includes authentication, role-based UI permissions, and management modules for patients, employees, departments, payments, assignments, and schedules. Built with a scalable, professional design system for healthcare applications.
+
+## 🎨 Enterprise Design System
+
+This project includes a comprehensive design system with 15+ reusable components, design tokens, and layout patterns for building professional healthcare interfaces.
+
+**Quick Links:**
+- **Component Showcase**: Visit `/design-system` to see all components
+- **Design System Guide**: See `DESIGN_SYSTEM.md` for complete documentation
+- **Quick Start**: See `QUICKSTART.md` to get started immediately
+- **Implementation Details**: See `IMPLEMENTATION_GUIDE.md` for technical details
+
+**What's Included:**
+- 100+ design tokens (colors, typography, spacing, shadows)
+- 15+ reusable components (Button, Card, Input, Modal, Layout)
+- 5 layout patterns for common page structures
+- Full dark mode support
+- WCAG 2.1 AA accessibility compliance
+- TypeScript support with full type definitions
+- 1,500+ lines of documentation
 
 ## Tech Stack
 

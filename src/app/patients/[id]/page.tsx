@@ -1131,7 +1131,7 @@ export default function PatientDetailPage() {
       >
         <AddCaseStepForm
           caseId={addStepCaseId ?? ""}
-          availableStepTypes={["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
+          availableStepTypes={["CONSULTATION", "LAB", "REFERRAL", "DISCHARGE"]}
           onClose={() => setAddStepCaseId(null)}
           onSuccess={() => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] })}
         />

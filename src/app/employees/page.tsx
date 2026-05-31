@@ -1,15 +1,14 @@
 "use client";
 
 import { exportToExcel } from "@/lib/export-excel";
-
 import formatPhone from "@/components/formatPhone";
 import { Can } from "@/components/ui/can";
-import { DataTable } from "@/components/ui/data-table";
+import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Download, Edit, Filter, Loader2, Plus, Trash2, X } from "lucide-react";
-import { motion } from "motion/react";
+import { Download, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,34 +26,26 @@ interface Employee {
 }
 
 const ROLE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700", label: "Admin" },
-  KASSIR: { bg: "bg-amber-100", text: "text-amber-700", label: "Kassir" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700", label: "Doctor" },
-  HAMSHIRA: { bg: "bg-green-100", text: "text-green-700", label: "Hamshira" },
-  LABARANT: { bg: "bg-cyan-100", text: "text-cyan-700", label: "Labarant" },
-  TEXNIK_HODIM: { bg: "bg-gray-100", text: "text-gray-700", label: "Texnik Hodim" },
-  DIREKTOR: { bg: "bg-rose-100", text: "text-rose-700", label: "Direktor" },
-  HISOBCHI: { bg: "bg-orange-100", text: "text-orange-700", label: "Hisobchi" },
+  ADMIN: { bg: "bg-primary-50", text: "text-primary", label: "Admin" },
+  KASSIR: { bg: "bg-primary-50", text: "text-primary", label: "Kassir" },
+  DOCTOR: { bg: "bg-info-50", text: "text-info", label: "Doctor" },
+  HAMSHIRA: { bg: "bg-success-50", text: "text-success", label: "Hamshira" },
+  LABARANT: { bg: "bg-warning-50", text: "text-warning", label: "Labarant" },
+  TEXNIK_HODIM: { bg: "bg-surface-hover", text: "text-text-muted", label: "Texnik Hodim" },
+  DIREKTOR: { bg: "bg-danger-50", text: "text-danger", label: "Direktor" },
+  HISOBCHI: { bg: "bg-primary-50", text: "text-primary", label: "Hisobchi" },
 };
 
 export default function EmployeesPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [filterText, setFilterText] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>("");
 
   const { data: employeesData = [] } = useQuery({
-    queryKey: ["employees", { search: filterText, role: selectedRole }],
+    queryKey: ["employees"],
     queryFn: () =>
       api
-        .get("/users", {
-          params: {
-            ...(filterText && { search: filterText }),
-            ...(selectedRole && { role: selectedRole }),
-          },
-        })
+        .get("/users")
         .then((res) => res.data),
     refetchOnWindowFocus: false,
   });
@@ -67,9 +58,6 @@ export default function EmployeesPage() {
     },
   });
 
-  // ✅ O'CHIRILDI: filteredEmployees useMemo kerak emas endi
-  // Backend filter qilib qaytaradi, to'g'ridan-to'g'ri employeesData ishlatiladi
-
   const handleExport = () => {
     const headers = ["#", t("employees.colFullName"), t("employees.colPhone"), t("employees.colRole"), t("employees.colJoined")];
     const rows = employeesData.map((e: Employee, idx: number) => [idx + 1, `${e.first_name} ${e.last_name}`, e.phone ?? "", e.role ?? "", e.createdAt ? new Date(e.createdAt).toLocaleDateString() : ""]);
@@ -81,13 +69,6 @@ export default function EmployeesPage() {
       setDeletingId(id);
       deleteEmployee(id);
     }
-  };
-
-  const handleToggleFilter = () => {
-    if (filterOpen) {
-      setSelectedRole("");
-    }
-    setFilterOpen((v) => !v);
   };
 
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -175,77 +156,40 @@ export default function EmployeesPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-6xl mx-auto w-full">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("employees.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("employees.description")}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            autoFocus
-            type="text"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            placeholder={t("common.filterPlaceholder")}
-            className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent w-48"
-          />
-
-          {filterOpen && (
-            <div className="flex items-center gap-1">
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer"
-              >
-                <option value="">all</option>
-                {Object.entries(ROLE_STYLES).map(([value, style]) => (
-                  <option key={value} value={value}>
-                    {style.label}
-                  </option>
-                ))}
-              </select>
-              {selectedRole && (
-                <button onClick={() => setSelectedRole("")} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary hover:text-text transition-colors cursor-pointer" title="clear">
-                  <X className="w-3.5 h-3.5" />
+    <div className="flex flex-col min-h-screen">
+      <PageHeader
+        title={t("employees.title")}
+        subtitle={t("employees.description")}
+        actions={
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export</span>
+            </button>
+            <Can roles={["ADMIN"]}>
+              <Link href="/employees/new">
+                <button className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium">
+                  <Plus className="w-4 h-4" />
+                  <span>{t("employees.addEmployee")}</span>
                 </button>
-              )}
-            </div>
-          )}
+              </Link>
+            </Can>
+          </div>
+        }
+      />
 
-          <button
-            onClick={handleToggleFilter}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-              filterOpen || selectedRole ? "bg-primary-50 border-primary text-primary hover:bg-primary-100" : "bg-surface border-border text-secondary hover:bg-surface-hover"
-            }`}
-          >
-            <Filter className="w-3.5 h-3.5" />
-            {t("common.filter")}
-            {selectedRole && <span className="ml-0.5 font-semibold">· {ROLE_STYLES[selectedRole]?.label ?? selectedRole}</span>}
-          </button>
-
-          <button
-            onClick={handleExport}
-            className="bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {t("common.export")}
-          </button>
-          <Can roles={["ADMIN"]}>
-            <Link href="/employees/new">
-              <button className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20">
-                <Plus className="w-3.5 h-3.5" />
-                {t("employees.addEmployee")}
-              </button>
-            </Link>
-          </Can>
-        </div>
-      </motion.div>
-
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-        <DataTable columns={columns} data={employeesData} />
-      </motion.div>
+      <PageContent>
+        <EnterpriseDataTable
+          columns={columns}
+          data={employeesData}
+          pageSize={20}
+          searchKey="name"
+          searchPlaceholder={t("common.filterPlaceholder")}
+        />
+      </PageContent>
     </div>
   );
 }
