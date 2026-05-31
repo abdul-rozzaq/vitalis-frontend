@@ -1,5 +1,5 @@
 export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "READY" | "DELIVERED" | "CANCELLED";
 
 export interface LaboratoryService {
   id: string;
@@ -48,6 +48,12 @@ export interface LabOrderItem {
   note?: string | null;
   completedAt?: string | null;
   payment?: LabPayment | null;
+  startedAt?: string | null;
+  readyAt?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LabOrder {

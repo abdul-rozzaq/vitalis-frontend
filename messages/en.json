@@ -689,6 +689,16 @@
       "IN_PROGRESS": "In Progress",
       "DONE": "Done",
       "CANCELLED": "Cancelled"
+    },
+    "searchPlaceholder": "Search orders...",
+    "tabs": {
+      "all": "All"
+    },
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "completed": "Completed"
     }
   },
   "laboratories": {

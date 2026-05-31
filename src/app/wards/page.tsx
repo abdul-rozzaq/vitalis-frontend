@@ -337,8 +337,8 @@ export default function WardsPage() {
           <button
             onClick={() => setFilterOpen((v) => !v)}
             className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${hasFilters
-                ? "bg-primary-50 border-primary-200 text-primary"
-                : "bg-surface border-border text-secondary hover:bg-surface-hover"
+              ? "bg-primary-50 border-primary-200 text-primary"
+              : "bg-surface border-border text-secondary hover:bg-surface-hover"
               }`}
           >
             <Filter className="w-3.5 h-3.5" />
@@ -510,8 +510,8 @@ export default function WardsPage() {
             {/* Status badge */}
             <span
               className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-500"
+                ? "bg-green-100 text-green-700"
+                : "bg-gray-100 text-gray-500"
                 }`}
             >
               {wardDetail.status === "OCCUPIED"
@@ -583,9 +583,9 @@ export default function WardsPage() {
                     </span>
                     <span
                       className={`font-medium ${wardDetail.status === "OCCUPIED" &&
-                          new Date(wardDetail.expectedOut) < new Date()
-                          ? "text-red-500"
-                          : "text-text"
+                        new Date(wardDetail.expectedOut) < new Date()
+                        ? "text-red-500"
+                        : "text-text"
                         }`}
                     >
                       {new Date(wardDetail.expectedOut).toLocaleDateString("uz-UZ")}
