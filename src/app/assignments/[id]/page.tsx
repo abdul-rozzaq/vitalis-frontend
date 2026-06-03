@@ -3,7 +3,9 @@
 import { AssignmentForm, type AssignmentFormValues } from "@/components/assignments/assignment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import { UserOption } from "@/features/assignments/types";
 import { api } from "@/lib/api";
+import { UserRole } from "@/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BedDouble, Building2, Calendar, CheckCircle2, Clock, DoorOpen, Edit, Loader2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
@@ -14,11 +16,6 @@ import { useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-interface Role {
-  id: string;
-  name: string;
-  description?: string;
-}
 
 interface Schedule {
   id: string;
@@ -35,23 +32,22 @@ interface Assignment {
   roomId?: string | null;
   isActive: boolean;
   createdAt: string;
-  user?: { id: string; first_name: string; last_name: string; role: Role };
+  user?: { id: string; first_name: string; last_name: string; role: UserRole };
   department?: { id: string; name: string };
   room?: { id: string; name: string; roomType: string } | null;
   schedules?: Schedule[];
 }
 
-interface UserOption { id: string; first_name: string; last_name: string; role: Role }
 interface DeptOption { id: string; name: string }
 interface RoomOption { id: string; name: string }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
+const ROLE_STYLES: Partial<Record<UserRole, { bg: string; text: string }>> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
   DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-green-100", text: "text-green-700" },
-  RECEPTIONIST: { bg: "bg-orange-100", text: "text-orange-700" },
+  HAMSHIRA: { bg: "bg-green-100", text: "text-green-700" },
+  KASSIR: { bg: "bg-orange-100", text: "text-orange-700" },
 };
 
 const DAY_COLS: Record<number, string> = {
@@ -141,9 +137,8 @@ export default function AssignmentDetailPage() {
   const fullName = assignment.user
     ? `${assignment.user.first_name} ${assignment.user.last_name}`
     : "—";
-  const roleName = assignment.user?.role?.name ?? "";
-  const roleStyle = ROLE_STYLES[roleName] ?? { bg: "bg-gray-100", text: "text-gray-700" };
-
+  const roleName = assignment.user?.role;
+  const roleStyle = (roleName ? ROLE_STYLES[roleName] : undefined) ?? { bg: "bg-gray-100", text: "text-gray-700" };
   const schedules = assignment.schedules ?? [];
   const scheduledDays = [...new Set(schedules.map((s) => s.dayOfWeek))].sort();
 

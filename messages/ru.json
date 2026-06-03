@@ -686,6 +686,16 @@
       "IN_PROGRESS": "В процессе",
       "DONE": "Выполнено",
       "CANCELLED": "Отменено"
+    },
+    "searchPlaceholder": "Поиск заказов...",
+    "tabs": {
+      "all": "Все"
+    },
+    "stats": {
+      "total": "Всего",
+      "pending": "Ожидает",
+      "inProgress": "В процессе",
+      "completed": "Выполнено"
     }
   },
   "laboratories": {

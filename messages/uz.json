@@ -687,7 +687,10 @@
       "IN_PROGRESS": "Jarayonda",
       "DONE": "Bajarildi",
       "CANCELLED": "Bekor qilingan"
-    }
+    },
+    "searchPlaceholder": "Buyurtmalarni qidirish...",
+    "tabs": { "all": "Barchasi" },
+    "stats": { "total": "Jami", "pending": "Kutilmoqda", "inProgress": "Jarayonda", "completed": "Bajarildi" }
   },
   "laboratories": {
     "title": "Laboratoriyalar",

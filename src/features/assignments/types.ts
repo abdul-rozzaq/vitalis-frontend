@@ -1,4 +1,4 @@
- 
+import { UserRole } from "@/types/user";
 
 export type RoomType = "WARD" | "EXAMINATION";
 
@@ -31,7 +31,7 @@ export interface Assignment {
     id: string;
     first_name: string;
     last_name: string;
-    role: string;
+    role: UserRole;
   };
   department?: {
     id: string;
@@ -49,7 +49,7 @@ export interface UserOption {
   id: string;
   first_name: string;
   last_name: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface DepartmentOption {
@@ -75,5 +75,5 @@ export type RoomPayload = {
 
 export type RolePayload = {
   name: string;
-  description?: string;
+  description?: string; 
 };

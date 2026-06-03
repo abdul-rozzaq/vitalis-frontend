@@ -1,5 +1,6 @@
 "use client";
 
+import { UserOption } from "@/features/assignments/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -24,12 +25,6 @@ const assignmentSchema = z.object({
 export type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 type AssignmentFormInput = z.input<typeof assignmentSchema>;
 
-interface UserOption {
-  id: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-}
 interface DeptOption {
   id: string;
   name: string;
