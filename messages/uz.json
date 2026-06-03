@@ -689,8 +689,15 @@
       "CANCELLED": "Bekor qilingan"
     },
     "searchPlaceholder": "Buyurtmalarni qidirish...",
-    "tabs": { "all": "Barchasi" },
-    "stats": { "total": "Jami", "pending": "Kutilmoqda", "inProgress": "Jarayonda", "completed": "Bajarildi" }
+    "tabs": {
+      "all": "Barchasi"
+    },
+    "stats": {
+      "total": "Jami",
+      "pending": "Kutilmoqda",
+      "inProgress": "Jarayonda",
+      "completed": "Bajarildi"
+    }
   },
   "laboratories": {
     "title": "Laboratoriyalar",
@@ -757,6 +764,8 @@
     "checkInHint": "Bo'sh qoldirsangiz, bugungi sana avtomatik qo'yiladi",
     "companionsCount": "Qarovchilar soni",
     "maxCompanions": "Maksimal",
-    "person": "kishi"
+    "person": "kishi",
+    "currentOccupants": "Hozirgi bemorlar",
+    "noOccupants": "Hozir xonada bemor yo'q"
   }
 }
