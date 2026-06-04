@@ -2,6 +2,7 @@
 
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
 import { WardCheckInModal } from "@/components/wards/ward-checkin-modal";
 import { WardEditModal } from "@/components/wards/ward-edit-modal";
@@ -23,7 +24,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -246,16 +246,13 @@ export default function WardsPage() {
               ? Math.max(1, Math.ceil((Date.now() - new Date(w.checkIn).getTime()) / 86400000))
               : (w.daysStayed ?? "—");
           return (
-            <span
-              className={`text-sm font-medium ${w.status === "OCCUPIED" ? "text-primary" : "text-secondary"}`}
-            >
+            <span className={`text-sm font-medium ${w.status === "OCCUPIED" ? "text-primary" : "text-secondary"}`}>
               {days} {w.status === "OCCUPIED" ? t("wards.currentDay") : ""}
             </span>
           );
         },
       },
       {
-        // ← QO'SHILDI: jadvalda ham ko'rinadi
         accessorKey: "companionsCount",
         header: t("wards.companionsCount"),
         cell: ({ row }) => {
@@ -275,10 +272,7 @@ export default function WardsPage() {
         cell: (info: any) => {
           const val = info.getValue() as string;
           return (
-            <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                }`}
-            >
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
               {val === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
             </span>
           );
@@ -322,163 +316,150 @@ export default function WardsPage() {
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-7xl mx-auto w-full">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-      >
-        <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("wards.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("wards.description")}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className={`border px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${hasFilters
-              ? "bg-primary-50 border-primary-200 text-primary"
-              : "bg-surface border-border text-secondary hover:bg-surface-hover"
-              }`}
-          >
-            <Filter className="w-3.5 h-3.5" />
-            {t("common.filter")}
-            {hasFilters && (
-              <span className="ml-0.5 bg-primary text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
-                {Object.values(filters).filter(Boolean).length}
-              </span>
-            )}
-            <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
-          </button>
-          <Can roles={["ADMIN", "KASSIR", "HAMSHIRA"]}>
+    <div className="flex flex-col min-h-screen">
+      <PageHeader
+        title={t("wards.title")}
+        subtitle={t("wards.description")}
+        actions={
+          <div className="flex gap-2">
             <button
-              onClick={() => setCheckInOpen(true)}
-              className="bg-primary hover:bg-primary-700 text-white px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-primary-600/20"
+              onClick={() => setFilterOpen((v) => !v)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                hasFilters
+                  ? "bg-primary-50 border-primary-200 text-primary"
+                  : "border-border text-text-muted hover:text-text hover:bg-surface-hover"
+              }`}
             >
-              <Plus className="w-3.5 h-3.5" />
-              {t("wards.checkIn")}
+              <Filter className="w-4 h-4" />
+              {t("common.filter")}
+              {hasFilters && (
+                <span className="ml-0.5 bg-primary text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+                  {Object.values(filters).filter(Boolean).length}
+                </span>
+              )}
+              <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
             </button>
-          </Can>
-        </div>
-      </motion.div>
-
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.04 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-      >
-        {[
-          { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600" },
-          { label: t("wards.statusVacated"), value: stats.vacated, color: "text-gray-500" },
-          { label: t("wards.total"), value: stats.total, color: "text-primary" },
-        ].map((s) => (
-          <div key={s.label} className="bg-surface border border-border rounded-xl p-4">
-            <p className="text-xs text-secondary mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+            <Can roles={["ADMIN", "KASSIR", "HAMSHIRA"]}>
+              <button
+                onClick={() => setCheckInOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:opacity-90 rounded-lg transition-opacity text-sm font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                {t("wards.checkIn")}
+              </button>
+            </Can>
           </div>
-        ))}
-      </motion.div>
+        }
+      />
 
-      {/* Filter panel */}
-      {filterOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-surface border border-border rounded-xl p-4"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => set("search", e.target.value)}
-              placeholder={t("common.filterPlaceholder")}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
-            <select
-              value={filters.status}
-              onChange={(e) => set("status", e.target.value as Filters["status"])}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            >
-              <option value="">{t("wards.allStatuses")}</option>
-              <option value="OCCUPIED">{t("wards.statusOccupied")}</option>
-              <option value="VACATED">{t("wards.statusVacated")}</option>
-            </select>
-            <select
-              value={filters.departmentId}
-              onChange={(e) => set("departmentId", e.target.value)}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            >
-              <option value="">
-                {t("forms.department")}: {t("common.all") ?? "All"}
-              </option>
-              {Array.from(
-                new Map(
-                  wardRooms
-                    .filter((r) => r.department)
-                    .map((r) => [r.department!.id, r.department!]),
-                ).values(),
-              ).map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
+      <PageContent>
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {[
+            { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600" },
+            { label: t("wards.statusVacated"),  value: stats.vacated,  color: "text-text-muted" },
+            { label: t("wards.total"),           value: stats.total,    color: "text-primary" },
+          ].map((s) => (
+            <div key={s.label} className="bg-surface border border-border rounded-lg p-4">
+              <p className="text-sm text-text-muted mb-1">{s.label}</p>
+              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Filter panel */}
+        {filterOpen && (
+          <div className="bg-surface border border-border rounded-lg p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => set("search", e.target.value)}
+                placeholder={t("common.filterPlaceholder")}
+                className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <select
+                value={filters.status}
+                onChange={(e) => set("status", e.target.value as Filters["status"])}
+                className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                <option value="">{t("wards.allStatuses")}</option>
+                <option value="OCCUPIED">{t("wards.statusOccupied")}</option>
+                <option value="VACATED">{t("wards.statusVacated")}</option>
+              </select>
+              <select
+                value={filters.departmentId}
+                onChange={(e) => set("departmentId", e.target.value)}
+                className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                <option value="">
+                  {t("forms.department")}: {t("common.all") ?? "All"}
                 </option>
-              ))}
-            </select>
-            <select
-              value={filters.roomId}
-              onChange={(e) => set("roomId", e.target.value)}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            >
-              <option value="">{t("wards.allRooms")}</option>
-              {wardRooms
-                .filter((r) => !filters.departmentId || r.department?.id === filters.departmentId)
-                .map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
+                {Array.from(
+                  new Map(
+                    wardRooms
+                      .filter((r) => r.department)
+                      .map((r) => [r.department!.id, r.department!]),
+                  ).values(),
+                ).map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
                   </option>
                 ))}
-            </select>
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => set("dateFrom", e.target.value)}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
-            <div className="flex gap-2">
+              </select>
+              <select
+                value={filters.roomId}
+                onChange={(e) => set("roomId", e.target.value)}
+                className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                <option value="">{t("wards.allRooms")}</option>
+                {wardRooms
+                  .filter((r) => !filters.departmentId || r.department?.id === filters.departmentId)
+                  .map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+              </select>
               <input
                 type="date"
-                value={filters.dateTo}
-                onChange={(e) => set("dateTo", e.target.value)}
-                className="flex-1 bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                value={filters.dateFrom}
+                onChange={(e) => set("dateFrom", e.target.value)}
+                className="bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
-              {hasFilters && (
-                <button
-                  onClick={() => setFilters(EMPTY_FILTERS)}
-                  className="px-2 py-1.5 rounded-md border border-border bg-background text-secondary hover:text-text hover:bg-surface-hover transition-colors"
-                  title={t("common.reset")}
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              )}
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => set("dateTo", e.target.value)}
+                  className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                {hasFilters && (
+                  <button
+                    onClick={() => setFilters(EMPTY_FILTERS)}
+                    className="px-2 py-2 rounded-lg border border-border bg-background text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
+                    title={t("common.reset")}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
+            <p className="text-xs text-text-muted mt-2">
+              {filtered.length} / {wardsRaw.length} {t("wards.records")}
+            </p>
           </div>
-          <p className="text-xs text-secondary mt-2">
-            {filtered.length} / {wardsRaw.length} {t("wards.records")}
-          </p>
-        </motion.div>
-      )}
+        )}
 
-      {/* Table */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+        {/* Table */}
         {isLoading ? (
-          <div className="bg-surface border border-border rounded-lg h-48 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-text-muted animate-spin" />
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-surface border border-border rounded-xl h-48 flex flex-col items-center justify-center gap-2">
-            <BedDouble className="w-8 h-8 text-secondary" />
-            <p className="text-secondary text-sm">{t("wards.noWards")}</p>
+          <div className="bg-surface border border-border rounded-lg h-48 flex flex-col items-center justify-center gap-2">
+            <BedDouble className="w-8 h-8 text-text-muted" />
+            <p className="text-text-muted text-sm">{t("wards.noWards")}</p>
             {hasFilters && (
               <button
                 onClick={() => setFilters(EMPTY_FILTERS)}
@@ -491,7 +472,7 @@ export default function WardsPage() {
         ) : (
           <DataTable columns={columns} data={filtered} />
         )}
-      </motion.div>
+      </PageContent>
 
       {/* Detail Sheet */}
       <Sheet
@@ -507,19 +488,10 @@ export default function WardsPage() {
           </div>
         ) : wardDetail ? (
           <div className="space-y-4">
-            {/* Status badge */}
-            <span
-              className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED"
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-500"
-                }`}
-            >
-              {wardDetail.status === "OCCUPIED"
-                ? t("wards.statusOccupied")
-                : t("wards.statusVacated")}
+            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+              {wardDetail.status === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
             </span>
 
-            {/* Bemor */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-1">
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.colPatient")}
@@ -532,7 +504,6 @@ export default function WardsPage() {
               </Link>
             </div>
 
-            {/* Xona */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-1">
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.colRoom")}
@@ -546,7 +517,6 @@ export default function WardsPage() {
               )}
             </div>
 
-            {/* ← QO'SHILDI: Qarovchilar soni */}
             {wardDetail.companionsCount > 0 && (
               <div className="bg-surface-hover rounded-xl p-4 space-y-1">
                 <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
@@ -561,7 +531,6 @@ export default function WardsPage() {
               </div>
             )}
 
-            {/* Sanalar */}
             <div className="bg-surface-hover rounded-xl p-4 space-y-3">
               <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {t("wards.dates")}
@@ -581,13 +550,7 @@ export default function WardsPage() {
                     <span className="flex items-center gap-2 text-secondary">
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.colExpectedOut")}
                     </span>
-                    <span
-                      className={`font-medium ${wardDetail.status === "OCCUPIED" &&
-                        new Date(wardDetail.expectedOut) < new Date()
-                        ? "text-red-500"
-                        : "text-text"
-                        }`}
-                    >
+                    <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date() ? "text-red-500" : "text-text"}`}>
                       {new Date(wardDetail.expectedOut).toLocaleDateString("uz-UZ")}
                     </span>
                   </div>
@@ -610,12 +573,7 @@ export default function WardsPage() {
                   </span>
                   <span className="text-primary font-bold text-base">
                     {wardDetail.status === "OCCUPIED"
-                      ? Math.max(
-                        1,
-                        Math.ceil(
-                          (Date.now() - new Date(wardDetail.checkIn).getTime()) / 86400000,
-                        ),
-                      )
+                      ? Math.max(1, Math.ceil((Date.now() - new Date(wardDetail.checkIn).getTime()) / 86400000))
                       : (wardDetail.daysStayed ?? "—")}
                     {wardDetail.status === "OCCUPIED" && (
                       <span className="text-xs font-normal text-secondary ml-1">
@@ -627,7 +585,6 @@ export default function WardsPage() {
               </div>
             </div>
 
-            {/* Izoh */}
             {wardDetail.note && (
               <div className="bg-surface-hover rounded-xl p-4 space-y-1">
                 <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
@@ -637,7 +594,6 @@ export default function WardsPage() {
               </div>
             )}
 
-            {/* Tugmalar */}
             <div className="flex gap-2 pt-1">
               <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
                 <button
@@ -645,7 +601,7 @@ export default function WardsPage() {
                     setEditingWard(wardDetail);
                     setDetailId(null);
                   }}
-                  className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="flex-1 bg-surface border border-border text-text-muted hover:bg-surface-hover px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Edit className="w-3.5 h-3.5" />
                   {t("common.edit")}
@@ -659,7 +615,7 @@ export default function WardsPage() {
                       handleCheckOut(wardDetail.id);
                     }}
                     disabled={isCheckingOut}
-                    className="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
+                    className="flex-1 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40"
                   >
                     {isCheckingOut ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
