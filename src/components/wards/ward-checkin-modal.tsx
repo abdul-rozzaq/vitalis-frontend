@@ -3,7 +3,7 @@
 import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Minus, Plus, Users, X } from "lucide-react";
+import { BedDouble, Loader2, Minus, Plus, UserRound, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -23,8 +23,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const [note, setNote] = useState("");
   const [companionsCount, setCompanionsCount] = useState(0);
 
-  // Alohida queryKey — boshqa ["patients"] cache ga tegmaydi
-  // staleTime: 0 — modal ochilganda har doim yangi so'rov ketadi
   const { data: patients = [] } = useQuery({
     queryKey: ["patients-available-for-ward"],
     queryFn: () =>
@@ -45,6 +43,15 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const maxCompanions = selectedRoom
     ? Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) - 1)
     : 0;
+
+  // Tanlangan xonadagi bemorlarni olish — /wards/room/:roomId (OCCUPIED filtri backendda)
+  const { data: roomOccupants = [], isLoading: isLoadingOccupants } = useQuery({
+    queryKey: ["room-occupants", roomId],
+    queryFn: () =>
+      api.get(`/wards/room/${roomId}`).then((r) => r.data),
+    enabled: !!roomId,
+    staleTime: 0,
+  });
 
   const patientOptions = patients.map((p: any) => ({
     label: `${p.first_name} ${p.last_name}`,
@@ -70,7 +77,6 @@ export function WardCheckInModal({ open, onClose }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
       queryClient.invalidateQueries({ queryKey: ["rooms"] });
-      // Modal keyingi ochilishida yangi ro'yxat oladi
       queryClient.invalidateQueries({ queryKey: ["patients-available-for-ward"] });
       handleClose();
     },
@@ -104,7 +110,7 @@ export function WardCheckInModal({ open, onClose }: Props) {
         </div>
 
         <div className="space-y-3">
-          {/* Bemor — faqat hozir palatada yotmaganlar */}
+          {/* Bemor */}
           <div>
             <label className="text-sm font-medium text-text mb-1 block">
               {t("wards.colPatient")} *
@@ -137,9 +143,70 @@ export function WardCheckInModal({ open, onClose }: Props) {
             )}
           </div>
 
+          {/* Tanlangan xonadagi bemorlar — preview panel */}
+          {roomId && (
+            <div className="rounded-lg border border-border bg-surface-hover/50 overflow-hidden">
+              {/* Panel header */}
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-surface">
+                <BedDouble className="w-3.5 h-3.5 text-secondary" />
+                <span className="text-xs font-medium text-text">
+                  {selectedRoom?.name} — {t("wards.currentOccupants")}
+                </span>
+                <span className="ml-auto text-xs text-secondary">
+                  {selectedRoom?.occupiedCount ?? 0}/{selectedRoom?.capacity ?? "—"}
+                </span>
+              </div>
+
+              {/* Bemorlar ro'yxati */}
+              <div className="divide-y divide-border">
+                {isLoadingOccupants ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-secondary" />
+                  </div>
+                ) : roomOccupants.length === 0 ? (
+                  <div className="py-3 px-3 text-xs text-secondary text-center">
+                    {t("wards.noOccupants")}
+                  </div>
+                ) : (
+                  roomOccupants.map((ward: any) => {
+                    const patient = ward.patient ?? ward;
+                    const fullName =
+                      patient.first_name && patient.last_name
+                        ? `${patient.first_name} ${patient.last_name}`
+                        : patient.name ?? "—";
+                    const companions = ward.companionsCount ?? ward.companions_count ?? 0;
+
+                    return (
+                      <div
+                        key={ward.id}
+                        className="flex items-center gap-2.5 px-3 py-2"
+                      >
+                        {/* Avatar placeholder */}
+                        <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                          <UserRound className="w-3.5 h-3.5 text-accent" />
+                        </div>
+
+                        {/* Ism */}
+                        <span className="text-sm text-text flex-1 truncate">{fullName}</span>
+
+                        {/* Sheriklar soni */}
+                        {companions > 0 && (
+                          <div className="flex items-center gap-1 text-xs text-secondary bg-surface rounded-md px-1.5 py-0.5 border border-border">
+                            <Users className="w-3 h-3" />
+                            <span>{companions}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Qarovchilar soni */}
           <div>
-            <label className="text-sm font-medium text-text mb-1 block flex items-center gap-1.5">
+            <label className="text-sm font-medium text-text mb-1 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" />
               {t("wards.companionsCount")}
               <span className="text-secondary font-normal ml-1">({t("common.optional")})</span>
