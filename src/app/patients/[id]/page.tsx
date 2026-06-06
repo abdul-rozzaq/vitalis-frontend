@@ -9,10 +9,9 @@ import {
   CaseStep,
   CaseStepStatus,
   CaseStepType,
-  LabItemStatus,
   Patient,
   PatientCase,
-  SheetMode,
+  SheetMode
 } from "@/features/patients/detail/types";
 import {
   PAYMENT_STATUS_STYLES,
@@ -48,7 +47,7 @@ import {
   Scissors,
   Stethoscope,
   User,
-  Users,
+  Users
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -68,33 +67,41 @@ const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
 };
 
 const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
-  CHECKIN: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
-  CONSULTATION: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
-  LAB: "bg-violet-200 text-violet-950 dark:bg-violet-900/40 dark:text-violet-200",
-  PROCEDURE: "bg-orange-200 text-orange-950 dark:bg-orange-900/40 dark:text-orange-200",
-  REFERRAL: "bg-yellow-200 text-yellow-950 dark:bg-yellow-900/40 dark:text-yellow-200",
-  DISCHARGE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
+  CHECKIN: "bg-info-50 text-info",
+  CONSULTATION: "bg-success-50 text-success",
+  LAB: "bg-info-50 text-info",
+  PROCEDURE: "bg-warning-50 text-warning",
+  REFERRAL: "bg-warning-50 text-warning",
+  DISCHARGE: "bg-danger-50 text-danger",
 };
 
 const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
-  PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  DONE: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+  PENDING: "bg-surface-secondary text-text-muted border-border",
+  IN_PROGRESS: "bg-info-50 text-info border-info-100",
+  DONE: "bg-success-50 text-success border-success-100",
+  CANCELLED: "bg-danger-50 text-danger border-danger-100",
 };
 
 const CASE_STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "text-blue-700 border-blue-400 dark:text-blue-300 dark:border-blue-700",
-  COMPLETED: "text-green-700 border-green-400 dark:text-green-300 dark:border-green-700",
-  CANCELLED: "text-gray-500 border-gray-300 dark:text-neutral-400 dark:border-neutral-600",
+  ACTIVE: "bg-info-50 text-info border-info-100",
+  COMPLETED: "bg-success-50 text-success border-success-100",
+  CANCELLED: "bg-surface-secondary text-text-muted border-border",
 };
 
-const LAB_ITEM_STATUS_COLOR: Record<LabItemStatus, string> = {
-  PENDING: "bg-gray-200 text-gray-900 dark:bg-gray-800 dark:text-gray-200",
-  IN_PROGRESS: "bg-blue-200 text-blue-950 dark:bg-blue-900/40 dark:text-blue-200",
-  DONE: "bg-green-200 text-green-950 dark:bg-green-900/40 dark:text-green-200",
-  CANCELLED: "bg-red-200 text-red-950 dark:bg-red-900/40 dark:text-red-200",
+const CASE_STATUS_BORDER: Record<string, string> = {
+  ACTIVE: "border-l-info",
+  COMPLETED: "border-l-success",
+  CANCELLED: "border-l-border",
 };
+
+const LAB_ITEM_STATUS_COLOR: Record<string, string> = {
+  PENDING: "bg-warning-50 text-warning border-warning-100",
+  IN_PROGRESS: "bg-info-50 text-info border-info-100",
+  READY: "bg-success-50 text-success border-success-100",
+  DELIVERED: "bg-success text-white border-transparent",
+  CANCELLED: "bg-danger-50 text-danger border-danger-100"
+};
+
 
 // ─── CaseStepRow ──────────────────────────────────────────────────────────────
 
@@ -109,26 +116,25 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
       <div className={`mt-0.5 rounded-full p-1.5 shrink-0 ${STEP_TYPE_COLOR[step.type]}`}>
         <Icon className="w-3.5 h-3.5" />
       </div>
+
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div>
             <span className="text-sm font-medium text-text">{t(`cases.stepType.${step.type}`)}</span>
             {step.assignment && (
-              <p className="text-xs text-secondary mt-0.5">
+              <p className="text-xs text-text-secondary mt-0.5">
                 Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} —{" "}
                 {step.assignment.department.name}
               </p>
             )}
           </div>
           <span
-            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${STEP_STATUS_COLOR[step.status]}`}
+            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${STEP_STATUS_COLOR[step.status]}`}
           >
             {t(`cases.stepStatus.${step.status}`)}
           </span>
         </div>
-
         {step.note && <p className="text-xs text-text-muted italic">{step.note}</p>}
-
         {payments.length > 0 && (
           <div className="space-y-1">
             {payments.map((payment) => {
@@ -137,15 +143,15 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
               return (
                 <div
                   key={payment.id}
-                  className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border}`}
+                  className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border} ${style.text}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <PayIcon className={`w-3.5 h-3.5 ${style.text}`} />
-                    <span className={`font-medium ${style.text}`}>{payment.status}</span>
-                    {payment.method && <span className="text-text-muted">• {payment.method}</span>}
+                    <PayIcon className="w-3.5 h-3.5" />
+                    <span className="font-medium">{t(`patients.${payment.status}`)}</span>
+                    {payment.method && <span className="text-text-muted">• {t(`patients.${payment.method}`)}</span>}
                   </div>
                   {showAmount && (
-                    <span className={`font-semibold ${style.text}`}>
+                    <span className="font-semibold">
                       {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
                     </span>
                   )}
@@ -163,68 +169,71 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
                 href={resolveFileUrl(file.url)}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between gap-2 bg-surface-hover rounded-md px-2.5 py-1.5 hover:bg-border transition-colors"
+                className="flex items-center justify-between gap-2 bg-surface-hover border border-transparent hover:border-border rounded-md px-2.5 py-1.5 transition-all duration-150 group"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <Paperclip className="w-3.5 h-3.5 text-secondary shrink-0" />
-                  <span className="text-xs text-text truncate">{file.name}</span>
+                  <Paperclip className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors shrink-0" />
+                  <span className="text-xs text-text group-hover:text-primary transition-colors truncate">{file.name}</span>
                 </div>
-                <Download className="w-3.5 h-3.5 text-secondary shrink-0" />
+                <Download className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors shrink-0" />
               </a>
             ))}
           </div>
         )}
 
         {step.labOrder && (
-          <div className="space-y-1">
-            <p className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+          <div className="space-y-1.5 mt-2">
+            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
               {step.labOrder.laboratory.name}
             </p>
-            {step.labOrder.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between text-xs bg-violet-200 dark:bg-violet-900/40 rounded-md px-2.5 py-1.5 gap-2"
-              >
-                <span className="text-violet-950 dark:text-violet-200 font-medium truncate">
-                  {item.service.name}
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  {item.files?.map((f) => (
-                    <a
-                      key={f.id}
-                      href={resolveFileUrl(f.url)}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={f.name}
-                    >
-                      <Download className="w-3.5 h-3.5 text-purple-400 dark:text-purple-300" />
-                    </a>
-                  ))}
-                  <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${LAB_ITEM_STATUS_COLOR[item.status]}`}
-                  >
-                    {t(`lab.itemStatus.${item.status}`)}
+            <div className="space-y-1">
+              {step.labOrder.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2"
+                >
+                  <span className="text-text font-medium truncate">
+                    {item.service.name}
                   </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {item.files?.map((f) => (
+                      <a
+                        key={f.id}
+                        href={resolveFileUrl(f.url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={f.name}
+                        className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+                    ))}
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}
+                    >
+                      {t(`lab.itemStatus.${item.status}`)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
         {step.appointment && (
           <Link
             href={`/appointments/${step.appointment.id}`}
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:text-accent transition-colors mt-1"
           >
-            <FileText className="w-3 h-3" />
-            {t("appointments.viewDetails")}
+            <FileText className="w-3.5 h-3.5" />
+            <span>{t("appointments.viewDetails")}</span>
           </Link>
         )}
 
         {step.completedAt && (
-          <p className="text-[10px] text-text-muted flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            {formatTime(step.completedAt)}
+          <p className="text-[10px] text-text-muted flex items-center gap-1 pt-0.5">
+            <CheckCircle2 className="w-3 h-3 text-success" />
+            <span>{formatTime(step.completedAt)}</span>
           </p>
         )}
       </div>
@@ -247,7 +256,7 @@ function CaseCard({
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
       <div
-        className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_COLOR[patientCase.status]}`}
+        className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}
       >
         <div>
           <div className="flex items-center gap-2">
@@ -287,7 +296,6 @@ function CaseCard({
     </div>
   );
 }
-
 // ─── EditPatientForm ──────────────────────────────────────────────────────────
 
 function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: () => void }) {
@@ -698,20 +706,20 @@ export default function PatientDetailPage() {
                       {(patient.document_type ||
                         patient.document_series ||
                         patient.document_number) && (
-                        <div className="flex items-start gap-2.5 text-sm text-secondary">
-                          <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                          <span>
-                            {patient.document_type?.replace(/_/g, " ")}
-                            {(patient.document_series || patient.document_number) && (
-                              <span className="font-mono">
-                                {" "}
-                                {patient.document_series}
-                                {patient.document_number}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      )}
+                          <div className="flex items-start gap-2.5 text-sm text-secondary">
+                            <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                            <span>
+                              {patient.document_type?.replace(/_/g, " ")}
+                              {(patient.document_series || patient.document_number) && (
+                                <span className="font-mono">
+                                  {" "}
+                                  {patient.document_series}
+                                  {patient.document_number}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        )}
                       {patient.pinfl && (
                         <div className="flex items-center gap-2.5 text-sm text-secondary">
                           <Hash className="w-4 h-4 text-text-muted shrink-0" />
@@ -799,26 +807,28 @@ export default function PatientDetailPage() {
             <Can roles={["ADMIN", "KASSIR", "HAMSHIRA", "DOCTOR"]}>
               {activeWard ? (
                 <div className="space-y-1.5">
-                  <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
-                    <BedDouble className="w-4 h-4 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{activeWard.room?.name}</p>
-                      <p className="text-xs font-normal text-green-600">
-                        {t("wards.statusOccupied")} ·{" "}
-                        {Math.max(
-                          1,
-                          Math.ceil(
-                            (Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000,
-                          ),
-                        )}{" "}
-                        {t("wards.colDays")}
-                      </p>
-                      {activeWard.companionsCount > 0 && (
-                        <p className="text-xs font-normal text-amber-600 flex items-center gap-1 mt-0.5">
-                          <Users className="w-3 h-3" />
-                          {activeWard.companionsCount} ta sheriq
+                  <div className="space-y-1.5">
+                    <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-success-50 border border-success-100 text-success text-sm font-medium">
+                      <BedDouble className="w-4 h-4 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-text">{activeWard.room?.name}</p>
+                        <p className="text-xs font-normal text-text-muted">
+                          {t("wards.statusOccupied")} ·{" "}
+                          {Math.max(
+                            1,
+                            Math.ceil(
+                              (Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000,
+                            ),
+                          )}{" "}
+                          {t("wards.colDays")}
                         </p>
-                      )}
+                        {activeWard.companionsCount > 0 && (
+                          <p className="text-xs font-normal text-warning flex items-center gap-1 mt-0.5">
+                            <Users className="w-3 h-3" />
+                            {activeWard.companionsCount} {t("wards.companionsCount") || "ta sherik"}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button

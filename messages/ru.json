@@ -134,7 +134,14 @@
     "statusCancelled": "Отменено",
     "deleteConfirm": "Вы уверены, что хотите удалить этого пациента?",
     "deletePatient": "Удалить пациента",
-    "showDocuments": "Подробнее"
+    "showDocuments": "Подробнее",
+    "documentInfo": "Информация о документе",
+    "pinflLabel": "ПИНФЛ",
+    "PAID": "Оплачено",
+    "UNPAID": "Не оплачено",
+    "PENDING": "Ожидается",
+    "CASH": "Наличные",
+    "CREDIT_CARD": "Кредитная карта"
   },
   "employees": {
     "title": "Сотрудники",
@@ -321,7 +328,15 @@
     "uploadFileDesc": "Выберите файл и при необходимости переименуйте его перед загрузкой.",
     "clickToSelectFile": "Нажмите, чтобы выбрать файл",
     "fileName": "Имя файла",
-    "fileNamePlaceholder": "Введите имя файла"
+    "fileNamePlaceholder": "Введите имя файла",
+    "status": {
+      "active": "Активен",
+      "completed": "Завершен",
+      "cancelled": "Отменен",
+      "pending": "В ожидании",
+      "in_progress": "В процессе",
+      "done": "Выполнено"
+    }
   },
   "prescription": {
     "searchMedicine": "Поиск лекарства...",
@@ -603,7 +618,8 @@
     "select": "Выберите...",
     "doctor": "Врач / Назначение",
     "note": "Примечание",
-    "notePlaceholder": "Дополнительные заметки..."
+    "notePlaceholder": "Дополнительные заметки...",
+    "optional": "(необязательно)"
   },
   "notifications": {
     "title": "Уведомления",
@@ -763,6 +779,8 @@
     "checkInHint": "Если не заполнено, автоматически будет указана сегодняшняя дата",
     "companionsCount": "Количество сопровождающих",
     "maxCompanions": "Максимум",
-    "person": "человек"
+    "person": "человек",
+    "currentOccupants": "Текущие пациенты",
+    "noOccupants": "В палате сейчас нет пациентов"
   }
 }

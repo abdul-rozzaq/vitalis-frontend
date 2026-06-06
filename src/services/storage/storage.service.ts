@@ -17,12 +17,17 @@ class StorageService {
   }
 
   getItem<T>(key: StorageKey, defaultValue: T | null = null): T | null {
+    console.log(`Attempting to retrieve key "${key}" from localStorage...`);
     if (!this.isBrowser()) return defaultValue;
 
     try {
       const item = window.localStorage.getItem(key);
       if (item === null) return defaultValue;
-      return JSON.parse(item) as T;
+      try {
+        return JSON.parse(item) as T;
+      } catch {
+        return item as unknown as T;
+      }
     } catch (error) {
       console.error(`Error reading from localStorage for key "${key}":`, error);
       return defaultValue;

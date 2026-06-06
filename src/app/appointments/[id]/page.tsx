@@ -494,7 +494,7 @@ export default function AppointmentDetailPage() {
                       stepId: appointment.caseStep!.id,
                     })
                   }
-                  className="inline-flex items-center gap-1.5 rounded-md bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 px-3 py-2 text-sm font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-success-50 border border-success-100 px-3 py-2 text-sm font-medium text-success hover:bg-success-100/50 transition-colors cursor-pointer disabled:opacity-60"
                 >
                   {isMarkingDone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                   {t("cases.markDone")}
@@ -508,7 +508,7 @@ export default function AppointmentDetailPage() {
                   setStepType("LAB");
                   setSheetMode("addStep");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 px-3 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-info-50 border border-info-100 px-3 py-2 text-sm font-medium text-info hover:bg-info-100/50 transition-colors cursor-pointer"
               >
                 <FlaskConical className="w-3.5 h-3.5" />
                 {t("cases.requestLab")}
@@ -520,7 +520,7 @@ export default function AppointmentDetailPage() {
                   setStepType("PROCEDURE");
                   setSheetMode("addStep");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-3 py-2 text-sm font-medium text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-warning-50 border border-warning-100 px-3 py-2 text-sm font-medium text-warning hover:bg-warning-100/50 transition-colors cursor-pointer"
               >
                 <Scissors className="w-3.5 h-3.5" />
                 {t("cases.stepType.PROCEDURE")}
@@ -532,7 +532,7 @@ export default function AppointmentDetailPage() {
                   setStepType("REFERRAL");
                   setSheetMode("addStep");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-warning-50 border border-warning-100 px-3 py-2 text-sm font-medium text-warning hover:bg-warning-100/50 transition-colors cursor-pointer"
               >
                 <ArrowRightCircle className="w-3.5 h-3.5" />
                 {t("cases.addReferral")}
@@ -543,9 +543,9 @@ export default function AppointmentDetailPage() {
                   setStepType("DISCHARGE");
                   setSheetMode("addStep");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-surface-hover border border-border px-3 py-2 text-sm font-medium text-secondary hover:bg-border transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md bg-surface-hover border border-border px-3 py-2 text-sm font-medium text-text hover:bg-border transition-colors cursor-pointer"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-3.5 h-3.5 text-danger" />
                 {t("cases.discharge")}
               </button>
             </Can>

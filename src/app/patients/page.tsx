@@ -84,7 +84,7 @@ export default function PatientsPage() {
       {
         accessorKey: "gender",
         header: t("patients.colGender"),
-        cell: (info: any) => <span className="capitalize px-2 py-1 rounded-full bg-surface-hover text-xs text-text-muted">{info.getValue() as string}</span>,
+        cell: (info: any) => <span className="capitalize px-2 py-1 rounded-full bg-surface-hover text-xs text-text-muted">{t(`patients.${(info.getValue() as string)?.toLowerCase()}`)}</span>,
       },
       {
         accessorKey: "birth_date",
