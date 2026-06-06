@@ -2,7 +2,7 @@
 
 import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
-import { DataTable } from "@/components/ui/data-table";
+import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
@@ -37,54 +37,6 @@ function getDepartmentColor(id: string) {
   return DEPARTMENT_COLORS[index];
 }
 
-/**
- * Recursively flattens departments tree into a flat list.
- * Each child keeps a reference to its parent for display.
- */
-function flattenDepartments(departments: Department[]): Department[] {
-  const result: Department[] = [];
-
-  function traverse(dept: Department) {
-    result.push(dept);
-    if (dept.children && dept.children.length > 0) {
-      dept.children.forEach((child) => {
-        // Ensure child has parent reference for display
-        const childWithParent: Department = {
-          ...child,
-          parent: child.parent ?? { id: dept.id, name: dept.name },
-        };
-        traverse(childWithParent);
-      });
-    }
-  }
-
-  departments.forEach(traverse);
-  return result;
-}
-
-/**
- * Filters departments by search query.
- * Searches through: name, description, parent name.
- * Also returns parent departments if any child matches.
- */
-function filterDepartments(departments: Department[], query: string): Department[] {
-  if (!query.trim()) return departments;
-
-  const q = query.toLowerCase().trim();
-
-  // Use flattened list for searching — find all matching entries
-  const flat = flattenDepartments(departments);
-  const matched = flat.filter((dept) => {
-    return (
-      dept.name.toLowerCase().includes(q) ||
-      dept.description?.toLowerCase().includes(q) ||
-      dept.parent?.name.toLowerCase().includes(q)
-    );
-  });
-
-  return matched;
-}
-
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
   const t = useTranslations();
@@ -92,11 +44,10 @@ export default function DepartmentsPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: departmentsData, isLoading } = useQuery<Department[]>({
     queryKey: ["departments"],
-    queryFn: () => api.get("/departments").then((res) => res.data),
+    queryFn: () => api.get("/departments?filter=parents").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -148,15 +99,6 @@ export default function DepartmentsPage() {
     }
   };
 
-  // Filtered data: when search is active, show flat list with matched departments
-  const filteredData = useMemo(() => {
-    const source = departmentsData ?? [];
-    if (!searchQuery.trim()) return source;
-    return filterDepartments(source, searchQuery);
-  }, [departmentsData, searchQuery]);
-
-  const isSearching = searchQuery.trim().length > 0;
-
   const columns = useMemo<ColumnDef<Department>[]>(
     () => [
       {
@@ -165,11 +107,7 @@ export default function DepartmentsPage() {
         cell: ({ row, table }) => {
           const pageIndex = table.getState().pagination.pageIndex;
           const pageSize = table.getState().pagination.pageSize;
-          return (
-            <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">
-              {pageIndex * pageSize + row.index + 1}
-            </span>
-          );
+          return <span className="font-medium text-primary bg-primary-50 px-1.5 py-0.5 rounded text-xs">{pageIndex * pageSize + row.index + 1}</span>;
         },
       },
       {
@@ -183,52 +121,38 @@ export default function DepartmentsPage() {
                 <Building2 className={`w-4 h-4 ${color.icon}`} />
               </div>
               <div>
-                <Link
-                  href={`/departments/${row.original.id}`}
-                  className="font-medium text-text hover:text-primary transition-colors"
-                >
+                <Link href={`/departments/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
                   {row.original.name}
                 </Link>
-                {row.original.description && (
-                  <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>
-                )}
+                {row.original.description && <p className="text-xs text-secondary truncate max-w-[200px]">{row.original.description}</p>}
               </div>
             </div>
           );
         },
       },
-      {
-        accessorKey: "parent",
-        header: t("departments.colParent"),
-        cell: ({ row }) => {
-          const parent = row.original.parent;
-          return parent ? (
-            <div className="flex items-center gap-1.5 text-secondary text-sm">
-              <GitBranch className="w-3.5 h-3.5 shrink-0" />
-              <Link
-                href={`/departments/${parent.id}`}
-                className="hover:text-primary transition-colors"
-              >
-                {parent.name}
-              </Link>
-            </div>
-          ) : (
-            <span className="text-xs text-secondary italic">—</span>
-          );
-        },
-      },
+      // {
+      //   accessorKey: "parent",
+      //   header: t("departments.colParent"),
+      //   cell: ({ row }) => {
+      //     const parent = row.original.parent;
+      //     return parent ? (
+      //       <div className="flex items-center gap-1.5 text-secondary text-sm">
+      //         <GitBranch className="w-3.5 h-3.5 shrink-0" />
+      //         <Link href={`/departments/${parent.id}`} className="hover:text-primary transition-colors">
+      //           {parent.name}
+      //         </Link>
+      //       </div>
+      //     ) : (
+      //       <span className="text-xs text-secondary italic">—</span>
+      //     );
+      //   },
+      // },
       {
         accessorKey: "price",
         header: t("departments.colPrice"),
         cell: ({ row }) => {
           const price = row.original.price;
-          return price != null ? (
-            <span className="text-sm text-text font-medium">
-              {Number(price).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-            </span>
-          ) : (
-            <span className="text-xs text-secondary italic">—</span>
-          );
+          return price != null ? <span className="text-sm text-text font-medium">{Number(price).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span> : <span className="text-xs text-secondary italic">—</span>;
         },
       },
       {
@@ -237,11 +161,7 @@ export default function DepartmentsPage() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             <Can roles={["ADMIN"]}>
-              <button
-                onClick={() => handleEditDepartment(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer"
-                title={t("departments.editDepartment")}
-              >
+              <button onClick={() => handleEditDepartment(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer" title={t("departments.editDepartment")}>
                 <Edit className="w-4 h-4" />
               </button>
             </Can>
@@ -252,11 +172,7 @@ export default function DepartmentsPage() {
                 className="p-1 rounded-md hover:bg-red-50 text-secondary hover:text-red-600 transition-colors cursor-pointer disabled:opacity-40"
                 title={t("departments.deleteDepartment")}
               >
-                {isDeleting && deletingId === row.original.id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
+                {isDeleting && deletingId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </Can>
           </div>
@@ -273,18 +189,12 @@ export default function DepartmentsPage() {
         subtitle={t("departments.description")}
         actions={
           <div className="flex gap-2">
-            <button
-              onClick={() => {}}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
-            >
+            <button onClick={() => {}} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
               <Download className="w-4 h-4" />
               <span>Export</span>
             </button>
             <Can roles={["ADMIN"]}>
-              <button
-                onClick={handleAddDepartment}
-                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium"
-              >
+              <button onClick={handleAddDepartment} className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium">
                 <Plus className="w-4 h-4" />
                 <span>{t("departments.addDepartment")}</span>
               </button>
@@ -299,7 +209,13 @@ export default function DepartmentsPage() {
             <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <DataTable columns={columns} data={filteredData} />
+          <EnterpriseDataTable
+              columns={columns}
+              data={departmentsData ?? []}
+              pageSize={20}
+              searchKey="name"
+              searchPlaceholder={t("common.filterPlaceholder")}
+            />
         )}
       </PageContent>
 

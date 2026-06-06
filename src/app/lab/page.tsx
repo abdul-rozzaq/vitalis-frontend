@@ -413,11 +413,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                       <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
                       {ITEM_STATUS_LABELS[item.status]}
                     </span>
-                    {item.payment && (
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.payment.status === "PAID" ? "bg-success-50 text-success" : "bg-warning-50 text-warning"}`}>
-                        {item.payment.amount.toLocaleString()} UZS
-                      </span>
-                    )}
+
                   </div>
 
                   <StatusTracker item={item} />

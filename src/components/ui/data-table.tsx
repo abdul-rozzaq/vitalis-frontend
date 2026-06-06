@@ -7,9 +7,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  expandedRowId?: string | null;
+  renderExpanded?: (row: TData) => React.ReactNode;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends { id?: string }, TValue>({
+  columns,
+  data,
+  expandedRowId,
+  renderExpanded,
+}: DataTableProps<TData, TValue>) {
   const t = useTranslations();
 
   const table = useReactTable({
@@ -49,13 +56,22 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
             <tbody className="divide-y divide-border-light text-text">
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-surface-hover transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
+                  <>
+                    <tr key={row.id} className="hover:bg-surface-hover transition-colors">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                    {renderExpanded && expandedRowId === row.original.id && (
+                      <tr key={`${row.id}-expanded`}>
+                        <td colSpan={columns.length} className="p-0">
+                          {renderExpanded(row.original)}
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))
               ) : (
                 <tr>

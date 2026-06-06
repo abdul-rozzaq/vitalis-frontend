@@ -42,7 +42,7 @@ interface StatsData {
   patientsTotal: number;
   appointmentsToday: number;
   employeesTotal: number;
-  paymentsUnpaid: number;
+  invoicesUnpaid: number;
   recentPatients: { id: string; first_name: string; last_name: string; phone: string; createdAt: string }[];
   recentAppointments: {
     id: string;
@@ -171,8 +171,8 @@ export default function HomePage() {
       bg: "bg-green-50",
     },
     {
-      label: t("dashboard.unpaidPayments"),
-      value: stats?.paymentsUnpaid ?? "—",
+      label: t("dashboard.unpaidInvoices"),
+      value: stats?.invoicesUnpaid ?? "—",
       icon: CreditCard,
       color: "text-warning-600",
       bg: "bg-warning-50",

@@ -8,7 +8,7 @@ import {
   Building2,
   Calendar,
   ChevronDown,
-  CreditCard,
+  FileText,
   FlaskConical,
   GitFork,
   Home,
@@ -101,10 +101,10 @@ export function Sidebar() {
           roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
         },
         {
-          label: t("nav.payments"),
-          href: "/payments",
-          icon: CreditCard,
-          roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR", "DOCTOR"],
+          label: t("nav.invoices"),
+          href: "/invoices",
+          icon: FileText,
+          roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR"],
         },
         {
           label: t("nav.assignments"),
