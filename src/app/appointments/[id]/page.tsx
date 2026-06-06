@@ -12,113 +12,14 @@ import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, CreditCard, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Receipt, Scissors, Stethoscope, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Scissors, Stethoscope, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-type PaymentMethod = "CASH" | "CREDIT_CARD";
-type PaymentStatus = "PAID" | "UNPAID";
-type DetailSheetMode = "editAppointment" | "addPayment" | "addStep" | null;
+type DetailSheetMode = "editAppointment" | "addStep" | null;
 type StepType = "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
 
-interface PaymentFormProps {
-  appointment: Appointment;
-  onSubmit: (data: { amount: number; method: PaymentMethod; status: PaymentStatus }) => Promise<void>;
-  onCancel: () => void;
-  isPending?: boolean;
-}
-
-function AppointmentPaymentForm({ appointment, onSubmit, onCancel, isPending }: PaymentFormProps) {
-  const t = useTranslations();
-
-  const [amount, setAmount] = useState<string>("");
-  const [method, setMethod] = useState<PaymentMethod>("CASH");
-  const [status, setStatus] = useState<PaymentStatus>("PAID");
-
-  const paymentMethodOptions = [
-    { value: "CASH" as const, label: t("forms.methodCash") },
-    { value: "CREDIT_CARD" as const, label: t("forms.methodCreditCard") },
-  ];
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const numericAmount = Number(amount);
-    if (!numericAmount || numericAmount <= 0) return;
-
-    await onSubmit({ amount: numericAmount, method, status });
-    setAmount("");
-    setMethod("CASH");
-    setStatus("PAID");
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="rounded-lg border border-border bg-surface-hover/60 p-3 text-sm text-secondary">
-        <p>
-          <span className="font-medium text-text">{t("appointments.colPatient")}:</span> {appointment.patient.first_name} {appointment.patient.last_name}
-        </p>
-        <p className="mt-1">
-          <span className="font-medium text-text">{t("forms.department")}:</span> {appointment.assignment.department.name}
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text">{t("forms.method")}</label>
-        <select
-          value={method}
-          onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          {paymentMethodOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text">{t("forms.paymentStatus")}</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as PaymentStatus)}
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm cursor-pointer"
-        >
-          <option value="PAID">{t("forms.statusPaid")}</option>
-          <option value="UNPAID">{t("forms.statusUnpaid")}</option>
-        </select>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
-          {t("forms.cancel")}
-        </button>
-        <button
-          type="submit"
-          disabled={isPending || !amount}
-          className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {isPending ? t("common.loading") : t("forms.recordPayment")}
-        </button>
-      </div>
-    </form>
-  );
-}
 
 export default function AppointmentDetailPage() {
   const t = useTranslations();
@@ -172,20 +73,6 @@ export default function AppointmentDetailPage() {
     },
   });
 
-  const { mutateAsync: createPayment, isPending: isCreatingPayment } = useMutation({
-    mutationFn: (data: { amount: number; method: PaymentMethod; status: PaymentStatus }) =>
-      api.post("/payments", {
-        ...data,
-        patientId: appointment?.patientId,
-        departmentId: appointment?.assignment.department.id,
-        assignmentId: appointment?.assignmentId,
-        appointmentId: appointment?.id,
-      }),
-    onSuccess: async () => {
-      await invalidateAppointmentData(appointment?.patientId);
-      setSheetMode(null);
-    },
-  });
 
   const [stepType, setStepType] = useState<StepType | "">("");
 
@@ -354,43 +241,6 @@ export default function AppointmentDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-primary" />
-              {t("appointments.payments")}
-            </h3>
-
-            <Can roles={["ADMIN", "KASSIR"]}>
-              <button
-                type="button"
-                onClick={() => setSheetMode("addPayment")}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary-50 px-2.5 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary-100 cursor-pointer"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                {t("patients.recordPayment")}
-              </button>
-            </Can>
-          </div>
-          {(appointment.payments?.length ?? 0) === 0 ? (
-            <p className="text-sm text-text-muted">{t("appointments.noPayments")}</p>
-          ) : (
-            <div className="space-y-2">
-              {appointment.payments?.map((payment) => (
-                <div key={payment.id} className="border border-border rounded-md p-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="font-medium text-text">{payment.amount?.toLocaleString()} UZS</span>
-                    <span className="text-xs uppercase text-secondary">{payment.status}</span>
-                  </div>
-                  <div className="text-xs text-text-muted mt-1">
-                    {payment.method || "—"} {payment.createdAt ? `• ${new Date(payment.createdAt).toLocaleString()}` : ""}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-text inline-flex items-center gap-2">
@@ -568,16 +418,6 @@ export default function AppointmentDetailPage() {
         />
       </Sheet>
 
-      <Sheet isOpen={sheetMode === "addPayment"} onClose={() => setSheetMode(null)} title={t("payments.newPaymentTitle")} description={t("payments.newPaymentDesc")}>
-        <AppointmentPaymentForm
-          appointment={appointment}
-          onSubmit={async (data) => {
-            await createPayment(data);
-          }}
-          onCancel={() => setSheetMode(null)}
-          isPending={isCreatingPayment}
-        />
-      </Sheet>
 
       <Sheet isOpen={sheetMode === "addStep"} onClose={() => setSheetMode(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
         <AddCaseStepForm

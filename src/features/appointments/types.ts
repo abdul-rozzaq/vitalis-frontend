@@ -5,14 +5,6 @@ export interface Assignment {
   room: { id: string; name: string } | null;
 }
 
-export interface Payment {
-  id: string;
-  amount: number;
-  method?: string | null;
-  status: "PAID" | "UNPAID";
-  createdAt?: string;
-  department?: { id: string; name: string } | null;
-}
 
 export interface AppointmentFile {
   id: string;
@@ -62,7 +54,6 @@ export interface Appointment {
   patientId: string;
   assignment: Assignment;
   assignmentId: string;
-  payments?: Payment[];
   files?: AppointmentFile[];
   prescription?: Prescription | null;
   caseStep?: {

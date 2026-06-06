@@ -3,6 +3,9 @@
 import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import formatPhone from "@/components/formatPhone";
 import usePhoneFormatter from "@/components/formatPhoneinput";
+import { PatientBalanceCard } from "@/components/balance/PatientBalanceCard";
+import { PatientInvoiceList } from "@/components/balance/PatientInvoiceList";
+import { PatientTransactionHistory } from "@/components/balance/PatientTransactionHistory";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import {
@@ -14,7 +17,6 @@ import {
   SheetMode
 } from "@/features/patients/detail/types";
 import {
-  PAYMENT_STATUS_STYLES,
   formatDate,
   formatTime,
   resolveFileUrl,
@@ -28,6 +30,7 @@ import {
   ArrowRightCircle,
   BedDouble,
   Building2,
+  Wallet,
   Calendar,
   CheckCircle2,
   ClipboardCheck,
@@ -47,12 +50,13 @@ import {
   Scissors,
   Stethoscope,
   User,
-  Users
+  Users,
+  XCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -105,11 +109,10 @@ const LAB_ITEM_STATUS_COLOR: Record<string, string> = {
 
 // ─── CaseStepRow ──────────────────────────────────────────────────────────────
 
-function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean }) {
+function CaseStepRow({ step }: { step: CaseStep }) {
   const t = useTranslations();
   const Icon = STEP_ICONS[step.type];
   const files = step.appointment?.files ?? [];
-  const payments = step.appointment?.payments ?? [];
 
   return (
     <div className="flex gap-3 px-4 py-3">
@@ -245,12 +248,12 @@ function CaseStepRow({ step, showAmount }: { step: CaseStep; showAmount: boolean
 
 function CaseCard({
   patientCase,
-  showAmount,
   onAddStep,
+  onCloseCase,
 }: {
   patientCase: PatientCase;
-  showAmount: boolean;
   onAddStep?: () => void;
+  onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void;
 }) {
   const t = useTranslations();
   return (
@@ -286,11 +289,29 @@ function CaseCard({
               {t("cases.addStep")}
             </button>
           )}
+          {patientCase.status === "ACTIVE" && onCloseCase && (
+            <>
+              <button
+                onClick={() => onCloseCase("COMPLETED")}
+                className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success-50 hover:bg-success/10 px-2 py-1 rounded-md transition-colors cursor-pointer"
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                {t("cases.complete")}
+              </button>
+              <button
+                onClick={() => onCloseCase("CANCELLED")}
+                className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:bg-danger-50 px-2 py-1 rounded-md transition-colors cursor-pointer"
+              >
+                <XCircle className="w-3 h-3" />
+                {t("cases.cancel")}
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div className="divide-y divide-border">
         {patientCase.steps.map((step) => (
-          <CaseStepRow key={step.id} step={step} showAmount={showAmount} />
+          <CaseStepRow key={step.id} step={step} />
         ))}
       </div>
     </div>
@@ -424,6 +445,15 @@ export default function PatientDetailPage() {
     typeof user?.role === "string" ? user.role.toUpperCase() : "",
   );
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (searchParams.get("tab") as "timeline" | "balance") ?? "timeline";
+  const setActiveTab = (tab: "timeline" | "balance") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode | "ward">(null);
   const [docRevealed, setDocRevealed] = useState(false);
@@ -458,6 +488,12 @@ export default function PatientDetailPage() {
       setChiefComplaint("");
       setSheetMode(null);
     },
+  });
+
+  const { mutateAsync: closeCase } = useMutation({
+    mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) =>
+      api.patch(`/cases/${caseId}/close`, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] }),
   });
 
   const { data: casesData = [], isLoading: isTimelineLoading } = useQuery<PatientCase[]>({
@@ -554,19 +590,7 @@ export default function PatientDetailPage() {
       c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0),
     0,
   );
-  const totalPaid = cases.reduce(
-    (total, c) =>
-      total +
-      c.steps.reduce(
-        (s, step) =>
-          s +
-          (step.appointment?.payments ?? [])
-            .filter((p) => p.status === "PAID")
-            .reduce((sum, p) => sum + Number(p.amount), 0),
-        0,
-      ),
-    0,
-  );
+  const totalPaid = 0;
   const visitedDepartments = useMemo(
     () => [
       ...new Set(
@@ -872,60 +896,104 @@ export default function PatientDetailPage() {
           </div>
         </motion.div>
 
-        {/* ── RIGHT TIMELINE ────────────────────────────────────────────────── */}
+        {/* ── RIGHT PANEL (tabbed) ──────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
-          className="flex-1 min-w-0 space-y-6"
+          className="flex-1 min-w-0 space-y-4"
         >
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-text">
-              {t("patients.activityTimeline")}
-            </h2>
-            <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
+          {/* Tab header */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
               <button
-                onClick={() => setSheetMode("checkin")}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                onClick={() => setActiveTab("timeline")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === "timeline"
+                    ? "bg-background text-text shadow-sm"
+                    : "text-secondary hover:text-text"
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                {t("cases.newCase")}
+                <ClipboardList className="w-3.5 h-3.5" />
+                {t("patients.activityTimeline")}
               </button>
-            </Can>
+              <button
+                onClick={() => setActiveTab("balance")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === "balance"
+                    ? "bg-background text-text shadow-sm"
+                    : "text-secondary hover:text-text"
+                }`}
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                {t("patients.balance")}
+              </button>
+            </div>
+
+            {activeTab === "timeline" && (
+              <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
+                <button
+                  onClick={() => setSheetMode("checkin")}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t("cases.newCase")}
+                </button>
+              </Can>
+            )}
           </div>
 
-          {isTimelineLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-surface border border-border rounded-xl p-4 animate-pulse"
-                >
-                  <div className="h-4 bg-border rounded w-1/3 mb-3" />
-                  <div className="h-3 bg-border rounded w-2/3" />
+          {/* Timeline tab */}
+          {activeTab === "timeline" && (
+            <>
+              {isTimelineLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-surface border border-border rounded-xl p-4 animate-pulse"
+                    >
+                      <div className="h-4 bg-border rounded w-1/3 mb-3" />
+                      <div className="h-3 bg-border rounded w-2/3" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : cases.length === 0 ? (
-            <div className="bg-surface border border-border rounded-xl p-12 text-center">
-              <p className="text-secondary text-sm">{t("patients.noActivity")}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {cases.map((patientCase, index) => (
-                <motion.div
-                  key={patientCase.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
-                  <CaseCard
-                    patientCase={patientCase}
-                    showAmount={canSeeAmount}
-                    onAddStep={() => setAddStepCaseId(patientCase.id)}
-                  />
-                </motion.div>
-              ))}
+              ) : cases.length === 0 ? (
+                <div className="bg-surface border border-border rounded-xl p-12 text-center">
+                  <p className="text-secondary text-sm">{t("patients.noActivity")}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cases.map((patientCase, index) => (
+                    <motion.div
+                      key={patientCase.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <CaseCard
+                        patientCase={patientCase}
+                        onAddStep={() => setAddStepCaseId(patientCase.id)}
+                        onCloseCase={(status) => {
+                          const msg = status === "COMPLETED"
+                            ? "Kasusni yakunlashni tasdiqlaysizmi?"
+                            : "Kasusni bekor qilishni tasdiqlaysizmi?";
+                          if (confirm(msg)) closeCase({ caseId: patientCase.id, status });
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Balance tab */}
+          {activeTab === "balance" && (
+            <div className="space-y-4">
+              <PatientBalanceCard patientId={id} />
+              <PatientInvoiceList patientId={id} />
+              <PatientTransactionHistory patientId={id} />
             </div>
           )}
         </motion.div>

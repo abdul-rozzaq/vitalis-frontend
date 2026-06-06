@@ -7,8 +7,9 @@ import {
   BedDouble,
   Building2,
   Calendar,
-  ChevronDown,
-  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
   FlaskConical,
   GitFork,
   Home,
@@ -23,7 +24,7 @@ import {
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface NavGroup {
   id: string;
@@ -43,9 +44,18 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const t = useTranslations();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(["core", "clinical"])
-  );
+
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
+
+  const toggleCollapsed = () => {
+    setCollapsed((v) => {
+      localStorage.setItem("sidebar-collapsed", String(!v));
+      return !v;
+    });
+  };
 
   const navGroups: NavGroup[] = [
     {
@@ -101,10 +111,10 @@ export function Sidebar() {
           roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
         },
         {
-          label: t("nav.payments"),
-          href: "/payments",
-          icon: CreditCard,
-          roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR", "DOCTOR"],
+          label: t("nav.invoices"),
+          href: "/invoices",
+          icon: FileText,
+          roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR"],
         },
         {
           label: t("nav.assignments"),
@@ -116,117 +126,113 @@ export function Sidebar() {
     },
   ];
 
-  const toggleGroup = (groupId: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
-    } else {
-      newExpanded.add(groupId);
-    }
-    setExpandedGroups(newExpanded);
-  };
-
   return (
-    <aside className="w-64 bg-surface border-r border-border flex flex-col h-screen sticky top-0">
-      {/* Logo Section */}
-      <div className="px-4 py-5 border-b border-border flex items-center gap-3">
-        <Link href="/" className="flex items-center flex-1 gap-3 min-w-0">
-          <img
-            src="/logo.png"
-            alt="Vitalis"
-            className="w-8 h-8 rounded-lg shrink-0"
-          />
-          <span className="font-semibold text-text text-sm truncate">Vitalis</span>
-        </Link>
+    <aside
+      className={`${collapsed ? "w-16" : "w-64"} bg-surface border-r border-border flex flex-col h-screen sticky top-0 transition-all duration-200 overflow-hidden`}
+    >
+      {/* Logo + collapse toggle */}
+      <div className="h-[61px] border-b border-border flex items-center justify-between px-3 flex-shrink-0">
+        {collapsed ? (
+          <button
+            onClick={toggleCollapsed}
+            className="w-full flex items-center justify-center h-8 rounded-md text-text-muted hover:text-text hover:bg-surface-hover transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <>
+            <Link href="/" className="flex items-center gap-3 min-w-0 flex-1">
+              <img src="/logo.png" alt="Vitalis" className="w-8 h-8 rounded-lg shrink-0" />
+              <span className="font-semibold text-text text-sm truncate">Vitalis</span>
+            </Link>
+            <button
+              onClick={toggleCollapsed}
+              className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text hover:bg-surface-hover transition-colors flex-shrink-0 cursor-pointer ml-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Navigation Groups */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
         {navGroups.map((group) => (
-          <div key={group.id} className="mb-4">
-            <button
-              onClick={() => toggleGroup(group.id)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-text-muted hover:text-text transition-colors mb-2"
-            >
-              <span>{group.label}</span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${expandedGroups.has(group.id) ? "" : "-rotate-90"}`}
-              />
-            </button>
-
-            {expandedGroups.has(group.id) && (
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <Can
-                    key={item.href}
-                    roles={item.roles as import("@/types/user").UserRole[]}
-                  >
-                    <SidebarNavItem
-                      href={item.href}
-                      icon={item.icon}
-                      label={item.label}
-                      active={
-                        pathname === item.href ||
-                        (item.href !== "/" && pathname.startsWith(item.href + "/"))
-                      }
-                    />
-                  </Can>
-                ))}
-              </div>
+          <div key={group.id} className="mb-3">
+            {!collapsed && (
+              <p className="px-3 mb-1 text-xs font-semibold text-text-muted uppercase tracking-wide">
+                {group.label}
+              </p>
             )}
+            {collapsed && <div className="border-t border-border mb-2" />}
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <Can key={item.href} roles={item.roles as import("@/types/user").UserRole[]}>
+                  <SidebarNavItem
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    active={
+                      pathname === item.href ||
+                      (item.href !== "/" && pathname.startsWith(item.href + "/"))
+                    }
+                    collapsed={collapsed}
+                  />
+                </Can>
+              ))}
+            </div>
           </div>
         ))}
       </nav>
 
-      {/* Footer - User & Settings */}
-      <div className="px-3 py-3 border-t border-border space-y-2">
-        {/* User Profile */}
-        <Link href="/settings" className="block">
-          <div
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-              pathname === "/settings"
-                ? "bg-primary-50"
-                : "hover:bg-surface-hover"
-            }`}
-          >
-            <div className="w-8 h-8 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-primary" />
+      {/* Footer */}
+      <div className="px-2 py-3 border-t border-border space-y-0.5">
+        {/* User profile */}
+        <Tooltip label={`${user?.first_name} · ${user?.role}`} collapsed={collapsed}>
+          <Link href="/settings" className="block">
+            <div
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === "/settings" ? "bg-primary-50" : "hover:bg-surface-hover"
+              } ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="w-7 h-7 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
+                <User className="w-3.5 h-3.5 text-primary" />
+              </div>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-text truncate">{user?.first_name}</p>
+                  <p className="text-xs text-text-muted truncate">{user?.role}</p>
+                </div>
+              )}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-text truncate">
-                {user?.first_name}
-              </p>
-              <p className="text-xs text-text-muted truncate">{user?.role}</p>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        </Tooltip>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-text hover:bg-surface-hover rounded-lg transition-colors text-sm"
-        >
-          {theme === "dark" ? (
-            <>
+        {/* Theme toggle */}
+        <Tooltip label={theme === "dark" ? "Light Mode" : "Dark Mode"} collapsed={collapsed}>
+          <button
+            onClick={toggleTheme}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-text hover:bg-surface-hover rounded-lg transition-colors text-sm cursor-pointer ${collapsed ? "justify-center" : ""}`}
+          >
+            {theme === "dark" ? (
               <Sun className="w-4 h-4 flex-shrink-0" />
-              <span>Light Mode</span>
-            </>
-          ) : (
-            <>
+            ) : (
               <Moon className="w-4 h-4 flex-shrink-0" />
-              <span>Dark Mode</span>
-            </>
-          )}
-        </button>
+            )}
+            {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+          </button>
+        </Tooltip>
 
         {/* Logout */}
-        <button
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors text-sm"
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          <span>{t("nav.signOut")}</span>
-        </button>
+        <Tooltip label={t("nav.signOut")} collapsed={collapsed}>
+          <button
+            onClick={() => logout()}
+            className={`w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors text-sm cursor-pointer ${collapsed ? "justify-center" : ""}`}
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>{t("nav.signOut")}</span>}
+          </button>
+        </Tooltip>
       </div>
     </aside>
   );
@@ -237,24 +243,69 @@ function SidebarNavItem({
   label,
   active = false,
   href,
+  collapsed,
 }: {
   icon: React.ElementType;
   label: string;
   active?: boolean;
   href: string;
+  collapsed: boolean;
 }) {
   return (
-    <Link href={href} className="block">
-      <div
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
-          active
-            ? "bg-primary-50 text-primary font-medium"
-            : "text-secondary hover:text-text hover:bg-surface-hover"
-        }`}
-      >
-        <Icon className="w-4 h-4 flex-shrink-0" />
-        <span className="truncate">{label}</span>
-      </div>
-    </Link>
+    <Tooltip label={label} collapsed={collapsed}>
+      <Link href={href} className="block">
+        <div
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+            collapsed ? "justify-center" : ""
+          } ${
+            active
+              ? "bg-primary-50 text-primary font-medium"
+              : "text-secondary hover:text-text hover:bg-surface-hover"
+          }`}
+        >
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && <span className="truncate">{label}</span>}
+        </div>
+      </Link>
+    </Tooltip>
+  );
+}
+
+function Tooltip({
+  children,
+  label,
+  collapsed,
+}: {
+  children: React.ReactNode;
+  label: string;
+  collapsed: boolean;
+}) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  if (!collapsed) return <>{children}</>;
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (rect) setPos({ top: rect.top + rect.height / 2, left: rect.right + 8 });
+      }}
+      onMouseLeave={() => setPos(null)}
+    >
+      {children}
+      {pos && (
+        <div
+          className="pointer-events-none fixed z-[9999] -translate-y-1/2"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          <div className="bg-gray-900 text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap shadow-lg">
+            {label}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

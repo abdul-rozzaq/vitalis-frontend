@@ -23,14 +23,6 @@ export interface Patient {
   } | null;
 }
 
-export interface AppointmentPayment {
-  id: string;
-  createdAt: string;
-  amount: number;
-  status: "PAID" | "UNPAID";
-  method?: string | null;
-  department?: { name: string };
-}
 
 export interface AppointmentFile {
   id: string;
@@ -50,7 +42,6 @@ export interface AppointmentTimelineItem {
     department: { name: string };
     user: { first_name: string; last_name: string };
   };
-  payments?: AppointmentPayment[];
   caseStep?: { case?: { id: string; status: CaseStatus } | null } | null;
 }
 
@@ -90,7 +81,6 @@ export interface CaseStep {
       status: LabItemStatus;
       service: { id: string; name: string; price?: number | null };
       files: { id: string; url: string; name: string }[];
-      payment?: { id: string; amount: number; status: "PAID" | "UNPAID" } | null;
     }[];
   } | null;
 }

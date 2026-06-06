@@ -25,12 +25,6 @@ export interface LaboratoryAssignment {
   laboratory: { id: string; name: string };
 }
 
-export interface LabPayment {
-  id: string;
-  amount: number;
-  status: "PAID" | "UNPAID";
-  method?: string | null;
-}
 
 export interface LabOrderItemFile {
   id: string;
@@ -47,7 +41,6 @@ export interface LabOrderItem {
   files: LabOrderItemFile[];
   note?: string | null;
   completedAt?: string | null;
-  payment?: LabPayment | null;
   startedAt?: string | null;
   readyAt?: string | null;
   deliveredAt?: string | null;
