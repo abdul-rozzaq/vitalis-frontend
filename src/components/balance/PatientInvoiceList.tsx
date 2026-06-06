@@ -219,7 +219,9 @@ export function PatientInvoiceList({ patientId }: Props) {
         <InvoicePayModal
           invoiceId={payTarget.id}
           patientId={patientId}
-          totalAmount={Number(payTarget.totalAmount) - Number(payTarget.paidCash) - Number(payTarget.paidBonus)}
+          invoiceTotalAmount={Number(payTarget.totalAmount)}
+          paidAmount={Number(payTarget.paidCash) + Number(payTarget.paidBonus)}
+          remainingAmount={Number(payTarget.totalAmount) - Number(payTarget.paidCash) - Number(payTarget.paidBonus)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["patient-invoices", patientId] });
             queryClient.invalidateQueries({ queryKey: ["patient-balance", patientId] });

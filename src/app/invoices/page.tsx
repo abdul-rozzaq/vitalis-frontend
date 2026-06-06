@@ -608,7 +608,9 @@ export default function InvoicesPage() {
         <InvoicePayModal
           invoiceId={payTarget.id}
           patientId={payTarget.patientId}
-          totalAmount={Number(payTarget.totalAmount) - Number(payTarget.paidCash) - Number(payTarget.paidBonus)}
+          invoiceTotalAmount={Number(payTarget.totalAmount)}
+          paidAmount={Number(payTarget.paidCash) + Number(payTarget.paidBonus)}
+          remainingAmount={Number(payTarget.totalAmount) - Number(payTarget.paidCash) - Number(payTarget.paidBonus)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["invoices"] });
             queryClient.invalidateQueries({ queryKey: ["patient-invoices", payTarget.patientId] });
