@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\"",
-    "clean": "next clean",
-    "prepare": "husky"
+    "clean": "next clean"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
