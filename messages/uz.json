@@ -136,7 +136,12 @@
     "statusCancelled": "Bekor qilingan",
     "deleteConfirm": "Ushbu bemorni o'chirishni xohlaysizmi?",
     "deletePatient": "Bemorni o'chirish",
-    "showDocuments": "Batafsil ko'rish"
+    "showDocuments": "Batafsil ko'rish",
+    "PAID": "To'langan",
+    "UNPAID": "To'lanmagan",
+    "PENDING": "Kutilmoqda",
+    "CASH": "Naqd",
+    "CREDIT_CARD": "Kredit karta"
   },
   "employees": {
     "title": "Xodimlar",
@@ -325,7 +330,15 @@
     "uploadFileDesc": "Fayl tanlang va yuklashdan oldin ixtiyoriy ravishda nomini o'zgartiring.",
     "clickToSelectFile": "Fayl tanlash uchun bosing",
     "fileName": "Fayl nomi",
-    "fileNamePlaceholder": "Fayl nomini kiriting"
+    "fileNamePlaceholder": "Fayl nomini kiriting",
+    "status": {
+      "active": "Faol",
+      "completed": "Yakunlandi",
+      "cancelled": "Bekor qilindi",
+      "pending": "Kutilmoqda",
+      "in_progress": "Jarayonda",
+      "done": "Bajarildi"
+    }
   },
   "prescription": {
     "searchMedicine": "Dori qidirish...",

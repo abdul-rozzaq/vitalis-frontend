@@ -139,7 +139,12 @@
     "deletePatient": "Delete Patient",
     "documentInfo": "Document Information",
     "pinflLabel": "PINFL",
-    "showDocuments": "Details"
+    "showDocuments": "Details",
+    "PAID": "Paid",
+    "UNPAID": "Unpaid",
+    "PENDING": "Pending",
+    "CASH": "Cash",
+    "CREDIT_CARD": "Credit Card"
   },
   "employees": {
     "title": "Employees",
@@ -327,7 +332,15 @@
     "uploadFileDesc": "Select a file and optionally rename it before uploading.",
     "clickToSelectFile": "Click to select a file",
     "fileName": "File name",
-    "fileNamePlaceholder": "Enter file name"
+    "fileNamePlaceholder": "Enter file name",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "done": "Done"
+    }
   },
   "prescription": {
     "searchMedicine": "Search medicine...",
@@ -770,6 +783,8 @@
     "checkInHint": "If left empty, today's date will be used automatically",
     "companionsCount": "Number of companions",
     "maxCompanions": "Maximum",
-    "person": "person"
+    "person": "person",
+    "currentOccupants": "Current Occupants",
+    "noOccupants": "No patients in room currently"
   }
 }

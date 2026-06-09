@@ -1,14 +1,14 @@
 "use client";
 
-import { exportToExcel } from "@/lib/export-excel";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
-import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
 import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, getAppointmentStatus, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
 import { api } from "@/lib/api";
+import { exportToExcel } from "@/lib/export-excel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar as CalendarIcon, Download, Edit, ExternalLink, Loader2, Plus, Stethoscope, Trash2, User } from "lucide-react";
@@ -176,9 +176,15 @@ export default function AppointmentsPage() {
         cell: ({ row }) => {
           const status = getAppointmentStatus(row.original);
           if (!status) return <span className="text-[10px] text-secondary">—</span>;
+          let displayStatus = status;
+          try {
+            displayStatus = t(`appointments.status.${status.toLowerCase()}`);
+          } catch (e) {
+            displayStatus = status;
+          }
           return (
             <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>
-              {status}
+              {displayStatus}
             </span>
           );
         },
