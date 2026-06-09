@@ -8,19 +8,8 @@ import { PatientInvoiceList } from "@/components/balance/PatientInvoiceList";
 import { PatientTransactionHistory } from "@/components/balance/PatientTransactionHistory";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
-import {
-  CaseStep,
-  CaseStepStatus,
-  CaseStepType,
-  Patient,
-  PatientCase,
-  SheetMode
-} from "@/features/patients/detail/types";
-import {
-  formatDate,
-  formatTime,
-  resolveFileUrl,
-} from "@/features/patients/detail/utils";
+import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/detail/types";
+import { formatDate, formatTime, resolveFileUrl } from "@/features/patients/detail/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
@@ -103,9 +92,8 @@ const LAB_ITEM_STATUS_COLOR: Record<string, string> = {
   IN_PROGRESS: "bg-info-50 text-info border-info-100",
   READY: "bg-success-50 text-success border-success-100",
   DELIVERED: "bg-success text-white border-transparent",
-  CANCELLED: "bg-danger-50 text-danger border-danger-100"
+  CANCELLED: "bg-danger-50 text-danger border-danger-100",
 };
-
 
 // ─── CaseStepRow ──────────────────────────────────────────────────────────────
 
@@ -126,43 +114,13 @@ function CaseStepRow({ step }: { step: CaseStep }) {
             <span className="text-sm font-medium text-text">{t(`cases.stepType.${step.type}`)}</span>
             {step.assignment && (
               <p className="text-xs text-text-secondary mt-0.5">
-                Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} —{" "}
-                {step.assignment.department.name}
+                Dr. {step.assignment.user.first_name} {step.assignment.user.last_name} — {step.assignment.department.name}
               </p>
             )}
           </div>
-          <span
-            className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${STEP_STATUS_COLOR[step.status]}`}
-          >
-            {t(`cases.stepStatus.${step.status}`)}
-          </span>
+          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${STEP_STATUS_COLOR[step.status]}`}>{t(`cases.stepStatus.${step.status}`)}</span>
         </div>
         {step.note && <p className="text-xs text-text-muted italic">{step.note}</p>}
-        {payments.length > 0 && (
-          <div className="space-y-1">
-            {payments.map((payment) => {
-              const style = PAYMENT_STATUS_STYLES[payment.status === "PAID" ? "PAID" : "PENDING"];
-              const PayIcon = style.icon;
-              return (
-                <div
-                  key={payment.id}
-                  className={`border rounded-md px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs ${style.bg} ${style.border} ${style.text}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <PayIcon className="w-3.5 h-3.5" />
-                    <span className="font-medium">{t(`patients.${payment.status}`)}</span>
-                    {payment.method && <span className="text-text-muted">• {t(`patients.${payment.method}`)}</span>}
-                  </div>
-                  {showAmount && (
-                    <span className="font-semibold">
-                      {Number(payment.amount).toLocaleString("uz-UZ")} so&apos;m
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {files.length > 0 && (
           <div className="space-y-1">
@@ -186,36 +144,18 @@ function CaseStepRow({ step }: { step: CaseStep }) {
 
         {step.labOrder && (
           <div className="space-y-1.5 mt-2">
-            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
-              {step.labOrder.laboratory.name}
-            </p>
+            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.labOrder.laboratory.name}</p>
             <div className="space-y-1">
               {step.labOrder.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2"
-                >
-                  <span className="text-text font-medium truncate">
-                    {item.service.name}
-                  </span>
+                <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
+                  <span className="text-text font-medium truncate">{item.service.name}</span>
                   <div className="flex items-center gap-2 shrink-0">
                     {item.files?.map((f) => (
-                      <a
-                        key={f.id}
-                        href={resolveFileUrl(f.url)}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={f.name}
-                        className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors"
-                      >
+                      <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name} className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors">
                         <Download className="w-3.5 h-3.5" />
                       </a>
                     ))}
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}
-                    >
-                      {t(`lab.itemStatus.${item.status}`)}
-                    </span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
                   </div>
                 </div>
               ))}
@@ -224,10 +164,7 @@ function CaseStepRow({ step }: { step: CaseStep }) {
         )}
 
         {step.appointment && (
-          <Link
-            href={`/appointments/${step.appointment.id}`}
-            className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:text-accent transition-colors mt-1"
-          >
+          <Link href={`/appointments/${step.appointment.id}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:text-accent transition-colors mt-1">
             <FileText className="w-3.5 h-3.5" />
             <span>{t("appointments.viewDetails")}</span>
           </Link>
@@ -246,31 +183,15 @@ function CaseStepRow({ step }: { step: CaseStep }) {
 
 // ─── CaseCard ─────────────────────────────────────────────────────────────────
 
-function CaseCard({
-  patientCase,
-  onAddStep,
-  onCloseCase,
-}: {
-  patientCase: PatientCase;
-  onAddStep?: () => void;
-  onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void;
-}) {
+function CaseCard({ patientCase, onAddStep, onCloseCase }: { patientCase: PatientCase; onAddStep?: () => void; onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void }) {
   const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
-      <div
-        className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}
-      >
+      <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}>
         <div>
           <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}
-            >
-              {t(`cases.status.${patientCase.status}`)}
-            </span>
-            {patientCase.chiefComplaint && (
-              <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>
-            )}
+            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>{t(`cases.status.${patientCase.status}`)}</span>
+            {patientCase.chiefComplaint && <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>}
           </div>
           {patientCase.closedAt && (
             <p className="text-xs text-text-muted mt-0.5">
@@ -281,10 +202,7 @@ function CaseCard({
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
           {patientCase.status === "ACTIVE" && onAddStep && (
-            <button
-              onClick={onAddStep}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
-            >
+            <button onClick={onAddStep} className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer">
               <Plus className="w-3 h-3" />
               {t("cases.addStep")}
             </button>
@@ -298,10 +216,7 @@ function CaseCard({
                 <CheckCircle2 className="w-3 h-3" />
                 {t("cases.complete")}
               </button>
-              <button
-                onClick={() => onCloseCase("CANCELLED")}
-                className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:bg-danger-50 px-2 py-1 rounded-md transition-colors cursor-pointer"
-              >
+              <button onClick={() => onCloseCase("CANCELLED")} className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:bg-danger-50 px-2 py-1 rounded-md transition-colors cursor-pointer">
                 <XCircle className="w-3 h-3" />
                 {t("cases.cancel")}
               </button>
@@ -378,16 +293,8 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
         <div className="flex gap-4">
           {["male", "female"].map((g) => (
             <label key={g} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="radio"
-                name="gender"
-                value={g}
-                defaultChecked={patient.gender === g}
-                className="w-4 h-4 accent-primary-600 cursor-pointer"
-              />
-              <span className="text-sm text-secondary capitalize">
-                {g === "male" ? t("forms.male") : t("forms.female")}
-              </span>
+              <input type="radio" name="gender" value={g} defaultChecked={patient.gender === g} className="w-4 h-4 accent-primary-600 cursor-pointer" />
+              <span className="text-sm text-secondary capitalize">{g === "male" ? t("forms.male") : t("forms.female")}</span>
             </label>
           ))}
         </div>
@@ -415,17 +322,10 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button
-          type="button"
-          className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
-        >
+        <button type="button" className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
           {t("patients.saveChanges")}
         </button>
       </div>
@@ -441,9 +341,7 @@ export default function PatientDetailPage() {
   const { user } = useAuth();
 
   const AMOUNT_ALLOWED_ROLES = ["ADMIN", "DIREKTOR"];
-  const canSeeAmount = AMOUNT_ALLOWED_ROLES.includes(
-    typeof user?.role === "string" ? user.role.toUpperCase() : "",
-  );
+  const canSeeAmount = AMOUNT_ALLOWED_ROLES.includes(typeof user?.role === "string" ? user.role.toUpperCase() : "");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -481,8 +379,7 @@ export default function PatientDetailPage() {
   const [addStepCaseId, setAddStepCaseId] = useState<string | null>(null);
 
   const { mutateAsync: addCase, isPending: isAddingCase } = useMutation({
-    mutationFn: (complaint: string) =>
-      api.post("/cases", { patientId: id, chiefComplaint: complaint || undefined }),
+    mutationFn: (complaint: string) => api.post("/cases", { patientId: id, chiefComplaint: complaint || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
       setChiefComplaint("");
@@ -491,8 +388,7 @@ export default function PatientDetailPage() {
   });
 
   const { mutateAsync: closeCase } = useMutation({
-    mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) =>
-      api.patch(`/cases/${caseId}/close`, { status }),
+    mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) => api.patch(`/cases/${caseId}/close`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] }),
   });
 
@@ -520,9 +416,7 @@ export default function PatientDetailPage() {
 
   const selectedWardRoom = wardRoomsRaw.find((r: any) => r.id === wardRoomId) as any | undefined;
   // Patient occupies 1 slot; remaining free slots are available for companions
-  const wardMaxCompanions = selectedWardRoom
-    ? Math.max(0, (selectedWardRoom.freeSlots ?? selectedWardRoom.capacity ?? 0) - 1)
-    : 0;
+  const wardMaxCompanions = selectedWardRoom ? Math.max(0, (selectedWardRoom.freeSlots ?? selectedWardRoom.capacity ?? 0) - 1) : 0;
 
   const { data: activeWard } = useQuery<any>({
     queryKey: ["patient-ward", id],
@@ -567,52 +461,25 @@ export default function PatientDetailPage() {
   });
 
   // ─── Derived state ─────────────────────────────────────────────────────────
-  const patient: Patient =
-    patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
+  const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
 
-  const hasDocInfo =
-    patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
+  const hasDocInfo = patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
 
-  const cases = useMemo(
-    () =>
-      [...casesData].sort(
-        (a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime(),
-      ),
-    [casesData],
-  );
+  const cases = useMemo(() => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()), [casesData]);
 
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
   const visitCount = cases.length;
-  const fileCount = cases.reduce(
-    (total, c) =>
-      total +
-      c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0),
-    0,
-  );
+  const fileCount = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0), 0);
   const totalPaid = 0;
-  const visitedDepartments = useMemo(
-    () => [
-      ...new Set(
-        cases.flatMap((c) =>
-          c.steps
-            .filter((s) => s.assignment)
-            .map((s) => s.assignment!.department.name),
-        ),
-      ),
-    ],
-    [cases],
-  );
+  const visitedDepartments = useMemo(() => [...new Set(cases.flatMap((c) => c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)))], [cases]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-6xl mx-auto w-full space-y-5">
       {/* Back link */}
       <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}>
-        <Link
-          href="/patients"
-          className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group"
-        >
+        <Link href="/patients" className="inline-flex items-center gap-1.5 text-sm text-secondary hover:text-text transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           {t("patients.backToPatients")}
         </Link>
@@ -620,18 +487,11 @@ export default function PatientDetailPage() {
 
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, x: -12 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.04 }}
-          className="w-full lg:w-72 shrink-0 space-y-4"
-        >
+        <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 }} className="w-full lg:w-72 shrink-0 space-y-4">
           {/* Patient card */}
           <div className="bg-surface border border-border rounded-xl p-5 space-y-4">
             <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">
-                {initials}
-              </div>
+              <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 text-2xl font-bold">{initials}</div>
               <div>
                 <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
                 <div className="flex items-center justify-center gap-2 text-xs text-text-muted capitalize">
@@ -669,8 +529,7 @@ export default function PatientDetailPage() {
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.region")}:</span>{" "}
-                    {patient.district.region.name}
+                    <span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}
                   </span>
                 </div>
               )}
@@ -679,8 +538,7 @@ export default function PatientDetailPage() {
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
                   <span>
-                    <span className="text-text-muted">{t("forms.district")}:</span>{" "}
-                    {patient.district.name}
+                    <span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}
                   </span>
                 </div>
               )}
@@ -697,19 +555,8 @@ export default function PatientDetailPage() {
                       {docLoading ? (
                         <>
                           <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                            />
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                           </svg>
                           {t("common.loading")}
                         </>
@@ -721,29 +568,22 @@ export default function PatientDetailPage() {
                       )}
                     </button>
                   ) : (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-2.5"
-                    >
-                      {(patient.document_type ||
-                        patient.document_series ||
-                        patient.document_number) && (
-                          <div className="flex items-start gap-2.5 text-sm text-secondary">
-                            <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                            <span>
-                              {patient.document_type?.replace(/_/g, " ")}
-                              {(patient.document_series || patient.document_number) && (
-                                <span className="font-mono">
-                                  {" "}
-                                  {patient.document_series}
-                                  {patient.document_number}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        )}
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-2.5">
+                      {(patient.document_type || patient.document_series || patient.document_number) && (
+                        <div className="flex items-start gap-2.5 text-sm text-secondary">
+                          <FileText className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                          <span>
+                            {patient.document_type?.replace(/_/g, " ")}
+                            {(patient.document_series || patient.document_number) && (
+                              <span className="font-mono">
+                                {" "}
+                                {patient.document_series}
+                                {patient.document_number}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                       {patient.pinfl && (
                         <div className="flex items-center gap-2.5 text-sm text-secondary">
                           <Hash className="w-4 h-4 text-text-muted shrink-0" />
@@ -766,9 +606,7 @@ export default function PatientDetailPage() {
               <div>
                 {canSeeAmount ? (
                   <>
-                    <p className="text-lg font-bold text-text">
-                      {totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS
-                    </p>
+                    <p className="text-lg font-bold text-text">{totalPaid.toLocaleString("en-US", { minimumFractionDigits: 0 })} UZS</p>
                     <p className="text-[11px] text-text-muted">{t("patients.paid")}</p>
                   </>
                 ) : (
@@ -787,9 +625,7 @@ export default function PatientDetailPage() {
 
           {/* Action buttons */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
-              {t("common.actions")}
-            </p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
 
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
               <button
@@ -837,14 +673,7 @@ export default function PatientDetailPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium text-text">{activeWard.room?.name}</p>
                         <p className="text-xs font-normal text-text-muted">
-                          {t("wards.statusOccupied")} ·{" "}
-                          {Math.max(
-                            1,
-                            Math.ceil(
-                              (Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000,
-                            ),
-                          )}{" "}
-                          {t("wards.colDays")}
+                          {t("wards.statusOccupied")} · {Math.max(1, Math.ceil((Date.now() - new Date(activeWard.checkIn).getTime()) / 86400000))} {t("wards.colDays")}
                         </p>
                         {activeWard.companionsCount > 0 && (
                           <p className="text-xs font-normal text-warning flex items-center gap-1 mt-0.5">
@@ -879,15 +708,10 @@ export default function PatientDetailPage() {
 
           {/* Departments visited */}
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
-            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              {t("patients.departmentsVisited")}
-            </p>
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{t("patients.departmentsVisited")}</p>
             <div className="flex flex-wrap gap-1.5">
               {visitedDepartments.map((department) => (
-                <span
-                  key={department}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary"
-                >
+                <span key={department} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-secondary">
                   <Building2 className="w-3 h-3" />
                   {department}
                 </span>
@@ -897,21 +721,14 @@ export default function PatientDetailPage() {
         </motion.div>
 
         {/* ── RIGHT PANEL (tabbed) ──────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="flex-1 min-w-0 space-y-4"
-        >
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-4">
           {/* Tab header */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
               <button
                 onClick={() => setActiveTab("timeline")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  activeTab === "timeline"
-                    ? "bg-background text-text shadow-sm"
-                    : "text-secondary hover:text-text"
+                  activeTab === "timeline" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
                 }`}
               >
                 <ClipboardList className="w-3.5 h-3.5" />
@@ -920,9 +737,7 @@ export default function PatientDetailPage() {
               <button
                 onClick={() => setActiveTab("balance")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  activeTab === "balance"
-                    ? "bg-background text-text shadow-sm"
-                    : "text-secondary hover:text-text"
+                  activeTab === "balance" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
                 }`}
               >
                 <Wallet className="w-3.5 h-3.5" />
@@ -949,10 +764,7 @@ export default function PatientDetailPage() {
               {isTimelineLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-surface border border-border rounded-xl p-4 animate-pulse"
-                    >
+                    <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse">
                       <div className="h-4 bg-border rounded w-1/3 mb-3" />
                       <div className="h-3 bg-border rounded w-2/3" />
                     </div>
@@ -965,19 +777,12 @@ export default function PatientDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {cases.map((patientCase, index) => (
-                    <motion.div
-                      key={patientCase.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                    >
+                    <motion.div key={patientCase.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }}>
                       <CaseCard
                         patientCase={patientCase}
                         onAddStep={() => setAddStepCaseId(patientCase.id)}
                         onCloseCase={(status) => {
-                          const msg = status === "COMPLETED"
-                            ? "Kasusni yakunlashni tasdiqlaysizmi?"
-                            : "Kasusni bekor qilishni tasdiqlaysizmi?";
+                          const msg = status === "COMPLETED" ? "Kasusni yakunlashni tasdiqlaysizmi?" : "Kasusni bekor qilishni tasdiqlaysizmi?";
                           if (confirm(msg)) closeCase({ caseId: patientCase.id, status });
                         }}
                       />
@@ -1002,19 +807,12 @@ export default function PatientDetailPage() {
       {/* ── SHEETS ──────────────────────────────────────────────────────────── */}
 
       {/* New Case */}
-      <Sheet
-        isOpen={sheetMode === "checkin"}
-        onClose={() => setSheetMode(null)}
-        title={t("cases.newCase")}
-        description={t("cases.newCaseDesc")}
-      >
+      <Sheet isOpen={sheetMode === "checkin"} onClose={() => setSheetMode(null)} title={t("cases.newCase")} description={t("cases.newCaseDesc")}>
         <div className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("cases.chiefComplaint")}
-              <span className="ml-1 text-text-muted font-normal text-xs">
-                {t("forms.optional")}
-              </span>
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
             <input
               value={chiefComplaint}
@@ -1044,22 +842,12 @@ export default function PatientDetailPage() {
       </Sheet>
 
       {/* Edit Patient */}
-      <Sheet
-        isOpen={sheetMode === "edit"}
-        onClose={() => setSheetMode(null)}
-        title={t("patients.editPatientSheet")}
-        description={t("patients.editPatientDesc")}
-      >
+      <Sheet isOpen={sheetMode === "edit"} onClose={() => setSheetMode(null)} title={t("patients.editPatientSheet")} description={t("patients.editPatientDesc")}>
         <EditPatientForm patient={patient} onCancel={() => setSheetMode(null)} />
       </Sheet>
 
       {/* Ward Check-in */}
-      <Sheet
-        isOpen={sheetMode === "ward"}
-        onClose={() => setSheetMode(null)}
-        title={t("wards.checkInTitle")}
-        description={t("wards.detailDescription")}
-      >
+      <Sheet isOpen={sheetMode === "ward"} onClose={() => setSheetMode(null)} title={t("wards.checkInTitle")} description={t("wards.detailDescription")}>
         <div className="space-y-4">
           {/* Room selection */}
           <div className="space-y-1.5">
@@ -1082,9 +870,7 @@ export default function PatientDetailPage() {
                 </option>
               ))}
             </select>
-            {wardRoomsRaw.length === 0 && (
-              <p className="text-xs text-text-muted">{t("wards.noWards")}</p>
-            )}
+            {wardRoomsRaw.length === 0 && <p className="text-xs text-text-muted">{t("wards.noWards")}</p>}
           </div>
 
           {/* Companions count */}
@@ -1092,9 +878,7 @@ export default function PatientDetailPage() {
             <label className="text-sm font-medium text-text flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" />
               {t("wards.companionsCount")}
-              <span className="ml-1 text-text-muted font-normal text-xs">
-                ({t("common.optional")})
-              </span>
+              <span className="ml-1 text-text-muted font-normal text-xs">({t("common.optional")})</span>
             </label>
             <div className="flex items-center gap-3">
               <button
@@ -1105,14 +889,10 @@ export default function PatientDetailPage() {
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="text-lg font-semibold text-text w-6 text-center">
-                {wardCompanionsCount}
-              </span>
+              <span className="text-lg font-semibold text-text w-6 text-center">{wardCompanionsCount}</span>
               <button
                 type="button"
-                onClick={() =>
-                  setWardCompanionsCount((c) => Math.min(wardMaxCompanions, c + 1))
-                }
+                onClick={() => setWardCompanionsCount((c) => Math.min(wardMaxCompanions, c + 1))}
                 disabled={!wardRoomId || wardCompanionsCount >= wardMaxCompanions}
                 className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
               >
@@ -1124,18 +904,14 @@ export default function PatientDetailPage() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-text-muted">
-              Sheriq ro&apos;yxatga olinmaydi, lekin joy egallaydi
-            </p>
+            <p className="text-xs text-text-muted">Sheriq ro&apos;yxatga olinmaydi, lekin joy egallaydi</p>
           </div>
 
           {/* Check-in date */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.colCheckIn")}
-              <span className="ml-1 text-text-muted font-normal text-xs">
-                {t("forms.optional")}
-              </span>
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
             <input
               type="date"
@@ -1151,9 +927,7 @@ export default function PatientDetailPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.colExpectedOut")}
-              <span className="ml-1 text-text-muted font-normal text-xs">
-                {t("forms.optional")}
-              </span>
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
             <input
               type="date"
@@ -1168,9 +942,7 @@ export default function PatientDetailPage() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">
               {t("wards.note")}
-              <span className="ml-1 text-text-muted font-normal text-xs">
-                {t("forms.optional")}
-              </span>
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
             <textarea
               value={wardNote}
@@ -1201,12 +973,7 @@ export default function PatientDetailPage() {
       </Sheet>
 
       {/* Add Case Step */}
-      <Sheet
-        isOpen={addStepCaseId !== null}
-        onClose={() => setAddStepCaseId(null)}
-        title={t("cases.addStep")}
-        description={t("cases.addStepDesc")}
-      >
+      <Sheet isOpen={addStepCaseId !== null} onClose={() => setAddStepCaseId(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
         <AddCaseStepForm
           caseId={addStepCaseId ?? ""}
           availableStepTypes={["CONSULTATION", "LAB", "REFERRAL", "DISCHARGE"]}
