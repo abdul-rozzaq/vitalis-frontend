@@ -38,13 +38,7 @@ export function Sheet({ isOpen, onClose, title, description, children, footer, c
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex justify-end"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex justify-end">
             {/* Sheet Content */}
             <motion.div
               initial={{ x: "100%" }}
@@ -60,7 +54,7 @@ export function Sheet({ isOpen, onClose, title, description, children, footer, c
                   {title && <h2 className="text-xl font-semibold text-text tracking-tight">{title}</h2>}
                   {description && <p className="text-sm text-secondary mt-1">{description}</p>}
                 </div>
-                <button onClick={onClose} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors transition-colors cursor-pointer">
+                <button onClick={onClose} className="p-1.5 rounded-md hover:bg-surface-hover text-secondary transition-colors cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
