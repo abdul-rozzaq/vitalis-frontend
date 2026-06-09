@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import React from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -11,12 +12,7 @@ interface DataTableProps<TData, TValue> {
   renderExpanded?: (row: TData) => React.ReactNode;
 }
 
-export function DataTable<TData extends { id?: string }, TValue>({
-  columns,
-  data,
-  expandedRowId,
-  renderExpanded,
-}: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends { id?: string }, TValue>({ columns, data, expandedRowId, renderExpanded }: DataTableProps<TData, TValue>) {
   const t = useTranslations();
 
   const table = useReactTable({
@@ -56,7 +52,7 @@ export function DataTable<TData extends { id?: string }, TValue>({
             <tbody className="divide-y divide-border-light text-text">
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <>
+                  <React.Fragment key={row.id}>
                     <tr key={row.id} className="hover:bg-surface-hover transition-colors">
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
@@ -71,7 +67,7 @@ export function DataTable<TData extends { id?: string }, TValue>({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>
@@ -86,9 +82,7 @@ export function DataTable<TData extends { id?: string }, TValue>({
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-background">
-          <div className="text-xs text-secondary">
-            {t("table.showing", { start, end, total })}
-          </div>
+          <div className="text-xs text-secondary">{t("table.showing", { start, end, total })}</div>
           <div className="flex items-center gap-1.5">
             <button
               className="p-1.5 border border-border rounded-md text-text-muted hover:bg-surface hover:text-text disabled:opacity-40 transition-colors cursor-pointer"
