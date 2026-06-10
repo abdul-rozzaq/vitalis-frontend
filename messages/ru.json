@@ -10,7 +10,9 @@
     "laboratories": "Лаборатории",
     "signOut": "Выйти",
     "wards": "Палаты",
-    "invoices": "Счета"
+    "invoices": "Счета",
+    "shifts": "Смены",
+    "duty": "Моё дежурство"
   },
   "common": {
     "filter": "Фильтр",

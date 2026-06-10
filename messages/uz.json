@@ -10,7 +10,9 @@
     "laboratories": "Laboratoriyalar",
     "signOut": "Chiqish",
     "wards": "Palatalar",
-    "invoices": "Invoicelar"
+    "invoices": "Invoicelar",
+    "shifts": "Smenalar",
+    "duty": "Mening navbatim"
   },
   "common": {
     "filter": "Filtr",

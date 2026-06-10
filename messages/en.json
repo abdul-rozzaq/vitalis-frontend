@@ -10,7 +10,9 @@
     "laboratories": "Laboratories",
     "signOut": "Sign Out",
     "wards": "Wards",
-    "invoices": "Invoices"
+    "invoices": "Invoices",
+    "shifts": "Shifts",
+    "duty": "My Duty"
   },
   "common": {
     "filter": "Filter",

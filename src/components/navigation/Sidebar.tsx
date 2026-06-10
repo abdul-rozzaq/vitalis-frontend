@@ -9,6 +9,8 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  ClipboardList,
   FileText,
   FlaskConical,
   GitFork,
@@ -37,6 +39,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   roles: string[];
+  exact?: boolean;
 }
 
 export function Sidebar() {
@@ -85,6 +88,19 @@ export function Sidebar() {
           href: "/wards",
           icon: BedDouble,
           roles: ["ADMIN", "DOCTOR", "HAMSHIRA", "DIREKTOR"],
+          exact: true,
+        },
+        {
+          label: t("nav.shifts"),
+          href: "/wards/shifts",
+          icon: Clock,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: t("nav.duty"),
+          href: "/wards/duty",
+          icon: ClipboardList,
+          roles: ["DOCTOR", "HAMSHIRA"],
         },
         {
           label: t("nav.lab"),
@@ -173,8 +189,10 @@ export function Sidebar() {
                     icon={item.icon}
                     label={item.label}
                     active={
-                      pathname === item.href ||
-                      (item.href !== "/" && pathname.startsWith(item.href + "/"))
+                      item.exact
+                        ? pathname === item.href
+                        : pathname === item.href ||
+                          (item.href !== "/" && pathname.startsWith(item.href + "/"))
                     }
                     collapsed={collapsed}
                   />
