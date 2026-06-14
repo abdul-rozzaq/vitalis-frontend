@@ -22,6 +22,8 @@ import {
   User,
   UserPen,
   Users,
+  Scissors,
+  Stethoscope,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -101,6 +103,18 @@ export function Sidebar() {
           href: "/wards/duty",
           icon: ClipboardList,
           roles: ["DOCTOR", "HAMSHIRA"],
+        },
+        {
+          label: "operations",
+          href: "/operations",
+          icon: Stethoscope,
+          roles: ["ADMIN", "DOCTOR", "LABARANT"],
+        },
+    {
+          label: "Operatsiya turlari",
+          href: "/operation-types",
+          icon: Scissors,
+          roles: ["ADMIN", "DOCTOR", "LABARANT"],
         },
         {
           label: t("nav.lab"),
