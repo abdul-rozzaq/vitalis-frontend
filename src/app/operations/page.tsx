@@ -21,6 +21,7 @@ import {
   XCircle
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -324,8 +325,6 @@ function InfoRow({ label, value, className = "" }: { label: string; value: strin
   );
 }
 
-// ─── Main Component ─────────────────────────────────────────────────────────────
-
 function ActionBtn({
   onClick,
   icon,
@@ -358,11 +357,22 @@ function ActionBtn({
   );
 }
 
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="bg-surface border border-border rounded-lg px-4 py-3">
+      <p className="text-xs text-text-muted mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+    </div>
+  );
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────────────
+
 export default function OperationsPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
-  const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
   const [editingOp, setEditingOp] = useState<Operation | null>(null);
 
@@ -376,19 +386,6 @@ export default function OperationsPage() {
 
   // ─── Mutations ───────────────────────────────────────────────────────────────
 
-  const createMutation = useMutation({
-    mutationFn: (dto: OperationFormValues) => api.post("/operations", dto),
-    onSuccess: () => {
-      invalidate();
-      setShowCreateSheet(false);
-      toast.success("Operatsiya muvaffaqiyatli rejalashtirildi");
-    },
-    onError: (err: any) => {
-      console.error("Yaratishda xatolik:", err);
-      toast.error(err?.response?.data?.message || "Operatsiyani yaratishda xatolik yuz berdi");
-    },
-  });
-
   const updateMutation = useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: OperationFormValues }) =>
       api.patch(`/operations/${id}`, dto),
@@ -399,7 +396,6 @@ export default function OperationsPage() {
       toast.success("Operatsiya muvaffaqiyatli yangilandi");
     },
     onError: (err: any) => {
-      console.error("Yangilashda xatolik:", err);
       toast.error(err?.response?.data?.message || "Operatsiyani yangilashda xatolik yuz berdi");
     },
   });
@@ -581,7 +577,7 @@ export default function OperationsPage() {
               Filtr
             </button>
             <button
-              onClick={() => setShowCreateSheet(true)}
+              onClick={() => router.push("/operations/new")}
               className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -615,30 +611,9 @@ export default function OperationsPage() {
             <Loader2 className="w-6 h-6 animate-spin text-text-muted" />
           </div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={filtered}
-          />
+          <DataTable columns={columns} data={filtered} />
         )}
       </PageContent>
-
-      {/* Yangi Operatsiya qo'shish oynasi */}
-      <Sheet
-        isOpen={showCreateSheet}
-        onClose={() => setShowCreateSheet(false)}
-        title="Yangi operatsiya"
-        description="Operatsiya ma'lumotlarini kiriting"
-      >
-        <div className="h-full overflow-y-auto px-1">
-          <OperationForm
-            onSubmit={(data) => {
-              createMutation.mutate(data);
-            }}
-            onCancel={() => setShowCreateSheet(false)}
-            isPending={createMutation.isPending}
-          />
-        </div>
-      </Sheet>
 
       {/* Detallar oynasi */}
       <Sheet
@@ -697,14 +672,5 @@ export default function OperationsPage() {
         )}
       </Sheet>
     </>
-  );
-}
-
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className="bg-surface border border-border rounded-lg px-4 py-3">
-      <p className="text-xs text-text-muted mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    </div>
   );
 }

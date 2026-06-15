@@ -1,0 +1,719 @@
+"use client";
+
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
+import { Combobox } from "@/components/ui/combobox";
+import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  DoorOpen,
+  Loader2,
+  Plus,
+  Scissors,
+  Stethoscope,
+  Trash2,
+  User,
+  UserRound,
+  Wrench,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+// ─── Types ──────────────────────────────────────────────────────────────────────
+
+type SurgeonRole = "LEAD" | "ASSISTANT";
+
+interface OperationSurgeonInput {
+  surgeonId: string;
+  role: SurgeonRole;
+}
+
+interface OperationItemInput {
+  operationTypeItemId: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+}
+
+interface OperationTypeItem {
+  id: string;
+  name: string;
+  price: number;
+  isActive: boolean;
+}
+
+interface OperationType {
+  id: string;
+  name: string;
+  basePrice: number;
+  description?: string;
+  items: OperationTypeItem[];
+}
+
+interface Room { id: string; name: string }
+interface Employee { id: string; first_name: string; last_name: string; role: string }
+interface Case { id: string; status: string; chiefComplaint?: string | null }
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+
+function nowLocal() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return now.toISOString().slice(0, 16);
+}
+
+const fmt = (val: number) =>
+  val.toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+
+// ─── Sub-components ─────────────────────────────────────────────────────────────
+
+function SectionTitle({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+      </div>
+      <span className="text-sm font-semibold text-text">{title}</span>
+      <div className="flex-1 h-px bg-border ml-1" />
+    </div>
+  );
+}
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+  return (
+    <label className="block text-xs font-medium text-text-muted mb-1.5">
+      {children}
+      {required && <span className="text-danger ml-0.5">*</span>}
+    </label>
+  );
+}
+
+function ErrorMsg({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-xs text-danger mt-1 font-medium">{msg}</p>;
+}
+
+const fieldCls =
+  "w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
+
+// ─── Page ────────────────────────────────────────────────────────────────────────
+
+export default function NewOperationPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // ── State ─────────────────────────────────────────────────────────────────────
+  const [patientId, setPatientId] = useState("");
+  const [operationTypeId, setOperationTypeId] = useState("");
+  const [caseId, setCaseId] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [scheduledAt, setScheduledAt] = useState(nowLocal());
+  const [note, setNote] = useState("");
+  const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([
+    { surgeonId: "", role: "LEAD" },
+  ]);
+  const [items, setItems] = useState<OperationItemInput[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showNewCase, setShowNewCase] = useState(false);
+  const [newCaseComplaint, setNewCaseComplaint] = useState("");
+
+  // ── Queries ───────────────────────────────────────────────────────────────────
+  const { data: patients = [] } = useQuery<{ id: string; first_name: string; last_name: string }[]>({
+    queryKey: ["patients"],
+    queryFn: () => api.get("/patients").then((r) => r.data),
+  });
+
+  const { data: operationTypes = [] } = useQuery<OperationType[]>({
+    queryKey: ["operation-types"],
+    queryFn: () => api.get("/operation-types?onlyActive=true").then((r) => r.data),
+  });
+
+  const { data: employees = [] } = useQuery<Employee[]>({
+    queryKey: ["users"],
+    queryFn: () => api.get("/users").then((r) => r.data),
+  });
+
+  const { data: rooms = [] } = useQuery<Room[]>({
+    queryKey: ["rooms"],
+    queryFn: () => api.get("/rooms").then((r) => r.data),
+  });
+
+  const { data: cases = [], isLoading: isCasesLoading } = useQuery<Case[]>({
+    queryKey: ["cases", patientId],
+    queryFn: () => api.get(`/patients/${patientId}/cases`).then((r) => r.data),
+    enabled: !!patientId,
+  });
+
+  // ── Case mutation ─────────────────────────────────────────────────────────────
+  const createCaseMutation = useMutation({
+    mutationFn: (chiefComplaint: string) =>
+      api.post("/cases", { patientId, chiefComplaint: chiefComplaint || undefined }).then((r) => r.data),
+    onSuccess: (data: Case) => {
+      queryClient.invalidateQueries({ queryKey: ["cases", patientId] });
+      setCaseId(data.id);
+      setShowNewCase(false);
+      setNewCaseComplaint("");
+    },
+  });
+
+  // ── Main mutation ─────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: (dto: any) => api.post("/operations", dto),
+    onSuccess: () => {
+      toast.success("Operatsiya muvaffaqiyatli rejalashtirildi");
+      router.push("/operations");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Operatsiyani yaratishda xatolik yuz berdi");
+    },
+  });
+
+  // ── Derived ───────────────────────────────────────────────────────────────────
+  const selectedOpType = operationTypes.find((t) => t.id === operationTypeId);
+  const doctors = employees.filter((e) => ["DOCTOR", "SURGEON"].includes(e.role));
+
+  useEffect(() => {
+    if (selectedOpType) {
+      setItems(
+        selectedOpType.items
+          .filter((i) => i.isActive)
+          .map((i) => ({
+            operationTypeItemId: i.id,
+            name: i.name,
+            unitPrice: Number(i.price),
+            quantity: 1,
+          }))
+      );
+    } else {
+      setItems([]);
+    }
+  }, [operationTypeId]);
+
+  const basePrice = Number(selectedOpType?.basePrice ?? 0);
+  const itemsTotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  const totalPrice = basePrice + itemsTotal;
+
+  // ── Surgeons ──────────────────────────────────────────────────────────────────
+  const addSurgeon = () => {
+    if (surgeons.length >= 4) return;
+    setSurgeons([...surgeons, { surgeonId: "", role: "ASSISTANT" }]);
+  };
+  const removeSurgeon = (idx: number) => setSurgeons(surgeons.filter((_, i) => i !== idx));
+  const updateSurgeon = (idx: number, field: keyof OperationSurgeonInput, value: string) =>
+    setSurgeons(surgeons.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
+
+  // ── Items ─────────────────────────────────────────────────────────────────────
+  const addItem = () =>
+    setItems([...items, { operationTypeItemId: "", name: "", unitPrice: 0, quantity: 1 }]);
+  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
+  const updateItem = (idx: number, field: keyof OperationItemInput, value: string | number) =>
+    setItems(
+      items.map((item, i) => {
+        if (i !== idx) return item;
+        if (field === "operationTypeItemId") {
+          const found = selectedOpType?.items.find((ti) => ti.id === value);
+          return found
+            ? { ...item, operationTypeItemId: found.id, name: found.name, unitPrice: Number(found.price) }
+            : { ...item, operationTypeItemId: value as string, name: "", unitPrice: 0 };
+        }
+        return { ...item, [field]: value };
+      })
+    );
+
+  // ── Combobox options ──────────────────────────────────────────────────────────
+  const patientOptions = patients.map((p) => ({
+    value: p.id,
+    label: `${p.first_name} ${p.last_name}`,
+    avatar: `${p.first_name[0]}${p.last_name[0]}`.toUpperCase(),
+  }));
+
+  const opTypeOptions = operationTypes.map((t) => ({
+    value: t.id,
+    label: t.name,
+    sublabel: Number(t.basePrice) > 0 ? `${fmt(Number(t.basePrice))} so'm` : undefined,
+  }));
+
+  const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name }));
+
+  const caseOptions = cases
+    .filter((c) => c.status === "ACTIVE")
+    .map((c) => ({
+      value: c.id,
+      label: c.chiefComplaint || `Murojaat #${c.id.slice(0, 5).toUpperCase()}`,
+    }));
+
+  const doctorOptions = doctors.map((d) => ({
+    value: d.id,
+    label: `${d.first_name} ${d.last_name}`,
+    sublabel: d.role,
+    avatar: `${d.first_name[0]}${d.last_name[0]}`.toUpperCase(),
+  }));
+
+  const roleOptions = [
+    { value: "LEAD", label: "Bosh jarroh (LEAD)" },
+    { value: "ASSISTANT", label: "Yordamchi (ASSISTANT)" },
+  ];
+
+  const opTypeItemOptions = (selectedOpType?.items ?? []).map((ti) => ({
+    value: ti.id,
+    label: ti.name,
+    sublabel: `${fmt(Number(ti.price))} so'm`,
+  }));
+
+  // ── Validate + Submit ─────────────────────────────────────────────────────────
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!patientId) e.patientId = "Bemor tanlanmadi";
+    if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
+    if (!caseId) e.caseId = "Holat tanlanmadi";
+    if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
+    if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
+    if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
+    if (surgeons.some((s) => !s.surgeonId)) e.surgeons = "Barcha jarrohlar tanlanishi kerak";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validate()) return;
+    createMutation.mutate({
+      patientId,
+      operationTypeId,
+      caseId: caseId || undefined,
+      roomId: roomId || undefined,
+      scheduledAt: new Date(scheduledAt).toISOString(),
+      note: note || undefined,
+      surgeons,
+      items: items.filter((i) => i.operationTypeItemId || i.name),
+    });
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  return (
+    <>
+      <PageHeader
+        title="Yangi operatsiya"
+        actions={
+          <button
+            onClick={() => router.push("/operations")}
+            className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-border text-text-muted hover:bg-surface-hover transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Orqaga
+          </button>
+        }
+      />
+
+      <PageContent>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+
+          {/* ══ CHAP USTUN ═══════════════════════════════════════════════════════ */}
+          <div className="space-y-6">
+
+            {/* Operatsiya turi — hero section */}
+            <div className="bg-surface border border-border rounded-xl overflow-hidden">
+              <div className="px-5 pt-5 pb-4">
+                <SectionTitle icon={Scissors} title="Operatsiya turi" />
+                <Combobox
+                  options={opTypeOptions}
+                  value={operationTypeId}
+                  onChange={setOperationTypeId}
+                  placeholder="Operatsiya turini tanlang..."
+                  searchPlaceholder="Operatsiya turini qidiring..."
+                  error={!!errors.operationTypeId}
+                />
+                <ErrorMsg msg={errors.operationTypeId} />
+              </div>
+
+              {/* Selected type preview */}
+              {selectedOpType && (
+                <div className="mx-5 mb-5 rounded-lg bg-primary/5 border border-primary/15 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-primary truncate">{selectedOpType.name}</p>
+                      {selectedOpType.description && (
+                        <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{selectedOpType.description}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs text-text-muted">Bazaviy narx</p>
+                      <p className="text-sm font-bold text-primary">{fmt(basePrice)} so'm</p>
+                    </div>
+                  </div>
+                  {selectedOpType.items.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2.5 pt-2.5 border-t border-primary/10">
+                      {selectedOpType.items.filter(i => i.isActive).map((item) => (
+                        <span key={item.id} className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {item.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Bemor va Holat */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <SectionTitle icon={User} title="Bemor ma'lumotlari" />
+
+              <div className="space-y-4">
+                <div>
+                  <FieldLabel required>Bemor</FieldLabel>
+                  <Combobox
+                    options={patientOptions}
+                    value={patientId}
+                    onChange={(v) => { setPatientId(v); setCaseId(""); }}
+                    placeholder="Bemor tanlang..."
+                    searchPlaceholder="Ism yoki familiya bo'yicha qidiring..."
+                    error={!!errors.patientId}
+                  />
+                  <ErrorMsg msg={errors.patientId} />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <FieldLabel required>Holat (Case)</FieldLabel>
+                    {patientId && (
+                      <button
+                        type="button"
+                        onClick={() => setShowNewCase((v) => !v)}
+                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Yangi holat
+                      </button>
+                    )}
+                  </div>
+
+                  {showNewCase && (
+                    <div className="flex items-center gap-2 mb-2 p-2.5 bg-surface-hover rounded-lg border border-border">
+                      <input
+                        value={newCaseComplaint}
+                        onChange={(e) => setNewCaseComplaint(e.target.value)}
+                        placeholder="Shikoyat (ixtiyoriy)..."
+                        className={fieldCls}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => createCaseMutation.mutate(newCaseComplaint)}
+                        disabled={createCaseMutation.isPending || !patientId}
+                        className="px-3 py-2 text-xs rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                      >
+                        {createCaseMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+                        Yaratish
+                      </button>
+                    </div>
+                  )}
+
+                  <Combobox
+                    options={caseOptions}
+                    value={caseId}
+                    onChange={setCaseId}
+                    placeholder={
+                      !patientId ? "Avval bemor tanlang" :
+                      isCasesLoading ? "Yuklanmoqda..." :
+                      "Holat tanlang..."
+                    }
+                    searchPlaceholder="Holat qidiring..."
+                    disabled={!patientId || isCasesLoading}
+                    error={!!errors.caseId}
+                  />
+                  <ErrorMsg msg={errors.caseId} />
+                </div>
+              </div>
+            </div>
+
+            {/* Sana va Xona */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <SectionTitle icon={Calendar} title="Vaqt va joy" />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <FieldLabel required>Sana va vaqt</FieldLabel>
+                  <input
+                    type="datetime-local"
+                    value={scheduledAt}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                    className={fieldCls}
+                  />
+                  <ErrorMsg msg={errors.scheduledAt} />
+                </div>
+                <div>
+                  <FieldLabel>Xona</FieldLabel>
+                  <Combobox
+                    options={roomOptions}
+                    value={roomId}
+                    onChange={setRoomId}
+                    placeholder="Xona tanlang..."
+                    searchPlaceholder="Xona nomi..."
+                  />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ══ O'NG USTUN ═══════════════════════════════════════════════════════ */}
+          <div className="space-y-6">
+
+            {/* Jarrohlar */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Stethoscope className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-text">Jarrohlar</span>
+                  <div className="flex-1 h-px bg-border ml-1" />
+                </div>
+                {surgeons.length < 4 && (
+                  <button
+                    type="button"
+                    onClick={addSurgeon}
+                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer ml-3 shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Qo'shish
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {surgeons.map((s, idx) => (
+                  <div key={idx} className="relative">
+                    {/* Role badge on top-left */}
+                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      s.role === "LEAD"
+                        ? "bg-primary text-white"
+                        : "bg-surface border border-border text-text-muted"
+                    }`}>
+                      {s.role === "LEAD" ? "Bosh jarroh" : "Yordamchi"}
+                    </div>
+                    <div className="flex items-end gap-2 p-3 pt-4 bg-surface-hover rounded-lg border border-border">
+                      <UserRound className="w-4 h-4 text-text-muted mb-2 shrink-0" />
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <div>
+                          <FieldLabel>Jarroh</FieldLabel>
+                          <Combobox
+                            options={doctorOptions}
+                            value={s.surgeonId}
+                            onChange={(v) => updateSurgeon(idx, "surgeonId", v)}
+                            placeholder="Tanlang..."
+                            searchPlaceholder="Ism yoki familiya..."
+                            error={!!errors.surgeons && !s.surgeonId}
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel>Rol</FieldLabel>
+                          <Combobox
+                            options={roleOptions}
+                            value={s.role}
+                            onChange={(v) => updateSurgeon(idx, "role", v)}
+                            placeholder="Rol..."
+                            searchPlaceholder=""
+                          />
+                        </div>
+                      </div>
+                      {surgeons.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSurgeon(idx)}
+                          className="mb-1 text-text-muted hover:text-danger transition-colors cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <ErrorMsg msg={errors.surgeons} />
+            </div>
+
+            {/* Xizmatlar */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Wrench className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-text">Xizmatlar</span>
+                  <div className="flex-1 h-px bg-border ml-1" />
+                </div>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer ml-3 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Qo'shish
+                </button>
+              </div>
+
+              {items.length === 0 ? (
+                <div className="text-center py-8 border border-dashed border-border rounded-lg">
+                  <Wrench className="w-6 h-6 text-text-muted mx-auto mb-2 opacity-40" />
+                  <p className="text-xs text-text-muted">Hozircha xizmat qo'shilmagan</p>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  >
+                    + Xizmat qo'shish
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-surface-hover rounded-lg border border-border space-y-2.5">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <FieldLabel>Xizmat nomi</FieldLabel>
+                          {opTypeItemOptions.length > 0 ? (
+                            <Combobox
+                              options={opTypeItemOptions}
+                              value={item.operationTypeItemId}
+                              onChange={(v) => updateItem(idx, "operationTypeItemId", v)}
+                              placeholder="Xizmat tanlang..."
+                              searchPlaceholder="Xizmat qidiring..."
+                            />
+                          ) : (
+                            <input
+                              value={item.name}
+                              onChange={(e) => updateItem(idx, "name", e.target.value)}
+                              placeholder="Xizmat nomi"
+                              className={fieldCls}
+                            />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(idx)}
+                          className="mt-5 text-text-muted hover:text-danger transition-colors cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <FieldLabel>Narx (so'm)</FieldLabel>
+                          <input
+                            type="number"
+                            min={0}
+                            value={item.unitPrice}
+                            onChange={(e) => updateItem(idx, "unitPrice", Number(e.target.value))}
+                            className={fieldCls}
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel>Miqdor</FieldLabel>
+                          <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) => updateItem(idx, "quantity", Number(e.target.value))}
+                            className={fieldCls}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <span className="text-xs text-text-muted">
+                          Jami:{" "}
+                          <span className="font-semibold text-text">
+                            {fmt(item.unitPrice * item.quantity)} so'm
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Price summary */}
+              {(items.length > 0 || basePrice > 0) && (
+                <div className="mt-4 pt-4 border-t border-border space-y-1.5">
+                  {basePrice > 0 && (
+                    <div className="flex justify-between text-xs text-text-muted">
+                      <span>Operatsiya narxi</span>
+                      <span>{fmt(basePrice)} so'm</span>
+                    </div>
+                  )}
+                  {items.length > 0 && (
+                    <div className="flex justify-between text-xs text-text-muted">
+                      <span>Xizmatlar jami</span>
+                      <span>{fmt(itemsTotal)} so'm</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-1.5 border-t border-border">
+                    <span className="text-sm font-bold text-text">Umumiy summa</span>
+                    <span className="text-sm font-bold text-primary">{fmt(totalPrice)} so'm</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Izoh */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <SectionTitle icon={CheckCircle2} title="Qo'shimcha" />
+              <FieldLabel>Izoh (ixtiyoriy)</FieldLabel>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={3}
+                placeholder="Operatsiya haqida qo'shimcha ma'lumot..."
+                className={fieldCls + " resize-none"}
+              />
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── Sticky action bar ─────────────────────────────────────────────────── */}
+        <div className="max-w-6xl mx-auto mt-6">
+          <div className="bg-surface border border-border rounded-xl px-5 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-sm text-text-muted">
+              {totalPrice > 0 && (
+                <>
+                  <span>Jami:</span>
+                  <span className="text-lg font-bold text-primary">{fmt(totalPrice)} so'm</span>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/operations")}
+                disabled={createMutation.isPending}
+                className="px-4 py-2 text-sm rounded-lg border border-border text-text-muted hover:bg-surface-hover transition-all disabled:opacity-50 cursor-pointer"
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={createMutation.isPending}
+                className="flex items-center gap-2 px-5 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 cursor-pointer font-medium"
+              >
+                {createMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+                Operatsiyani rejalashtirish
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </PageContent>
+    </>
+  );
+}
