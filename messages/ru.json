@@ -12,7 +12,9 @@
     "wards": "Палаты",
     "invoices": "Счета",
     "shifts": "Смены",
-    "duty": "Моё дежурство"
+    "duty": "Моё дежурство",
+    "operations": "Операции",
+    "operation-types": "Типы операций"
   },
   "common": {
     "filter": "Фильтр",
@@ -717,8 +719,28 @@
       "total": "Всего",
       "pending": "Ожидает",
       "inProgress": "В процессе",
-      "completed": "Выполнено"
-    }
+      "completed": "Выполнено",
+      "myTasks": "Мои задачи",
+      "readyItems": "Готовые результаты",
+      "pendingItems": "Ожидающие результаты",
+      "deliveredItems": "Выдано результатов"
+    },
+    "viewTasks": "Мои задачи",
+    "viewOrders": "Заказы",
+    "noTasks": "Пока нет задач, требующих действия.",
+    "allCaughtUp": "Все задачи выполнены!",
+    "nextStep": "Следующий шаг",
+    "nextStepTo": "Перевести в «{status}»",
+    "autoReadyHint": "Файл загружен — результат отмечен как «Готово»",
+    "patient": "Пациент",
+    "service": "Услуга",
+    "expandAll": "Развернуть все",
+    "collapseAll": "Свернуть все",
+    "deliveredOf": "выдано",
+    "readyAwaitingDelivery": "готово (ожидает выдачи)",
+    "confirmAdvanceTitle": "Подтвердите изменение статуса",
+    "confirmAdvanceDescription": "Вы собираетесь перевести результат «{service}» в статус «{status}». Это действие нельзя отменить.",
+    "confirmAdvanceButton": "Да, перевести в «{status}»"
   },
   "laboratories": {
     "title": "Лаборатории",
@@ -788,5 +810,38 @@
     "person": "человек",
     "currentOccupants": "Текущие пациенты",
     "noOccupants": "В палате сейчас нет пациентов"
+  },
+  "operations": {
+    "title": "Операции",
+    "filter": "Фильтр",
+    "clear": "Очистить",
+    "all": "Все",
+    "status": "Статус",
+    "patientOrType": "Пациент / Тип",
+    "searchPlaceholder": "Поиск...",
+    "fromDate": "С даты",
+    "toDate": "По дату",
+    "id": "ID",
+    "patient": "Пациент",
+    "operationType": "Тип операции",
+    "date": "Дата",
+    "leadSurgeon": "Главный хирург",
+    "amount": "Сумма",
+    "view": "Просмотр",
+    "edit": "Редактировать",
+    "newOperation": "Новая операция",
+    "total": "Всего",
+    "scheduled": "Запланировано",
+    "inProgress": "В процессе",
+    "completed": "Завершено",
+    "cancelled": "Отменено",
+    "statuses": {
+      "SCHEDULED": "Запланировано",
+      "IN_PROGRESS": "В процессе",
+      "COMPLETED": "Завершено",
+      "CANCELLED": "Отменено"
+    },
+    "loading": "Загрузка...",
+    "noLeadSurgeon": "—"
   }
 }

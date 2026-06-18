@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckCircle2,
   ChevronRight,
-  DoorOpen,
   Loader2,
   Plus,
   Scissors,
@@ -20,7 +19,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -57,15 +56,36 @@ interface OperationType {
 
 interface Room { id: string; name: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
-interface Case { id: string; status: string; chiefComplaint?: string | null }
+
+interface OperationSurgeon {
+  role: string;
+  surgeon: { id: string; first_name: string; last_name: string; role: string };
+}
+
+interface OperationItem {
+  id: string;
+  operationTypeItemId: string;
+  name: string;
+  unitPrice: string;
+  quantity: number;
+  totalPrice: string;
+}
+
+interface Operation {
+  id: string;
+  patientId: string;
+  status: string;
+  scheduledAt: string;
+  note?: string;
+  totalPrice: string;
+  patient: { id: string; first_name: string; last_name: string };
+  operationType: { id: string; name: string; basePrice?: number };
+  room?: { id: string; name: string };
+  surgeons: OperationSurgeon[];
+  items: OperationItem[];
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
-
-function nowLocal() {
-  const now = new Date();
-  now.setSeconds(0, 0);
-  return now.toISOString().slice(0, 16);
-}
 
 const fmt = (val: number) =>
   val.toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
@@ -103,24 +123,23 @@ const fieldCls =
 
 // ─── Page ────────────────────────────────────────────────────────────────────────
 
-export default function NewOperationPage() {
+export default function EditOperationPage() {
   const router = useRouter();
+  const params = useParams();
+  const operationId = params?.id as string;
   const queryClient = useQueryClient();
 
   // ── State ─────────────────────────────────────────────────────────────────────
-  const [patientId, setPatientId] = useState("");
   const [operationTypeId, setOperationTypeId] = useState("");
-  const [caseId, setCaseId] = useState("");
   const [roomId, setRoomId] = useState("");
-  const [scheduledAt, setScheduledAt] = useState(nowLocal());
+  const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([
     { surgeonId: "", role: "LEAD" },
   ]);
   const [items, setItems] = useState<OperationItemInput[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showNewCase, setShowNewCase] = useState(false);
-  const [newCaseComplaint, setNewCaseComplaint] = useState("");
+  const [initialized, setInitialized] = useState(false);
 
   // Yangi xizmat qo'shish (operation type ga)
   const [showNewItemForm, setShowNewItemForm] = useState(false);
@@ -128,9 +147,10 @@ export default function NewOperationPage() {
   const [newItemPrice, setNewItemPrice] = useState<number>(0);
 
   // ── Queries ───────────────────────────────────────────────────────────────────
-  const { data: patients = [] } = useQuery<{ id: string; first_name: string; last_name: string }[]>({
-    queryKey: ["patients"],
-    queryFn: () => api.get("/patients").then((r) => r.data),
+  const { data: operation, isLoading: isOpLoading } = useQuery<Operation>({
+    queryKey: ["operation", operationId],
+    queryFn: () => api.get(`/operations/${operationId}`).then((r) => r.data),
+    enabled: !!operationId,
   });
 
   const { data: operationTypes = [] } = useQuery<OperationType[]>({
@@ -148,26 +168,32 @@ export default function NewOperationPage() {
     queryFn: () => api.get("/rooms").then((r) => r.data),
   });
 
-  const { data: cases = [], isLoading: isCasesLoading } = useQuery<Case[]>({
-    queryKey: ["cases", patientId],
-    queryFn: () => api.get(`/patients/${patientId}/cases`).then((r) => r.data),
-    enabled: !!patientId,
-  });
-
-  // ── Case mutation ─────────────────────────────────────────────────────────────
-  const createCaseMutation = useMutation({
-    mutationFn: (chiefComplaint: string) =>
-      api.post("/cases", { patientId, chiefComplaint: chiefComplaint || undefined }).then((r) => r.data),
-    onSuccess: (data: Case) => {
-      queryClient.invalidateQueries({ queryKey: ["cases", patientId] });
-      setCaseId(data.id);
-      setShowNewCase(false);
-      setNewCaseComplaint("");
-    },
-  });
+  // ── Initialize form from operation data ───────────────────────────────────────
+  useEffect(() => {
+    if (operation && !initialized) {
+      setOperationTypeId(operation.operationType.id);
+      setRoomId(operation.room?.id ?? "");
+      setScheduledAt(new Date(operation.scheduledAt).toISOString().slice(0, 16));
+      setNote(operation.note ?? "");
+      setSurgeons(
+        operation.surgeons.map((s) => ({
+          surgeonId: s.surgeon.id,
+          role: s.role as SurgeonRole,
+        }))
+      );
+      setItems(
+        operation.items.map((i) => ({
+          operationTypeItemId: i.operationTypeItemId,
+          name: i.name,
+          unitPrice: Number(i.unitPrice),
+          quantity: i.quantity,
+        }))
+      );
+      setInitialized(true);
+    }
+  }, [operation, initialized]);
 
   // ── Yangi xizmat (OperationTypeItem) qo'shish mutation ───────────────────────
-  // PATCH /operation-types/:id ga mavjud itemlar + yangi item yuboramiz
   const addOpTypeItemMutation = useMutation({
     mutationFn: async (newItem: { name: string; price: number }) => {
       const currentType = operationTypes.find((t) => t.id === operationTypeId);
@@ -218,37 +244,21 @@ export default function NewOperationPage() {
   });
 
   // ── Main mutation ─────────────────────────────────────────────────────────────
-  const createMutation = useMutation({
-    mutationFn: (dto: any) => api.post("/operations", dto),
+  const updateMutation = useMutation({
+    mutationFn: (dto: any) => api.patch(`/operations/${operationId}`, dto),
     onSuccess: () => {
-      toast.success("Operatsiya muvaffaqiyatli rejalashtirildi");
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+      toast.success("Operatsiya muvaffaqiyatli yangilandi");
       router.push("/operations");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || "Operatsiyani yaratishda xatolik yuz berdi");
+      toast.error(err?.response?.data?.message || "Operatsiyani yangilashda xatolik yuz berdi");
     },
   });
 
   // ── Derived ───────────────────────────────────────────────────────────────────
   const selectedOpType = operationTypes.find((t) => t.id === operationTypeId);
   const doctors = employees.filter((e) => ["DOCTOR", "SURGEON"].includes(e.role));
-
-  useEffect(() => {
-    if (selectedOpType) {
-      setItems(
-        selectedOpType.items
-          .filter((i) => i.isActive)
-          .map((i) => ({
-            operationTypeItemId: i.id,
-            name: i.name,
-            unitPrice: Number(i.price),
-            quantity: 1,
-          }))
-      );
-    } else {
-      setItems([]);
-    }
-  }, [operationTypeId]);
 
   const basePrice = Number(selectedOpType?.basePrice ?? 0);
   const itemsTotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -266,7 +276,9 @@ export default function NewOperationPage() {
   // ── Items ─────────────────────────────────────────────────────────────────────
   const addItem = () =>
     setItems([...items, { operationTypeItemId: "", name: "", unitPrice: 0, quantity: 1 }]);
+
   const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
+
   const updateItem = (idx: number, field: keyof OperationItemInput, value: string | number) =>
     setItems(
       items.map((item, i) => {
@@ -282,12 +294,6 @@ export default function NewOperationPage() {
     );
 
   // ── Combobox options ──────────────────────────────────────────────────────────
-  const patientOptions = patients.map((p) => ({
-    value: p.id,
-    label: `${p.first_name} ${p.last_name}`,
-    avatar: `${p.first_name[0]}${p.last_name[0]}`.toUpperCase(),
-  }));
-
   const opTypeOptions = operationTypes.map((t) => ({
     value: t.id,
     label: t.name,
@@ -295,13 +301,6 @@ export default function NewOperationPage() {
   }));
 
   const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name }));
-
-  const caseOptions = cases
-    .filter((c) => c.status === "ACTIVE")
-    .map((c) => ({
-      value: c.id,
-      label: c.chiefComplaint || `Murojaat #${c.id.slice(0, 5).toUpperCase()}`,
-    }));
 
   const doctorOptions = doctors.map((d) => ({
     value: d.id,
@@ -315,6 +314,7 @@ export default function NewOperationPage() {
     { value: "ASSISTANT", label: "Yordamchi (ASSISTANT)" },
   ];
 
+  // Har doim barcha itemlarni ko'rsatamiz (isActive filter yo'q — edit sahifasida)
   const opTypeItemOptions = (selectedOpType?.items ?? []).map((ti) => ({
     value: ti.id,
     label: ti.name,
@@ -324,9 +324,7 @@ export default function NewOperationPage() {
   // ── Validate + Submit ─────────────────────────────────────────────────────────
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!patientId) e.patientId = "Bemor tanlanmadi";
     if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
-    if (!caseId) e.caseId = "Holat tanlanmadi";
     if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
     if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
@@ -337,10 +335,8 @@ export default function NewOperationPage() {
 
   const handleSubmit = () => {
     if (!validate()) return;
-    createMutation.mutate({
-      patientId,
+    updateMutation.mutate({
       operationTypeId,
-      caseId: caseId || undefined,
       roomId: roomId || undefined,
       scheduledAt: new Date(scheduledAt).toISOString(),
       note: note || undefined,
@@ -354,11 +350,36 @@ export default function NewOperationPage() {
     addOpTypeItemMutation.mutate({ name: newItemName.trim(), price: newItemPrice });
   };
 
+  // ── Loading ───────────────────────────────────────────────────────────────────
+  if (isOpLoading) {
+    return (
+      <>
+        <PageHeader title="Operatsiyani tahrirlash" />
+        <PageContent>
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-6 h-6 animate-spin text-text-muted" />
+          </div>
+        </PageContent>
+      </>
+    );
+  }
+
+  if (!operation) {
+    return (
+      <>
+        <PageHeader title="Operatsiyani tahrirlash" />
+        <PageContent>
+          <div className="text-center py-20 text-text-muted text-sm">Operatsiya topilmadi</div>
+        </PageContent>
+      </>
+    );
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <>
       <PageHeader
-        title="Yangi operatsiya"
+        title={`Tahrirlash — ${operation.patient.first_name} ${operation.patient.last_name}`}
         actions={
           <button
             onClick={() => router.push("/operations")}
@@ -418,81 +439,24 @@ export default function NewOperationPage() {
               )}
             </div>
 
-            {/* Bemor va Holat */}
+            {/* Bemor (readonly) */}
             <div className="bg-surface border border-border rounded-xl p-5">
               <SectionTitle icon={User} title="Bemor ma'lumotlari" />
-
-              <div className="space-y-4">
-                <div>
-                  <FieldLabel required>Bemor</FieldLabel>
-                  <Combobox
-                    options={patientOptions}
-                    value={patientId}
-                    onChange={(v) => { setPatientId(v); setCaseId(""); }}
-                    placeholder="Bemor tanlang..."
-                    searchPlaceholder="Ism yoki familiya bo'yicha qidiring..."
-                    error={!!errors.patientId}
-                  />
-                  <ErrorMsg msg={errors.patientId} />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <FieldLabel required>Holat (Case)</FieldLabel>
-                    {patientId && (
-                      <button
-                        type="button"
-                        onClick={() => setShowNewCase((v) => !v)}
-                        className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Yangi holat
-                      </button>
-                    )}
-                  </div>
-
-                  {showNewCase && (
-                    <div className="flex items-center gap-2 mb-2 p-2.5 bg-surface-hover rounded-lg border border-border">
-                      <input
-                        value={newCaseComplaint}
-                        onChange={(e) => setNewCaseComplaint(e.target.value)}
-                        placeholder="Shikoyat (ixtiyoriy)..."
-                        className={fieldCls}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => createCaseMutation.mutate(newCaseComplaint)}
-                        disabled={createCaseMutation.isPending || !patientId}
-                        className="px-3 py-2 text-xs rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                      >
-                        {createCaseMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
-                        Yaratish
-                      </button>
-                    </div>
-                  )}
-
-                  <Combobox
-                    options={caseOptions}
-                    value={caseId}
-                    onChange={setCaseId}
-                    placeholder={
-                      !patientId ? "Avval bemor tanlang" :
-                      isCasesLoading ? "Yuklanmoqda..." :
-                      "Holat tanlang..."
-                    }
-                    searchPlaceholder="Holat qidiring..."
-                    disabled={!patientId || isCasesLoading}
-                    error={!!errors.caseId}
-                  />
-                  <ErrorMsg msg={errors.caseId} />
-                </div>
+              <div className="px-3 py-2.5 bg-surface-hover border border-border rounded-lg">
+                <p className="text-xs text-text-muted mb-0.5">Bemor</p>
+                <p className="text-sm font-medium text-text">
+                  {operation.patient.first_name} {operation.patient.last_name}
+                </p>
               </div>
+              <p className="text-xs text-text-muted mt-2 flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-text-muted/50 inline-block" />
+                Bemor tahrirlash operatsiya yaratishda belgilanadi
+              </p>
             </div>
 
             {/* Sana va Xona */}
             <div className="bg-surface border border-border rounded-xl p-5">
               <SectionTitle icon={Calendar} title="Vaqt va joy" />
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <FieldLabel required>Sana va vaqt</FieldLabel>
@@ -547,11 +511,10 @@ export default function NewOperationPage() {
               <div className="space-y-3">
                 {surgeons.map((s, idx) => (
                   <div key={idx} className="relative">
-                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                      s.role === "LEAD"
+                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${s.role === "LEAD"
                         ? "bg-primary text-white"
                         : "bg-surface border border-border text-text-muted"
-                    }`}>
+                      }`}>
                       {s.role === "LEAD" ? "Bosh jarroh" : "Yordamchi"}
                     </div>
                     <div className="flex items-end gap-2 p-3 pt-4 bg-surface-hover rounded-lg border border-border">
@@ -606,7 +569,6 @@ export default function NewOperationPage() {
                   <div className="flex-1 h-px bg-border ml-1" />
                 </div>
                 <div className="flex items-center gap-2 ml-3 shrink-0">
-                  {/* Ro'yxatdan tanlash — faqat opTypeItemOptions bo'lganda */}
                   {opTypeItemOptions.length > 0 && (
                     <button
                       type="button"
@@ -617,7 +579,6 @@ export default function NewOperationPage() {
                       Ro'yxatdan
                     </button>
                   )}
-                  {/* Yangi xizmat — faqat operatsiya turi tanlanganda ko'rinadi */}
                   {operationTypeId && (
                     <button
                       type="button"
@@ -733,7 +694,7 @@ export default function NewOperationPage() {
                       <div className="flex items-start gap-2">
                         <div className="flex-1">
                           <FieldLabel>Xizmat nomi</FieldLabel>
-                          {opTypeItemOptions.length > 0 ? (
+                          {opTypeItemOptions.length > 0 && item.operationTypeItemId !== "" ? (
                             <Combobox
                               options={opTypeItemOptions}
                               value={item.operationTypeItemId}
@@ -850,7 +811,7 @@ export default function NewOperationPage() {
               <button
                 type="button"
                 onClick={() => router.push("/operations")}
-                disabled={createMutation.isPending}
+                disabled={updateMutation.isPending}
                 className="px-4 py-2 text-sm rounded-lg border border-border text-text-muted hover:bg-surface-hover transition-all disabled:opacity-50 cursor-pointer"
               >
                 Bekor qilish
@@ -858,15 +819,15 @@ export default function NewOperationPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={createMutation.isPending}
+                disabled={updateMutation.isPending}
                 className="flex items-center gap-2 px-5 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 cursor-pointer font-medium"
               >
-                {createMutation.isPending ? (
+                {updateMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <ChevronRight className="w-4 h-4" />
                 )}
-                Operatsiyani rejalashtirish
+                O'zgarishlarni saqlash
               </button>
             </div>
           </div>

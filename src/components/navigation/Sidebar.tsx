@@ -9,26 +9,24 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Clock,
   ClipboardList,
+  Clock,
   FileText,
   FlaskConical,
   GitFork,
-  Home,
   LogOut,
-  Microscope,
   Moon,
+  Scissors,
+  Stethoscope,
   Sun,
   User,
   UserPen,
-  Users,
-  Scissors,
-  Stethoscope,
+  Users
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 interface NavGroup {
   id: string;
@@ -105,13 +103,13 @@ export function Sidebar() {
           roles: ["DOCTOR", "HAMSHIRA"],
         },
         {
-          label: "operations",
+          label: t("nav.operations"),
           href: "/operations",
           icon: Stethoscope,
           roles: ["ADMIN", "DOCTOR", "LABARANT"],
         },
-    {
-          label: "Operatsiya turlari",
+        {
+          label: t("nav.operation-types"),
           href: "/operation-types",
           icon: Scissors,
           roles: ["ADMIN", "DOCTOR", "LABARANT"],
@@ -206,7 +204,7 @@ export function Sidebar() {
                       item.exact
                         ? pathname === item.href
                         : pathname === item.href ||
-                          (item.href !== "/" && pathname.startsWith(item.href + "/"))
+                        (item.href !== "/" && pathname.startsWith(item.href + "/"))
                     }
                     collapsed={collapsed}
                   />
@@ -223,9 +221,8 @@ export function Sidebar() {
         <Tooltip label={`${user?.first_name} · ${user?.role}`} collapsed={collapsed}>
           <Link href="/settings" className="block">
             <div
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === "/settings" ? "bg-primary-50" : "hover:bg-surface-hover"
-              } ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-primary-50" : "hover:bg-surface-hover"
+                } ${collapsed ? "justify-center" : ""}`}
             >
               <div className="w-7 h-7 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
                 <User className="w-3.5 h-3.5 text-primary" />
@@ -287,13 +284,11 @@ function SidebarNavItem({
     <Tooltip label={label} collapsed={collapsed}>
       <Link href={href} className="block">
         <div
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
-            collapsed ? "justify-center" : ""
-          } ${
-            active
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${collapsed ? "justify-center" : ""
+            } ${active
               ? "bg-primary-50 text-primary font-medium"
               : "text-secondary hover:text-text hover:bg-surface-hover"
-          }`}
+            }`}
         >
           <Icon className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span className="truncate">{label}</span>}

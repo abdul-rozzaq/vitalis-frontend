@@ -12,7 +12,9 @@
     "wards": "Wards",
     "invoices": "Invoices",
     "shifts": "Shifts",
-    "duty": "My Duty"
+    "duty": "My Duty",
+    "operations": "Operations",
+    "operation-types": "Operation Types"
   },
   "common": {
     "filter": "Filter",
@@ -717,8 +719,28 @@
       "total": "Total",
       "pending": "Pending",
       "inProgress": "In progress",
-      "completed": "Completed"
-    }
+      "completed": "Completed",
+      "myTasks": "My tasks",
+      "readyItems": "Ready results",
+      "pendingItems": "Pending results",
+      "deliveredItems": "Delivered results"
+    },
+    "viewTasks": "My Tasks",
+    "viewOrders": "Orders",
+    "noTasks": "No tasks need your attention right now.",
+    "allCaughtUp": "All caught up!",
+    "nextStep": "Next step",
+    "nextStepTo": "Move to {status}",
+    "autoReadyHint": "File uploaded — result marked as Ready",
+    "patient": "Patient",
+    "service": "Service",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "deliveredOf": "delivered",
+    "readyAwaitingDelivery": "ready (awaiting delivery)",
+    "confirmAdvanceTitle": "Confirm status change",
+    "confirmAdvanceDescription": "You're about to move \"{service}\" to \"{status}\". This action can't be undone.",
+    "confirmAdvanceButton": "Yes, move to {status}"
   },
   "laboratories": {
     "title": "Laboratories",
@@ -788,5 +810,38 @@
     "person": "person",
     "currentOccupants": "Current Occupants",
     "noOccupants": "No patients in room currently"
+  },
+  "operations": {
+    "title": "Operations",
+    "filter": "Filter",
+    "clear": "Clear",
+    "all": "All",
+    "status": "Status",
+    "patientOrType": "Patient / Type",
+    "searchPlaceholder": "Search...",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "id": "ID",
+    "patient": "Patient",
+    "operationType": "Operation Type",
+    "date": "Date",
+    "leadSurgeon": "Lead Surgeon",
+    "amount": "Amount",
+    "view": "View",
+    "edit": "Edit",
+    "newOperation": "New Operation",
+    "total": "Total",
+    "scheduled": "Scheduled",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "statuses": {
+      "SCHEDULED": "Scheduled",
+      "IN_PROGRESS": "In Progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "loading": "Loading...",
+    "noLeadSurgeon": "—"
   }
 }
