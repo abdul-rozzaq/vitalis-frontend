@@ -2,13 +2,11 @@
 
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { PatientSearch } from "@/components/ui/patient-search";
-import { Bell, Command, Plus, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
-import React, { useState } from "react";
+import { ShiftNotificationBell } from "@/components/shifts/ShiftNotificationBell";
+import { Command, Search } from "lucide-react";
+import { useState } from "react";
 
 export function Topbar() {
-  const t = useTranslations();
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
 
   return (
@@ -39,31 +37,7 @@ export function Topbar() {
           </button>
 
           {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative p-2 text-text-muted hover:text-text hover:bg-surface-hover rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger-500 rounded-full"></span>
-            </button>
-
-            {notificationsOpen && (
-              <div className="absolute top-12 right-0 w-96 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="font-semibold text-text text-sm">
-                    {t("notifications.title")}
-                  </p>
-                </div>
-                <div className="px-4 py-8 flex flex-col items-center justify-center gap-2">
-                  <Bell className="w-8 h-8 text-text-muted opacity-40" />
-                  <p className="text-secondary text-sm text-center">
-                    {t("notifications.empty")}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <ShiftNotificationBell />
 
           {/* Language Switcher */}
           <LanguageSwitcher />

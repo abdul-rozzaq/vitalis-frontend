@@ -4,24 +4,32 @@ import { Can } from "@/components/ui/can";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import {
+  ArrowLeftRight,
+  BarChart3,
   BedDouble,
   Building2,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
+  CalendarDays,
+  ChevronDown,
   ClipboardList,
   Clock,
+  DoorOpen,
   FileText,
   FlaskConical,
   GitFork,
+  Grid3x3,
+  History,
+  LayoutDashboard,
+  LayoutTemplate,
   LogOut,
   Moon,
   Scissors,
+  ShieldCheck,
   Stethoscope,
   Sun,
   User,
   UserPen,
-  Users
+  Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -48,22 +56,25 @@ export function Sidebar() {
   const { theme, toggleTheme } = useTheme();
   const t = useTranslations();
 
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("sidebar-collapsed") === "true";
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try { return JSON.parse(localStorage.getItem("sidebar-groups") ?? "{}"); }
+    catch { return {}; }
   });
 
-  const toggleCollapsed = () => {
-    setCollapsed((v) => {
-      localStorage.setItem("sidebar-collapsed", String(!v));
-      return !v;
+  function toggleGroup(id: string, hasActive: boolean) {
+    if (hasActive) return; // aktiv sahifa bor bo'lsa yig'ma
+    setCollapsed((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem("sidebar-groups", JSON.stringify(next));
+      return next;
     });
-  };
+  }
 
   const navGroups: NavGroup[] = [
     {
       id: "core",
-      label: "Core",
+      label: "Asosiy",
       items: [
         {
           label: t("nav.patients"),
@@ -81,7 +92,7 @@ export function Sidebar() {
     },
     {
       id: "clinical",
-      label: "Clinical",
+      label: "Klinik",
       items: [
         {
           label: t("nav.wards"),
@@ -89,18 +100,6 @@ export function Sidebar() {
           icon: BedDouble,
           roles: ["ADMIN", "DOCTOR", "HAMSHIRA", "DIREKTOR"],
           exact: true,
-        },
-        {
-          label: t("nav.shifts"),
-          href: "/wards/shifts",
-          icon: Clock,
-          roles: ["ADMIN", "DIREKTOR"],
-        },
-        {
-          label: t("nav.duty"),
-          href: "/wards/duty",
-          icon: ClipboardList,
-          roles: ["DOCTOR", "HAMSHIRA"],
         },
         {
           label: t("nav.operations"),
@@ -123,8 +122,63 @@ export function Sidebar() {
       ],
     },
     {
-      id: "operations",
-      label: "Operations",
+      id: "shifts",
+      label: "Smenalar",
+      items: [
+        {
+          label: "Kalendar",
+          href: "/shifts",
+          icon: CalendarDays,
+          roles: ["ADMIN", "DIREKTOR"],
+          exact: true,
+        },
+        {
+          label: "Shablonlar",
+          href: "/shifts/templates",
+          icon: LayoutTemplate,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: "Almashtirish",
+          href: "/shifts/overrides",
+          icon: ArrowLeftRight,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: "Qamrov",
+          href: "/shifts/coverage",
+          icon: ShieldCheck,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+      ],
+    },
+    {
+      id: "workspace",
+      label: "Ish maydoni",
+      items: [
+        {
+          label: "Shifokor paneli",
+          href: "/workspace/doctor",
+          icon: LayoutDashboard,
+          roles: ["DOCTOR"],
+        },
+        {
+          label: "Hamshira paneli",
+          href: "/workspace/nurse",
+          icon: LayoutDashboard,
+          roles: ["HAMSHIRA"],
+        },
+        {
+          label: t("nav.duty"),
+          href: "/wards/duty",
+          icon: ClipboardList,
+          roles: ["DOCTOR", "HAMSHIRA"],
+        },
+      ],
+    },
+    {
+      id: "staff",
+      label: "Xodimlar",
       items: [
         {
           label: t("nav.employees"),
@@ -133,11 +187,60 @@ export function Sidebar() {
           roles: ["ADMIN", "DIREKTOR"],
         },
         {
+          label: "Xodimlar qamrovi",
+          href: "/admin/staffing",
+          icon: BarChart3,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: "Ish soatlari",
+          href: "/admin/work-hours",
+          icon: Clock,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: "O'zgarishlar tarixi",
+          href: "/admin/history",
+          icon: History,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+      ],
+    },
+    {
+      id: "infrastructure",
+      label: "Infratuzilma",
+      items: [
+        {
           label: t("nav.departments"),
           href: "/departments",
           icon: Building2,
           roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
         },
+        {
+          label: "Xonalar",
+          href: "/rooms",
+          icon: DoorOpen,
+          roles: ["ADMIN", "DIREKTOR"],
+          exact: true,
+        },
+        {
+          label: "Qavatlar",
+          href: "/rooms/floor-view",
+          icon: Building2,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+        {
+          label: "Xona matritsasi",
+          href: "/rooms/matrix",
+          icon: Grid3x3,
+          roles: ["ADMIN", "DIREKTOR"],
+        },
+      ],
+    },
+    {
+      id: "finance",
+      label: "Moliya",
+      items: [
         {
           label: t("nav.invoices"),
           href: "/invoices",
@@ -155,184 +258,126 @@ export function Sidebar() {
   ];
 
   return (
-    <aside
-      className={`${collapsed ? "w-16" : "w-64"} bg-surface border-r border-border flex flex-col h-screen sticky top-0 transition-all duration-200 overflow-hidden`}
-    >
-      {/* Logo + collapse toggle */}
-      <div className="h-[61px] border-b border-border flex items-center justify-between px-3 flex-shrink-0">
-        {collapsed ? (
-          <button
-            onClick={toggleCollapsed}
-            className="w-full flex items-center justify-center h-8 rounded-md text-text-muted hover:text-text hover:bg-surface-hover transition-colors cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        ) : (
-          <>
-            <Link href="/" className="flex items-center gap-3 min-w-0 flex-1">
-              <img src="/logo.png" alt="Vitalis" className="w-8 h-8 rounded-lg shrink-0" />
-              <span className="font-semibold text-text text-sm truncate">Vitalis</span>
-            </Link>
-            <button
-              onClick={toggleCollapsed}
-              className="w-7 h-7 flex items-center justify-center rounded-md text-text-muted hover:text-text hover:bg-surface-hover transition-colors flex-shrink-0 cursor-pointer ml-1"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          </>
-        )}
+    <aside className="w-60 bg-surface border-r border-border flex flex-col h-screen sticky top-0 overflow-hidden flex-shrink-0">
+      {/* Logo */}
+      <div className="h-[61px] border-b border-border flex items-center px-4 flex-shrink-0">
+        <Link href="/" className="flex items-center gap-3 min-w-0">
+          <img src="/logo.png" alt="Vitalis" className="w-8 h-8 rounded-lg shrink-0" />
+          <span className="font-semibold text-text text-sm truncate">Vitalis</span>
+        </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
-        {navGroups.map((group) => (
-          <div key={group.id} className="mb-3">
-            {!collapsed && (
-              <p className="px-3 mb-1 text-xs font-semibold text-text-muted uppercase tracking-wide">
-                {group.label}
-              </p>
-            )}
-            {collapsed && <div className="border-t border-border mb-2" />}
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <Can key={item.href} roles={item.roles as import("@/types/user").UserRole[]}>
-                  <SidebarNavItem
-                    href={item.href}
-                    icon={item.icon}
-                    label={item.label}
-                    active={
-                      item.exact
-                        ? pathname === item.href
-                        : pathname === item.href ||
-                        (item.href !== "/" && pathname.startsWith(item.href + "/"))
-                    }
-                    collapsed={collapsed}
-                  />
-                </Can>
-              ))}
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+        {navGroups.map((group) => {
+          const hasActive = group.items.some((item) =>
+            item.exact ? pathname === item.href : pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"))
+          );
+          const isOpen = hasActive || !collapsed[group.id];
+
+          return (
+            <div key={group.id} className="mb-1">
+              <button
+                onClick={() => toggleGroup(group.id, hasActive)}
+                className="w-full flex items-center justify-between px-3 py-1.5 rounded-md group cursor-pointer"
+              >
+                <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider group-hover:text-text transition-colors">
+                  {group.label}
+                </span>
+                <ChevronDown
+                  className={`w-3 h-3 text-text-muted transition-transform duration-200 ${isOpen ? "rotate-0" : "-rotate-90"}`}
+                />
+              </button>
+
+              {isOpen && (
+                <div className="mt-0.5 space-y-0.5">
+                  {group.items.map((item) => (
+                    <Can key={item.href} roles={item.roles as import("@/types/user").UserRole[]}>
+                      <NavItem
+                        href={item.href}
+                        icon={item.icon}
+                        label={item.label}
+                        active={
+                          item.exact
+                            ? pathname === item.href
+                            : pathname === item.href ||
+                              (item.href !== "/" && pathname.startsWith(item.href + "/"))
+                        }
+                      />
+                    </Can>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Footer */}
       <div className="px-2 py-3 border-t border-border space-y-0.5">
-        {/* User profile */}
-        <Tooltip label={`${user?.first_name} · ${user?.role}`} collapsed={collapsed}>
-          <Link href="/settings" className="block">
-            <div
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-primary-50" : "hover:bg-surface-hover"
-                } ${collapsed ? "justify-center" : ""}`}
-            >
-              <div className="w-7 h-7 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
-                <User className="w-3.5 h-3.5 text-primary" />
-              </div>
-              {!collapsed && (
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-text truncate">{user?.first_name}</p>
-                  <p className="text-xs text-text-muted truncate">{user?.role}</p>
-                </div>
-              )}
+        <Link href="/settings" className="block">
+          <div
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              pathname === "/settings" ? "bg-primary-50" : "hover:bg-surface-hover"
+            }`}
+          >
+            <div className="w-7 h-7 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
+              <User className="w-3.5 h-3.5 text-primary" />
             </div>
-          </Link>
-        </Tooltip>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-text truncate">{user?.first_name}</p>
+              <p className="text-xs text-text-muted truncate">{user?.role}</p>
+            </div>
+          </div>
+        </Link>
 
-        {/* Theme toggle */}
-        <Tooltip label={theme === "dark" ? "Light Mode" : "Dark Mode"} collapsed={collapsed}>
-          <button
-            onClick={toggleTheme}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-text hover:bg-surface-hover rounded-lg transition-colors text-sm cursor-pointer ${collapsed ? "justify-center" : ""}`}
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <Moon className="w-4 h-4 flex-shrink-0" />
-            )}
-            {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
-          </button>
-        </Tooltip>
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 px-3 py-2 text-text-muted hover:text-text hover:bg-surface-hover rounded-lg transition-colors text-sm cursor-pointer"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 flex-shrink-0" />
+          ) : (
+            <Moon className="w-4 h-4 flex-shrink-0" />
+          )}
+          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+        </button>
 
-        {/* Logout */}
-        <Tooltip label={t("nav.signOut")} collapsed={collapsed}>
-          <button
-            onClick={() => logout()}
-            className={`w-full flex items-center gap-3 px-3 py-2 text-secondary hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors text-sm cursor-pointer ${collapsed ? "justify-center" : ""}`}
-          >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>{t("nav.signOut")}</span>}
-          </button>
-        </Tooltip>
+        <button
+          onClick={() => logout()}
+          className="w-full flex items-center gap-3 px-3 py-2 text-text-muted hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors text-sm cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <span>{t("nav.signOut")}</span>
+        </button>
       </div>
     </aside>
   );
 }
 
-function SidebarNavItem({
+function NavItem({
   icon: Icon,
   label,
   active = false,
   href,
-  collapsed,
 }: {
   icon: React.ElementType;
   label: string;
   active?: boolean;
   href: string;
-  collapsed: boolean;
 }) {
   return (
-    <Tooltip label={label} collapsed={collapsed}>
-      <Link href={href} className="block">
-        <div
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${collapsed ? "justify-center" : ""
-            } ${active
-              ? "bg-primary-50 text-primary font-medium"
-              : "text-secondary hover:text-text hover:bg-surface-hover"
-            }`}
-        >
-          <Icon className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span className="truncate">{label}</span>}
-        </div>
-      </Link>
-    </Tooltip>
-  );
-}
-
-function Tooltip({
-  children,
-  label,
-  collapsed,
-}: {
-  children: React.ReactNode;
-  label: string;
-  collapsed: boolean;
-}) {
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  if (!collapsed) return <>{children}</>;
-
-  return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={() => {
-        const rect = ref.current?.getBoundingClientRect();
-        if (rect) setPos({ top: rect.top + rect.height / 2, left: rect.right + 8 });
-      }}
-      onMouseLeave={() => setPos(null)}
-    >
-      {children}
-      {pos && (
-        <div
-          className="pointer-events-none fixed z-[9999] -translate-y-1/2"
-          style={{ top: pos.top, left: pos.left }}
-        >
-          <div className="bg-gray-900 text-white text-xs font-medium px-2 py-1 rounded-md whitespace-nowrap shadow-lg">
-            {label}
-          </div>
-        </div>
-      )}
-    </div>
+    <Link href={href} className="block">
+      <div
+        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+          active
+            ? "bg-primary-50 text-primary font-medium"
+            : "text-text-muted hover:text-text hover:bg-surface-hover"
+        }`}
+      >
+        <Icon className="w-4 h-4 flex-shrink-0" />
+        <span className="truncate">{label}</span>
+      </div>
+    </Link>
   );
 }
