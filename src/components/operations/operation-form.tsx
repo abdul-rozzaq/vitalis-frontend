@@ -3,6 +3,7 @@
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export function OperationForm({
   isPending,
 }: OperationFormProps) {
   const isEditing = !!initialData;
+  const t = useTranslations("operations");
 
   const [patientId, setPatientId] = useState(propPatientId ?? initialData?.patientId ?? "");
   const [operationTypeId, setOperationTypeId] = useState(initialData?.operationTypeId ?? "");
@@ -217,19 +219,27 @@ export function OperationForm({
 
   // ── Validation ───────────────────────────────────────────────────────────────
 
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!patientId) newErrors.patientId = "Bemor tanlanmadi";
-    if (!operationTypeId) newErrors.operationTypeId = "Operatsiya turi tanlanmadi";
-    if (!caseId && !isEditing) newErrors.caseId = "Holat (case) tanlanmadi";
-    if (!scheduledAt) newErrors.scheduledAt = "Sana va vaqt kiritilmadi";
-    if (surgeons.length === 0) newErrors.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
-    if (!surgeons.some((s) => s.role === "LEAD")) newErrors.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
-    if (surgeons.some((s) => !s.surgeonId)) newErrors.surgeons = "Barcha jarrohlar tanlanishi kerak";
+    if (!patientId)
+      newErrors.patientId = t("operationForm.validation.patientRequired");
+    if (!operationTypeId)
+      newErrors.operationTypeId = t("operationForm.validation.operationTypeRequired");
+    if (!caseId && !isEditing)
+      newErrors.caseId = t("operationForm.validation.caseRequired");
+    if (!scheduledAt)
+      newErrors.scheduledAt = t("operationForm.validation.scheduledAtRequired");
+    if (surgeons.length === 0)
+      newErrors.surgeons = t("operationForm.validation.surgeonRequired");
+    if (!surgeons.some((s) => s.role === "LEAD"))
+      newErrors.surgeons = t("operationForm.validation.leadRequired");
+    if (surgeons.some((s) => !s.surgeonId))
+      newErrors.surgeons = t("operationForm.validation.allSurgeonsRequired");
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   // ── Submit ───────────────────────────────────────────────────────────────────
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -265,13 +275,17 @@ export function OperationForm({
       {/* ── Bemor ── */}
       {!propPatientId && (
         <div>
-          <label className={labelClass}>Bemor *</label>
+          <label className={labelClass}>
+            {t("operationForm.patient")} *
+          </label>
           <select
             value={patientId}
             onChange={(e) => setPatientId(e.target.value)}
             className={selectClass}
           >
-            <option value="">Bemor tanlang...</option>
+            <option value="">
+              {t("operationForm.selectPatient")}
+            </option>
             {patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.first_name} {p.last_name}
@@ -284,13 +298,13 @@ export function OperationForm({
 
       {/* ── Operatsiya turi ── */}
       <div>
-        <label className={labelClass}>Operatsiya turi *</label>
+        <label className={labelClass}>{t("operationForm.operationType")} *</label>
         <select
           value={operationTypeId}
           onChange={(e) => setOperationTypeId(e.target.value)}
           className={selectClass}
         >
-          <option value="">Operatsiya turi tanlang...</option>
+          <option value="">{t("operationForm.selectOperationType")}</option>
           {operationTypes.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}{Number(t.basePrice) > 0 ? ` — ${fmt(Number(t.basePrice))} so'm` : ""}
@@ -304,7 +318,7 @@ export function OperationForm({
       {!propCaseId && !isEditing && (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className={labelClass + " mb-0"}>Holat (Case) *</label>
+            <label className={labelClass + " mb-0"}>{t("operationForm.case")} *</label>
             {patientId && (
               <button
                 type="button"
@@ -312,7 +326,7 @@ export function OperationForm({
                 className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Yangi holat
+                {t("operationForm.newCase")}
               </button>
             )}
           </div>
@@ -322,7 +336,8 @@ export function OperationForm({
               <input
                 value={newCaseComplaint}
                 onChange={(e) => setNewCaseComplaint(e.target.value)}
-                placeholder="Shikoyat (ixtiyoriy)"
+                placeholder={t("operationForm.complaint")}
+
                 className={fieldClass}
               />
               <button
@@ -332,7 +347,7 @@ export function OperationForm({
                 className="px-3 py-2 text-xs rounded-lg bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-1 cursor-pointer whitespace-nowrap"
               >
                 {createCaseMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Yaratish
+                {t("operationForm.create")}
               </button>
             </div>
           )}
@@ -345,10 +360,10 @@ export function OperationForm({
           >
             <option value="">
               {!patientId
-                ? "Avval bemor tanlang"
+                ? t("operationForm.selectPatientFirst")
                 : isCasesLoading
-                ? "Yuklanmoqda..."
-                : "Holat tanlang..."}
+                  ? t("operationForm.loading")
+                  : t("operationForm.selectCase")}
             </option>
             {cases
               .filter((c) => c.status === "ACTIVE")
@@ -365,7 +380,7 @@ export function OperationForm({
       {/* ── Sana va Xona ── */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Sana va vaqt *</label>
+          <label className={labelClass}>{t("operationForm.dateTime")} *</label>
           <input
             type="datetime-local"
             value={scheduledAt}
@@ -375,7 +390,7 @@ export function OperationForm({
           {errors.scheduledAt && <p className={errorClass}>{errors.scheduledAt}</p>}
         </div>
         <div>
-          <label className={labelClass}>Xona (ixtiyoriy)</label>
+          <label className={labelClass}>{t("operationForm.room")} (ixtiyoriy)</label>
           <select
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
@@ -394,7 +409,7 @@ export function OperationForm({
       {/* ── Jarrohlar ── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className={labelClass + " mb-0"}>Jarrohlar *</label>
+          <label className={labelClass + " mb-0"}>{t("operationForm.surgeons")} *</label>
           {surgeons.length < 2 && (
             <button
               type="button"
@@ -402,7 +417,7 @@ export function OperationForm({
               className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              Qo'shish
+              {t("operationForm.add")}
             </button>
           )}
         </div>
@@ -413,13 +428,13 @@ export function OperationForm({
               <UserRound className="w-4 h-4 text-text-muted mt-2 flex-shrink-0" />
               <div className="flex-1 grid grid-cols-2 gap-2">
                 <div>
-                  <label className={labelClass}>Jarroh</label>
+                  <label className={labelClass}>{t("operationForm.surgeon")}</label>
                   <select
                     value={s.surgeonId}
                     onChange={(e) => updateSurgeon(idx, "surgeonId", e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">Jarroh tanlang...</option>
+                    <option value="">  {t("operationForm.selectSurgeon")}</option>
                     {doctors.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.first_name} {d.last_name}
@@ -428,14 +443,14 @@ export function OperationForm({
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Rol</label>
+                  <label className={labelClass}>{t("operationForm.role")}</label>
                   <select
                     value={s.role}
                     onChange={(e) => updateSurgeon(idx, "role", e.target.value as SurgeonRole)}
                     className={selectClass}
                   >
-                    <option value="LEAD">LEAD (Bosh jarroh)</option>
-                    <option value="ASSISTANT">ASSISTANT (Yordamchi)</option>
+                    <option value="LEAD">{t("operationForm.lead")}</option>
+                    <option value="ASSISTANT">{t("operationForm.assistant")}</option>
                   </select>
                 </div>
               </div>
@@ -457,14 +472,14 @@ export function OperationForm({
       {/* ── Xizmatlar ── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className={labelClass + " mb-0"}>Xizmatlar (ixtiyoriy)</label>
+          <label className={labelClass + " mb-0"}>{t("operationForm.services")}</label>
           <button
             type="button"
             onClick={addItem}
             className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            Qo'shish
+            {t("operationForm.addItem")}
           </button>
         </div>
 
@@ -473,14 +488,14 @@ export function OperationForm({
             <div key={idx} className="p-3 bg-surface-hover rounded-lg border border-border">
               <div className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-5">
-                  {idx === 0 && <label className={labelClass}>Xizmat</label>}
+                  {idx === 0 && <label className={labelClass}>{t("operationForm.service")}</label>}
                   {selectedOpType?.items.length ? (
                     <select
                       value={item.operationTypeItemId}
                       onChange={(e) => updateItem(idx, "operationTypeItemId", e.target.value)}
                       className={selectClass}
                     >
-                      <option value="">Xizmat tanlang...</option>
+                      <option value="">  {t("operationForm.selectService")}</option>
                       {selectedOpType.items.map((ti) => (
                         <option key={ti.id} value={ti.id}>
                           {ti.name} — {fmt(Number(ti.price))} so'm
@@ -491,13 +506,13 @@ export function OperationForm({
                     <input
                       value={item.name}
                       onChange={(e) => updateItem(idx, "name", e.target.value)}
-                      placeholder="Xizmat nomi"
+                      placeholder={t("operationForm.serviceName")}
                       className={fieldClass}
                     />
                   )}
                 </div>
                 <div className="col-span-3">
-                  {idx === 0 && <label className={labelClass}>Narx (so'm)</label>}
+                  {idx === 0 && <label className={labelClass}>{t("operationForm.price")}</label>}
                   <input
                     type="number"
                     min={0}
@@ -507,7 +522,7 @@ export function OperationForm({
                   />
                 </div>
                 <div className="col-span-3">
-                  {idx === 0 && <label className={labelClass}>Miqdor</label>}
+                  {idx === 0 && <label className={labelClass}>{t("operationForm.quantity")}</label>}
                   <input
                     type="number"
                     min={1}
@@ -548,7 +563,7 @@ export function OperationForm({
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <span className="text-sm font-semibold text-text">Umumiy:</span>
+              <span className="text-sm font-semibold text-text">{t("operationForm.grandTotal")}:</span>
               <span className="text-sm font-semibold text-text">{fmt(totalPrice)} so'm</span>
             </div>
           </div>
@@ -557,12 +572,12 @@ export function OperationForm({
 
       {/* ── Izoh ── */}
       <div>
-        <label className={labelClass}>Izoh (ixtiyoriy)</label>
+        <label className={labelClass}>{t("operationForm.note")} (ixtiyoriy)</label>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
-          placeholder="Qo'shimcha izoh..."
+          placeholder={t("operationForm.additionalNote")}
           className={fieldClass + " resize-none"}
         />
       </div>
@@ -584,7 +599,9 @@ export function OperationForm({
           className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
         >
           {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {isEditing ? "Saqlash" : "Yaratish"}
+          {isEditing
+            ? t("operationForm.save")
+            : t("operationForm.createButton")}
         </button>
       </div>
     </div>

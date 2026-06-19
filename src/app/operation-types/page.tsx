@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, Loader2, Plus, Scissors, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ export default function OperationTypesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editing, setEditing] = useState<OperationType | null>(null);
 
+  const t = useTranslations();
   const { data: operationTypes = [], isLoading } = useQuery<OperationType[]>({
     queryKey: ["operation-types"],
     queryFn: () => api.get("/operation-types").then((r) => r.data),
@@ -54,7 +56,7 @@ export default function OperationTypesPage() {
     onSuccess: () => {
       invalidate();
       setIsSheetOpen(false);
-      toast.success("Operatsiya turi yaratildi");
+      toast.success(t("operationTypes.created"));
     },
     onError: () => toast.error("Yaratishda xatolik yuz berdi"),
   });
@@ -110,7 +112,7 @@ export default function OperationTypesPage() {
     () => [
       {
         id: "name",
-        header: "Nomi",
+        header: t("operationTypes.name"),
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -210,7 +212,7 @@ export default function OperationTypesPage() {
   return (
     <>
       <PageHeader
-        title="Operatsiya turlari"
+        title={t("operationTypes.title")}
         actions={
           <Can roles={["ADMIN", "DIREKTOR"]}>
             <button

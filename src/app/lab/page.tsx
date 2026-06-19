@@ -6,12 +6,16 @@ import { resolveFileUrl } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
+  ChevronsDownUp,
+  ChevronsUpDown,
   ChevronUp,
   Clock,
   FileText,
   FlaskConical,
+  ListChecks,
   Loader2,
   Package,
   Pencil,
@@ -20,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 /* ===================== CONSTANTS ===================== */
 
@@ -115,12 +119,33 @@ const ORDER_STATUS_TABS = [
   "CANCELLED",
 ] as const;
 
+// Har bir holatdan keyin keladigan "tabiiy" keyingi bosqich. Bitta bosishda
+// shu holatga o'tkazamiz, picker'ni ochmasdan. CANCELLED dan keyin yo'q —
+// bekor qilingan natija qo'lda qayta tiklanadi.
+const NEXT_STATUS: Partial<Record<LabItemStatus, LabItemStatus>> = {
+  PENDING: "IN_PROGRESS",
+  IN_PROGRESS: "READY",
+  READY: "DELIVERED",
+};
+
+// "Keyingi bosqich" tugmasi nimaga o'tkazayotganiga mos rangda bo'lsin —
+// laborant bosishdan oldin oqibatini rangdan ham bilib oladi.
+const NEXT_STEP_BUTTON_CLASS: Record<LabItemStatus, string> = {
+  PENDING:     "bg-info text-white hover:opacity-90",
+  IN_PROGRESS: "bg-primary text-white hover:opacity-90",
+  READY:       "bg-success text-white hover:opacity-90",
+  DELIVERED:   "bg-success text-white hover:opacity-90",
+  CANCELLED:   "bg-text-muted text-white hover:opacity-90",
+};
+
 /* ===================== TYPES ===================== */
 
 interface ItemEditForm {
   status: LabItemStatus;
   note: string;
 }
+
+type ViewMode = "tasks" | "orders";
 
 /* ===================== UTILS ===================== */
 
@@ -134,42 +159,71 @@ function formatDate(iso?: string | null) {
   );
 }
 
+/** Bemorning ismi bo'yicha barqaror, ko'zga yoqimli avatar rangi. */
+function initialsOf(firstName: string, lastName: string) {
+  return (firstName[0] ?? "") + (lastName[0] ?? "");
+}
+
+/**
+ * Buyurtmaning "haqiqiy" holatini itemlar asosida qayta hisoblaymiz —
+ * backenddagi recalcOrderStatus bilan bir xil mantiq. order.status
+ * ba'zan eski/sinxronlanmagan bo'lib qolishi mumkin (masalan, item
+ * qo'lda READY holatiga qaytarilgan bo'lsa-yu, order COMPLETED qolib
+ * ketgan bo'lsa) — shu sababli "Bajarildi" filtri faqat backend
+ * bergan statusga emas, shu hisob-kitobga tayanadi.
+ */
+function deriveOrderStatus(order: LabOrder): LabOrder["status"] {
+  if (order.items.length === 0) return order.status;
+  const statuses = order.items.map((i) => i.status);
+
+  if (statuses.every((s) => s === "DELIVERED" || s === "CANCELLED")) {
+    return "COMPLETED";
+  }
+  if (statuses.some((s) => s === "READY" || s === "DELIVERED" || s === "IN_PROGRESS")) {
+    return "IN_PROGRESS";
+  }
+  return "PENDING";
+}
+
 /* ===================== STATS BAR ===================== */
 
 function StatsBar({ orders }: { orders: LabOrder[] }) {
   const t = useTranslations();
 
+  const allItems = useMemo(() => orders.flatMap((o) => o.items), [orders]);
+
   const stats = [
     {
-      label: t("lab.stats.total"),
-      value: orders.length,
+      label: t("lab.stats.myTasks"),
+      value: allItems.filter((i) => i.status === "PENDING" || i.status === "IN_PROGRESS").length,
       valueClass: "text-primary",
-      cardClass: "border-border bg-surface",
     },
     {
-      label: t("lab.stats.pending"),
-      value: orders.filter((o) => o.status === "PENDING").length,
+      label: t("lab.stats.pendingItems"),
+      value: allItems.filter((i) => i.status === "PENDING").length,
       valueClass: "text-warning",
-      cardClass: "border-border bg-surface",
     },
     {
-      label: t("lab.stats.inProgress"),
-      value: orders.filter((o) => o.status === "IN_PROGRESS").length,
+      label: t("lab.stats.readyItems"),
+      value: allItems.filter((i) => i.status === "READY").length,
       valueClass: "text-info",
-      cardClass: "border-border bg-surface",
+    },
+    {
+      label: t("lab.stats.deliveredItems"),
+      value: allItems.filter((i) => i.status === "DELIVERED").length,
+      valueClass: "text-success",
     },
     {
       label: t("lab.stats.completed"),
-      value: orders.filter((o) => o.status === "COMPLETED").length,
+      value: orders.filter((o) => deriveOrderStatus(o) === "COMPLETED").length,
       valueClass: "text-success",
-      cardClass: "border-border bg-surface",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {stats.map((s) => (
-        <div key={s.label} className={`${s.cardClass} border rounded-lg px-4 py-4`}>
+        <div key={s.label} className="border border-border bg-surface rounded-lg px-4 py-4">
           <p className="text-sm text-text-muted mb-1">{s.label}</p>
           <p className={`text-2xl font-bold tabular-nums ${s.valueClass}`}>{s.value}</p>
         </div>
@@ -235,6 +289,98 @@ function StatusTracker({ item }: { item: LabOrderItem }) {
         );
       })}
     </div>
+  );
+}
+
+/* ===================== CONFIRM DIALOG ===================== */
+
+function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  confirmClassName,
+  isLoading,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  confirmClassName: string;
+  isLoading: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const t = useTranslations();
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-sm bg-surface border border-border rounded-xl p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-base font-semibold text-text">{title}</p>
+        <p className="text-sm text-text-muted mt-1.5 leading-relaxed">{description}</p>
+        <div className="flex gap-2 justify-end mt-5">
+          <button
+            onClick={onCancel}
+            disabled={isLoading}
+            className="text-sm font-medium border border-border rounded-lg px-3.5 py-2 text-text-muted hover:text-text hover:bg-surface-hover transition-colors disabled:opacity-50"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className={`flex items-center gap-1.5 text-sm font-medium rounded-lg px-3.5 py-2 transition-opacity disabled:opacity-50 ${confirmClassName}`}
+          >
+            {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===================== QUICK NEXT-STEP BUTTON ===================== */
+
+function NextStepButton({
+  item,
+  onClick,
+  isSaving,
+  size = "md",
+}: {
+  item: LabOrderItem;
+  onClick: () => void;
+  isSaving: boolean;
+  size?: "md" | "sm";
+}) {
+  const t = useTranslations();
+  const next = NEXT_STATUS[item.status];
+  if (!next) return null;
+
+  const isSm = size === "sm";
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={isSaving}
+      title={t("lab.nextStepTo", { status: ITEM_STATUS_LABELS[next] })}
+      className={`flex items-center gap-1.5 font-medium rounded-lg transition-opacity disabled:opacity-50 shrink-0 ${NEXT_STEP_BUTTON_CLASS[next]} ${
+        isSm ? "text-xs px-2.5 py-1.5" : "text-sm px-3.5 py-2"
+      }`}
+    >
+      {isSaving ? (
+        <Loader2 className={isSm ? "w-3 h-3 animate-spin" : "w-3.5 h-3.5 animate-spin"} />
+      ) : (
+        <ArrowRight className={isSm ? "w-3 h-3" : "w-3.5 h-3.5"} />
+      )}
+      {ITEM_STATUS_LABELS[next]}
+    </button>
   );
 }
 
@@ -312,16 +458,14 @@ function StatusPicker({
   );
 }
 
-/* ===================== ORDER CARD ===================== */
+/* ===================== ITEM ROW (shared logic via hook) ===================== */
 
-function LabOrderCard({ order }: { order: LabOrder }) {
-  const t = useTranslations();
+function useItemActions(order: LabOrder) {
   const queryClient = useQueryClient();
-
-  const [expanded, setExpanded] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
   const [form, setForm] = useState<ItemEditForm>({ status: "PENDING", note: "" });
+  const [pendingAdvanceItem, setPendingAdvanceItem] = useState<LabOrderItem | null>(null);
 
   const updateItem = useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: Partial<ItemEditForm> }) =>
@@ -329,6 +473,7 @@ function LabOrderCard({ order }: { order: LabOrder }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
       setEditingItemId(null);
+      setPendingAdvanceItem(null);
     },
   });
 
@@ -362,7 +507,255 @@ function LabOrderCard({ order }: { order: LabOrder }) {
     setEditingItemId(item.id);
   };
 
-  const initials = (order.patient.first_name[0] ?? "") + (order.patient.last_name[0] ?? "");
+  // Bitta bosish bilan keyingi bosqichga o'tkazish — lekin avval tasdiqlash
+  // so'raladi, chunki bu amal qaytarib bo'lmas yoki bemorga ta'sir qiladi
+  // (masalan natijani "Berildi" deb belgilash).
+  const requestAdvance = (item: LabOrderItem) => {
+    if (!NEXT_STATUS[item.status]) return;
+    setPendingAdvanceItem(item);
+  };
+
+  const confirmAdvance = () => {
+    if (!pendingAdvanceItem) return;
+    const next = NEXT_STATUS[pendingAdvanceItem.status];
+    if (!next) return;
+    updateItem.mutate({ itemId: pendingAdvanceItem.id, data: { status: next } });
+  };
+
+  const cancelAdvance = () => setPendingAdvanceItem(null);
+
+  return {
+    editingItemId,
+    setEditingItemId,
+    uploadingItemId,
+    form,
+    setForm,
+    updateItem,
+    deleteFile,
+    handleFileUpload,
+    openEdit,
+    pendingAdvanceItem,
+    requestAdvance,
+    confirmAdvance,
+    cancelAdvance,
+  };
+}
+
+/* ===================== ITEM DETAIL (files / note / picker) ===================== */
+
+function ItemFilesAndNote({
+  item,
+  order,
+  onDeleteFile,
+  isDeletingFile,
+  isEditing,
+}: {
+  item: LabOrderItem;
+  order: LabOrder;
+  onDeleteFile: (fileId: string) => void;
+  isDeletingFile: boolean;
+  isEditing: boolean;
+}) {
+  const t = useTranslations();
+
+  return (
+    <>
+      {item.files?.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2.5">
+          {item.files.map((f) => (
+            <div key={f.id} className="flex items-center gap-1.5 text-xs border border-border rounded-lg px-2 py-1 bg-surface-hover hover:border-border-strong transition-colors">
+              <FileText className="w-3 h-3 text-text-muted shrink-0" />
+              <a href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" className="text-text-muted hover:text-primary transition-colors max-w-[120px] truncate">
+                {f.name}
+              </a>
+              {item.status !== "CANCELLED" && (
+                <button
+                  onClick={() => onDeleteFile(f.id)}
+                  disabled={isDeletingFile}
+                  className="text-text-muted hover:text-danger transition-colors disabled:opacity-40 ml-0.5"
+                  aria-label={t("lab.removeFile")}
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {item.note && !isEditing && (
+        <p className="text-xs text-text-muted mt-2 px-2.5 py-1.5 bg-surface-hover rounded-lg border-l-2 border-border-strong leading-relaxed" style={{ borderRadius: "0 6px 6px 0" }}>
+          {item.note}
+        </p>
+      )}
+    </>
+  );
+}
+
+/* ===================== TASKS VIEW (flat list of actionable items) ===================== */
+
+function TaskRow({ order, item }: { order: LabOrder; item: LabOrderItem }) {
+  const t = useTranslations();
+  const actions = useItemActions(order);
+  const isEditing = actions.editingItemId === item.id;
+  const initials = initialsOf(order.patient.first_name, order.patient.last_name);
+
+  return (
+    <div className="bg-surface border border-border rounded-xl px-5 py-4 hover:border-border-strong transition-colors">
+      <div className="grid grid-cols-[40px_1fr_auto] gap-3 items-start">
+        <div className="w-10 h-10 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">
+          {initials}
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-text">
+              {order.patient.first_name} {order.patient.last_name}
+            </p>
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
+              {ITEM_STATUS_LABELS[item.status]}
+            </span>
+          </div>
+          <p className="text-xs text-text-muted mt-0.5">
+            {item.service.name}
+            <span className="mx-2 opacity-40">·</span>
+            {order.laboratory.name}
+            <span className="mx-2 opacity-40">·</span>
+            {order.patient.phone_number}
+          </p>
+
+          <ItemFilesAndNote
+            item={item}
+            order={order}
+            onDeleteFile={(fileId) => actions.deleteFile.mutate({ itemId: item.id, fileId })}
+            isDeletingFile={actions.deleteFile.isPending}
+            isEditing={isEditing}
+          />
+
+          {isEditing && (
+            <StatusPicker
+              currentStatus={item.status}
+              form={actions.form}
+              onPick={(s) => actions.setForm((p) => ({ ...p, status: s }))}
+              onNoteChange={(v) => actions.setForm((p) => ({ ...p, note: v }))}
+              onSave={() =>
+                actions.updateItem.mutate({
+                  itemId: item.id,
+                  data: { status: actions.form.status, note: actions.form.note || undefined },
+                })
+              }
+              onCancel={() => actions.setEditingItemId(null)}
+              isSaving={actions.updateItem.isPending}
+            />
+          )}
+        </div>
+
+        {!isEditing && (
+          <div className="flex flex-col gap-1.5 items-center pt-0.5 shrink-0">
+            <div className="flex items-center gap-1.5">
+              <label
+                className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
+                title={t("lab.uploadResult")}
+                aria-label={t("lab.uploadResult")}
+              >
+                {actions.uploadingItemId === item.id
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Upload className="w-3.5 h-3.5" />
+                }
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => actions.handleFileUpload(item.id, e)}
+                  disabled={actions.uploadingItemId === item.id}
+                />
+              </label>
+              <button
+                onClick={() => actions.openEdit(item)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
+                title={t("lab.updateItem")}
+                aria-label={t("lab.updateItem")}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <NextStepButton
+              item={item}
+              isSaving={actions.updateItem.isPending}
+              onClick={() => actions.requestAdvance(item)}
+              size="sm"
+            />
+          </div>
+        )}
+      </div>
+
+      {actions.pendingAdvanceItem?.id === item.id && (
+        <ConfirmDialog
+          title={t("lab.confirmAdvanceTitle")}
+          description={t("lab.confirmAdvanceDescription", {
+            service: item.service.name,
+            status: ITEM_STATUS_LABELS[NEXT_STATUS[item.status] as LabItemStatus],
+          })}
+          confirmLabel={t("lab.confirmAdvanceButton", {
+            status: ITEM_STATUS_LABELS[NEXT_STATUS[item.status] as LabItemStatus],
+          })}
+          confirmClassName={NEXT_STEP_BUTTON_CLASS[NEXT_STATUS[item.status] as LabItemStatus]}
+          isLoading={actions.updateItem.isPending}
+          onConfirm={actions.confirmAdvance}
+          onCancel={actions.cancelAdvance}
+        />
+      )}
+    </div>
+  );
+}
+
+function TasksView({ orders }: { orders: LabOrder[] }) {
+  const t = useTranslations();
+
+  const tasks = useMemo(() => {
+    const rows: { order: LabOrder; item: LabOrderItem }[] = [];
+    for (const order of orders) {
+      for (const item of order.items) {
+        if (item.status === "PENDING" || item.status === "IN_PROGRESS") {
+          rows.push({ order, item });
+        }
+      }
+    }
+    // Eng uzoq kutgan vazifa birinchi bo'lib ko'rinsin.
+    rows.sort((a, b) => new Date(a.item.createdAt).getTime() - new Date(b.item.createdAt).getTime());
+    return rows;
+  }, [orders]);
+
+  if (tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+        <div className="w-12 h-12 rounded-xl bg-success-50 border border-success-100 flex items-center justify-center">
+          <CheckCircle2 className="w-5 h-5 text-success" />
+        </div>
+        <p className="text-sm font-medium text-text">{t("lab.allCaughtUp")}</p>
+        <p className="text-xs text-text-muted">{t("lab.noTasks")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {tasks.map(({ order, item }) => (
+        <TaskRow key={item.id} order={order} item={item} />
+      ))}
+    </div>
+  );
+}
+
+/* ===================== ORDER CARD (grouped view) ===================== */
+
+function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceExpanded: boolean }) {
+  const t = useTranslations();
+  const [expanded, setExpanded] = useState(false);
+  const actions = useItemActions(order);
+
+  const isExpanded = forceExpanded || expanded;
+  const initials = initialsOf(order.patient.first_name, order.patient.last_name);
 
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-border-strong transition-colors">
@@ -380,6 +773,24 @@ function LabOrderCard({ order }: { order: LabOrder }) {
             <span className="mx-2 opacity-40">·</span>
             {order.patient.phone_number}
           </p>
+          {order.items.length > 1 && (
+            <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1">
+              <Package className="w-3 h-3 text-success shrink-0" />
+              <span className="font-medium text-success tabular-nums">
+                {order.items.filter((i) => i.status === "DELIVERED").length}/{order.items.length}
+              </span>
+              <span>{t("lab.deliveredOf")}</span>
+              {order.items.some((i) => i.status === "READY") && (
+                <>
+                  <span className="opacity-40">·</span>
+                  <span className="font-medium text-info tabular-nums">
+                    {order.items.filter((i) => i.status === "READY").length}
+                  </span>
+                  <span>{t("lab.readyAwaitingDelivery")}</span>
+                </>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_PILL[order.status]}`}>
@@ -389,19 +800,19 @@ function LabOrderCard({ order }: { order: LabOrder }) {
           <button
             onClick={() => setExpanded((v) => !v)}
             className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:border-border-strong transition-all"
-            aria-label={expanded ? "Yopish" : "Ochish"}
+            aria-label={isExpanded ? "Yopish" : "Ochish"}
           >
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
       {/* ITEMS */}
-      {expanded && (
+      {isExpanded && (
         <div className="border-t border-border divide-y divide-border">
           {order.items.map((item) => {
             const canAct = item.status !== "DELIVERED" && item.status !== "CANCELLED";
-            const isEditing = editingItemId === item.id;
+            const isEditing = actions.editingItemId === item.id;
 
             return (
               <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 items-start px-5 py-3.5">
@@ -413,91 +824,94 @@ function LabOrderCard({ order }: { order: LabOrder }) {
                       <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
                       {ITEM_STATUS_LABELS[item.status]}
                     </span>
-
                   </div>
 
                   <StatusTracker item={item} />
 
-                  {item.files?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2.5">
-                      {item.files.map((f) => (
-                        <div key={f.id} className="flex items-center gap-1.5 text-xs border border-border rounded-lg px-2 py-1 bg-surface-hover hover:border-border-strong transition-colors">
-                          <FileText className="w-3 h-3 text-text-muted shrink-0" />
-                          <a href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" className="text-text-muted hover:text-primary transition-colors max-w-[120px] truncate">
-                            {f.name}
-                          </a>
-                          {item.status !== "CANCELLED" && (
-                            <button
-                              onClick={() => deleteFile.mutate({ itemId: item.id, fileId: f.id })}
-                              disabled={deleteFile.isPending}
-                              className="text-text-muted hover:text-danger transition-colors disabled:opacity-40 ml-0.5"
-                              aria-label={t("lab.removeFile")}
-                            >
-                              <X className="w-2.5 h-2.5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {item.note && !isEditing && (
-                    <p className="text-xs text-text-muted mt-2 px-2.5 py-1.5 bg-surface-hover rounded-lg border-l-2 border-border-strong leading-relaxed" style={{ borderRadius: "0 6px 6px 0" }}>
-                      {item.note}
-                    </p>
-                  )}
+                  <ItemFilesAndNote
+                    item={item}
+                    order={order}
+                    onDeleteFile={(fileId) => actions.deleteFile.mutate({ itemId: item.id, fileId })}
+                    isDeletingFile={actions.deleteFile.isPending}
+                    isEditing={isEditing}
+                  />
 
                   {isEditing && (
                     <StatusPicker
                       currentStatus={item.status}
-                      form={form}
-                      onPick={(s) => setForm((p) => ({ ...p, status: s }))}
-                      onNoteChange={(v) => setForm((p) => ({ ...p, note: v }))}
+                      form={actions.form}
+                      onPick={(s) => actions.setForm((p) => ({ ...p, status: s }))}
+                      onNoteChange={(v) => actions.setForm((p) => ({ ...p, note: v }))}
                       onSave={() =>
-                        updateItem.mutate({
+                        actions.updateItem.mutate({
                           itemId: item.id,
-                          data: { status: form.status, note: form.note || undefined },
+                          data: { status: actions.form.status, note: actions.form.note || undefined },
                         })
                       }
-                      onCancel={() => setEditingItemId(null)}
-                      isSaving={updateItem.isPending}
+                      onCancel={() => actions.setEditingItemId(null)}
+                      isSaving={actions.updateItem.isPending}
                     />
                   )}
                 </div>
 
                 {/* RIGHT: action buttons */}
                 {!isEditing && canAct && (
-                  <div className="flex flex-col gap-1.5 items-center pt-0.5 shrink-0">
-                    <label
-                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
-                      title={t("lab.uploadResult")}
-                      aria-label={t("lab.uploadResult")}
-                    >
-                      {uploadingItemId === item.id
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <Upload className="w-3.5 h-3.5" />
-                      }
-                      <input
-                        type="file"
-                        hidden
-                        onChange={(e) => handleFileUpload(item.id, e)}
-                        disabled={uploadingItemId === item.id}
-                      />
-                    </label>
-                    <button
-                      onClick={() => openEdit(item)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
-                      title={t("lab.updateItem")}
-                      aria-label={t("lab.updateItem")}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="flex flex-col gap-1.5 items-end pt-0.5 shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <label
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
+                        title={t("lab.uploadResult")}
+                        aria-label={t("lab.uploadResult")}
+                      >
+                        {actions.uploadingItemId === item.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Upload className="w-3.5 h-3.5" />
+                        }
+                        <input
+                          type="file"
+                          hidden
+                          onChange={(e) => actions.handleFileUpload(item.id, e)}
+                          disabled={actions.uploadingItemId === item.id}
+                        />
+                      </label>
+                      <button
+                        onClick={() => actions.openEdit(item)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
+                        title={t("lab.updateItem")}
+                        aria-label={t("lab.updateItem")}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <NextStepButton
+                      item={item}
+                      isSaving={actions.updateItem.isPending}
+                      onClick={() => actions.requestAdvance(item)}
+                      size="sm"
+                    />
                   </div>
                 )}
               </div>
             );
           })}
         </div>
+      )}
+
+      {actions.pendingAdvanceItem && (
+        <ConfirmDialog
+          title={t("lab.confirmAdvanceTitle")}
+          description={t("lab.confirmAdvanceDescription", {
+            service: actions.pendingAdvanceItem.service.name,
+            status: ITEM_STATUS_LABELS[NEXT_STATUS[actions.pendingAdvanceItem.status] as LabItemStatus],
+          })}
+          confirmLabel={t("lab.confirmAdvanceButton", {
+            status: ITEM_STATUS_LABELS[NEXT_STATUS[actions.pendingAdvanceItem.status] as LabItemStatus],
+          })}
+          confirmClassName={NEXT_STEP_BUTTON_CLASS[NEXT_STATUS[actions.pendingAdvanceItem.status] as LabItemStatus]}
+          isLoading={actions.updateItem.isPending}
+          onConfirm={actions.confirmAdvance}
+          onCancel={actions.cancelAdvance}
+        />
       )}
     </div>
   );
@@ -509,6 +923,8 @@ export default function LabPage() {
   const t = useTranslations();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [view, setView] = useState<ViewMode>("tasks");
+  const [allExpanded, setAllExpanded] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery<LabOrder[]>({
     queryKey: ["lab-orders"],
@@ -521,8 +937,9 @@ export default function LabPage() {
     const matchSearch =
       !q ||
       `${o.patient.first_name} ${o.patient.last_name}`.toLowerCase().includes(q) ||
-      o.patient.phone_number.replace(/\D/g, "").includes(q.replace(/\D/g, ""));
-    const matchStatus = statusFilter === "all" || o.status === statusFilter;
+      o.patient.phone_number.replace(/\D/g, "").includes(q.replace(/\D/g, "")) ||
+      o.items.some((i) => i.service.name.toLowerCase().includes(q));
+    const matchStatus = statusFilter === "all" || deriveOrderStatus(o) === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -545,7 +962,41 @@ export default function LabPage() {
       />
 
       <PageContent>
-        {/* Status tabs */}
+        {/* View switcher */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex items-center gap-1 p-1 bg-surface-hover border border-border rounded-lg">
+            <button
+              onClick={() => setView("tasks")}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                view === "tasks" ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text"
+              }`}
+            >
+              <ListChecks className="w-3.5 h-3.5" />
+              {t("lab.viewTasks")}
+            </button>
+            <button
+              onClick={() => setView("orders")}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
+                view === "orders" ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text"
+              }`}
+            >
+              <FlaskConical className="w-3.5 h-3.5" />
+              {t("lab.viewOrders")}
+            </button>
+          </div>
+
+          {view === "orders" && (
+            <button
+              onClick={() => setAllExpanded((v) => !v)}
+              className="flex items-center gap-1.5 text-sm font-medium text-text-muted hover:text-text px-3 py-1.5 rounded-lg border border-border hover:bg-surface-hover transition-colors"
+            >
+              {allExpanded ? <ChevronsDownUp className="w-3.5 h-3.5" /> : <ChevronsUpDown className="w-3.5 h-3.5" />}
+              {allExpanded ? t("lab.collapseAll") : t("lab.expandAll")}
+            </button>
+          )}
+        </div>
+
+        {/* Status tabs (only meaningful for the orders view, but kept visible for filtering) */}
         <div className="flex border-b border-border overflow-x-auto scrollbar-none -mt-2">
           {ORDER_STATUS_TABS.map((s) => (
             <button
@@ -561,7 +1012,7 @@ export default function LabPage() {
         {/* Stats */}
         {!isLoading && <StatsBar orders={filtered} />}
 
-        {/* Order list */}
+        {/* Content */}
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-7 h-7 animate-spin text-primary" />
@@ -573,10 +1024,12 @@ export default function LabPage() {
             </div>
             <p className="text-sm text-text-muted">{t("lab.noOrders")}</p>
           </div>
+        ) : view === "tasks" ? (
+          <TasksView orders={filtered} />
         ) : (
           <div className="space-y-3">
             {filtered.map((o) => (
-              <LabOrderCard key={o.id} order={o} />
+              <LabOrderCard key={o.id} order={o} forceExpanded={allExpanded} />
             ))}
           </div>
         )}
