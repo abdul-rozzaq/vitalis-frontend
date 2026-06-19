@@ -14,7 +14,8 @@
     "shifts": "Smenalar",
     "duty": "Mening navbatim",
     "operations": "Operatsiyalar",
-    "operation-types": "Operatsiya turlari"
+    "operation-types": "Operatsiya turlari",
+    "diagnostics": "Diagnostika"
   },
   "common": {
     "filter": "Filtr",
@@ -293,7 +294,9 @@
       "LAB": "Laboratoriya",
       "PROCEDURE": "Protsedura",
       "REFERRAL": "Yo'llanma",
-      "DISCHARGE": "Chiqarish"
+      "OPERATION": "Operatsiya",
+      "DISCHARGE": "Chiqarish",
+      "DIAGNOSTIC": "Diagnostika"
     },
     "stepStatus": {
       "PENDING": "Kutilmoqda",
@@ -449,7 +452,11 @@
     "free": "Bo'sh",
     "bedsOccupied": "o'rin band",
     "roomDetail": "Xona tafsilotlari",
-    "roomDetailDesc": "Xona va uning sig'imi haqida ma'lumot"
+    "roomDetailDesc": "Xona va uning sig'imi haqida ma'lumot",
+    "colDiagnostic": "Diagnostika",
+    "newDiagnosticAssignment": "Yangi diagnostika tayinlovi",
+    "statusActive": "Faol",
+    "statusInactive": "Nofaol"
   },
   "forms": {
     "cancel": "Bekor qilish",
@@ -625,7 +632,17 @@
     "doctor": "Shifokor / Tayinlov",
     "note": "Izoh",
     "notePlaceholder": "Qo'shimcha izohlar...",
-    "optional": "(ixtiyoriy)"
+    "optional": "(ixtiyoriy)",
+    "diagnosticName": "Diagnostika markazi nomi",
+    "diagnosticNameTooShort": "Diagnostika markazi nomi juda qisqa",
+    "diagnosticDescPlaceholder": "Ushbu diagnostika markazi haqida qisqacha tavsif...",
+    "addDiagnostic": "Diagnostika markazi qo'shish",
+    "updateDiagnostic": "Diagnostika markazini yangilash",
+    "diagnosticServiceName": "Xizmat nomi",
+    "diagnosticServiceNameTooShort": "Xizmat nomi juda qisqa",
+    "addDiagnosticService": "Xizmat qo'shish",
+    "updateDiagnosticService": "Xizmatni yangilash",
+    "roomTypeOperation": "Operatsiya xonasi"
   },
   "notifications": {
     "title": "Bildirishnomalar",
@@ -707,6 +724,7 @@
       "PENDING": "Kutilmoqda",
       "IN_PROGRESS": "Jarayonda",
       "DONE": "Bajarildi",
+      "READY": "Tayyor",
       "CANCELLED": "Bekor qilingan"
     },
     "searchPlaceholder": "Buyurtmalarni qidirish...",
@@ -932,5 +950,56 @@
         "itemNameRequired": "Barcha xizmatlar nomi to'ldirilishi kerak"
       }
     }
+  },
+"diagnostics": {
+  "title": "Диагностические центры",
+  "description": "...",
+  "addCenter": "Добавить центр",
+  "editCenter": "Редактировать центр",
+  "centerName": "Название",
+  "descriptionField": "Описание",
+  "services": "Услуги",
+  "addService": "Добавить услугу",
+  "editService": "Редактировать услугу",
+  "serviceName": "Название услуги",
+  "servicePrice": "Цена",
+  "noServices": "Услуг нет",
+  "assignments": "назначений",
+  "deleteConfirm": "Вы уверены, что хотите удалить?",
+  "deleteServiceConfirm": "Вы уверены, что хотите удалить эту услугу?",
+  "pageTitle": "Диагностика",
+  "pageSubtitle": "Управление диагностическими заказами",
+  "searchPlaceholder": "Пациент или услуга...",
+  "viewTasks": "Задачи",
+  "viewOrders": "Заказы",
+  "allDone": "Всё выполнено",
+  "noActiveTasks": "Пока нет активных задач",
+  "noOrders": "Заказы не найдены",
+  "delivered": "выдано",
+  "ready": "готово",
+  "uploadResult": "Загрузить результат",
+  "updateStatus": "Обновить статус",
+  "deleteFile": "Удалить файл",
+  "confirmChangeTitle": "Изменить статус",
+  "confirmChangeDesc": "Перевести услугу «{service}» в статус «{status}»?",
+  "advanceTo": "Перевести в «{status}»",
+  "statsMyTasks": "Мои задачи",
+  "statsPending": "Ожидает",
+  "statsReady": "Готово",
+  "statsDelivered": "Выдано",
+  "statsCompleted": "Выполнено",
+  "orderStatus": {
+    "PENDING": "Ожидание",
+    "IN_PROGRESS": "В процессе",
+    "COMPLETED": "Завершено",
+    "CANCELLED": "Отменено"
+  },
+  "itemStatus": {
+    "PENDING": "Ожидание",
+    "IN_PROGRESS": "В процессе",
+    "READY": "Готово",
+    "DELIVERED": "Выдано",
+    "CANCELLED": "Отменено"
   }
+}
 }

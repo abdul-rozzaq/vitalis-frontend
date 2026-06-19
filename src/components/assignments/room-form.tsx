@@ -1,24 +1,25 @@
 "use client";
 
 import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { AlignLeft, BedDouble, Building2, Hash, LayoutGrid } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
 type RoomFormInput = {
   name: string;
-  roomType: "WARD" | "EXAMINATION" | "";
+  roomType: "WARD" | "EXAMINATION" | "OPERATION" | "";
   capacity?: number | string;
   description?: string;
   departmentId?: string;
 };
 
+
 type RoomFormValues = {
   name: string;
-  roomType: "WARD" | "EXAMINATION";
+  roomType: "WARD" | "EXAMINATION" | "OPERATION";
   capacity?: number;
   description?: string;
   departmentId?: string | null;
@@ -42,7 +43,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
 
   const roomSchema = z.object({
     name: z.string().min(1, t("forms.roomNameRequired")),
-    roomType: z.enum(["WARD", "EXAMINATION"], { message: t("forms.roomTypeRequired") }),
+    roomType: z.enum(["WARD", "EXAMINATION", "OPERATION"], { message: t("forms.roomTypeRequired") }),
     capacity: z.coerce.number().min(1, t("forms.capacityMin")).optional(),
     description: z.string().optional(),
     departmentId: z.string().uuid().optional().nullable(),
@@ -88,8 +89,10 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           <option value="" disabled hidden>
             {t("forms.selectType")}
           </option>
+         // YANGI:
           <option value="EXAMINATION">{t("forms.roomTypeExamination")}</option>
           <option value="WARD">{t("forms.roomTypeWard")}</option>
+          <option value="OPERATION">{t("forms.roomTypeOperation")}</option>
         </select>
         {errors.roomType && <p className="text-xs text-danger-600 font-medium">{errors.roomType.message}</p>}
       </div>

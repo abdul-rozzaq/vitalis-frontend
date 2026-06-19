@@ -46,7 +46,7 @@ export interface AppointmentTimelineItem {
 }
 
 export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
-export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
+export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE" | "DIAGNOSTIC" | "OPERATION";
 export type CaseStepStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
@@ -61,17 +61,26 @@ export interface CaseStep {
   completedAt?: string | null;
   assignmentId?: string | null;
   appointmentId?: string | null;
+
   assignment?: {
     id: string;
     department: { name: string; id: string };
     user: { first_name: string; last_name: string };
     room?: { name: string } | null;
   } | null;
+
   appointment?: (AppointmentTimelineItem & { id: string }) | null;
+
   prescription?: {
     id: string;
-    items: { id: string; medicine: { name: string }; dosage: string; frequency: number }[];
+    items: {
+      id: string;
+      medicine: { name: string };
+      dosage: string;
+      frequency: number;
+    }[];
   } | null;
+
   labOrder?: {
     id: string;
     status: LabOrderStatus;
@@ -83,8 +92,29 @@ export interface CaseStep {
       files: { id: string; url: string; name: string }[];
     }[];
   } | null;
-}
 
+  diagnosticOrder?: {
+    id: string;
+    diagnostics: {
+      id: string;
+      name: string;
+    };
+    items: {
+      id: string;
+      status: LabItemStatus;
+      service: {
+        id: string;
+        name: string;
+        price?: number | null;
+      };
+      files: {
+        id: string;
+        url: string;
+        name: string;
+      }[];
+    }[];
+  } | null;
+}
 export interface PatientCase {
   id: string;
   patientId: string;
