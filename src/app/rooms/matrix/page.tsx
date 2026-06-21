@@ -8,7 +8,7 @@ import { CheckSquare, Grid3x3, Square, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-interface Room { id: string; name: string; roomType: string; floor: number | null; roomNumber: string | null }
+interface Room { id: string; name: string; roomType: string; floor: number | null }
 
 export default function AssignmentMatrixPage() {
   const qc = useQueryClient();
@@ -68,10 +68,7 @@ export default function AssignmentMatrixPage() {
                     <span>{fmtHM(s.startHour)}–{fmtHM(s.endHour)}</span>
                     <span>· {s.rooms.length} xona</span>
                   </div>
-                  <div className="text-xs text-text-muted mt-0.5">
-                    👨‍⚕️ {s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : "—"}
-                    {s.defaultNurses.length > 0 && <span> · 👩‍⚕️ {s.defaultNurses.length}</span>}
-                  </div>
+                  {s.defaultNurses.length > 0 && <div className="text-xs text-text-muted mt-0.5">👩‍⚕️ {s.defaultNurses.length} hamshira</div>}
                 </button>
               ))}
             </div>
@@ -103,14 +100,14 @@ export default function AssignmentMatrixPage() {
                     <button key={r.id} onClick={() => toggle(r.id)}
                       className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-colors ${on ? "bg-primary/10 border-primary/30 text-primary" : "bg-background border-border text-text hover:bg-surface-hover"}`}>
                       {on ? <CheckSquare className="w-4 h-4 flex-shrink-0" /> : <Square className="w-4 h-4 flex-shrink-0 text-text-muted" />}
-                      <span className="truncate">{r.roomNumber ?? r.name}</span>
+                      <span className="truncate">{r.name}</span>
                       {r.floor != null && <span className="text-[10px] text-text-muted ml-auto">{r.floor}q</span>}
                     </button>
                   );
                 })}
               </div>
             )}
-            {selected && <p className="px-4 pb-4 text-xs text-text-muted">Xonani bosing — {selected.doctor ? `${selected.doctor.first_name} ${selected.doctor.last_name}` : "shu shablon"} shu xonaga biriktiriladi/olib tashlanadi.</p>}
+            {selected && <p className="px-4 pb-4 text-xs text-text-muted">Xonani bosing — shu shablon shu xonaga biriktiriladi/olib tashlanadi.</p>}
           </div>
         </div>
       </PageContent>

@@ -24,7 +24,6 @@ import {
   LogOut,
   Moon,
   Scissors,
-  ShieldCheck,
   Stethoscope,
   Sun,
   User,
@@ -144,12 +143,6 @@ export function Sidebar() {
           icon: ArrowLeftRight,
           roles: ["ADMIN", "DIREKTOR"],
         },
-        {
-          label: "Qamrov",
-          href: "/shifts/coverage",
-          icon: ShieldCheck,
-          roles: ["ADMIN", "DIREKTOR"],
-        },
       ],
     },
     {
@@ -169,7 +162,7 @@ export function Sidebar() {
           roles: ["HAMSHIRA"],
         },
         {
-          label: t("nav.duty"),
+          label: "Navbatchilik",
           href: "/wards/duty",
           icon: ClipboardList,
           roles: ["DOCTOR", "HAMSHIRA"],
@@ -222,12 +215,6 @@ export function Sidebar() {
           icon: DoorOpen,
           roles: ["ADMIN", "DIREKTOR"],
           exact: true,
-        },
-        {
-          label: "Qavatlar",
-          href: "/rooms/floor-view",
-          icon: Building2,
-          roles: ["ADMIN", "DIREKTOR"],
         },
         {
           label: "Xona matritsasi",

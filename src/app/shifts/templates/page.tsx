@@ -2,10 +2,11 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DEFAULT_SHIFT_COLORS } from "@/components/shifts/ShiftTimeline";
+import { AssignDoctorModal } from "@/components/shifts/AssignDoctorModal";
 import { api } from "@/lib/api";
-import { fmtHM, RoomShift, shiftsApi, WEEKDAYS, weekdayMaskToLabels } from "@/lib/shifts-api";
+import { fmtHM, RoomShift, shiftsApi } from "@/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Edit2, LayoutTemplate, Plus, Trash2, X } from "lucide-react";
+import { Clock, Edit2, LayoutTemplate, Plus, Trash2, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -26,14 +27,9 @@ const EMPTY_FORM = {
   name: "",
   startTime: "08:00",
   endTime: "20:00",
-  everyDay: true,
-  weekdayMask: 127,
-  startDate: "",
-  endDate: "",
   color: DEFAULT_SHIFT_COLORS[0],
   hasRound: false,
   roundHour: "" as number | "",
-  doctorId: "",
   nurseIds: [] as string[],
   roomIds: [] as string[],
 };
@@ -49,6 +45,7 @@ export default function ShiftTemplatesPage() {
   const [showModal, setShowModal] = useState<"new" | "edit" | null>(null);
   const [editTarget, setEditTarget] = useState<RoomShift | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
+  const [assignTarget, setAssignTarget] = useState<RoomShift | null>(null);
 
   const { data: rooms = [] } = useQuery<Room[]>({
     queryKey: ["rooms-all"],
@@ -65,7 +62,6 @@ export default function ShiftTemplatesPage() {
     queryKey: ["staff-list"],
     queryFn: () => api.get("/users").then((r) => r.data.data ?? r.data),
   });
-  const doctors = staff.filter((s) => s.role === "DOCTOR");
   const nurses = staff.filter((s) => s.role === "HAMSHIRA");
 
   function buildPayload(data: FormState) {
@@ -77,12 +73,8 @@ export default function ShiftTemplatesPage() {
       startMinute: start.minute,
       endHour: end.hour === 0 ? 24 : end.hour,
       endMinute: end.minute,
-      weekdayMask: data.everyDay ? null : data.weekdayMask,
       color: data.color,
       roundHour: data.hasRound && data.roundHour !== "" ? data.roundHour : null,
-      doctorId: data.doctorId || null,
-      startDate: data.startDate || null,
-      endDate: data.endDate || null,
       nurseIds: data.nurseIds,
       roomIds: data.roomIds,
     };
@@ -114,14 +106,9 @@ export default function ShiftTemplatesPage() {
       name: shift.name,
       startTime: fmtHM(shift.startHour, shift.startMinute),
       endTime: fmtHM(shift.endHour, shift.endMinute),
-      everyDay: shift.weekdayMask === null,
-      weekdayMask: shift.weekdayMask ?? 127,
-      startDate: shift.startDate ? shift.startDate.slice(0, 10) : "",
-      endDate: shift.endDate ? shift.endDate.slice(0, 10) : "",
       color: shift.color ?? DEFAULT_SHIFT_COLORS[0],
       hasRound: shift.roundHour != null,
       roundHour: shift.roundHour ?? "",
-      doctorId: shift.doctorId ?? "",
       nurseIds: shift.defaultNurses.map((n) => n.nurseId),
       roomIds: shift.rooms.map((r) => r.roomId),
     });
@@ -131,7 +118,6 @@ export default function ShiftTemplatesPage() {
   function closeModal() { setShowModal(null); setEditTarget(null); }
   function toggleRoom(id: string) { setForm((p) => ({ ...p, roomIds: p.roomIds.includes(id) ? p.roomIds.filter((x) => x !== id) : [...p.roomIds, id] })); }
   function toggleNurse(id: string) { setForm((p) => ({ ...p, nurseIds: p.nurseIds.includes(id) ? p.nurseIds.filter((x) => x !== id) : [...p.nurseIds, id] })); }
-  function toggleWeekday(i: number) { setForm((p) => ({ ...p, weekdayMask: p.weekdayMask ^ (1 << i) })); }
 
   function handleSave() {
     if (showModal === "new") createMutation.mutate(form);
@@ -142,7 +128,7 @@ export default function ShiftTemplatesPage() {
     <>
       <PageHeader
         title="Smena shablonlari"
-        subtitle="Qayta ishlatiladigan smenalar — vaqt, kunlar, shifokor va xonalar"
+        subtitle="Xonalar va vaqt oralig'ini birlashtiruvchi shablonlar"
         actions={
           <button onClick={openNew} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
             <Plus className="w-4 h-4" /> Yangi shablon
@@ -162,7 +148,9 @@ export default function ShiftTemplatesPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {shifts.map((shift) => (
-              <TemplateCard key={shift.id} shift={shift} onEdit={() => openEdit(shift)}
+              <TemplateCard key={shift.id} shift={shift}
+                onEdit={() => openEdit(shift)}
+                onAssign={() => setAssignTarget(shift)}
                 onDelete={() => { if (confirm(`"${shift.name}" shablonini o'chirasizmi?`)) deleteMutation.mutate(shift.id); }} />
             ))}
           </div>
@@ -170,7 +158,7 @@ export default function ShiftTemplatesPage() {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={closeModal}>
-            <div className="bg-surface border border-border rounded-2xl p-6 w-[560px] shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-surface border border-border rounded-2xl p-6 w-[520px] shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-semibold text-text">{showModal === "new" ? "Yangi shablon" : "Shablonni tahrirlash"}</h3>
                 <button onClick={closeModal} className="text-text-muted hover:text-text"><X className="w-5 h-5" /></button>
@@ -179,7 +167,7 @@ export default function ShiftTemplatesPage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-xs text-text-muted block mb-1">Nom *</label>
-                  <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Masalan: Tungi smena" className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
+                  <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Masalan: Ertalgi smena" className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -193,46 +181,14 @@ export default function ShiftTemplatesPage() {
                   </div>
                 </div>
 
-                {/* Weekday recurrence */}
-                <div className="border border-border rounded-lg p-3 bg-background space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.everyDay} onChange={(e) => setForm((p) => ({ ...p, everyDay: e.target.checked }))} className="rounded accent-primary" />
-                    <span className="text-sm text-text font-medium">Har kuni</span>
-                  </label>
-                  {!form.everyDay && (
-                    <div className="flex gap-1.5 pt-1">
-                      {WEEKDAYS.map((d, i) => {
-                        const active = (form.weekdayMask & (1 << i)) !== 0;
-                        return (
-                          <button key={d} type="button" onClick={() => toggleWeekday(i)}
-                            className={`w-9 h-9 rounded-lg text-xs font-medium transition-colors ${active ? "bg-primary text-white" : "bg-surface border border-border text-text-muted hover:bg-surface-hover"}`}>
-                            {d}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-text-muted block mb-1">Amal qiladi (dan)</label>
-                    <input type="date" value={form.startDate} onChange={(e) => setForm((p) => ({ ...p, startDate: e.target.value }))} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-text-muted block mb-1">Amal qiladi (gacha)</label>
-                    <input type="date" value={form.endDate} onChange={(e) => setForm((p) => ({ ...p, endDate: e.target.value }))} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
-                  </div>
-                </div>
-
                 <div className="border border-border rounded-lg p-3 bg-background">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={form.hasRound} onChange={(e) => setForm((p) => ({ ...p, hasRound: e.target.checked, roundHour: e.target.checked ? (p.roundHour === "" ? 8 : p.roundHour) : "" }))} className="rounded accent-primary" />
-                    <span className="text-sm text-text font-medium">Bu smenada ko'rik (apoxot) bo'ladi</span>
+                    <span className="text-sm text-text font-medium">Bu smenada apoxot bo'ladi</span>
                   </label>
                   {form.hasRound && (
                     <div className="mt-3">
-                      <label className="text-xs text-text-muted block mb-1">Ko'rik vaqti (soat)</label>
+                      <label className="text-xs text-text-muted block mb-1">Apoxot vaqti (soat)</label>
                       <input type="number" min={0} max={23} value={form.roundHour} onChange={(e) => setForm((p) => ({ ...p, roundHour: e.target.value ? +e.target.value : "" }))} className="w-32 border border-border rounded-lg px-3 py-2 text-sm bg-surface text-text" />
                     </div>
                   )}
@@ -245,14 +201,6 @@ export default function ShiftTemplatesPage() {
                       <button key={c} onClick={() => setForm((p) => ({ ...p, color: c }))} className={`w-6 h-6 rounded-full border-2 transition-transform ${form.color === c ? "border-text scale-125" : "border-transparent"}`} style={{ backgroundColor: c }} />
                     ))}
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-text-muted block mb-1">Standart shifokor</label>
-                  <select value={form.doctorId} onChange={(e) => setForm((p) => ({ ...p, doctorId: e.target.value }))} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text">
-                    <option value="">— Tanlang —</option>
-                    {doctors.map((d) => <option key={d.id} value={d.id}>{d.first_name} {d.last_name}</option>)}
-                  </select>
                 </div>
 
                 <div>
@@ -292,14 +240,20 @@ export default function ShiftTemplatesPage() {
           </div>
         )}
       </PageContent>
+
+      {assignTarget && (
+        <AssignDoctorModal
+          shift={assignTarget}
+          onClose={() => setAssignTarget(null)}
+          onSaved={() => { qc.invalidateQueries({ queryKey: ["resolved-range"] }); setAssignTarget(null); }}
+        />
+      )}
     </>
   );
 }
 
-function TemplateCard({ shift, onEdit, onDelete }: { shift: RoomShift; onEdit: () => void; onDelete: () => void }) {
+function TemplateCard({ shift, onEdit, onAssign, onDelete }: { shift: RoomShift; onEdit: () => void; onAssign: () => void; onDelete: () => void }) {
   const color = shift.color ?? DEFAULT_SHIFT_COLORS[0];
-  const days = weekdayMaskToLabels(shift.weekdayMask);
-  const everyDay = shift.weekdayMask === null;
 
   return (
     <div className="bg-surface border border-border rounded-xl p-4">
@@ -312,24 +266,16 @@ function TemplateCard({ shift, onEdit, onDelete }: { shift: RoomShift; onEdit: (
           </span>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onAssign} className="p-1.5 text-text-muted hover:text-primary rounded-lg hover:bg-primary/10" title="Shifokor tayinlash"><UserPlus className="w-4 h-4" /></button>
           <button onClick={onEdit} className="p-1.5 text-text-muted hover:text-text rounded-lg hover:bg-surface-hover"><Edit2 className="w-4 h-4" /></button>
-          <button onClick={onDelete} className="p-1.5 text-text-muted hover:text-error rounded-lg hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
+          <button onClick={onDelete} className="p-1.5 text-text-muted hover:text-danger-600 rounded-lg hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap gap-1">
-        {everyDay ? (
-          <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Har kuni</span>
-        ) : (
-          days.map((d) => <span key={d} className="text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{d}</span>)
-        )}
-        {shift.roundHour != null && (
-          <span className="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">Apoxot {fmtHM(shift.roundHour)}</span>
-        )}
-      </div>
-
       <div className="mt-2.5 flex flex-wrap gap-3 text-xs text-text-muted">
-        <span>👨‍⚕️ {shift.doctor ? <span className="text-text font-medium">{shift.doctor.first_name} {shift.doctor.last_name}</span> : <span className="italic">biriktirilmagan</span>}</span>
+        {shift.roundHour != null && (
+          <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">Apoxot {fmtHM(shift.roundHour)}</span>
+        )}
         {shift.defaultNurses.length > 0 && <span>👩‍⚕️ <span className="text-text">{shift.defaultNurses.length} hamshira</span></span>}
         {shift.rooms.length > 0 && <span>🚪 <span className="text-text">{shift.rooms.length} xona</span></span>}
       </div>

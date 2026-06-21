@@ -147,8 +147,7 @@ function WeekDayGrid({ days, slots, onSlotClick }: { days: Date[]; slots: Resolv
                         <button key={i} onClick={() => onSlotClick(s)}
                           className={`w-full text-left px-2 py-1 rounded-md border text-xs transition-colors hover:shadow-sm ${
                             s.source === "none" ? "bg-amber-50 border-amber-200 text-amber-700"
-                            : s.source === "override" ? "bg-indigo-50 border-indigo-200 text-indigo-700"
-                            : "bg-background border-border text-text"}`}>
+                            : "bg-teal-50 border-teal-200 text-teal-700"}`}>
                           <div className="font-medium truncate">{s.room.name}</div>
                           <div className="truncate text-[11px] opacity-80">
                             {s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : "— biriktirilmagan"}
@@ -213,7 +212,7 @@ function QuickAssignDrawer({ slot, onClose, onSaved }: { slot: ResolvedSlot; onC
   const doctors = staff.filter((s) => s.role === "DOCTOR");
 
   const save = useMutation({
-    mutationFn: () => shiftsApi.createOverride({ roomShiftId: slot.shift.id, roomId: slot.room.id, date: slot.date.slice(0, 10), doctorId }),
+    mutationFn: () => shiftsApi.bulkAssign({ roomShiftId: slot.shift.id, roomId: slot.room.id, dates: [slot.date.slice(0, 10)], doctorId }),
     onSuccess: () => { toast.success("Tayinlandi"); onSaved(); },
     onError: () => toast.error("Xatolik"),
   });

@@ -63,7 +63,7 @@ export default function DoctorDashboardPage() {
           </Card>
 
           <Card title="Kelgusi smenalar (7 kun)">
-            {!upcoming || (upcoming.overrides.length === 0 && upcoming.defaultShifts.length === 0)
+            {!upcoming || upcoming.overrides.length === 0
               ? <p className="text-sm text-text-muted py-4">Kelgusi smena yo'q</p>
               : (
                 <div className="space-y-2">
@@ -72,13 +72,6 @@ export default function DoctorDashboardPage() {
                       <div className="flex items-center gap-2"><CalendarClock className="w-4 h-4 text-text-muted" />
                         <span className="text-sm text-text">{o.room.name} · {o.roomShift.name}</span></div>
                       <span className="text-xs text-text-muted">{o.date.slice(0, 10)}</span>
-                    </div>
-                  ))}
-                  {upcoming.defaultShifts.slice(0, 4).map((d) => (
-                    <div key={d.id} className="flex items-center justify-between p-2.5 rounded-lg bg-background border border-border">
-                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-text-muted" />
-                        <span className="text-sm text-text">{d.name}</span></div>
-                      <span className="text-xs text-text-muted">{fmtHM(d.startHour)}–{fmtHM(d.endHour)}</span>
                     </div>
                   ))}
                 </div>

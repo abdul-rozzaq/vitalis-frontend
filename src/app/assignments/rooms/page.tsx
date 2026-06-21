@@ -594,6 +594,7 @@ export default function AssignmentsRoomsPage() {
                   name: sheet.editing.name,
                   roomType: sheet.editing.roomType,
                   capacity: sheet.editing.capacity ?? undefined,
+                  floor: sheet.editing.floor ?? undefined,
                   description: sheet.editing.description ?? "",
                   departmentId: sheet.editing.department?.id ?? "",
                 }

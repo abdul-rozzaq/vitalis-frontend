@@ -20,13 +20,8 @@ export interface RoomShift {
   endHour: number;
   startMinute: number;
   endMinute: number;
-  weekdayMask: number | null;
-  startDate: string | null;
-  endDate: string | null;
   color: string | null;
   roundHour: number | null;
-  doctorId: string | null;
-  doctor: StaffRef | null;
   defaultNurses: { id: string; nurseId: string; nurse: StaffRef }[];
   rooms: { id: string; roomId: string; room: RoomRef }[];
 }
@@ -47,7 +42,7 @@ export interface ResolvedSlot {
   } | null;
   doctor: StaffRef | null;
   nurses: { nurseId: string; nurse: StaffRef }[];
-  source: "override" | "default" | "none";
+  source: "assigned" | "none";
 }
 
 export type ShiftEventType =
@@ -129,6 +124,10 @@ export const shiftsApi = {
   resolvedRange: (params: { from: string; to: string; roomId?: string }) =>
     api.get<ResolvedSlot[]>("/shift-assignments", { params }).then((r) => r.data),
 
+  // Bulk assign (shifokorni bir nechta kunga tayinlash)
+  bulkAssign: (data: { roomShiftId: string; roomId: string; doctorId: string; dates: string[] }) =>
+    api.post("/shift-assignments/bulk", data).then((r) => r.data),
+
   // Overrides & operations
   createOverride: (data: { roomShiftId: string; roomId: string; date: string; doctorId: string; nurseIds?: string[] }) =>
     api.post("/shift-assignments/override", data).then((r) => r.data),
@@ -182,7 +181,6 @@ export interface ActiveShift {
 
 export interface MyShifts {
   overrides: { id: string; date: string; roomShift: { name: string }; room: RoomRef; doctor: StaffRef }[];
-  defaultShifts: RoomShift[];
 }
 
 export interface WardPatient {
@@ -201,14 +199,6 @@ export interface WardRoundRef {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-export const WEEKDAYS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
-
-/** weekdayMask (bit 0=Du..6=Ya) → array of active weekday labels */
-export function weekdayMaskToLabels(mask: number | null): string[] {
-  if (mask === null) return [...WEEKDAYS];
-  return WEEKDAYS.filter((_, i) => mask & (1 << i));
-}
 
 export function fmtHM(hour: number, minute = 0): string {
   const h = hour === 24 ? 0 : hour;

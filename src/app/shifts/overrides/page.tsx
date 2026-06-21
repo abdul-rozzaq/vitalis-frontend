@@ -76,10 +76,9 @@ export default function ShiftOverridesPage() {
                     <td className="p-3 text-text">{s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : <span className="text-amber-600">biriktirilmagan</span>}</td>
                     <td className="p-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                        s.source === "override" ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                        : s.source === "none" ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : "bg-background text-text-muted border-border"}`}>
-                        {s.source === "override" ? "Override" : s.source === "none" ? "Bo'sh" : "Standart"}
+                        s.source === "assigned" ? "bg-teal-50 text-teal-700 border-teal-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                        {s.source === "assigned" ? "Tayinlangan" : "Bo'sh"}
                       </span>
                     </td>
                     <td className="p-3">
