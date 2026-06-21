@@ -49,7 +49,7 @@ export default function AssignmentMatrixPage() {
 
   return (
     <>
-      <PageHeader title="Xona matritsasi" subtitle="Smena shablonini tanlab, xonalarni bir vaqtda biriktiring (shifokor + hamshiralar)" />
+      <PageHeader title="Xona matritsasi" subtitle="Smena shablonini tanlab, xonalarni bir vaqtda biriktiring" />
 
       <PageContent>
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 items-start">
@@ -61,7 +61,7 @@ export default function AssignmentMatrixPage() {
                 <button key={s.id} onClick={() => setSelectedId(s.id)}
                   className={`w-full text-left px-4 py-3 border-b border-border last:border-0 transition-colors ${selectedId === s.id ? "bg-primary-50" : "hover:bg-surface-hover"}`}>
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color ?? "#888" }} />
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: s.color ?? "#888" }} />
                     <span className="text-sm font-medium text-text">{s.name}</span>
                   </div>
                   <div className="text-xs text-text-muted mt-1 flex items-center gap-2">

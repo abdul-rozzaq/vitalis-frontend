@@ -73,7 +73,7 @@ export function Sidebar() {
   const navGroups: NavGroup[] = [
     {
       id: "core",
-      label: "Asosiy",
+      label: t("nav.group-core"),
       items: [
         {
           label: t("nav.patients"),
@@ -91,7 +91,7 @@ export function Sidebar() {
     },
     {
       id: "clinical",
-      label: "Klinik",
+      label: t("nav.group-clinical"),
       items: [
         {
           label: t("nav.wards"),
@@ -122,23 +122,23 @@ export function Sidebar() {
     },
     {
       id: "shifts",
-      label: "Smenalar",
+      label: t("nav.group-shifts"),
       items: [
         {
-          label: "Kalendar",
+          label: t("nav.shifts-calendar"),
           href: "/shifts",
           icon: CalendarDays,
           roles: ["ADMIN", "DIREKTOR"],
           exact: true,
         },
         {
-          label: "Shablonlar",
+          label: t("nav.shifts-templates"),
           href: "/shifts/templates",
           icon: LayoutTemplate,
           roles: ["ADMIN", "DIREKTOR"],
         },
         {
-          label: "Almashtirish",
+          label: t("nav.shifts-overrides"),
           href: "/shifts/overrides",
           icon: ArrowLeftRight,
           roles: ["ADMIN", "DIREKTOR"],
@@ -147,22 +147,22 @@ export function Sidebar() {
     },
     {
       id: "workspace",
-      label: "Ish maydoni",
+      label: t("nav.group-workspace"),
       items: [
         {
-          label: "Shifokor paneli",
+          label: t("nav.doctor-panel"),
           href: "/workspace/doctor",
           icon: LayoutDashboard,
           roles: ["DOCTOR"],
         },
         {
-          label: "Hamshira paneli",
+          label: t("nav.nurse-panel"),
           href: "/workspace/nurse",
           icon: LayoutDashboard,
           roles: ["HAMSHIRA"],
         },
         {
-          label: "Navbatchilik",
+          label: t("nav.navbatchilik"),
           href: "/wards/duty",
           icon: ClipboardList,
           roles: ["DOCTOR", "HAMSHIRA"],
@@ -171,7 +171,7 @@ export function Sidebar() {
     },
     {
       id: "staff",
-      label: "Xodimlar",
+      label: t("nav.group-staff"),
       items: [
         {
           label: t("nav.employees"),
@@ -180,19 +180,19 @@ export function Sidebar() {
           roles: ["ADMIN", "DIREKTOR"],
         },
         {
-          label: "Xodimlar qamrovi",
+          label: t("nav.staffing"),
           href: "/admin/staffing",
           icon: BarChart3,
           roles: ["ADMIN", "DIREKTOR"],
         },
         {
-          label: "Ish soatlari",
+          label: t("nav.work-hours"),
           href: "/admin/work-hours",
           icon: Clock,
           roles: ["ADMIN", "DIREKTOR"],
         },
         {
-          label: "O'zgarishlar tarixi",
+          label: t("nav.history"),
           href: "/admin/history",
           icon: History,
           roles: ["ADMIN", "DIREKTOR"],
@@ -201,7 +201,7 @@ export function Sidebar() {
     },
     {
       id: "infrastructure",
-      label: "Infratuzilma",
+      label: t("nav.group-infrastructure"),
       items: [
         {
           label: t("nav.departments"),
@@ -210,14 +210,14 @@ export function Sidebar() {
           roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
         },
         {
-          label: "Xonalar",
+          label: t("nav.rooms"),
           href: "/rooms",
           icon: DoorOpen,
           roles: ["ADMIN", "DIREKTOR"],
           exact: true,
         },
         {
-          label: "Xona matritsasi",
+          label: t("nav.rooms-matrix"),
           href: "/rooms/matrix",
           icon: Grid3x3,
           roles: ["ADMIN", "DIREKTOR"],
@@ -226,7 +226,7 @@ export function Sidebar() {
     },
     {
       id: "finance",
-      label: "Moliya",
+      label: t("nav.group-finance"),
       items: [
         {
           label: t("nav.invoices"),
@@ -327,7 +327,7 @@ export function Sidebar() {
           ) : (
             <Moon className="w-4 h-4 flex-shrink-0" />
           )}
-          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+          <span>{theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}</span>
         </button>
 
         <button
