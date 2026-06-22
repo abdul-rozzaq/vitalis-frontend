@@ -18,11 +18,10 @@ import {
   Filter,
   Loader2,
   Plus,
-  RotateCcw,
   Trash2,
   User,
   Users,
-  X,
+  X
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -165,9 +164,18 @@ export default function AssignmentsRoomsPage() {
       {
         accessorKey: "roomType",
         header: t("forms.roomType"),
-        cell: ({ row }) => (
-          <span className="text-secondary text-sm">{row.original.roomType}</span>
-        ),
+        cell: ({ row }) => {
+          const labels: Record<string, string> = {
+            WARD: t("forms.roomTypeWard"),
+            EXAMINATION: t("forms.roomTypeExamination"),
+            OPERATION: t("forms.roomTypeOperation"),
+          };
+          return (
+            <span className="text-secondary text-sm">
+              {labels[row.original.roomType] ?? row.original.roomType}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "capacity",
@@ -380,11 +388,10 @@ export default function AssignmentsRoomsPage() {
                   <div className="relative">
                     <button
                       onClick={() => setWardFilterOpen((v) => !v)}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-colors ${
-                        wardFilter
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-colors ${wardFilter
                           ? "bg-primary-50 border-primary-200 text-primary"
                           : "bg-background border-border text-secondary hover:bg-surface-hover"
-                      }`}
+                        }`}
                     >
                       <Filter className="w-3 h-3" />
                       {wardFilter
@@ -405,15 +412,14 @@ export default function AssignmentsRoomsPage() {
                               setWardFilter(s);
                               setWardFilterOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-surface-hover ${
-                              wardFilter === s ? "text-primary font-medium" : "text-secondary"
-                            }`}
+                            className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-surface-hover ${wardFilter === s ? "text-primary font-medium" : "text-secondary"
+                              }`}
                           >
                             {s === ""
                               ? t("wards.allStatuses")
                               : s === "OCCUPIED"
-                              ? t("wards.statusOccupied")
-                              : t("wards.statusVacated")}
+                                ? t("wards.statusOccupied")
+                                : t("wards.statusVacated")}
                           </button>
                         ))}
                       </div>
@@ -445,11 +451,11 @@ export default function AssignmentsRoomsPage() {
                       const days =
                         ward.status === "OCCUPIED"
                           ? Math.max(
-                              1,
-                              Math.ceil(
-                                (Date.now() - new Date(ward.checkIn).getTime()) / 86400000,
-                              ),
-                            )
+                            1,
+                            Math.ceil(
+                              (Date.now() - new Date(ward.checkIn).getTime()) / 86400000,
+                            ),
+                          )
                           : (ward.daysStayed ?? 1);
 
                       return (
@@ -475,11 +481,10 @@ export default function AssignmentsRoomsPage() {
 
                             {/* Status badge */}
                             <span
-                              className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                                ward.status === "OCCUPIED"
+                              className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${ward.status === "OCCUPIED"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-gray-100 text-gray-500"
-                              }`}
+                                }`}
                             >
                               {ward.status === "OCCUPIED"
                                 ? t("wards.statusOccupied")
@@ -501,11 +506,10 @@ export default function AssignmentsRoomsPage() {
                             )}
                             {ward.expectedOut && ward.status === "OCCUPIED" && (
                               <span
-                                className={`text-xs ${
-                                  new Date(ward.expectedOut) < new Date()
+                                className={`text-xs ${new Date(ward.expectedOut) < new Date()
                                     ? "text-red-500 font-medium"
                                     : "text-secondary"
-                                }`}
+                                  }`}
                               >
                                 → {new Date(ward.expectedOut).toLocaleDateString("uz-UZ")}
                                 {new Date(ward.expectedOut) < new Date() && " ⚠️"}

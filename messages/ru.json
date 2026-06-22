@@ -15,6 +15,7 @@
     "duty": "Моё дежурство",
     "operations": "Операции",
     "operation-types": "Типы операций",
+    "diagnostics": "Диагностика"
     "group-core": "Основное",
     "group-clinical": "Клиническое",
     "group-shifts": "Смены",
@@ -311,8 +312,10 @@
       "CHECKIN": "Регистрация",
       "CONSULTATION": "Консультация",
       "LAB": "Лаборатория",
+      "DIAGNOSTIC": "Диагностика",
       "PROCEDURE": "Процедура",
       "REFERRAL": "Направление",
+      "OPERATION": "Операция",
       "DISCHARGE": "Выписка"
     },
     "stepStatus": {
@@ -469,7 +472,11 @@
     "free": "Свободно",
     "bedsOccupied": "мест занято",
     "roomDetail": "Детали комнаты",
-    "roomDetailDesc": "Информация о комнате и её вместимости"
+    "roomDetailDesc": "Информация о комнате и её вместимости",
+    "colDiagnostic": "Диагностика",
+    "newDiagnosticAssignment": "Новое назначение диагностики",
+    "statusActive": "Активный",
+    "statusInactive": "Неактивный"
   },
   "forms": {
     "cancel": "Отмена",
@@ -645,7 +652,17 @@
     "doctor": "Врач / Назначение",
     "note": "Примечание",
     "notePlaceholder": "Дополнительные заметки...",
-    "optional": "(необязательно)"
+    "optional": "(необязательно)",
+    "diagnosticName": "Название диагностического центра",
+    "diagnosticNameTooShort": "Название диагностического центра слишком короткое",
+    "diagnosticDescPlaceholder": "Краткое описание этого диагностического центра...",
+    "addDiagnostic": "Добавить диагностический центр",
+    "updateDiagnostic": "Обновить диагностический центр",
+    "diagnosticServiceName": "Название услуги",
+    "diagnosticServiceNameTooShort": "Название услуги слишком короткое",
+    "addDiagnosticService": "Добавить услугу",
+    "updateDiagnosticService": "Обновить услугу",
+    "roomTypeOperation": "Операционная"
   },
   "notifications": {
     "title": "Уведомления",
@@ -726,7 +743,9 @@
     "itemStatus": {
       "PENDING": "Ожидание",
       "IN_PROGRESS": "В процессе",
+      "READY": "Готово",
       "DONE": "Выполнено",
+      "DELIVERED": "Выдано",
       "CANCELLED": "Отменено"
     },
     "searchPlaceholder": "Поиск заказов...",
@@ -952,5 +971,32 @@
         "itemNameRequired": "Все услуги должны иметь название"
       }
     }
+  },
+  "diagnostics": {
+    "title": "Диагностика",
+    "description": "Управление диагностическими центрами и их услугами.",
+    "addDiagnostic": "Добавить диагностический центр",
+    "colDiagnostic": "Диагностический центр",
+    "colServices": "Услуги",
+    "colServiceName": "Услуга",
+    "colPrice": "Цена",
+    "addNewTitle": "Добавить новый диагностический центр",
+    "addNewDesc": "Создать новый диагностический центр в вашей организации.",
+    "editTitle": "Редактировать диагностический центр",
+    "editDesc": "Изменить данные этого диагностического центра.",
+    "deleteConfirm": "Вы уверены, что хотите удалить этот диагностический центр?",
+    "notFound": "Диагностический центр не найден.",
+    "viewDiagnostic": "Просмотреть диагностический центр",
+    "editDiagnostic": "Редактировать диагностический центр",
+    "deleteDiagnostic": "Удалить диагностический центр",
+    "services": "Услуги",
+    "servicesDesc": "Услуги, предоставляемые {name}.",
+    "servicesCount": "{count} услуг",
+    "addService": "Добавить услугу",
+    "addServiceTitle": "Добавить услугу для {name}",
+    "addServiceDesc": "Создать новую услугу для {name}.",
+    "editServiceTitle": "Редактировать услугу",
+    "editServiceDesc": "Изменить данные этой услуги.",
+    "deleteServiceConfirm": "Вы уверены, что хотите удалить эту услугу?"
   }
 }

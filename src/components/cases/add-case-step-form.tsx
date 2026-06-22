@@ -1,6 +1,5 @@
 "use client";
 
-import type { Laboratory } from "@/features/lab/types";
 import type { AssignmentSource, CaseStepType } from "@/features/patients/detail/types";
 import { toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
@@ -10,7 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type AvailableStepType = Exclude<CaseStepType, "CHECKIN">;
 
-const ALL_STEP_TYPES: AvailableStepType[] = ["CONSULTATION", "LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"];
+const ALL_STEP_TYPES: AvailableStepType[] = ["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"];
 
 interface AddCaseStepFormProps {
   caseId: string;
@@ -21,7 +20,26 @@ interface AddCaseStepFormProps {
   onSuccess?: () => void;
 }
 
-export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, defaultStepType, onClose, onSuccess, appointmentId }: AddCaseStepFormProps) {
+interface Laboratory {
+  id: string;
+  name: string;
+  services: { id: string; name: string; price?: number | null }[];
+}
+
+interface Diagnostics {
+  id: string;
+  name: string;
+  services: { id: string; name: string; price?: number | null }[];
+}
+
+export function AddCaseStepForm({
+  caseId,
+  availableStepTypes = ALL_STEP_TYPES,
+  defaultStepType,
+  onClose,
+  onSuccess,
+  appointmentId,
+}: AddCaseStepFormProps) {
   const t = useTranslations();
 
   const [stepType, setStepType] = useState<AvailableStepType | "">(defaultStepType ?? "");
@@ -29,21 +47,29 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
   const [stepDateTime, setStepDateTime] = useState(() => new Date().toISOString().slice(0, 16));
   const [stepAmount, setStepAmount] = useState("");
   const [stepNote, setStepNote] = useState("");
+
+  // LAB state
   const [labDepartmentId, setLabDepartmentId] = useState("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
-  // Assignments (cached — same key used across pages)
+  // DIAGNOSTIC state
+  const [diagnosticsId, setDiagnosticsId] = useState("");
+  const [selectedDiagnosticServiceIds, setSelectedDiagnosticServiceIds] = useState<string[]>([]);
+
+  // Assignments
   const { data: assignmentsDataRaw } = useQuery({
     queryKey: ["assignments"],
     queryFn: () => api.get("/assignments").then((res) => res.data as unknown),
     refetchOnWindowFocus: false,
   });
 
-  const assignmentsData = useMemo(() => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []), [assignmentsDataRaw]);
-
+  const assignmentsData = useMemo(
+    () => (Array.isArray(assignmentsDataRaw) ? (assignmentsDataRaw as AssignmentSource[]) : []),
+    [assignmentsDataRaw]
+  );
   const assignmentOptions = useMemo(() => toAssignmentOptions(assignmentsData), [assignmentsData]);
 
-  // Auto-fill amount for CONSULTATION based on selected doctor's department price
+  // Auto-fill amount for CONSULTATION
   useEffect(() => {
     if (stepType === "CONSULTATION") {
       const assignment = assignmentsData.find((a) => a.id === stepAssignmentId);
@@ -51,11 +77,19 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
     }
   }, [stepAssignmentId, stepType, assignmentsData]);
 
-  // Lab departments — fetched lazily only when LAB is selected
+  // LAB — laboratorylar
   const { data: labDepts = [] } = useQuery<Laboratory[]>({
     queryKey: ["laboratories"],
     queryFn: () => api.get("/laboratories").then((res) => res.data),
     enabled: stepType === "LAB",
+    refetchOnWindowFocus: false,
+  });
+
+  // DIAGNOSTIC — diagnostika markazlari
+  const { data: diagnosticCenters = [] } = useQuery<Diagnostics[]>({
+    queryKey: ["diagnostics"],
+    queryFn: () => api.get("/diagnostics").then((res) => res.data),
+    enabled: stepType === "DIAGNOSTIC",
     refetchOnWindowFocus: false,
   });
 
@@ -67,6 +101,8 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
     setStepNote("");
     setLabDepartmentId("");
     setSelectedServiceIds([]);
+    setDiagnosticsId("");
+    setSelectedDiagnosticServiceIds([]);
   };
 
   const { mutate: submit, isPending: isSubmitting } = useMutation({
@@ -88,11 +124,12 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
     if (stepType === "LAB") {
       payload.laboratoryId = labDepartmentId;
       payload.serviceIds = selectedServiceIds;
-
+    } else if (stepType === "DIAGNOSTIC") {
+      payload.diagnosticsId = diagnosticsId;
+      payload.diagnosticServiceIds = selectedDiagnosticServiceIds;
     } else if (stepType === "PROCEDURE") {
       payload.appointmentId = appointmentId;
       payload.amount = stepAmount ? Number(stepAmount) : 0;
-    
     } else {
       if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
       if (stepDateTime) payload.dateTime = new Date(stepDateTime).toISOString();
@@ -102,9 +139,16 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
     submit(payload);
   };
 
-  const isDisabled = !stepType || isSubmitting || (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0));
+  const isDisabled =
+    !stepType ||
+    isSubmitting ||
+    (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0)) ||
+    (stepType === "DIAGNOSTIC" && (!diagnosticsId || selectedDiagnosticServiceIds.length === 0));
 
-  const inputCls = "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
+  const inputCls =
+    "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
+
+  const selectedDiagnosticsCenter = diagnosticCenters.find((d) => d.id === diagnosticsId);
 
   return (
     <div className="space-y-4">
@@ -118,6 +162,8 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
             setStepAssignmentId("");
             setLabDepartmentId("");
             setSelectedServiceIds([]);
+            setDiagnosticsId("");
+            setSelectedDiagnosticServiceIds([]);
           }}
           className={inputCls}
         >
@@ -146,11 +192,23 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("forms.dateTime")}</label>
-            <input type="datetime-local" value={stepDateTime} onChange={(e) => setStepDateTime(e.target.value)} className={inputCls} />
+            <input
+              type="datetime-local"
+              value={stepDateTime}
+              onChange={(e) => setStepDateTime(e.target.value)}
+              className={inputCls}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-            <input type="number" min="0" value={stepAmount} onChange={(e) => setStepAmount(e.target.value)} placeholder="0" className={inputCls} />
+            <input
+              type="number"
+              min="0"
+              value={stepAmount}
+              onChange={(e) => setStepAmount(e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
           </div>
         </>
       )}
@@ -184,15 +242,24 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
                 {labDepts
                   .find((d) => d.id === labDepartmentId)
                   ?.services.map((svc) => (
-                    <label key={svc.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors">
+                    <label
+                      key={svc.id}
+                      className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedServiceIds.includes(svc.id)}
-                        onChange={(e) => setSelectedServiceIds((prev) => (e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)))}
+                        onChange={(e) =>
+                          setSelectedServiceIds((prev) =>
+                            e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)
+                          )
+                        }
                         className="w-4 h-4 accent-primary-600"
                       />
                       <span className="text-sm text-text flex-1">{svc.name}</span>
-                      {svc.price != null && <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>}
+                      {svc.price != null && (
+                        <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>
+                      )}
                     </label>
                   ))}
               </div>
@@ -206,11 +273,79 @@ export function AddCaseStepForm({ caseId, availableStepTypes = ALL_STEP_TYPES, d
         </>
       )}
 
+      {/* DIAGNOSTIC */}
+      {stepType === "DIAGNOSTIC" && (
+        <>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("diagnostics.center")}</label>
+            <select
+              value={diagnosticsId}
+              onChange={(e) => {
+                setDiagnosticsId(e.target.value);
+                setSelectedDiagnosticServiceIds([]);
+              }}
+              className={inputCls}
+            >
+              <option value="">{t("forms.select")}</option>
+              {diagnosticCenters.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {diagnosticsId && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">{t("diagnostics.services")}</label>
+              <div className="border border-border rounded-md overflow-hidden max-h-44 overflow-y-auto divide-y divide-border">
+                {selectedDiagnosticsCenter?.services.length === 0 && (
+                  <p className="text-xs text-text-muted text-center py-4">{t("common.noData")}</p>
+                )}
+                {selectedDiagnosticsCenter?.services.map((svc) => (
+                  <label
+                    key={svc.id}
+                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDiagnosticServiceIds.includes(svc.id)}
+                      onChange={(e) =>
+                        setSelectedDiagnosticServiceIds((prev) =>
+                          e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)
+                        )
+                      }
+                      className="w-4 h-4 accent-primary-600"
+                    />
+                    <span className="text-sm text-text flex-1">{svc.name}</span>
+                    {svc.price != null && (
+                      <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+              {selectedDiagnosticServiceIds.length > 0 && (
+                <p className="text-xs text-primary">
+                  {selectedDiagnosticServiceIds.length} {t("lab.servicesSelected")}
+                </p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* PROCEDURE */}
       {stepType === "PROCEDURE" && (
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-          <input type="number" min="0" value={stepAmount} onChange={(e) => setStepAmount(e.target.value)} placeholder="0" className={inputCls} />
+          <input
+            type="number"
+            min="0"
+            value={stepAmount}
+            onChange={(e) => setStepAmount(e.target.value)}
+            placeholder="0"
+            className={inputCls}
+          />
         </div>
       )}
 

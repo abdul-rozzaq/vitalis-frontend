@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckCircle2,
   ChevronRight,
-  DoorOpen,
   Loader2,
   Plus,
   Scissors,
@@ -18,7 +17,7 @@ import {
   User,
   UserRound,
   Wrench,
-  X,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -55,7 +54,7 @@ interface OperationType {
   items: OperationTypeItem[];
 }
 
-interface Room { id: string; name: string }
+interface Room { id: string; name: string; roomType: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
 interface Case { id: string; status: string; chiefComplaint?: string | null }
 
@@ -294,8 +293,9 @@ export default function NewOperationPage() {
     sublabel: Number(t.basePrice) > 0 ? `${fmt(Number(t.basePrice))} so'm` : undefined,
   }));
 
-  const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name }));
-
+  const operationRooms = rooms.filter((r) => r.roomType === "OPERATION");
+  const roomOptions = operationRooms.map((r) => ({ value: r.id, label: r.name }));
+  
   const caseOptions = cases
     .filter((c) => c.status === "ACTIVE")
     .map((c) => ({
@@ -477,8 +477,8 @@ export default function NewOperationPage() {
                     onChange={setCaseId}
                     placeholder={
                       !patientId ? "Avval bemor tanlang" :
-                      isCasesLoading ? "Yuklanmoqda..." :
-                      "Holat tanlang..."
+                        isCasesLoading ? "Yuklanmoqda..." :
+                          "Holat tanlang..."
                     }
                     searchPlaceholder="Holat qidiring..."
                     disabled={!patientId || isCasesLoading}
@@ -547,11 +547,10 @@ export default function NewOperationPage() {
               <div className="space-y-3">
                 {surgeons.map((s, idx) => (
                   <div key={idx} className="relative">
-                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                      s.role === "LEAD"
-                        ? "bg-primary text-white"
-                        : "bg-surface border border-border text-text-muted"
-                    }`}>
+                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${s.role === "LEAD"
+                      ? "bg-primary text-white"
+                      : "bg-surface border border-border text-text-muted"
+                      }`}>
                       {s.role === "LEAD" ? "Bosh jarroh" : "Yordamchi"}
                     </div>
                     <div className="flex items-end gap-2 p-3 pt-4 bg-surface-hover rounded-lg border border-border">

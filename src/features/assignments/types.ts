@@ -1,6 +1,6 @@
 import { UserRole } from "@/types/user";
 
-export type RoomType = "WARD" | "EXAMINATION";
+export type RoomType = "WARD" | "EXAMINATION" | "OPERATION";
 
 export interface Room {
   id: string;
@@ -59,7 +59,7 @@ export interface DepartmentOption {
   price?: number | null;
 }
 
-export type TabId = "assignments" | "rooms" | "roles" | "permissions" | "lab-assignments" | "laboratories";
+export type TabId = "assignments" | "rooms" | "roles" | "permissions" | "lab-assignments" | "laboratories" | "diagnostics" | "diagnostics-assignments" | "operation-types";
 
 export interface SheetState<T> {
   open: boolean;
@@ -68,7 +68,7 @@ export interface SheetState<T> {
 
 export type RoomPayload = {
   name: string;
-  roomType: "WARD" | "EXAMINATION";
+  roomType: RoomType;
   capacity?: number;
   floor?: number | null;
   description?: string;
