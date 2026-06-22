@@ -595,12 +595,13 @@ export default function AssignmentsRoomsPage() {
           initialData={
             sheet.editing
               ? {
-                name: sheet.editing.name,
-                roomType: sheet.editing.roomType,
-                capacity: sheet.editing.capacity ?? undefined,
-                description: sheet.editing.description ?? "",
-                departmentId: sheet.editing.department?.id ?? "",
-              }
+                  name: sheet.editing.name,
+                  roomType: sheet.editing.roomType,
+                  capacity: sheet.editing.capacity ?? undefined,
+                  floor: sheet.editing.floor ?? undefined,
+                  description: sheet.editing.description ?? "",
+                  departmentId: sheet.editing.department?.id ?? "",
+                }
               : undefined
           }
           onSubmit={(data) => {

@@ -7,6 +7,7 @@ export interface Room {
   name: string;
   roomType: RoomType;
   capacity?: number | null;
+  floor?: number | null;
   description?: string;
   department?: { id: string; name: string } | null;
   createdAt: string;
@@ -69,6 +70,7 @@ export type RoomPayload = {
   name: string;
   roomType: RoomType;
   capacity?: number;
+  floor?: number | null;
   description?: string;
   departmentId?: string | null;
 };

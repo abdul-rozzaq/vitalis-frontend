@@ -3,7 +3,7 @@
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { AlignLeft, BedDouble, Building2, Hash, LayoutGrid } from "lucide-react";
+import { AlignLeft, BedDouble, Building2, Hash, LayoutGrid, Layers } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
@@ -12,6 +12,7 @@ type RoomFormInput = {
   name: string;
   roomType: "WARD" | "EXAMINATION" | "OPERATION" | "";
   capacity?: number | string;
+  floor?: number | string;
   description?: string;
   departmentId?: string;
 };
@@ -21,6 +22,7 @@ type RoomFormValues = {
   name: string;
   roomType: "WARD" | "EXAMINATION" | "OPERATION";
   capacity?: number;
+  floor?: number | null;
   description?: string;
   departmentId?: string | null;
 };
@@ -45,6 +47,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
     name: z.string().min(1, t("forms.roomNameRequired")),
     roomType: z.enum(["WARD", "EXAMINATION", "OPERATION"], { message: t("forms.roomTypeRequired") }),
     capacity: z.coerce.number().min(1, t("forms.capacityMin")).optional(),
+    floor: z.coerce.number().int().min(0).optional().nullable(),
     description: z.string().optional(),
     departmentId: z.string().uuid().optional().nullable(),
   });
@@ -95,6 +98,21 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           <option value="OPERATION">{t("forms.roomTypeOperation")}</option>
         </select>
         {errors.roomType && <p className="text-xs text-danger-600 font-medium">{errors.roomType.message}</p>}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Layers className="w-4 h-4 text-primary-500" />
+          Qavat <span className="text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+        </label>
+        <input
+          {...register("floor")}
+          type="number"
+          min={0}
+          placeholder="1"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+        {errors.floor && <p className="text-xs text-danger-600 font-medium">{errors.floor.message}</p>}
       </div>
 
       {roomType === "WARD" && (
