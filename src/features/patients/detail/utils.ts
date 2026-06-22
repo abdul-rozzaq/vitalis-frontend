@@ -2,14 +2,13 @@ import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { AppointmentTimelineItem, AssignmentSource } from "./types";
 
 export const PAYMENT_STATUS_STYLES = {
-  // PAID: {
-  //   bg: "bg-primary-50 dark:bg-emerald-950/40",
-  //   border: "border-primary-100 dark:border-emerald-800",
-  //   text: "text-primary dark:text-emerald-400",
-  //   icon: CheckCircle2,
-  //   dot: "bg-primary",
-  // },
-  PAID: { bg: "bg-green-100", border: "border-green-300", text: "text-green-800", icon: CheckCircle2 },
+  PAID: {
+    bg: "bg-success-50",
+    border: "border-success-100",
+    text: "text-success",
+    icon: CheckCircle2,
+    dot: "bg-success",
+  },
   PENDING: {
     bg: "bg-warning-50 dark:bg-amber-950/40",
     border: "border-amber-200 dark:border-amber-800",
@@ -27,7 +26,7 @@ export const PAYMENT_STATUS_STYLES = {
 } as const;
 
 export const APPOINTMENT_STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-primary-50 dark:bg-emerald-950/40 text-primary dark:text-emerald-400",
+  ACTIVE: "bg-primary-50 text-primary",
   COMPLETED: "bg-info-50 dark:bg-blue-950/40 text-info-600 dark:text-blue-400",
   CANCELLED: "bg-danger-50 dark:bg-red-950/40 text-danger-600 dark:text-red-400",
 };

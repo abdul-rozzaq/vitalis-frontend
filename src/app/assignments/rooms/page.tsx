@@ -196,7 +196,7 @@ export default function AssignmentsRoomsPage() {
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-border rounded-full h-1.5 max-w-20">
                 <div
-                  className={`h-1.5 rounded-full transition-all ${r.isFull ? "bg-red-500" : "bg-green-500"}`}
+                  className={`h-1.5 rounded-full transition-all ${r.isFull ? "bg-red-500" : "bg-success"}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -351,13 +351,13 @@ export default function AssignmentsRoomsPage() {
                     <p className="text-xs text-secondary mt-0.5">{t("assignments.occupied")}</p>
                   </div>
                   <div className="bg-surface-hover rounded-lg p-2">
-                    <p className="text-xl font-bold text-green-600">{roomDetail.freeSlots ?? roomDetail.freeCount}</p>
+                    <p className="text-xl font-bold text-success">{roomDetail.freeSlots ?? roomDetail.freeCount}</p>
                     <p className="text-xs text-secondary mt-0.5">{t("assignments.free")}</p>
                   </div>
                 </div>
                 <div className="bg-border rounded-full h-2">
                   <div
-                    className={`h-2 rounded-full transition-all ${roomDetail.isFull ? "bg-red-500" : "bg-green-500"}`}
+                    className={`h-2 rounded-full transition-all ${roomDetail.isFull ? "bg-red-500" : "bg-success"}`}
                     style={{
                       width: `${Math.min(100, (roomDetail.occupiedCount / roomDetail.capacity) * 100)}%`,
                     }}
@@ -482,7 +482,7 @@ export default function AssignmentsRoomsPage() {
                             {/* Status badge */}
                             <span
                               className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${ward.status === "OCCUPIED"
-                                  ? "bg-green-100 text-green-700"
+                                  ? "bg-success-100 text-success"
                                   : "bg-gray-100 text-gray-500"
                                 }`}
                             >

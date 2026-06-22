@@ -181,7 +181,7 @@ export default function DiagnosticAssignmentsPage() {
         header: t("assignments.colStatus"),
         cell: ({ row }) =>
           row.original.isActive ? (
-            <span className="text-green-600 flex items-center gap-1">
+            <span className="text-success flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
               {t("assignments.statusActive")}
             </span>

@@ -112,7 +112,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
               {t("ward.summary")}
             </p>
             {paymentStatus === "ok" && (
-              <span className="flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+              <span className="flex items-center gap-1 text-xs bg-success-100 text-success px-2 py-0.5 rounded-full">
                 <CheckCircle2 className="w-3 h-3" /> {t("ward.statusPaid")}
               </span>
             )}
@@ -140,7 +140,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
             </div>
             <div>
               <p className="text-secondary text-xs">Joriy balans</p>
-              <p className={`font-semibold ${hasDebt ? "text-red-600" : "text-green-600"}`}>
+              <p className={`font-semibold ${hasDebt ? "text-red-600" : "text-success"}`}>
                 {fmt(cashBalance)}
               </p>
             </div>
@@ -163,7 +163,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
               <div className="h-2 bg-border rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    hasDebt ? "bg-red-500" : "bg-green-500"
+                    hasDebt ? "bg-red-500" : "bg-success"
                   }`}
                   style={{
                     width: `${Math.min(100, Math.round((cashBalance / totalCharged) * 100))}%`,

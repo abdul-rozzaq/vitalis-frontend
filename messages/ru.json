@@ -33,7 +33,17 @@
     "work-hours": "Рабочие часы",
     "history": "История изменений",
     "rooms": "Комнаты",
-    "rooms-matrix": "Матрица комнат"
+    "rooms-matrix": "Матрица комнат",
+    "ws-dashboard": "Дашборд",
+    "ws-patients": "Пациенты",
+    "ws-clinical": "Клиника",
+    "ws-schedule": "Расписание",
+    "ws-staff": "Персонал",
+    "ws-finance": "Финансы",
+    "ws-settings": "Настройки",
+    "rooms-floor-view": "Вид этажа",
+    "new-patient": "Новый пациент",
+    "new-employee": "Новый сотрудник"
   },
   "common": {
     "filter": "Фильтр",
@@ -65,7 +75,9 @@
     "allDepartments": "Все отделы",
     "reset": "Сброс",
     "search": "Поиск",
-    "info": "Информация"
+    "info": "Информация",
+    "expandAll": "Развернуть все",
+    "collapseAll": "Свернуть все"
   },
   "table": {
     "noResults": "Результаты не найдены.",

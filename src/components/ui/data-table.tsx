@@ -35,10 +35,10 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
 
   return (
     <div className="w-full">
-      <div className="bg-surface rounded-lg border border-border overflow-hidden">
+      <div className="bg-surface rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-background border-b border-border text-secondary text-xs font-medium">
+            <thead className="bg-surface-secondary border-b border-border text-text-muted text-[11.5px] font-bold uppercase tracking-wider">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (

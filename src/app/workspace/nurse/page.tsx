@@ -87,9 +87,9 @@ export default function NurseDashboardPage() {
               : (
                 <div className="space-y-2">
                   {tasks.filter((t) => t.completed > 0).map((t) => (
-                    <div key={t.key} className="flex items-center justify-between p-2.5 rounded-lg bg-green-50 border border-green-200">
-                      <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-600" /><span className="text-sm text-text">{t.room}</span></div>
-                      <span className="text-xs text-green-700">{t.completed} apoxot</span>
+                    <div key={t.key} className="flex items-center justify-between p-2.5 rounded-lg bg-success-50 border border-success-100">
+                      <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-success" /><span className="text-sm text-text">{t.room}</span></div>
+                      <span className="text-xs text-success">{t.completed} apoxot</span>
                     </div>
                   ))}
                 </div>
@@ -105,7 +105,7 @@ function TaskBadge({ status }: { status: TaskStatus }) {
   const map = {
     pending: { label: "Kutilmoqda", cls: "bg-amber-50 text-amber-700 border-amber-200" },
     in_progress: { label: "Jarayonda", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-    done: { label: "Bajarilgan", cls: "bg-green-50 text-green-700 border-green-200" },
+    done: { label: "Bajarilgan", cls: "bg-success-50 text-success border-success-100" },
   }[status];
   return <span className={`text-xs px-2 py-0.5 rounded-full border ${map.cls}`}>{map.label}</span>;
 }

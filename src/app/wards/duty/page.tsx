@@ -47,7 +47,7 @@ interface WardRound {
 }
 
 const CONDITION_STYLES: Record<string, string> = {
-  STABLE: "bg-green-100 text-green-700",
+  STABLE: "bg-success-100 text-success",
   IMPROVING: "bg-blue-100 text-blue-700",
   WORSENING: "bg-orange-100 text-orange-700",
   CRITICAL: "bg-red-100 text-red-700",
@@ -302,7 +302,7 @@ function ShiftDutyCard({
               .map((r) => (
                 <span
                   key={r.id}
-                  className="flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full"
+                  className="flex items-center gap-1 text-xs text-success bg-success-50 border border-success-100 px-2 py-0.5 rounded-full"
                 >
                   <CheckCircle2 className="w-3 h-3" />
                   {new Date(r.completedAt!).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}

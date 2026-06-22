@@ -272,7 +272,7 @@ export default function WardsPage() {
         cell: (info: any) => {
           const val = info.getValue() as string;
           return (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${val === "OCCUPIED" ? "bg-success-100 text-success" : "bg-gray-100 text-gray-500"}`}>
               {val === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
             </span>
           );
@@ -356,7 +356,7 @@ export default function WardsPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
-            { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-green-600" },
+            { label: t("wards.statusOccupied"), value: stats.occupied, color: "text-success" },
             { label: t("wards.statusVacated"),  value: stats.vacated,  color: "text-text-muted" },
             { label: t("wards.total"),           value: stats.total,    color: "text-primary" },
           ].map((s) => (
@@ -488,7 +488,7 @@ export default function WardsPage() {
           </div>
         ) : wardDetail ? (
           <div className="space-y-4">
-            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${wardDetail.status === "OCCUPIED" ? "bg-success-100 text-success" : "bg-gray-100 text-gray-500"}`}>
               {wardDetail.status === "OCCUPIED" ? t("wards.statusOccupied") : t("wards.statusVacated")}
             </span>
 
