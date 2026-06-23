@@ -4,7 +4,7 @@ import { TabId } from "./types";
 export const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
   DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-green-100", text: "text-green-700" },
+  NURSE: { bg: "bg-success-100", text: "text-success" },
   RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
 };
 

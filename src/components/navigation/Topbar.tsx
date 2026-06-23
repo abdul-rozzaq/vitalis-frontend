@@ -1,78 +1,57 @@
 "use client";
 
+import { useTheme } from "@/hooks/use-theme";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { PatientSearch } from "@/components/ui/patient-search";
 import { ShiftNotificationBell } from "@/components/shifts/ShiftNotificationBell";
-import { Command, Search } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { activeWorkspace, isItemActive } from "./workspaces";
 
 export function Topbar() {
-  const [commandOpen, setCommandOpen] = useState(false);
+  const pathname = usePathname();
+  const t = useTranslations();
+  const { theme, toggleTheme } = useTheme();
+
+  const ws = activeWorkspace(pathname);
+  const activeItem = ws.items.find((item) => isItemActive(pathname, item));
 
   return (
-    <>
-      <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-6 sticky top-0 z-20">
-        {/* Left: Search & Breadcrumb */}
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="w-80 max-w-full">
-            <PatientSearch />
-          </div>
-        </div>
+    <header className="flex h-14 items-center gap-3.5 border-b border-border bg-surface px-[18px] sticky top-0 z-20">
+      {/* Breadcrumb */}
+      <div className="flex min-w-0 items-center gap-1.5 text-[13px]">
+        <span className="text-text-muted">{t(ws.labelKey)}</span>
+        {activeItem && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-text-muted" />
+            <span className="truncate font-semibold text-text">
+              {t(activeItem.labelKey)}
+            </span>
+          </>
+        )}
+      </div>
 
-        {/* Right: Actions & Settings */}
-        <div className="flex items-center gap-2">
-          {/* Quick Create Button */}
-          {/* <button className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4" />
-            <span>New</span>
-          </button> */}
+      {/* Search (centered) */}
+      <div className="mx-auto w-full max-w-[380px]">
+        <PatientSearch />
+      </div>
 
-          {/* Command Palette */}
-          <button
-            onClick={() => setCommandOpen(!commandOpen)}
-            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-secondary hover:text-text hover:border-text-muted transition-colors text-sm"
-          >
-            <Command className="w-4 h-4" />
-            <span>K</span>
-          </button>
-
-          {/* Notifications */}
-          <ShiftNotificationBell />
-
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-        </div>
-      </header>
-
-      {/* Command Palette Modal (simplified) */}
-      {commandOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50"
-          onClick={() => setCommandOpen(false)}
+      {/* Controls */}
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-text cursor-pointer"
         >
-          <div className="pt-20 px-4">
-            <div
-              className="bg-surface rounded-xl border border-border max-w-2xl mx-auto shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-                <Search className="w-5 h-5 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search or jump to..."
-                  className="flex-1 bg-transparent outline-none text-text placeholder:text-text-muted"
-                  autoFocus
-                />
-              </div>
-              <div className="p-2 max-h-96 overflow-y-auto">
-                <p className="px-3 py-2 text-xs font-medium text-text-muted">
-                  No recent searches
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+          {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+        </button>
+
+        <ShiftNotificationBell />
+
+        <LanguageSwitcher />
+      </div>
+    </header>
   );
 }

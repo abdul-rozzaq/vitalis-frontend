@@ -41,14 +41,14 @@ interface Appointment {
 
 const STATUS_STYLES: Record<CaseStatus, { bg: string; text: string; icon: React.ElementType }> = {
   ACTIVE: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: Clock },
-  COMPLETED: { bg: "bg-green-50 border-green-200", text: "text-green-700", icon: CheckCircle2 },
+  COMPLETED: { bg: "bg-success-50 border-success-100", text: "text-success", icon: CheckCircle2 },
   CANCELLED: { bg: "bg-red-50 border-red-200", text: "text-red-600", icon: XCircle },
 };
 
 const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
   { bg: "bg-blue-100", icon: "text-blue-600" },
   { bg: "bg-purple-100", icon: "text-purple-600" },
-  { bg: "bg-green-100", icon: "text-green-600" },
+  { bg: "bg-success-100", icon: "text-success" },
   { bg: "bg-amber-100", icon: "text-amber-600" },
   { bg: "bg-rose-100", icon: "text-rose-600" },
   { bg: "bg-cyan-100", icon: "text-cyan-600" },

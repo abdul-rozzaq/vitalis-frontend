@@ -5,7 +5,8 @@
    Enterprise Healthcare CRM Design System
 ───────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-primary-700: #15803d;
+  /* Font families (mapped from next/font CSS variables, see @theme inline below) */
+  --color-primary-700: oklch(0.46 0.14 248);
   --color-success-500: #22c55e;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
@@ -39,12 +40,17 @@
    allowing @layer base to swap values for dark mode without any dark: variants.
 ───────────────────────────────────────────────────────────────────────────── */
 @theme inline {
+  /* Font families (resolve through next/font variables) */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+
   /* Surfaces & Backgrounds */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-surface-secondary: var(--surface-secondary);
   --color-surface-dark: var(--surface-dark);
+  --color-rail: var(--rail);
 
   /* Borders */
   --color-border: var(--border);
@@ -61,6 +67,7 @@
   --color-primary-50: var(--primary-50);
   --color-primary-100: var(--primary-100);
   --color-primary-500: var(--primary-500);
+  --color-primary-text: var(--primary-text);
   --color-accent: var(--accent);
 
   /* Status Colors */
@@ -82,28 +89,30 @@
 @layer base {
   :root {
     /* Backgrounds & Surfaces */
-    --background: #f8fafc;
+    --background: #eef1f5;
     --surface: #ffffff;
     --surface-hover: #f1f5f9;
-    --surface-secondary: #f0f4f8;
+    --surface-secondary: #f6f8fc;
     --surface-dark: #0f172a;
+    --rail: #fbfcfe;
 
     /* Borders */
-    --border: #e2e8f0;
-    --border-light: #f1f5f9;
+    --border: #e4e8ef;
+    --border-light: #eef1f6;
 
     /* Text */
-    --text: #0f172a;
-    --text-muted: #64748b;
+    --text: #141925;
+    --text-muted: #697586;
     --text-secondary: #475569;
-    --secondary: #64748b;
+    --secondary: #697586;
 
-    /* Brand Colors - Professional Green */
-    --primary: #16a34a;
-    --primary-50: #f0fdf4;
-    --primary-100: #dcfce7;
-    --primary-500: #22c55e;
-    --accent: #22c55e;
+    /* Brand Colors - Ocean */
+    --primary: oklch(0.58 0.15 248);
+    --primary-50: oklch(0.95 0.03 248);
+    --primary-100: oklch(0.9 0.05 248);
+    --primary-500: oklch(0.58 0.15 248);
+    --primary-text: oklch(0.46 0.14 248);
+    --accent: oklch(0.58 0.15 248);
 
     /* Status Colors */
     --success: #22c55e;
@@ -140,28 +149,30 @@
   /* ─── Dark mode values ──────────────────────────────────────────────────── */
   .dark {
     /* Backgrounds & Surfaces */
-    --background: #0f172a;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --surface-secondary: #1a222f;
-    --surface-dark: #0f172a;
+    --background: #0c0f15;
+    --surface: #151a22;
+    --surface-hover: #232b3a;
+    --surface-secondary: #1b2230;
+    --surface-dark: #0c0f15;
+    --rail: #0a0d12;
 
     /* Borders */
-    --border: #334155;
-    --border-light: #475569;
+    --border: #262d3a;
+    --border-light: #1e2531;
 
     /* Text */
-    --text: #f8fafc;
-    --text-muted: #94a3b8;
+    --text: #e7eaf0;
+    --text-muted: #8a93a3;
     --text-secondary: #cbd5e1;
-    --secondary: #cbd5e1;
+    --secondary: #8a93a3;
 
-    /* Brand Colors */
-    --primary: #22c55e;
-    --primary-50: #051f1a;
-    --primary-100: #0d3d2f;
-    --primary-500: #22c55e;
-    --accent: #34d399;
+    /* Brand Colors - Ocean */
+    --primary: oklch(0.68 0.15 248);
+    --primary-50: oklch(0.28 0.07 248);
+    --primary-100: oklch(0.34 0.09 248);
+    --primary-500: oklch(0.68 0.15 248);
+    --primary-text: oklch(0.83 0.11 248);
+    --accent: oklch(0.68 0.15 248);
 
     /* Status Colors */
     --success: #34d399;

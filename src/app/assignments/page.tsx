@@ -142,7 +142,7 @@ export default function AssignmentsPage() {
         header: t("assignments.colStatus"),
         cell: ({ row }) =>
           row.original.isActive ? (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success">
               <CheckCircle2 className="w-3 h-3" /> {t("assignments.active")}
             </span>
           ) : (

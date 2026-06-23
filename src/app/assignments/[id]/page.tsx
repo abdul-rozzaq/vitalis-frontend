@@ -46,7 +46,7 @@ interface RoomOption { id: string; name: string }
 const ROLE_STYLES: Partial<Record<UserRole, { bg: string; text: string }>> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
   DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  HAMSHIRA: { bg: "bg-green-100", text: "text-green-700" },
+  HAMSHIRA: { bg: "bg-success-100", text: "text-success" },
   KASSIR: { bg: "bg-orange-100", text: "text-orange-700" },
 };
 
@@ -209,7 +209,7 @@ export default function AssignmentDetailPage() {
 
             <div className="pt-1 border-t border-border">
               {assignment.isActive ? (
-                <span className="flex items-center gap-1.5 text-sm text-green-600 font-medium">
+                <span className="flex items-center gap-1.5 text-sm text-success font-medium">
                   <CheckCircle2 className="w-4 h-4" />
                   {t("common.active")}
                 </span>

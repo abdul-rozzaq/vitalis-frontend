@@ -13,7 +13,7 @@ import Link from "next/link";
 const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
   DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-green-100", text: "text-green-700" },
+  NURSE: { bg: "bg-success-100", text: "text-success" },
   RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
 };
 
@@ -167,8 +167,8 @@ export default function HomePage() {
       label: t("dashboard.totalEmployees"),
       value: stats?.employeesTotal ?? "—",
       icon: UserPen,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-success",
+      bg: "bg-success-50",
     },
     {
       label: t("dashboard.unpaidInvoices"),
@@ -183,8 +183,8 @@ export default function HomePage() {
     <div className="p-6 space-y-6 max-w-6xl mx-auto w-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text tracking-tight">{t("dashboard.title")}</h2>
-          <p className="text-secondary text-sm mt-0.5">{t("dashboard.welcome", { name: user.first_name })}</p>
+          <h2 className="text-[22px] font-extrabold text-text tracking-[-0.015em]">{t("dashboard.title")}</h2>
+          <p className="text-text-muted text-[13.5px] mt-0.5">{t("dashboard.welcome", { name: user.first_name })}</p>
         </div>
         <Can roles={["ADMIN", "KASSIR"]}>
           <Link href="/patients/new">
@@ -199,14 +199,14 @@ export default function HomePage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat, i) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-surface p-4 rounded-lg border border-border">
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-surface p-4 rounded-[13px] border border-border">
             <div className="flex items-center justify-between mb-3">
-              <div className={`${stat.bg} ${stat.color} p-2 rounded-md`}>
+              <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
                 <stat.icon className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-secondary text-xs font-medium">{stat.label}</p>
-            <h3 className="text-2xl font-semibold text-text mt-0.5">{statsLoading ? <span className="inline-block w-10 h-6 bg-border animate-pulse rounded" /> : stat.value}</h3>
+            <p className="text-text-muted text-[12.5px] font-medium">{stat.label}</p>
+            <h3 className="text-[27px] font-extrabold text-text mt-0.5 leading-tight">{statsLoading ? <span className="inline-block w-10 h-7 bg-border animate-pulse rounded" /> : stat.value}</h3>
           </motion.div>
         ))}
       </div>

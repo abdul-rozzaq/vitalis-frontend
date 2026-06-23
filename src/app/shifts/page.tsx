@@ -147,7 +147,7 @@ function WeekDayGrid({ days, slots, onSlotClick }: { days: Date[]; slots: Resolv
                         <button key={i} onClick={() => onSlotClick(s)}
                           className={`w-full text-left px-2 py-1 rounded-md border text-xs transition-colors hover:shadow-sm ${
                             s.source === "none" ? "bg-amber-50 border-amber-200 text-amber-700"
-                            : "bg-teal-50 border-teal-200 text-teal-700"}`}>
+                            : "bg-success-50 border-success-100 text-success"}`}>
                           <div className="font-medium truncate">{s.room.name}</div>
                           <div className="truncate text-[11px] opacity-80">
                             {s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : "— biriktirilmagan"}

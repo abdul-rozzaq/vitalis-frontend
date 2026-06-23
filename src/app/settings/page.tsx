@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Camera, KeyRound, Loader2, Phone, Shield, User, X } from "lucide-react";
+import { Calendar, Camera, KeyRound, Loader2, LogOut, Phone, Shield, User, X } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -17,7 +17,7 @@ import * as z from "zod";
 
 export default function SettingsPage() {
   const t = useTranslations();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const queryClient = useQueryClient();
 
   const profileSchema = createProfileSchema(t);
@@ -223,7 +223,7 @@ export default function SettingsPage() {
               {t("common.saveChanges")}
             </button>
             {profileSuccess && (
-              <span className="text-sm text-green-600 font-medium">{t("settings.savedSuccessfully")}</span>
+              <span className="text-sm text-success font-medium">{t("settings.savedSuccessfully")}</span>
             )}
           </div>
         </form>
@@ -304,10 +304,38 @@ export default function SettingsPage() {
               {t("settings.changePasswordBtn")}
             </button>
             {passwordSuccess && (
-              <span className="text-sm text-green-600 font-medium">{t("settings.savedSuccessfully")}</span>
+              <span className="text-sm text-success font-medium">{t("settings.savedSuccessfully")}</span>
             )}
           </div>
         </form>
+      </motion.div>
+
+      {/* Account / Sign out Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+        className="bg-surface border border-border rounded-xl p-6 flex items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-text truncate">
+              {user?.first_name} {user?.last_name}
+            </h3>
+            <p className="text-xs text-secondary truncate">{user?.role}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => logout()}
+          className="inline-flex items-center gap-2 bg-surface border border-border hover:bg-danger-50 hover:text-danger-600 hover:border-danger-100 text-secondary px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer shrink-0"
+        >
+          <LogOut className="w-4 h-4" />
+          {t("nav.signOut")}
+        </button>
       </motion.div>
     </div>
   );

@@ -179,10 +179,10 @@ export function EnterpriseDataTable<TData extends { id?: string | number }, TVal
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-lg overflow-hidden">
+      <div className="border border-border rounded-xl overflow-hidden bg-surface">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-background border-b border-border text-text-muted text-xs font-medium sticky top-0">
+            <thead className="bg-surface-secondary border-b border-border text-text-muted text-[11.5px] font-bold uppercase tracking-wider sticky top-0">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {/* Checkbox Column */}
@@ -204,7 +204,7 @@ export function EnterpriseDataTable<TData extends { id?: string | number }, TVal
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className={`${current.py} whitespace-nowrap text-text-muted font-medium`}
+                      className={`${current.py} whitespace-nowrap`}
                     >
                       <div className="flex items-center gap-2">
                         {header.isPlaceholder

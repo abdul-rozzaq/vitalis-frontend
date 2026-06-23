@@ -268,15 +268,15 @@ function StatusTracker({ item }: { item: LabOrderItem }) {
         return (
           <div key={step} className="flex flex-col items-center flex-1">
             <div className="flex items-center w-full">
-              <div className={`flex-1 h-[1.5px] transition-colors ${idx === 0 ? "invisible" : isDone || isActive ? "bg-emerald-400" : "bg-border"}`} />
-              <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-all ${isDone ? "bg-emerald-500 border-emerald-500" : isActive ? "bg-blue-500 border-blue-500 ring-[4px] ring-blue-100" : "bg-surface border-border"}`}>
+              <div className={`flex-1 h-[1.5px] transition-colors ${idx === 0 ? "invisible" : isDone || isActive ? "bg-success" : "bg-border"}`} />
+              <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center shrink-0 transition-all ${isDone ? "bg-success border-success" : isActive ? "bg-blue-500 border-blue-500 ring-[4px] ring-blue-100" : "bg-surface border-border"}`}>
                 {isDone && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
                 {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
               </div>
-              <div className={`flex-1 h-[1.5px] transition-colors ${idx === TRACKER_STEPS.length - 1 ? "invisible" : isDone ? "bg-emerald-400" : "bg-border"}`} />
+              <div className={`flex-1 h-[1.5px] transition-colors ${idx === TRACKER_STEPS.length - 1 ? "invisible" : isDone ? "bg-success" : "bg-border"}`} />
             </div>
             <div className="mt-1.5 text-center">
-              <p className={`text-[9px] font-semibold leading-tight tracking-wide ${isDone ? "text-emerald-700" : isActive ? "text-blue-700" : "text-text-muted"}`}>
+              <p className={`text-[9px] font-semibold leading-tight tracking-wide ${isDone ? "text-success" : isActive ? "text-blue-700" : "text-text-muted"}`}>
                 {TRACKER_STEP_LABELS[step]}
               </p>
               {time && (

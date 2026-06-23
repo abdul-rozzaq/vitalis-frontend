@@ -1,9 +1,11 @@
 "use client";
 
-import { Sidebar } from "@/components/navigation/Sidebar";
+import { ContextualPanel } from "@/components/navigation/ContextualPanel";
+import { IconRail } from "@/components/navigation/IconRail";
 import { Topbar } from "@/components/navigation/Topbar";
 import { useAuth } from "@/hooks/use-auth";
 import Lottie from "lottie-react";
+import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import React from "react";
 
@@ -32,16 +34,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Modern Sidebar Navigation */}
-      <Sidebar />
+      {/* amoCRM-style shell: icon rail + contextual panel + content */}
+      <IconRail />
+      <ContextualPanel />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Modern Topbar */}
         <Topbar />
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="flex-1 overflow-auto">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.26, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </div>
       </main>
     </div>
   );
