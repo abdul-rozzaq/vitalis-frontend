@@ -14,13 +14,6 @@ export const TAB_IDLE = "text-secondary hover:bg-surface-hover hover:text-text";
 
 export const getTableRowIndex = (pageIndex: number, pageSize: number, rowIndex: number) => pageIndex * pageSize + rowIndex + 1;
 
-export const formatShortDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
 export const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
 export const getAssignmentTabs = (t: (key: string) => string) => [

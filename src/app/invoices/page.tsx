@@ -20,6 +20,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -92,8 +93,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) =>
-  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = formatCurrency;
 
 function StatusBadge({ status }: { status: InvoiceStatus }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.DRAFT;

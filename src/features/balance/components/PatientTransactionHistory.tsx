@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/formatters";
 import { Card, CardHeader } from "@/components/design-system/Card";
 
 interface CashTransaction {
@@ -86,13 +87,8 @@ export function PatientTransactionHistory({ patientId }: PatientTransactionHisto
   const total = currentData?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
 
-  const formatAmount = (val: string, isCredit: boolean) => {
-    const num = parseFloat(val).toLocaleString("uz-UZ", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    return `${isCredit ? "+" : "-"} ${num} UZS`;
-  };
+  const formatAmount = (val: string, isCredit: boolean) =>
+    `${isCredit ? "+" : "-"} ${formatCurrency(val)} UZS`;
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("uz-UZ", {
@@ -174,10 +170,7 @@ export function PatientTransactionHistory({ patientId }: PatientTransactionHisto
                       {formatAmount(tx.amount, credit)}
                     </td>
                     <td className="py-2 px-3 text-right text-text whitespace-nowrap">
-                      {parseFloat(tx.balanceAfter).toLocaleString("uz-UZ", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
+                      {formatCurrency(tx.balanceAfter)}{" "}
                       UZS
                     </td>
                   </tr>

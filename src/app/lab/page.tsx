@@ -3,6 +3,7 @@
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import type { LabItemStatus, LabOrder, LabOrderItem } from "@/features/lab/types";
 import { resolveFileUrl } from "@/features/patients/detail/utils";
+import { formatDateTime as formatDate } from "@/lib/formatters";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -148,16 +149,6 @@ interface ItemEditForm {
 type ViewMode = "tasks" | "orders";
 
 /* ===================== UTILS ===================== */
-
-function formatDate(iso?: string | null) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  return (
-    d.toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" }) +
-    " " +
-    d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
-  );
-}
 
 /** Bemorning ismi bo'yicha barqaror, ko'zga yoqimli avatar rangi. */
 function initialsOf(firstName: string, lastName: string) {

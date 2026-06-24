@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/formatters";
 import { Modal } from "@/components/design-system/Modal";
 
 interface BalanceData {
@@ -94,8 +95,7 @@ export function InvoicePayModal({
     });
   };
 
-  const fmt = (val: number) =>
-    val.toLocaleString("uz-UZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = formatCurrency;
 
   const isPartialInvoice = paidAmount > 0;
 

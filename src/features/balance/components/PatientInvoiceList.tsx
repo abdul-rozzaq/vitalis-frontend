@@ -3,6 +3,7 @@
 import { Card, CardHeader } from "@/components/design-system/Card";
 import { Can } from "@/components/ui/can";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Clock, FileText, Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
@@ -95,7 +96,7 @@ export function PatientInvoiceList({ patientId }: Props) {
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
 
-  const fmt = (val: string | number) => Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = formatCurrency;
 
   return (
     <>

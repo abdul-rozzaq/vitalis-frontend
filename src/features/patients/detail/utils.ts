@@ -31,21 +31,6 @@ export const APPOINTMENT_STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-danger-50 dark:bg-red-950/40 text-danger-600 dark:text-red-400",
 };
 
-export function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function resolveFileUrl(url: string) {
   if (/^https?:\/\//i.test(url)) return url;
   return url.startsWith("/") ? url : `/${url}`;

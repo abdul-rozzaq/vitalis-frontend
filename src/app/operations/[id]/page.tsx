@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
+import { formatAmount } from "@/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -54,8 +55,7 @@ interface Operation {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) =>
-  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+const fmt = formatAmount;
 
 const initials = (first: string, last: string) =>
   `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();

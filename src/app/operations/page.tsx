@@ -16,6 +16,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { formatAmount } from "@/lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -62,8 +63,7 @@ const STATUS_STYLES: Record<OperationStatus, { bg: string; text: string; dot: st
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) =>
-  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+const fmt = formatAmount;
 
 function StatusBadge({ status }: { status: OperationStatus }) {
   const t = useTranslations();

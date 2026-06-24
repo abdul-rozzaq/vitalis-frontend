@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { WardCheckInModal } from "@/features/wards/components/ward-checkin-modal";
 import { WardEditModal } from "@/features/wards/components/ward-edit-modal";
 import { api } from "@/lib/api";
+import { formatDateUz } from "@/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { BedDouble, Calendar, CalendarCheck, ChevronDown, Clock, Edit, Filter, Loader2, Plus, RotateCcw, Trash2, Users, X } from "lucide-react";
@@ -179,7 +180,7 @@ export default function WardsPage() {
       {
         accessorKey: "checkIn",
         header: t("wards.colCheckIn"),
-        cell: (info: any) => <span className="text-sm text-secondary">{new Date(info.getValue()).toLocaleDateString("uz-UZ")}</span>,
+        cell: (info: any) => <span className="text-sm text-secondary">{formatDateUz(info.getValue())}</span>,
       },
       {
         accessorKey: "expectedOut",
@@ -190,7 +191,7 @@ export default function WardsPage() {
           const isOverdue = info.row.original.status === "OCCUPIED" && new Date(val) < new Date();
           return (
             <span className={`text-sm ${isOverdue ? "text-red-500 font-medium" : "text-secondary"}`}>
-              {new Date(val).toLocaleDateString("uz-UZ")}
+              {formatDateUz(val)}
               {isOverdue && " ⚠️"}
             </span>
           );
@@ -201,7 +202,7 @@ export default function WardsPage() {
         header: t("wards.actualOut"),
         cell: (info: any) => {
           const val = info.getValue() as string | null;
-          return <span className="text-sm text-secondary">{val ? new Date(val).toLocaleDateString("uz-UZ") : "—"}</span>;
+          return <span className="text-sm text-secondary">{val ? formatDateUz(val) : "—"}</span>;
         },
       },
       {
@@ -460,7 +461,7 @@ export default function WardsPage() {
                   <span className="flex items-center gap-2 text-secondary">
                     <Calendar className="w-3.5 h-3.5" /> {t("wards.colCheckIn")}
                   </span>
-                  <span className="text-text font-medium">{new Date(wardDetail.checkIn).toLocaleDateString("uz-UZ")}</span>
+                  <span className="text-text font-medium">{formatDateUz(wardDetail.checkIn)}</span>
                 </div>
 
                 {wardDetail.expectedOut && (
@@ -469,7 +470,7 @@ export default function WardsPage() {
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.colExpectedOut")}
                     </span>
                     <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date() ? "text-red-500" : "text-text"}`}>
-                      {new Date(wardDetail.expectedOut).toLocaleDateString("uz-UZ")}
+                      {formatDateUz(wardDetail.expectedOut)}
                     </span>
                   </div>
                 )}
@@ -479,7 +480,7 @@ export default function WardsPage() {
                     <span className="flex items-center gap-2 text-secondary">
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.actualOut")}
                     </span>
-                    <span className="text-text font-medium">{new Date(wardDetail.actualOut).toLocaleDateString("uz-UZ")}</span>
+                    <span className="text-text font-medium">{formatDateUz(wardDetail.actualOut)}</span>
                   </div>
                 )}
 

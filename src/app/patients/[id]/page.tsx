@@ -9,7 +9,8 @@ import { PatientInvoiceList } from "@/features/balance/components/PatientInvoice
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
 import { AddCaseStepForm } from "@/features/cases/components/add-case-step-form";
 import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/detail/types";
-import { formatDate, formatTime, resolveFileUrl } from "@/features/patients/detail/utils";
+import { formatDateLong as formatDate, formatTime } from "@/lib/formatters";
+import { resolveFileUrl } from "@/features/patients/detail/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
