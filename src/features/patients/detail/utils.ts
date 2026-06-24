@@ -1,5 +1,4 @@
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
-import { AppointmentTimelineItem, AssignmentSource } from "./types";
 
 export const PAYMENT_STATUS_STYLES = {
   PAID: {
@@ -36,9 +35,4 @@ export function resolveFileUrl(url: string) {
   return url.startsWith("/") ? url : `/${url}`;
 }
 
-export function toAssignmentOptions(assignments: AssignmentSource[]) {
-  return assignments.map((assignment) => ({
-    id: assignment.id,
-    label: `Dr. ${assignment.user.first_name} ${assignment.user.last_name} — ${assignment.department.name}${assignment.room ? ` (${assignment.room.name})` : ""}`,
-  }));
-}
+export { toAssignmentOptions } from "@/lib/helpers";

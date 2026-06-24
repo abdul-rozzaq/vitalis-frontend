@@ -4,6 +4,7 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import type { LabItemStatus, LabOrder, LabOrderItem } from "@/features/lab/types";
 import { resolveFileUrl } from "@/features/patients/detail/utils";
 import { formatDateTime as formatDate } from "@/lib/formatters";
+import { deriveOrderStatus, initialsOf } from "@/lib/helpers";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -149,32 +150,6 @@ interface ItemEditForm {
 type ViewMode = "tasks" | "orders";
 
 /* ===================== UTILS ===================== */
-
-/** Bemorning ismi bo'yicha barqaror, ko'zga yoqimli avatar rangi. */
-function initialsOf(firstName: string, lastName: string) {
-  return (firstName[0] ?? "") + (lastName[0] ?? "");
-}
-
-/**
- * Buyurtmaning "haqiqiy" holatini itemlar asosida qayta hisoblaymiz —
- * backenddagi recalcOrderStatus bilan bir xil mantiq. order.status
- * ba'zan eski/sinxronlanmagan bo'lib qolishi mumkin (masalan, item
- * qo'lda READY holatiga qaytarilgan bo'lsa-yu, order COMPLETED qolib
- * ketgan bo'lsa) — shu sababli "Bajarildi" filtri faqat backend
- * bergan statusga emas, shu hisob-kitobga tayanadi.
- */
-function deriveOrderStatus(order: LabOrder): LabOrder["status"] {
-  if (order.items.length === 0) return order.status;
-  const statuses = order.items.map((i) => i.status);
-
-  if (statuses.every((s) => s === "DELIVERED" || s === "CANCELLED")) {
-    return "COMPLETED";
-  }
-  if (statuses.some((s) => s === "READY" || s === "DELIVERED" || s === "IN_PROGRESS")) {
-    return "IN_PROGRESS";
-  }
-  return "PENDING";
-}
 
 /* ===================== STATS BAR ===================== */
 

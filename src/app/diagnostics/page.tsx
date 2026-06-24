@@ -4,6 +4,7 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import type { DiagnosticOrder, DiagnosticOrderItem, DiagnosticItemStatus } from "@/features/diagnostic/types";
 import { resolveFileUrl } from "@/features/patients/detail/utils";
 import { formatDateTime as formatDate } from "@/lib/formatters";
+import { deriveOrderStatus, initialsOf } from "@/lib/helpers";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -114,18 +115,6 @@ interface ItemEditForm {
 type ViewMode = "tasks" | "orders";
 
 /* ===================== UTILS ===================== */
-
-function initialsOf(firstName: string, lastName: string) {
-  return (firstName[0] ?? "") + (lastName[0] ?? "");
-}
-
-function deriveOrderStatus(order: DiagnosticOrder): DiagnosticOrder["status"] {
-  if (order.items.length === 0) return order.status;
-  const statuses = order.items.map((i) => i.status);
-  if (statuses.every((s) => s === "DELIVERED" || s === "CANCELLED")) return "COMPLETED";
-  if (statuses.some((s) => s === "READY" || s === "DELIVERED" || s === "IN_PROGRESS")) return "IN_PROGRESS";
-  return "PENDING";
-}
 
 /* ===================== STATS BAR ===================== */
 

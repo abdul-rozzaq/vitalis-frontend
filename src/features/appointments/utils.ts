@@ -1,4 +1,7 @@
-import { Appointment, Assignment, Patient } from "./types";
+import { Appointment, Patient } from "./types";
+import { toAssignmentOptions } from "@/lib/helpers";
+
+export { toAssignmentOptions };
 
 export const CASE_STATUS_STYLES: Record<string, string> = {
   // PatientCase statuslari
@@ -15,12 +18,6 @@ export const toPatientOptions = (patients: Patient[]) =>
   patients.map((patient) => ({
     id: patient.id,
     name: `${patient.first_name} ${patient.last_name}`,
-  }));
-
-export const toAssignmentOptions = (assignments: Assignment[]) =>
-  assignments.map((assignment) => ({
-    id: assignment.id,
-    label: `Dr. ${assignment.user.first_name} ${assignment.user.last_name} — ${assignment.department.name}${assignment.room ? ` (${assignment.room.name})` : ""}`,
   }));
 
 export const filterAppointmentsByPatientName = (appointments: Appointment[], filterText: string) => {
