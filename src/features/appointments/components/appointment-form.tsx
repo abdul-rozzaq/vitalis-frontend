@@ -1,6 +1,7 @@
 "use client";
 
 import { Combobox } from "@/components/ui/combobox";
+import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Link2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -96,7 +97,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
           disabled={isPending}
           error={!!errors.patientId}
         />
-        {errors.patientId && <p className="text-xs text-danger-600 font-medium">{errors.patientId.message}</p>}
+        <FormError message={errors.patientId?.message} />
       </div>
 
       {/* Assignment */}
@@ -114,7 +115,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
           disabled={isPending}
           error={!!errors.assignmentId}
         />
-        {errors.assignmentId && <p className="text-xs text-danger-600 font-medium">{errors.assignmentId.message}</p>}
+        <FormError message={errors.assignmentId?.message} />
       </div>
 
       {/* DateTime */}
@@ -128,7 +129,7 @@ export function AppointmentForm({ initialData, patients, assignments, onSubmit, 
           {...register("dateTime")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.dateTime && <p className="text-xs text-danger-600 font-medium">{errors.dateTime.message}</p>}
+        <FormError message={errors.dateTime?.message} />
       </div>
 
       <div className="flex gap-3 pt-2">

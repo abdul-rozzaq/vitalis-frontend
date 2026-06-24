@@ -1,8 +1,10 @@
 "use client";
 
 import usePhoneFormatter from "@/components/formatPhoneinput";
+import { FormButtons } from "@/components/ui/form-buttons";
+import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Loader2, Phone, Shield, Upload, User, X } from "lucide-react";
+import { Calendar, Phone, Shield, Upload, User, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -157,7 +159,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             placeholder="John"
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
-          {errors.first_name && <p className="text-xs text-danger-600 font-medium">{errors.first_name.message}</p>}
+          <FormError message={errors.first_name?.message} />
         </div>
 
         <div className="space-y-1.5">
@@ -170,7 +172,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             placeholder="Doe"
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
-          {errors.last_name && <p className="text-xs text-danger-600 font-medium">{errors.last_name.message}</p>}
+          <FormError message={errors.last_name?.message} />
         </div>
       </div>
 
@@ -211,7 +213,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
 
-            {errors.phone && <p className="text-xs text-danger-600 font-medium">{errors.phone.message}</p>}
+            <FormError message={errors.phone?.message} />
           </div>
         )}
       />
@@ -228,7 +230,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             placeholder="••••••••"
             className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
           />
-          {errors.password && <p className="text-xs text-danger-600 font-medium">{errors.password.message}</p>}
+          <FormError message={errors.password?.message} />
         </div>
       )}
 
@@ -246,7 +248,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
               placeholder="••••••••"
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
-            {errors.password && <p className="text-xs text-danger-600 font-medium">{errors.password.message}</p>}
+            <FormError message={errors.password?.message} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text flex items-center gap-2">
@@ -259,7 +261,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
               placeholder="••••••••"
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
-            {errors.confirm_password && <p className="text-xs text-danger-600 font-medium">{errors.confirm_password.message}</p>}
+            <FormError message={errors.confirm_password?.message} />
           </div>
         </div>
       )}
@@ -280,7 +282,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
             </option>
           ))}
         </select>
-        {errors.role && <p className="text-xs text-danger-600 font-medium">{errors.role.message}</p>}
+        <FormError message={errors.role?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -293,22 +295,12 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
           type="date"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.birthday && <p className="text-xs text-danger-600 font-medium">{errors.birthday.message}</p>}
+        <FormError message={errors.birthday?.message} />
       </div>
 
-      <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
-          {t("forms.cancel")}
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {isEditing ? t("forms.updateEmployee") : t("forms.addEmployee")}
-        </button>
-      </div>
+      <FormButtons onCancel={onCancel} loading={isPending}>
+        {isEditing ? t("forms.updateEmployee") : t("forms.addEmployee")}
+      </FormButtons>
     </form>
   );
 }

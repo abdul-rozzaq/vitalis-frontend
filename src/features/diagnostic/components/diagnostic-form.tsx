@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Stethoscope } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { FormError } from "@/components/ui/form-error";
 
 type DiagnosticFormValues = {
   name: string;
@@ -48,7 +49,7 @@ export function DiagnosticForm({ initialData, onSubmit, onCancel }: DiagnosticFo
           placeholder="e.g. UZI markazi"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
+        <FormError message={errors.name?.message} />
       </div>
 
       <div className="space-y-1.5">

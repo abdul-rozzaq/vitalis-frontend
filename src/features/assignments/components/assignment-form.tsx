@@ -1,6 +1,7 @@
 "use client";
 
 import { UserOption } from "@/features/assignments/types";
+import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Clock, DoorOpen, Plus, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -119,7 +120,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           disabled={isLoading}
           error={!!errors.userId}
         />
-        {errors.userId && <p className="text-xs text-danger-600 font-medium">{errors.userId.message}</p>}
+        <FormError message={errors.userId?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -136,7 +137,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           disabled={isLoading}
           error={!!errors.departmentId}
         />
-        {errors.departmentId && <p className="text-xs text-danger-600 font-medium">{errors.departmentId.message}</p>}
+        <FormError message={errors.departmentId?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -153,7 +154,7 @@ export function AssignmentForm({ initialData, users, departments, rooms, onSubmi
           disabled={isLoading}
           error={!!errors.roomId}
         />
-        {errors.roomId && <p className="text-xs text-danger-600 font-medium">{errors.roomId.message}</p>}
+        <FormError message={errors.roomId?.message} />
       </div>
 
       <div className="flex items-center gap-3">

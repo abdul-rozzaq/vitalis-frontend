@@ -1,10 +1,11 @@
 "use client";
 
 import formatPhone from "@/components/formatPhone";
+import { FormButtons } from "@/components/ui/form-buttons";
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, CreditCard, Droplet, Heart, Loader2, MapPin, Phone, User } from "lucide-react";
+import { Calendar, CreditCard, Droplet, Heart, MapPin, Phone, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -402,23 +403,9 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       </div>
 
       {/* Tugmalar */}
-      <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
-          {t("forms.cancel")}
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {initialData ? t("forms.updatePatient") : t("forms.addPatient")}
-        </button>
-      </div>
+      <FormButtons onCancel={onCancel} loading={isPending}>
+        {initialData ? t("forms.updatePatient") : t("forms.addPatient")}
+      </FormButtons>
     </form>
   );
 }

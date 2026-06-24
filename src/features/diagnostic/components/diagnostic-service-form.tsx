@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DollarSign, FlaskConical } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { FormError } from "@/components/ui/form-error";
 
 type DiagnosticServiceFormInput = {
   name: string;
@@ -53,7 +54,7 @@ export function DiagnosticServiceForm({ initialData, onSubmit, onCancel }: Diagn
           placeholder={t("diagnostics.serviceExample")}
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
+        <FormError message={errors.name?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -69,7 +70,7 @@ export function DiagnosticServiceForm({ initialData, onSubmit, onCancel }: Diagn
           placeholder="0.00"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.price && <p className="text-xs text-danger-600 font-medium">{errors.price.message}</p>}
+        <FormError message={errors.price?.message} />
       </div>
 
       <div className="flex gap-3 pt-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { AlignLeft, BedDouble, Building2, Hash, LayoutGrid, Layers } from "lucide-react";
@@ -77,7 +78,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           placeholder="e.g. Room 220, Operating Room A"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.name && <p className="text-xs text-danger-600 font-medium">{errors.name.message}</p>}
+        <FormError message={errors.name?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -97,7 +98,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           <option value="WARD">{t("forms.roomTypeWard")}</option>
           <option value="OPERATION">{t("forms.roomTypeOperation")}</option>
         </select>
-        {errors.roomType && <p className="text-xs text-danger-600 font-medium">{errors.roomType.message}</p>}
+        <FormError message={errors.roomType?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -112,7 +113,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
           placeholder="1"
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
-        {errors.floor && <p className="text-xs text-danger-600 font-medium">{errors.floor.message}</p>}
+        <FormError message={errors.floor?.message} />
       </div>
 
       {roomType === "WARD" && (
@@ -129,7 +130,7 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading }: RoomFor
               placeholder="1"
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
-            {errors.capacity && <p className="text-xs text-danger-600 font-medium">{errors.capacity.message}</p>}
+            <FormError message={errors.capacity?.message} />
           </div>
 
           <div className="space-y-1.5">
