@@ -57,6 +57,7 @@ function DoctorsSectionEdit({
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   // ✅ Har bir doctor uchun alohida loading state
+  const t = useTranslations();
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [addingId, setAddingId] = useState<string | null>(null);
 
@@ -224,7 +225,7 @@ function DoctorsSectionCreate({
   onChange: (ids: string[]) => void;
 }) {
   const [search, setSearch] = useState("");
-
+  const t = useTranslations();
   const { data: allDoctors = [], isLoading } = useQuery<Doctor[]>({
     queryKey: ["users", "doctors"],
     queryFn: () => api.get("/users?role=DOCTOR").then((r) => r.data),

@@ -5,7 +5,7 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { RoundModal } from "@/components/rounds/RoundModal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BedDouble, CheckCircle2, Clock, ClipboardList, Users } from "lucide-react";
+import { BedDouble, CheckCircle2, ClipboardList, Clock, Users } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -134,6 +134,7 @@ function ShiftDutyCard({
     patients: { patientId: string; patientName: string; currentCondition?: "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" }[]
   ) => void;
 }) {
+  const t = useTranslations();
   const { data: patients = [] } = useQuery<WardPatient[]>({
     queryKey: ["room-patients", shift.room.id],
     queryFn: () => api.get(`/wards/room/${shift.room.id}`).then((r) => r.data),
@@ -157,8 +158,8 @@ function ShiftDutyCard({
       const resolvedId = assignmentId
         ? assignmentId
         : await api
-            .post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id })
-            .then((r) => r.data.id);
+          .post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id })
+          .then((r) => r.data.id);
       return api.post("/ward-rounds", { shiftAssignmentId: resolvedId });
     },
     onSuccess: (res) => {
@@ -277,9 +278,8 @@ function ShiftDutyCard({
                 <div className="flex items-center gap-2">
                   {lastNote ? (
                     <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"
-                      }`}
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"
+                        }`}
                     >
                       {CONDITION_LABELS[lastNote.condition] ?? lastNote.condition}
                     </span>

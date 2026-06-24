@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { fmtHM, ResolvedSlot, shiftsApi } from "@/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftRight, Clock4, Scissors, UserCog, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface Staff { id: string; first_name: string; last_name: string; role: string }
@@ -77,9 +77,8 @@ export default function ShiftOverridesPage() {
                     <td className="p-3 text-text-muted">{fmtHM(s.shift.startHour)}–{fmtHM(s.shift.endHour)}</td>
                     <td className="p-3 text-text">{s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : <span className="text-amber-600">biriktirilmagan</span>}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                        s.source === "assigned" ? "bg-success-50 text-success border-success-100"
-                        : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${s.source === "assigned" ? "bg-success-50 text-success border-success-100"
+                          : "bg-amber-50 text-amber-700 border-amber-200"}`}>
                         {s.source === "assigned" ? "Tayinlangan" : t("shifts.free")}
                       </span>
                     </td>
@@ -154,6 +153,7 @@ function OverrideModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose
 function OvertimeModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose: () => void; onSaved: () => void }) {
   const [newEndHour, setNewEndHour] = useState(slot.shift.endHour + 2);
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.overtime({ assignmentId: slot.assignment!.id, newEndHour, reason: reason || undefined }),
     onSuccess: () => { toast.success("Qo'shimcha vaqt qo'shildi"); onSaved(); }, onError: () => toast.error("Xatolik"),
@@ -176,6 +176,7 @@ function PartialModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose:
   const [windowStart, setWindowStart] = useState(slot.shift.startHour);
   const [windowEnd, setWindowEnd] = useState(slot.shift.endHour);
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.partialTransfer({ assignmentId: slot.assignment!.id, toDoctorId, windowStart, windowEnd, reason: reason || undefined }),
     onSuccess: () => { toast.success("Qisman o'tkazildi"); onSaved(); }, onError: () => toast.error("Xatolik"),
@@ -205,6 +206,7 @@ function SwapModal({ slots, onClose, onSaved }: { slots: ResolvedSlot[]; onClose
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.swap({ fromAssignmentId: a, toAssignmentId: b, reason: reason || undefined }),
     onSuccess: () => { toast.success("Smenalar almashtirildi"); onSaved(); }, onError: () => toast.error("Xatolik"),

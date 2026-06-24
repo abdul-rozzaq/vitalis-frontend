@@ -2,8 +2,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { DEFAULT_SHIFT_COLORS } from "@/components/shifts/ShiftTimeline";
 import { AssignDoctorModal } from "@/components/shifts/AssignDoctorModal";
+import { DEFAULT_SHIFT_COLORS } from "@/components/shifts/ShiftTimeline";
 import { api } from "@/lib/api";
 import { fmtHM, RoomShift, shiftsApi } from "@/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -256,7 +256,7 @@ export default function ShiftTemplatesPage() {
 
 function TemplateCard({ shift, onEdit, onAssign, onDelete }: { shift: RoomShift; onEdit: () => void; onAssign: () => void; onDelete: () => void }) {
   const color = shift.color ?? DEFAULT_SHIFT_COLORS[0];
-
+  const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl p-4">
       <div className="flex items-start justify-between">
