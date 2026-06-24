@@ -1,9 +1,4 @@
-export type DiagnosticItemStatus =
-  | "PENDING"
-  | "IN_PROGRESS"
-  | "READY"
-  | "DELIVERED"
-  | "CANCELLED";
+export type DiagnosticItemStatus = "PENDING" | "IN_PROGRESS" | "READY" | "DELIVERED" | "CANCELLED";
 
 export interface DiagnosticOrderFile {
   id: string;

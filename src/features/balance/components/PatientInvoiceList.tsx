@@ -1,20 +1,12 @@
 "use client";
 
-import { InvoicePayModal } from "@/components/balance/InvoicePayModal";
 import { Card, CardHeader } from "@/components/design-system/Card";
 import { Can } from "@/components/ui/can";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  FileText,
-  Loader2,
-  Wallet,
-  X,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, FileText, Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
+import { InvoicePayModal } from "./InvoicePayModal";
 
 type InvoiceStatus = "DRAFT" | "ISSUED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
 
@@ -49,11 +41,11 @@ interface PaginatedResponse {
 }
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; bg: string; text: string; dot: string; icon: React.ElementType }> = {
-  DRAFT:         { label: "Qoralama",        bg: "bg-surface-hover", text: "text-text-muted", dot: "bg-text-muted", icon: FileText },
-  ISSUED:        { label: "Chiqarilgan",     bg: "bg-info-50",       text: "text-info",       dot: "bg-info",       icon: Clock },
-  PARTIALLY_PAID:{ label: "Qisman to'langan",bg: "bg-warning-50",    text: "text-warning",    dot: "bg-warning",    icon: AlertCircle },
-  PAID:          { label: "To'langan",       bg: "bg-success-50",    text: "text-success",    dot: "bg-success",    icon: CheckCircle2 },
-  CANCELLED:     { label: "Bekor qilingan",  bg: "bg-danger-50",     text: "text-danger",     dot: "bg-danger",     icon: X },
+  DRAFT: { label: "Qoralama", bg: "bg-surface-hover", text: "text-text-muted", dot: "bg-text-muted", icon: FileText },
+  ISSUED: { label: "Chiqarilgan", bg: "bg-info-50", text: "text-info", dot: "bg-info", icon: Clock },
+  PARTIALLY_PAID: { label: "Qisman to'langan", bg: "bg-warning-50", text: "text-warning", dot: "bg-warning", icon: AlertCircle },
+  PAID: { label: "To'langan", bg: "bg-success-50", text: "text-success", dot: "bg-success", icon: CheckCircle2 },
+  CANCELLED: { label: "Bekor qilingan", bg: "bg-danger-50", text: "text-danger", dot: "bg-danger", icon: X },
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -103,8 +95,7 @@ export function PatientInvoiceList({ patientId }: Props) {
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
 
-  const fmt = (val: string | number) =>
-    Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (val: string | number) => Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <>
@@ -116,9 +107,7 @@ export function PatientInvoiceList({ patientId }: Props) {
             <Loader2 className="w-5 h-5 animate-spin text-text-muted" />
           </div>
         ) : invoices.length === 0 ? (
-          <div className="text-center py-8 text-sm text-text-muted">
-            Hisob-fakturalar yo&apos;q
-          </div>
+          <div className="text-center py-8 text-sm text-text-muted">Hisob-fakturalar yo&apos;q</div>
         ) : (
           <div className="space-y-2">
             {invoices.map((inv) => {
@@ -132,9 +121,7 @@ export function PatientInvoiceList({ patientId }: Props) {
                 <div key={inv.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-surface-hover transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-sm font-medium text-text">
-                        {SOURCE_LABELS[inv.sourceType] ?? inv.sourceType}
-                      </span>
+                      <span className="text-sm font-medium text-text">{SOURCE_LABELS[inv.sourceType] ?? inv.sourceType}</span>
                       <StatusBadge status={inv.status} />
                     </div>
                     <div className="text-xs text-text-muted mb-1.5">
@@ -147,10 +134,7 @@ export function PatientInvoiceList({ patientId }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 max-w-[120px] h-1.5 bg-surface rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-success rounded-full transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
+                        <div className="h-full bg-success rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="text-xs text-text-muted whitespace-nowrap">
                         {fmt(paid)} / {fmt(total)} UZS

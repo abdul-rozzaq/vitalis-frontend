@@ -77,5 +77,5 @@ export type RoomPayload = {
 
 export type RolePayload = {
   name: string;
-  description?: string; 
+  description?: string;
 };

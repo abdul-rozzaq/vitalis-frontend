@@ -1,5 +1,6 @@
 "use client";
 
+import usePhoneFormatter from "@/components/formatPhoneinput";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Loader2, Phone, Shield, Upload, User, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -7,7 +8,6 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
-import usePhoneFormatter from "../formatPhoneinput";
 
 type EmployeeFormValues = {
   first_name: string;

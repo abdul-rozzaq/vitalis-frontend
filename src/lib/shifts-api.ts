@@ -45,15 +45,7 @@ export interface ResolvedSlot {
   source: "assigned" | "none";
 }
 
-export type ShiftEventType =
-  | "SWAP_REQUEST"
-  | "SWAP_APPROVED"
-  | "SWAP_REJECTED"
-  | "FULL_TRANSFER"
-  | "PARTIAL_TRANSFER"
-  | "OVERTIME_ADDED"
-  | "OVERRIDE_CREATED"
-  | "OVERRIDE_DELETED";
+export type ShiftEventType = "SWAP_REQUEST" | "SWAP_APPROVED" | "SWAP_REJECTED" | "FULL_TRANSFER" | "PARTIAL_TRANSFER" | "OVERTIME_ADDED" | "OVERRIDE_CREATED" | "OVERRIDE_DELETED";
 
 export interface ShiftChangeEvent {
   id: string;
@@ -69,12 +61,7 @@ export interface ShiftChangeEvent {
   roomShift?: { id: string; name: string; startHour: number; endHour: number };
 }
 
-export type ShiftNotifType =
-  | "SWAP_REQUESTED"
-  | "SWAP_APPROVED"
-  | "SWAP_REJECTED"
-  | "SHIFT_CHANGED"
-  | "SHIFT_REMINDER";
+export type ShiftNotifType = "SWAP_REQUESTED" | "SWAP_APPROVED" | "SWAP_REJECTED" | "SHIFT_CHANGED" | "SHIFT_REMINDER";
 
 export interface ShiftNotification {
   id: string;
@@ -111,39 +98,29 @@ export interface WorkingHoursSummary {
 
 export const shiftsApi = {
   // Templates
-  listTemplates: (roomId?: string) =>
-    api.get<RoomShift[]>("/room-shifts", { params: roomId ? { roomId } : {} }).then((r) => r.data),
+  listTemplates: (roomId?: string) => api.get<RoomShift[]>("/room-shifts", { params: roomId ? { roomId } : {} }).then((r) => r.data),
   createTemplate: (data: Record<string, unknown>) => api.post("/room-shifts", data).then((r) => r.data),
-  updateTemplate: (id: string, data: Record<string, unknown>) =>
-    api.patch(`/room-shifts/${id}`, data).then((r) => r.data),
+  updateTemplate: (id: string, data: Record<string, unknown>) => api.patch(`/room-shifts/${id}`, data).then((r) => r.data),
   deleteTemplate: (id: string) => api.delete(`/room-shifts/${id}`).then((r) => r.data),
   addRoomToTemplate: (id: string, roomId: string) => api.post(`/room-shifts/${id}/rooms`, { roomId }).then((r) => r.data),
   removeRoomFromTemplate: (id: string, roomId: string) => api.delete(`/room-shifts/${id}/rooms/${roomId}`).then((r) => r.data),
 
   // Resolved calendar range
-  resolvedRange: (params: { from: string; to: string; roomId?: string }) =>
-    api.get<ResolvedSlot[]>("/shift-assignments", { params }).then((r) => r.data),
+  resolvedRange: (params: { from: string; to: string; roomId?: string }) => api.get<ResolvedSlot[]>("/shift-assignments", { params }).then((r) => r.data),
 
   // Bulk assign (shifokorni bir nechta kunga tayinlash)
-  bulkAssign: (data: { roomShiftId: string; roomId: string; doctorId: string; dates: string[] }) =>
-    api.post("/shift-assignments/bulk", data).then((r) => r.data),
+  bulkAssign: (data: { roomShiftId: string; roomId: string; doctorId: string; dates: string[] }) => api.post("/shift-assignments/bulk", data).then((r) => r.data),
 
   // Overrides & operations
-  createOverride: (data: { roomShiftId: string; roomId: string; date: string; doctorId: string; nurseIds?: string[] }) =>
-    api.post("/shift-assignments/override", data).then((r) => r.data),
+  createOverride: (data: { roomShiftId: string; roomId: string; date: string; doctorId: string; nurseIds?: string[] }) => api.post("/shift-assignments/override", data).then((r) => r.data),
   deleteOverride: (id: string) => api.delete(`/shift-assignments/override/${id}`).then((r) => r.data),
-  swap: (data: { fromAssignmentId: string; toAssignmentId: string; reason?: string }) =>
-    api.post("/shift-assignments/swap", data).then((r) => r.data),
-  partialTransfer: (data: { assignmentId: string; toDoctorId: string; windowStart: number; windowEnd: number; reason?: string }) =>
-    api.post("/shift-assignments/partial-transfer", data).then((r) => r.data),
-  overtime: (data: { assignmentId: string; newEndHour: number; reason?: string }) =>
-    api.post("/shift-assignments/overtime", data).then((r) => r.data),
-  assignmentHistory: (id: string) =>
-    api.get<ShiftChangeEvent[]>(`/shift-assignments/${id}/history`).then((r) => r.data),
+  swap: (data: { fromAssignmentId: string; toAssignmentId: string; reason?: string }) => api.post("/shift-assignments/swap", data).then((r) => r.data),
+  partialTransfer: (data: { assignmentId: string; toDoctorId: string; windowStart: number; windowEnd: number; reason?: string }) => api.post("/shift-assignments/partial-transfer", data).then((r) => r.data),
+  overtime: (data: { assignmentId: string; newEndHour: number; reason?: string }) => api.post("/shift-assignments/overtime", data).then((r) => r.data),
+  assignmentHistory: (id: string) => api.get<ShiftChangeEvent[]>(`/shift-assignments/${id}/history`).then((r) => r.data),
 
   // Events (admin history)
-  events: (params: { userId?: string; from?: string; to?: string; type?: ShiftEventType }) =>
-    api.get<ShiftChangeEvent[]>("/shift-events", { params }).then((r) => r.data),
+  events: (params: { userId?: string; from?: string; to?: string; type?: ShiftEventType }) => api.get<ShiftChangeEvent[]>("/shift-events", { params }).then((r) => r.data),
 
   // Notifications
   myNotifications: () => api.get<ShiftNotification[]>("/shift-notifications/my").then((r) => r.data),
@@ -152,18 +129,15 @@ export const shiftsApi = {
   markAllRead: () => api.patch("/shift-notifications/read-all").then((r) => r.data),
 
   // Working hours
-  workHours: (params: { userId?: string; from?: string; to?: string }) =>
-    api.get<WorkingHoursLog[]>("/working-hours", { params }).then((r) => r.data),
-  workHoursSummary: (userId: string, period: "week" | "month") =>
-    api.get<WorkingHoursSummary>("/working-hours/summary", { params: { userId, period } }).then((r) => r.data),
+  workHours: (params: { userId?: string; from?: string; to?: string }) => api.get<WorkingHoursLog[]>("/working-hours", { params }).then((r) => r.data),
+  workHoursSummary: (userId: string, period: "week" | "month") => api.get<WorkingHoursSummary>("/working-hours/summary", { params: { userId, period } }).then((r) => r.data),
   myWorkHours: () => api.get<WorkingHoursLog[]>("/working-hours/my").then((r) => r.data),
 
   // Workspace (doctor / nurse)
   myActiveShifts: () => api.get<ActiveShift[]>("/shift-assignments/my/active").then((r) => r.data),
   myUpcomingShifts: () => api.get<MyShifts>("/shift-assignments/my").then((r) => r.data),
   roomPatients: (roomId: string) => api.get<WardPatient[]>(`/wards/room/${roomId}`).then((r) => r.data),
-  roundsByAssignment: (assignmentId: string) =>
-    api.get<WardRoundRef[]>(`/ward-rounds?shiftAssignmentId=${assignmentId}`).then((r) => r.data),
+  roundsByAssignment: (assignmentId: string) => api.get<WardRoundRef[]>(`/ward-rounds?shiftAssignmentId=${assignmentId}`).then((r) => r.data),
 };
 
 export interface ActiveShift {

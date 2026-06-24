@@ -5,7 +5,6 @@ export interface Assignment {
   room: { id: string; name: string } | null;
 }
 
-
 export interface AppointmentFile {
   id: string;
   name: string;

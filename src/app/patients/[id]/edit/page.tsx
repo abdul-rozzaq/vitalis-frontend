@@ -1,6 +1,6 @@
 "use client";
 
-import { PatientForm } from "@/components/patients/patient-form";
+import { PatientForm } from "@/features/patients/components/patient-form";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

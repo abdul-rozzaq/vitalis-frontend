@@ -1,10 +1,10 @@
 "use client";
 
-import { InvoicePayModal } from "@/components/balance/InvoicePayModal";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";

@@ -1,6 +1,6 @@
 "use client";
 
-import { AssignmentForm, type AssignmentFormValues } from "@/components/assignments/assignment-form";
+import { AssignmentForm, type AssignmentFormValues } from "@/features/assignments/components/assignment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { UserOption } from "@/features/assignments/types";

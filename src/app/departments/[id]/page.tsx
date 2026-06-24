@@ -1,9 +1,9 @@
 "use client";
 
-import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { DepartmentForm } from "@/features/departments/components/department-form";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";

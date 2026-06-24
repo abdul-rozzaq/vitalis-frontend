@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import * as z from "zod";
-import { Combobox, ComboboxOption } from "../ui/combobox";
+import { Combobox, ComboboxOption } from "../../../components/ui/combobox";
 
 const scheduleRowSchema = z.object({
   startTime: z.string().min(1, "Required"),

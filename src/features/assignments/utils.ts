@@ -36,12 +36,12 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
     label: t("assignments.tabLabAssignments"),
     icon: FlaskConical,
   },
-    {
+  {
     id: "diagnostics" as TabId,
     label: "diagnotika",
     icon: Shield,
   },
-    {
+  {
     id: "diagnostics-assignments" as TabId,
     label: "diagnotika tayinlovi",
     icon: FlaskConical,
@@ -53,5 +53,4 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
   },
 ];
 
-export const getAssignmentsTabHref = (tabId: TabId) =>
-  tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`;
+export const getAssignmentsTabHref = (tabId: TabId) => (tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`);

@@ -1,14 +1,14 @@
 "use client";
 
-import { DepartmentForm } from "@/components/departments/department-form";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
-import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
+import { DepartmentForm } from "@/features/departments/components/department-form";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { Building2, Download, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -209,13 +209,7 @@ export default function DepartmentsPage() {
             <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <EnterpriseDataTable
-              columns={columns}
-              data={departmentsData ?? []}
-              pageSize={20}
-              searchKey="name"
-              searchPlaceholder={t("common.filterPlaceholder")}
-            />
+          <EnterpriseDataTable columns={columns} data={departmentsData ?? []} pageSize={20} searchKey="name" searchPlaceholder={t("common.filterPlaceholder")} />
         )}
       </PageContent>
 

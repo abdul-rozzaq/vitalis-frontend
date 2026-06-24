@@ -1,6 +1,6 @@
 "use client";
 
-import { RoomForm } from "@/components/assignments/room-form";
+import { RoomForm } from "@/features/assignments/components/room-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";

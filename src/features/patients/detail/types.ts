@@ -23,7 +23,6 @@ export interface Patient {
   } | null;
 }
 
-
 export interface AppointmentFile {
   id: string;
   name: string;

@@ -1,13 +1,14 @@
 "use client";
+
 import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
 import { fmtHM, ResolvedSlot, shiftsApi, WorkingHoursLog } from "@/lib/shifts-api";
+import { ymd } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Stethoscope, UserCheck, Users } from "lucide-react";
 import { useMemo } from "react";
 
-function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
 export default function StaffingOverviewPage() {
   const t = useTranslations();

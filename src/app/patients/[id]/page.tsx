@@ -1,13 +1,13 @@
 "use client";
 
-import { PatientBalanceCard } from "@/components/balance/PatientBalanceCard";
-import { PatientInvoiceList } from "@/components/balance/PatientInvoiceList";
-import { PatientTransactionHistory } from "@/components/balance/PatientTransactionHistory";
-import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import formatPhone from "@/components/formatPhone";
 import usePhoneFormatter from "@/components/formatPhoneinput";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import { PatientBalanceCard } from "@/features/balance/components/PatientBalanceCard";
+import { PatientInvoiceList } from "@/features/balance/components/PatientInvoiceList";
+import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
+import { AddCaseStepForm } from "@/features/cases/components/add-case-step-form";
 import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/detail/types";
 import { formatDate, formatTime, resolveFileUrl } from "@/features/patients/detail/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -59,7 +59,6 @@ const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
   DIAGNOSTIC: FlaskConical,
   OPERATION: Scissors,
   DISCHARGE: LogOut,
-
 };
 
 const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
@@ -123,9 +122,7 @@ function CaseStepRow({ step }: { step: CaseStep }) {
               </p>
             )}
           </div>
-          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${STEP_STATUS_COLOR[step.status]}`}>
-            {t(`cases.stepStatus.${step.status}`)}
-          </span>
+          <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium border ${STEP_STATUS_COLOR[step.status]}`}>{t(`cases.stepStatus.${step.status}`)}</span>
         </div>
 
         {step.note && <p className="text-xs text-text-muted italic">{step.note}</p>}
@@ -163,9 +160,7 @@ function CaseStepRow({ step }: { step: CaseStep }) {
                         <Download className="w-3.5 h-3.5" />
                       </a>
                     ))}
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
-                      {t(`lab.itemStatus.${item.status}`)}
-                    </span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
                   </div>
                 </div>
               ))}
@@ -175,9 +170,7 @@ function CaseStepRow({ step }: { step: CaseStep }) {
 
         {step.diagnosticOrder && (
           <div className="space-y-1.5 mt-2">
-            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
-              {step.diagnosticOrder.diagnostics.name}
-            </p>
+            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.diagnosticOrder.diagnostics.name}</p>
             <div className="space-y-1">
               {step.diagnosticOrder.items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
@@ -188,9 +181,7 @@ function CaseStepRow({ step }: { step: CaseStep }) {
                         <Download className="w-3.5 h-3.5" />
                       </a>
                     ))}
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>
-                      {t(`lab.itemStatus.${item.status}`)}
-                    </span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
                   </div>
                 </div>
               ))}
@@ -218,24 +209,14 @@ function CaseStepRow({ step }: { step: CaseStep }) {
 
 // ─── CaseCard ─────────────────────────────────────────────────────────────────
 
-function CaseCard({
-  patientCase,
-  onAddStep,
-  onCloseCase,
-}: {
-  patientCase: PatientCase;
-  onAddStep?: () => void;
-  onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void;
-}) {
+function CaseCard({ patientCase, onAddStep, onCloseCase }: { patientCase: PatientCase; onAddStep?: () => void; onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void }) {
   const t = useTranslations();
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
       <div className={`px-4 py-3 border-b border-border flex items-center justify-between gap-3 border-l-4 ${CASE_STATUS_BORDER[patientCase.status]}`}>
         <div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>
-              {t(`cases.status.${patientCase.status}`)}
-            </span>
+            <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>{t(`cases.status.${patientCase.status}`)}</span>
             {patientCase.chiefComplaint && <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>}
           </div>
           {patientCase.closedAt && (
@@ -247,10 +228,7 @@ function CaseCard({
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
           {patientCase.status === "ACTIVE" && onAddStep && (
-            <button
-              onClick={onAddStep}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
-            >
+            <button onClick={onAddStep} className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer">
               <Plus className="w-3 h-3" />
               {t("cases.addStep")}
             </button>
@@ -264,10 +242,7 @@ function CaseCard({
                 <CheckCircle2 className="w-3 h-3" />
                 {t("cases.complete")}
               </button>
-              <button
-                onClick={() => onCloseCase("CANCELLED")}
-                className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:bg-danger-50 px-2 py-1 rounded-md transition-colors cursor-pointer"
-              >
+              <button onClick={() => onCloseCase("CANCELLED")} className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:bg-danger-50 px-2 py-1 rounded-md transition-colors cursor-pointer">
                 <XCircle className="w-3 h-3" />
                 {t("cases.cancel")}
               </button>
@@ -374,17 +349,10 @@ function EditPatientForm({ patient, onCancel }: { patient: Patient; onCancel: ()
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button
-          type="button"
-          className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
-        >
+        <button type="button" className="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
           {t("patients.saveChanges")}
         </button>
       </div>
@@ -447,8 +415,7 @@ export default function PatientDetailPage() {
   });
 
   const { mutateAsync: closeCase } = useMutation({
-    mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) =>
-      api.patch(`/cases/${caseId}/close`, { status }),
+    mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) => api.patch(`/cases/${caseId}/close`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] }),
   });
 
@@ -474,9 +441,7 @@ export default function PatientDetailPage() {
   const wardRoomsRaw = allRoomsRaw.filter((r: any) => r.roomType === "WARD");
 
   const selectedWardRoom = wardRoomsRaw.find((r: any) => r.id === wardRoomId) as any | undefined;
-  const wardMaxCompanions = selectedWardRoom
-    ? Math.max(0, (selectedWardRoom.freeSlots ?? selectedWardRoom.capacity ?? 0) - 1)
-    : 0;
+  const wardMaxCompanions = selectedWardRoom ? Math.max(0, (selectedWardRoom.freeSlots ?? selectedWardRoom.capacity ?? 0) - 1) : 0;
 
   const { data: activeWard } = useQuery<any>({
     queryKey: ["patient-ward", id],
@@ -523,22 +488,13 @@ export default function PatientDetailPage() {
   // ─── Derived state ─────────────────────────────────────────────────────────
   const patient: Patient = patientData ?? PATIENTS_MOCK_DATA.find((p) => p.id === id) ?? PATIENTS_MOCK_DATA[0];
   const hasDocInfo = patient.document_type || patient.document_series || patient.document_number || patient.pinfl;
-  const cases = useMemo(
-    () => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()),
-    [casesData]
-  );
+  const cases = useMemo(() => [...casesData].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()), [casesData]);
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
   const visitCount = cases.length;
-  const fileCount = cases.reduce(
-    (total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0),
-    0
-  );
+  const fileCount = cases.reduce((total, c) => total + c.steps.reduce((s, step) => s + (step.appointment?.files?.length ?? 0), 0), 0);
   const totalPaid = 0;
-  const visitedDepartments = useMemo(
-    () => [...new Set(cases.flatMap((c) => c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)))],
-    [cases]
-  );
+  const visitedDepartments = useMemo(() => [...new Set(cases.flatMap((c) => c.steps.filter((s) => s.assignment).map((s) => s.assignment!.department.name)))], [cases]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
@@ -586,13 +542,17 @@ export default function PatientDetailPage() {
               {patient.district?.region?.name && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                  <span><span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}</span>
+                  <span>
+                    <span className="text-text-muted">{t("forms.region")}:</span> {patient.district.region.name}
+                  </span>
                 </div>
               )}
               {patient.district?.name && (
                 <div className="flex items-start gap-2.5 text-sm text-secondary">
                   <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
-                  <span><span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}</span>
+                  <span>
+                    <span className="text-text-muted">{t("forms.district")}:</span> {patient.district.name}
+                  </span>
                 </div>
               )}
               {hasDocInfo && (
@@ -613,7 +573,10 @@ export default function PatientDetailPage() {
                           {t("common.loading")}
                         </>
                       ) : (
-                        <><FileText className="w-3.5 h-3.5" />{t("patients.showDocuments")}</>
+                        <>
+                          <FileText className="w-3.5 h-3.5" />
+                          {t("patients.showDocuments")}
+                        </>
                       )}
                     </button>
                   ) : (
@@ -624,7 +587,11 @@ export default function PatientDetailPage() {
                           <span>
                             {patient.document_type?.replace(/_/g, " ")}
                             {(patient.document_series || patient.document_number) && (
-                              <span className="font-mono"> {patient.document_series}{patient.document_number}</span>
+                              <span className="font-mono">
+                                {" "}
+                                {patient.document_series}
+                                {patient.document_number}
+                              </span>
                             )}
                           </span>
                         </div>
@@ -672,22 +639,34 @@ export default function PatientDetailPage() {
           <div className="bg-surface border border-border rounded-xl p-4 space-y-2">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{t("common.actions")}</p>
             <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
-              <button onClick={() => setSheetMode("checkin")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20">
+              <button
+                onClick={() => setSheetMode("checkin")}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors cursor-pointer shadow-sm shadow-primary/20"
+              >
                 <Plus className="w-4 h-4" />
                 {t("cases.newCase")}
               </button>
             </Can>
             <Can roles={["ADMIN", "KASSIR"]}>
-              <button onClick={() => setSheetMode("edit")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
+              <button
+                onClick={() => setSheetMode("edit")}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+              >
                 <Edit className="w-4 h-4" />
                 {t("patients.editPatientInfo")}
               </button>
             </Can>
-            <Link href={`/patients/${id}/medical-cards/new`} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
+            <Link
+              href={`/patients/${id}/medical-cards/new`}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+            >
               <ClipboardList className="w-4 h-4" />
               {t("medicalCard.newCard")}
             </Link>
-            <Link href={`/patients/${id}/medical-cards`} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
+            <Link
+              href={`/patients/${id}/medical-cards`}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+            >
               <FileText className="w-4 h-4" />
               {t("medicalCard.myCards")}
             </Link>
@@ -710,7 +689,9 @@ export default function PatientDetailPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => { if (confirm(t("wards.checkOutConfirm"))) wardCheckOut(activeWard.id); }}
+                    onClick={() => {
+                      if (confirm(t("wards.checkOutConfirm"))) wardCheckOut(activeWard.id);
+                    }}
                     disabled={isWardCheckout}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-red-200 text-red-600 hover:bg-red-50 text-xs font-medium transition-colors cursor-pointer disabled:opacity-40"
                   >
@@ -718,7 +699,10 @@ export default function PatientDetailPage() {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => setSheetMode("ward")} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer">
+                <button
+                  onClick={() => setSheetMode("ward")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+                >
                   <BedDouble className="w-4 h-4" />
                   {t("wards.checkIn")}
                 </button>
@@ -761,7 +745,10 @@ export default function PatientDetailPage() {
             </div>
             {activeTab === "timeline" && (
               <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
-                <button onClick={() => setSheetMode("checkin")} className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer">
+                <button
+                  onClick={() => setSheetMode("checkin")}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 bg-primary-50 hover:bg-primary-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                >
                   <Plus className="w-3.5 h-3.5" />
                   {t("cases.newCase")}
                 </button>
@@ -831,10 +818,19 @@ export default function PatientDetailPage() {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setSheetMode(null)} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setSheetMode(null)}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
               {t("forms.cancel")}
             </button>
-            <button type="button" disabled={isAddingCase} onClick={() => addCase(chiefComplaint)} className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
+            <button
+              type="button"
+              disabled={isAddingCase}
+              onClick={() => addCase(chiefComplaint)}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
               {isAddingCase ? t("common.loading") : t("cases.startCase")}
             </button>
           </div>
@@ -851,11 +847,21 @@ export default function PatientDetailPage() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("wards.colRoom")} *</label>
-            <select value={wardRoomId} onChange={(e) => { setWardRoomId(e.target.value); setWardCompanionsCount(0); }} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm">
+            <select
+              value={wardRoomId}
+              onChange={(e) => {
+                setWardRoomId(e.target.value);
+                setWardCompanionsCount(0);
+              }}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            >
               <option value="">{t("forms.select")}</option>
               {wardRoomsRaw.map((r: any) => (
                 <option key={r.id} value={r.id} disabled={r.isFull}>
-                  {r.name}{r.department ? ` (${r.department.name})` : ""}{r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}{r.isFull ? ` ⛔ ${t("wards.full")}` : ""}
+                  {r.name}
+                  {r.department ? ` (${r.department.name})` : ""}
+                  {r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}
+                  {r.isFull ? ` ⛔ ${t("wards.full")}` : ""}
                 </option>
               ))}
             </select>
@@ -868,33 +874,84 @@ export default function PatientDetailPage() {
               <span className="ml-1 text-text-muted font-normal text-xs">({t("common.optional")})</span>
             </label>
             <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setWardCompanionsCount((c) => Math.max(0, c - 1))} disabled={wardCompanionsCount === 0} className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setWardCompanionsCount((c) => Math.max(0, c - 1))}
+                disabled={wardCompanionsCount === 0}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <span className="text-lg font-semibold text-text w-6 text-center">{wardCompanionsCount}</span>
-              <button type="button" onClick={() => setWardCompanionsCount((c) => Math.min(wardMaxCompanions, c + 1))} disabled={!wardRoomId || wardCompanionsCount >= wardMaxCompanions} className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setWardCompanionsCount((c) => Math.min(wardMaxCompanions, c + 1))}
+                disabled={!wardRoomId || wardCompanionsCount >= wardMaxCompanions}
+                className="w-8 h-8 rounded-md border border-border bg-surface hover:bg-surface-hover flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+              >
                 <Plus className="w-3.5 h-3.5" />
               </button>
-              {wardRoomId && <span className="text-xs text-secondary ml-1">{t("wards.maxCompanions")}: {wardMaxCompanions}</span>}
+              {wardRoomId && (
+                <span className="text-xs text-secondary ml-1">
+                  {t("wards.maxCompanions")}: {wardMaxCompanions}
+                </span>
+              )}
             </div>
             <p className="text-xs text-text-muted">Sheriq ro&apos;yxatga olinmaydi, lekin joy egallaydi</p>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("wards.colCheckIn")}<span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span></label>
-            <input type="date" value={wardCheckInDate} onChange={(e) => setWardCheckInDate(e.target.value)} max={new Date().toISOString().slice(0, 10)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
+            <label className="text-sm font-medium text-text">
+              {t("wards.colCheckIn")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <input
+              type="date"
+              value={wardCheckInDate}
+              onChange={(e) => setWardCheckInDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
             <p className="text-xs text-text-muted">{t("wards.checkInHint")}</p>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("wards.colExpectedOut")}<span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span></label>
-            <input type="date" value={wardExpectedOut} onChange={(e) => setWardExpectedOut(e.target.value)} min={wardCheckInDate || new Date().toISOString().slice(0, 10)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm" />
+            <label className="text-sm font-medium text-text">
+              {t("wards.colExpectedOut")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <input
+              type="date"
+              value={wardExpectedOut}
+              onChange={(e) => setWardExpectedOut(e.target.value)}
+              min={wardCheckInDate || new Date().toISOString().slice(0, 10)}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+            />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("wards.note")}<span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span></label>
-            <textarea value={wardNote} onChange={(e) => setWardNote(e.target.value)} rows={3} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none" />
+            <label className="text-sm font-medium text-text">
+              {t("wards.note")}
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <textarea
+              value={wardNote}
+              onChange={(e) => setWardNote(e.target.value)}
+              rows={3}
+              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm resize-none"
+            />
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setSheetMode(null)} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">{t("forms.cancel")}</button>
-            <button type="button" disabled={!wardRoomId || isWardCheckin} onClick={() => doWardCheckIn()} className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setSheetMode(null)}
+              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
+            >
+              {t("forms.cancel")}
+            </button>
+            <button
+              type="button"
+              disabled={!wardRoomId || isWardCheckin}
+              onClick={() => doWardCheckIn()}
+              className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary/20 cursor-pointer"
+            >
               {isWardCheckin ? t("common.loading") : t("wards.checkIn")}
             </button>
           </div>

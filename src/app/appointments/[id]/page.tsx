@@ -1,13 +1,13 @@
 "use client";
 
-import { AppointmentForm } from "@/components/appointments/appointment-form";
-import { FileUploadModal } from "@/components/appointments/file-upload-modal";
-import { PrescriptionEditor } from "@/components/appointments/prescription-editor";
-import { AddCaseStepForm } from "@/components/cases/add-case-step-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import { AppointmentForm } from "@/features/appointments/components/appointment-form";
+import { FileUploadModal } from "@/features/appointments/components/file-upload-modal";
+import { PrescriptionEditor } from "@/features/appointments/components/prescription-editor";
 import { Appointment } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES } from "@/features/appointments/utils";
+import { AddCaseStepForm } from "@/features/cases/components/add-case-step-form";
 import { AssignmentSource } from "@/features/patients/detail/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/detail/utils";
 import { api } from "@/lib/api";
@@ -20,12 +20,14 @@ import { useMemo, useState } from "react";
 type DetailSheetMode = "editAppointment" | "addStep" | null;
 type StepType = "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE";
 
-
 export default function AppointmentDetailPage() {
   const t = useTranslations();
+
   const { id } = useParams<{ id: string }>();
+
   const router = useRouter();
   const queryClient = useQueryClient();
+
   const [sheetMode, setSheetMode] = useState<DetailSheetMode>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
@@ -72,7 +74,6 @@ export default function AppointmentDetailPage() {
       setConclusionDraft(null);
     },
   });
-
 
   const [stepType, setStepType] = useState<StepType | "">("");
 
@@ -417,7 +418,6 @@ export default function AppointmentDetailPage() {
           isPending={isUpdatingAppointment}
         />
       </Sheet>
-
 
       <Sheet isOpen={sheetMode === "addStep"} onClose={() => setSheetMode(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
         <AddCaseStepForm

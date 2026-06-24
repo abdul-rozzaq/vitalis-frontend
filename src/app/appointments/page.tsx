@@ -1,10 +1,10 @@
 "use client";
 
-import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import { Sheet } from "@/components/ui/sheet";
+import { AppointmentForm } from "@/features/appointments/components/appointment-form";
 import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, getAppointmentStatus, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
 import { api } from "@/lib/api";
@@ -182,11 +182,7 @@ export default function AppointmentsPage() {
           } catch (e) {
             displayStatus = status;
           }
-          return (
-            <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>
-              {displayStatus}
-            </span>
-          );
+          return <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>{displayStatus}</span>;
         },
       },
       {
@@ -226,18 +222,12 @@ export default function AppointmentsPage() {
         subtitle={t("appointments.description")}
         actions={
           <div className="flex gap-2">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
-            >
+            <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
               <Download className="w-4 h-4" />
               <span>Export</span>
             </button>
             <Can roles={["ADMIN", "KASSIR"]}>
-              <button
-                onClick={handleAdd}
-                className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium"
-              >
+              <button onClick={handleAdd} className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary rounded-lg transition-colors text-sm font-medium">
                 <Plus className="w-4 h-4" />
                 <span>{t("appointments.newAppointment")}</span>
               </button>
@@ -252,13 +242,7 @@ export default function AppointmentsPage() {
             <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <EnterpriseDataTable
-            columns={columns}
-            data={filteredAppointments}
-            pageSize={20}
-            searchKey="patient"
-            searchPlaceholder={t("common.filterPlaceholder")}
-          />
+          <EnterpriseDataTable columns={columns} data={filteredAppointments} pageSize={20} searchKey="patient" searchPlaceholder={t("common.filterPlaceholder")} />
         )}
       </PageContent>
 
@@ -272,11 +256,11 @@ export default function AppointmentsPage() {
           initialData={
             editingAppointment
               ? {
-                patientId: editingAppointment.patientId,
-                assignmentId: editingAppointment.assignmentId,
-                dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
-                // status: editingAppointment.status,
-              }
+                  patientId: editingAppointment.patientId,
+                  assignmentId: editingAppointment.assignmentId,
+                  dateTime: new Date(editingAppointment.dateTime).toISOString().slice(0, 16),
+                  // status: editingAppointment.status,
+                }
               : undefined
           }
           patients={patients}

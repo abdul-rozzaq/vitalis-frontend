@@ -1,6 +1,6 @@
 "use client";
 
-import { MedicineCombobox } from "@/components/appointments/medicine-combobox";
+import { MedicineCombobox } from "@/features/appointments/components/medicine-combobox";
 import { MealRelation, Prescription } from "@/features/appointments/types";
 import { api } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

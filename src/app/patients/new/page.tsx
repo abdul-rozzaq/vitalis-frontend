@@ -1,6 +1,6 @@
 "use client";
 
-import { PatientForm } from "@/components/patients/patient-form";
+import { PatientForm } from "@/features/patients/components/patient-form";
 import { NewPatientPayload } from "@/features/patients/new/types";
 import { api } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";

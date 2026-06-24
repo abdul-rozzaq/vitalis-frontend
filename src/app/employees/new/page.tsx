@@ -1,6 +1,6 @@
 "use client";
 
-import { EmployeeForm, EmployeeSubmitData } from "@/components/employees/employee-form";
+import { EmployeeForm, EmployeeSubmitData } from "@/features/employees/employee-form";
 import { api } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
@@ -46,12 +46,7 @@ export default function NewEmployeePage() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-        <EmployeeForm
-
-          onSubmit={handleSubmit}
-          onCancel={() => router.push("/employees")}
-          isPending={isPending}
-        />
+        <EmployeeForm onSubmit={handleSubmit} onCancel={() => router.push("/employees")} isPending={isPending} />
       </motion.div>
     </div>
   );
