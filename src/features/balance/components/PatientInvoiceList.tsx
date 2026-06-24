@@ -4,12 +4,11 @@ import { Card, CardHeader } from "@/components/design-system/Card";
 import { Can } from "@/components/ui/can";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/formatters";
+import { INVOICE_STATUS_CONFIG, type InvoiceStatus } from "@/lib/status-styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Clock, FileText, Loader2, Wallet, X } from "lucide-react";
+import { Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
 import { InvoicePayModal } from "./InvoicePayModal";
-
-type InvoiceStatus = "DRAFT" | "ISSUED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
 
 interface InvoiceItem {
   id: string;
@@ -41,13 +40,7 @@ interface PaginatedResponse {
   limit: number;
 }
 
-const STATUS_CONFIG: Record<InvoiceStatus, { label: string; bg: string; text: string; dot: string; icon: React.ElementType }> = {
-  DRAFT: { label: "Qoralama", bg: "bg-surface-hover", text: "text-text-muted", dot: "bg-text-muted", icon: FileText },
-  ISSUED: { label: "Chiqarilgan", bg: "bg-info-50", text: "text-info", dot: "bg-info", icon: Clock },
-  PARTIALLY_PAID: { label: "Qisman to'langan", bg: "bg-warning-50", text: "text-warning", dot: "bg-warning", icon: AlertCircle },
-  PAID: { label: "To'langan", bg: "bg-success-50", text: "text-success", dot: "bg-success", icon: CheckCircle2 },
-  CANCELLED: { label: "Bekor qilingan", bg: "bg-danger-50", text: "text-danger", dot: "bg-danger", icon: X },
-};
+const STATUS_CONFIG = INVOICE_STATUS_CONFIG;
 
 const SOURCE_LABELS: Record<string, string> = {
   WARD: "Palata",

@@ -8,26 +8,14 @@ import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  FileText,
-  Loader2,
-  Plus,
-  SlidersHorizontal,
-  Trash2,
-  Wallet,
-  X,
-} from "lucide-react";
+import { CheckCircle2, Clock, FileText, Loader2, Plus, SlidersHorizontal, Trash2, Wallet, X } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { INVOICE_STATUS_CONFIG, type InvoiceStatus } from "@/lib/status-styles";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type InvoiceStatus = "DRAFT" | "ISSUED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
 
 interface InvoiceItem {
   id: string;
@@ -77,15 +65,7 @@ interface DraftItem {
 const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "" };
 const EMPTY_ITEM: DraftItem = { description: "", quantity: 1, unitPrice: "" };
 
-// ─── Status config ─────────────────────────────────────────────────────────────
-
-const STATUS_CONFIG: Record<InvoiceStatus, { label: string; bg: string; text: string; dot: string; icon: React.ElementType }> = {
-  DRAFT:          { label: "Qoralama",         bg: "bg-surface-hover", text: "text-text-muted", dot: "bg-text-muted", icon: FileText },
-  ISSUED:         { label: "Chiqarilgan",      bg: "bg-info-50",       text: "text-info",       dot: "bg-info",       icon: Clock },
-  PARTIALLY_PAID: { label: "Qisman to'langan", bg: "bg-warning-50",    text: "text-warning",    dot: "bg-warning",    icon: AlertCircle },
-  PAID:           { label: "To'langan",        bg: "bg-success-50",    text: "text-success",    dot: "bg-success",    icon: CheckCircle2 },
-  CANCELLED:      { label: "Bekor qilingan",   bg: "bg-danger-50",     text: "text-danger",     dot: "bg-danger",     icon: X },
-};
+const STATUS_CONFIG = INVOICE_STATUS_CONFIG;
 
 const SOURCE_LABELS: Record<string, string> = {
   WARD: "Palata", APPOINTMENT: "Qabul", LAB_ORDER: "Laboratoriya", MANUAL: "Qo'lda",

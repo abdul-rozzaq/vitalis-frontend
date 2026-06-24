@@ -1,12 +1,7 @@
 import { DoorOpen, FlaskConical, KeyRound, Shield, User } from "lucide-react";
 import { TabId } from "./types";
 
-export const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-success-100", text: "text-success" },
-  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
-};
+export { ROLE_STYLES } from "@/lib/status-styles";
 
 export const TAB_BASE = "px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer";
 export const TAB_ACTIVE = "bg-primary text-white shadow-sm shadow-primary-600/20";

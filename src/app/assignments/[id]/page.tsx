@@ -7,6 +7,7 @@ import { UserOption } from "@/features/assignments/types";
 import { api } from "@/lib/api";
 import { UserRole } from "@/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ROLE_STYLES } from "@/lib/status-styles";
 import { ArrowLeft, BedDouble, Building2, Calendar, CheckCircle2, Clock, DoorOpen, Edit, Loader2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -43,12 +44,6 @@ interface RoomOption { id: string; name: string }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const ROLE_STYLES: Partial<Record<UserRole, { bg: string; text: string }>> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  HAMSHIRA: { bg: "bg-success-100", text: "text-success" },
-  KASSIR: { bg: "bg-orange-100", text: "text-orange-700" },
-};
 
 const DAY_COLS: Record<number, string> = {
   1: "bg-surface border-border border-l-4 border-l-blue-400",
