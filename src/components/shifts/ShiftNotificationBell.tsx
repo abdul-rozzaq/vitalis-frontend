@@ -1,21 +1,23 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { shiftsApi, ShiftNotification } from "@/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 import { useState } from "react";
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: (key: string, opts?: Record<string, number>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "hozir";
-  if (m < 60) return `${m} daqiqa oldin`;
+  if (m < 1) return t("shifts.justNow");
+  if (m < 60) return t("shifts.minutesAgo", { m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} soat oldin`;
-  return `${Math.floor(h / 24)} kun oldin`;
+  if (h < 24) return t("shifts.hoursAgo", { h });
+  return t("shifts.daysAgo", { d: Math.floor(h / 24) });
 }
 
 export function ShiftNotificationBell() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
@@ -42,7 +44,7 @@ export function ShiftNotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative p-2 text-text-muted hover:text-text hover:bg-surface-hover rounded-lg transition-colors"
-        aria-label="Bildirishnomalar"
+        aria-label={t("shifts.notificationTitle")}
       >
         <Bell className="w-5 h-5" />
         {unread > 0 && (
@@ -57,13 +59,13 @@ export function ShiftNotificationBell() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute top-12 right-0 w-96 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-              <p className="font-semibold text-text text-sm">Bildirishnomalar</p>
+              <p className="font-semibold text-text text-sm">{t("shifts.notificationTitle")}</p>
               {unread > 0 && (
                 <button
                   onClick={() => markAll.mutate()}
                   className="text-xs text-primary hover:underline flex items-center gap-1"
                 >
-                  <Check className="w-3 h-3" /> Barchasini o'qildi
+                  <Check className="w-3 h-3" /> {t("shifts.markAllRead")}
                 </button>
               )}
             </div>
@@ -71,7 +73,7 @@ export function ShiftNotificationBell() {
               {notifications.length === 0 ? (
                 <div className="px-4 py-10 flex flex-col items-center justify-center gap-2">
                   <Bell className="w-8 h-8 text-text-muted opacity-40" />
-                  <p className="text-secondary text-sm">Bildirishnoma yo'q</p>
+                  <p className="text-secondary text-sm">{t("shifts.noNotification")}</p>
                 </div>
               ) : (
                 notifications.map((n) => (
@@ -85,11 +87,11 @@ export function ShiftNotificationBell() {
                     <div className="flex items-start gap-2">
                       {!n.readAt && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-text">{n.payload?.message ?? "Smena yangilanishi"}</p>
+                        <p className="text-sm text-text">{n.payload?.message ?? t("shifts.shiftUpdate")}</p>
                         {n.payload?.shiftName && (
                           <p className="text-xs text-text-muted mt-0.5">{String(n.payload.shiftName)}</p>
                         )}
-                        <p className="text-xs text-text-muted mt-1">{timeAgo(n.createdAt)}</p>
+                        <p className="text-xs text-text-muted mt-1">{timeAgo(n.createdAt, t)}</p>
                       </div>
                     </div>
                   </button>

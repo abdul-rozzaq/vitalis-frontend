@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { api } from "@/lib/api";
 import { fmtHM, RoomShift, shiftsApi } from "@/lib/shifts-api";

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { RoundModal } from "@/components/rounds/RoundModal";
@@ -61,6 +62,7 @@ const CONDITION_LABELS: Record<string, string> = {
 };
 
 export default function DutyPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [roundModalData, setRoundModalData] = useState<{
     roundId: string;
@@ -76,7 +78,7 @@ export default function DutyPage() {
   return (
     <>
       <PageHeader
-        title="Mening navbatim"
+        title={t("wards.myDuty")}
         subtitle="Joriy smena — palatalar va bemorlar"
       />
       <PageContent>
@@ -294,7 +296,7 @@ function ShiftDutyCard({
       {/* Past rounds */}
       {rounds.filter((r) => r.completedAt).length > 0 && (
         <div className="px-5 py-3 border-t border-border bg-background">
-          <p className="text-xs font-medium text-text-muted mb-2">O'tgan apoxotlar</p>
+          <p className="text-xs font-medium text-text-muted mb-2">{t("wards.pastRounds")}</p>
           <div className="flex gap-2 flex-wrap">
             {rounds
               .filter((r) => r.completedAt)

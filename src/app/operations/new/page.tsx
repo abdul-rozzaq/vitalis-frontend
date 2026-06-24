@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Combobox } from "@/components/ui/combobox";
@@ -46,12 +47,17 @@ interface OperationTypeItem {
   isActive: boolean;
 }
 
+interface OperationTypeDoctor {
+  doctor: { id: string; first_name: string; last_name: string; role: string };
+}
+
 interface OperationType {
   id: string;
   name: string;
   basePrice: number;
   description?: string;
   items: OperationTypeItem[];
+  doctors: OperationTypeDoctor[];
 }
 
 interface Room { id: string; name: string; roomType: string }
@@ -103,6 +109,7 @@ const fieldCls =
 // ─── Page ────────────────────────────────────────────────────────────────────────
 
 export default function NewOperationPage() {
+  const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -120,8 +127,6 @@ export default function NewOperationPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showNewCase, setShowNewCase] = useState(false);
   const [newCaseComplaint, setNewCaseComplaint] = useState("");
-
-  // Yangi xizmat qo'shish (operation type ga)
   const [showNewItemForm, setShowNewItemForm] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState<number>(0);
@@ -165,14 +170,12 @@ export default function NewOperationPage() {
     },
   });
 
-  // ── Yangi xizmat (OperationTypeItem) qo'shish mutation ───────────────────────
-  // PATCH /operation-types/:id ga mavjud itemlar + yangi item yuboramiz
+  // ── Yangi xizmat mutation ─────────────────────────────────────────────────────
   const addOpTypeItemMutation = useMutation({
     mutationFn: async (newItem: { name: string; price: number }) => {
       const currentType = operationTypes.find((t) => t.id === operationTypeId);
       if (!currentType) throw new Error("Operatsiya turi topilmadi");
 
-      // Mavjud itemlarni + yangi itemni birgalikda yuboramiz
       const updatedItems = [
         ...currentType.items.map((i) => ({
           id: i.id,
@@ -189,12 +192,10 @@ export default function NewOperationPage() {
       return response.data;
     },
     onSuccess: (updatedType: OperationType) => {
-      // Cache-ni yangilaymiz
       queryClient.setQueryData<OperationType[]>(["operation-types"], (old = []) =>
         old.map((t) => (t.id === operationTypeId ? updatedType : t))
       );
 
-      // Yangi qo'shilgan itemni topib, operatsiya itemlariga qo'shamiz
       const newItem = updatedType.items[updatedType.items.length - 1];
       if (newItem) {
         setItems((prev) => [
@@ -295,7 +296,7 @@ export default function NewOperationPage() {
 
   const operationRooms = rooms.filter((r) => r.roomType === "OPERATION");
   const roomOptions = operationRooms.map((r) => ({ value: r.id, label: r.name }));
-  
+
   const caseOptions = cases
     .filter((c) => c.status === "ACTIVE")
     .map((c) => ({
@@ -303,12 +304,35 @@ export default function NewOperationPage() {
       label: c.chiefComplaint || `Murojaat #${c.id.slice(0, 5).toUpperCase()}`,
     }));
 
-  const doctorOptions = doctors.map((d) => ({
-    value: d.id,
-    label: `${d.first_name} ${d.last_name}`,
-    sublabel: d.role,
-    avatar: `${d.first_name[0]}${d.last_name[0]}`.toUpperCase(),
+  // ── Grouped doctor options ────────────────────────────────────────────────────
+  const recommendedDoctorIds = new Set(
+    (selectedOpType?.doctors ?? []).map((d) => d.doctor.id)
+  );
+
+  const recommendedDoctors = (selectedOpType?.doctors ?? []).map((d) => ({
+    value: d.doctor.id,
+    label: `${d.doctor.first_name} ${d.doctor.last_name}`,
+    sublabel: d.doctor.role,
+    avatar: `${d.doctor.first_name[0]}${d.doctor.last_name[0]}`.toUpperCase(),
+    group: "recommended",
   }));
+
+  const otherDoctors = doctors
+    .filter((d) => !recommendedDoctorIds.has(d.id))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.first_name} ${d.last_name}`,
+      sublabel: d.role,
+      avatar: `${d.first_name[0]}${d.last_name[0]}`.toUpperCase(),
+      group: "other",
+    }));
+
+  const doctorOptions = [...recommendedDoctors, ...otherDoctors];
+
+  const doctorGroupLabels: Record<string, string> = {
+    recommended: "⭐ Tavsiya etilgan",
+    other: "Boshqa doktorlar",
+  };
 
   const roleOptions = [
     { value: "LEAD", label: "Bosh jarroh (LEAD)" },
@@ -358,7 +382,7 @@ export default function NewOperationPage() {
   return (
     <>
       <PageHeader
-        title="Yangi operatsiya"
+        title={t("operations.newTitle")}
         actions={
           <button
             onClick={() => router.push("/operations")}
@@ -384,7 +408,7 @@ export default function NewOperationPage() {
                   options={opTypeOptions}
                   value={operationTypeId}
                   onChange={setOperationTypeId}
-                  placeholder="Operatsiya turini tanlang..."
+                  placeholder={t("operationForm.selectOperationType")}
                   searchPlaceholder="Operatsiya turini qidiring..."
                   error={!!errors.operationTypeId}
                 />
@@ -429,7 +453,7 @@ export default function NewOperationPage() {
                     options={patientOptions}
                     value={patientId}
                     onChange={(v) => { setPatientId(v); setCaseId(""); }}
-                    placeholder="Bemor tanlang..."
+                    placeholder={t("operationForm.selectPatient")}
                     searchPlaceholder="Ism yoki familiya bo'yicha qidiring..."
                     error={!!errors.patientId}
                   />
@@ -510,7 +534,7 @@ export default function NewOperationPage() {
                     options={roomOptions}
                     value={roomId}
                     onChange={setRoomId}
-                    placeholder="Xona tanlang..."
+                    placeholder={t("operationForm.room")}
                     searchPlaceholder="Xona nomi..."
                   />
                 </div>
@@ -547,10 +571,11 @@ export default function NewOperationPage() {
               <div className="space-y-3">
                 {surgeons.map((s, idx) => (
                   <div key={idx} className="relative">
-                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${s.role === "LEAD"
-                      ? "bg-primary text-white"
-                      : "bg-surface border border-border text-text-muted"
-                      }`}>
+                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                      s.role === "LEAD"
+                        ? "bg-primary text-white"
+                        : "bg-surface border border-border text-text-muted"
+                    }`}>
                       {s.role === "LEAD" ? "Bosh jarroh" : "Yordamchi"}
                     </div>
                     <div className="flex items-end gap-2 p-3 pt-4 bg-surface-hover rounded-lg border border-border">
@@ -562,9 +587,10 @@ export default function NewOperationPage() {
                             options={doctorOptions}
                             value={s.surgeonId}
                             onChange={(v) => updateSurgeon(idx, "surgeonId", v)}
-                            placeholder="Tanlang..."
+                            placeholder={t("forms.select")}
                             searchPlaceholder="Ism yoki familiya..."
                             error={!!errors.surgeons && !s.surgeonId}
+                            groupLabels={operationTypeId ? doctorGroupLabels : undefined}
                           />
                         </div>
                         <div>
@@ -605,7 +631,6 @@ export default function NewOperationPage() {
                   <div className="flex-1 h-px bg-border ml-1" />
                 </div>
                 <div className="flex items-center gap-2 ml-3 shrink-0">
-                  {/* Ro'yxatdan tanlash — faqat opTypeItemOptions bo'lganda */}
                   {opTypeItemOptions.length > 0 && (
                     <button
                       type="button"
@@ -616,7 +641,6 @@ export default function NewOperationPage() {
                       Ro'yxatdan
                     </button>
                   )}
-                  {/* Yangi xizmat — faqat operatsiya turi tanlanganda ko'rinadi */}
                   {operationTypeId && (
                     <button
                       type="button"
@@ -630,7 +654,7 @@ export default function NewOperationPage() {
                 </div>
               </div>
 
-              {/* ── Yangi xizmat form (inline) ── */}
+              {/* Yangi xizmat form */}
               {showNewItemForm && operationTypeId && (
                 <div className="mb-4 p-3.5 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
@@ -639,11 +663,7 @@ export default function NewOperationPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowNewItemForm(false);
-                        setNewItemName("");
-                        setNewItemPrice(0);
-                      }}
+                      onClick={() => { setShowNewItemForm(false); setNewItemName(""); setNewItemPrice(0); }}
                       className="text-text-muted hover:text-text transition-colors cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -677,11 +697,7 @@ export default function NewOperationPage() {
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowNewItemForm(false);
-                        setNewItemName("");
-                        setNewItemPrice(0);
-                      }}
+                      onClick={() => { setShowNewItemForm(false); setNewItemName(""); setNewItemPrice(0); }}
                       className="px-3 py-1.5 text-xs rounded-lg border border-border text-text-muted hover:bg-surface-hover transition-all cursor-pointer"
                     >
                       Bekor
@@ -706,20 +722,12 @@ export default function NewOperationPage() {
                   <p className="text-xs text-text-muted">Hozircha xizmat qo'shilmagan</p>
                   <div className="flex items-center justify-center gap-3 mt-2">
                     {opTypeItemOptions.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={addItem}
-                        className="text-xs text-text-muted hover:text-text transition-colors cursor-pointer"
-                      >
+                      <button type="button" onClick={addItem} className="text-xs text-text-muted hover:text-text transition-colors cursor-pointer">
                         + Ro'yxatdan tanlash
                       </button>
                     )}
                     {operationTypeId && (
-                      <button
-                        type="button"
-                        onClick={() => setShowNewItemForm(true)}
-                        className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                      >
+                      <button type="button" onClick={() => setShowNewItemForm(true)} className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer">
                         + Yangi xizmat yaratish
                       </button>
                     )}
@@ -737,7 +745,7 @@ export default function NewOperationPage() {
                               options={opTypeItemOptions}
                               value={item.operationTypeItemId}
                               onChange={(v) => updateItem(idx, "operationTypeItemId", v)}
-                              placeholder="Xizmat tanlang..."
+                              placeholder={t("operationForm.selectService")}
                               searchPlaceholder="Xizmat qidiring..."
                             />
                           ) : (
@@ -783,10 +791,7 @@ export default function NewOperationPage() {
 
                       <div className="flex justify-end">
                         <span className="text-xs text-text-muted">
-                          Jami:{" "}
-                          <span className="font-semibold text-text">
-                            {fmt(item.unitPrice * item.quantity)} so'm
-                          </span>
+                          Jami: <span className="font-semibold text-text">{fmt(item.unitPrice * item.quantity)} so'm</span>
                         </span>
                       </div>
                     </div>
@@ -794,7 +799,6 @@ export default function NewOperationPage() {
                 </div>
               )}
 
-              {/* Price summary */}
               {(items.length > 0 || basePrice > 0) && (
                 <div className="mt-4 pt-4 border-t border-border space-y-1.5">
                   {basePrice > 0 && (
@@ -819,13 +823,13 @@ export default function NewOperationPage() {
 
             {/* Izoh */}
             <div className="bg-surface border border-border rounded-xl p-5">
-              <SectionTitle icon={CheckCircle2} title="Qo'shimcha" />
+              <SectionTitle icon={CheckCircle2} title={t("operations.additionalNote")} />
               <FieldLabel>Izoh (ixtiyoriy)</FieldLabel>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
-                placeholder="Operatsiya haqida qo'shimcha ma'lumot..."
+                placeholder={t("operations.additionalNotePlaceholder")}
                 className={fieldCls + " resize-none"}
               />
             </div>
@@ -833,7 +837,7 @@ export default function NewOperationPage() {
           </div>
         </div>
 
-        {/* ── Sticky action bar ─────────────────────────────────────────────────── */}
+        {/* Sticky action bar */}
         <div className="max-w-6xl mx-auto mt-6">
           <div className="bg-surface border border-border rounded-xl px-5 py-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -844,7 +848,6 @@ export default function NewOperationPage() {
                 </>
               )}
             </div>
-
             <div className="flex items-center gap-3">
               <button
                 type="button"

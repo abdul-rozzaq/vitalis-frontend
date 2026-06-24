@@ -1,7 +1,11 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { OperationTypeForm, OperationTypeFormValues } from "@/components/operation-types/operation-type-form";
+import {
+  AssignedDoctor,
+  OperationTypeForm,
+  OperationTypeFormValues,
+} from "@/components/operation-types/operation-type-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
@@ -29,30 +33,49 @@ interface OperationType {
   basePrice: string | number;
   isActive: boolean;
   items: OperationTypeItem[];
+  doctors: AssignedDoctor[];
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) => Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+const fmt = (val: string | number) =>
+  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
 
 // ─── Page ───────────────────────────────────────────────────────────────────────
 
 export default function OperationTypesPage() {
   const queryClient = useQueryClient();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editing, setEditing] = useState<OperationType | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const t = useTranslations();
+
   const { data: operationTypes = [], isLoading } = useQuery<OperationType[]>({
     queryKey: ["operation-types"],
     queryFn: () => api.get("/operation-types").then((r) => r.data),
     refetchOnWindowFocus: false,
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["operation-types"] });
+  const editing = operationTypes.find((t) => t.id === editingId) ?? null;
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["operation-types"] });
 
   const createMutation = useMutation({
-    mutationFn: (dto: OperationTypeFormValues) => api.post("/operation-types", dto),
+    mutationFn: async (dto: OperationTypeFormValues) => {
+      const { doctorIds, ...rest } = dto;
+      const res = await api.post("/operation-types", rest);
+      const newId: string = res.data.id;
+      if (doctorIds && doctorIds.length > 0) {
+        await Promise.all(
+          doctorIds.map((doctorId) =>
+            api.post(`/operation-types/${newId}/doctors`, { doctorId })
+          )
+        );
+      }
+      return res.data;
+    },
     onSuccess: () => {
       invalidate();
       setIsSheetOpen(false);
@@ -62,18 +85,24 @@ export default function OperationTypesPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (dto: OperationTypeFormValues) => api.patch(`/operation-types/${editing?.id}`, dto),
+    mutationFn: (dto: OperationTypeFormValues) => {
+      const { doctorIds, ...rest } = dto;
+      return api.patch(`/operation-types/${editingId}`, rest);
+    },
     onSuccess: () => {
       invalidate();
       setIsSheetOpen(false);
-      setEditing(null);
+      setEditingId(null);
       toast.success("Operatsiya turi yangilandi");
     },
     onError: () => toast.error("Yangilashda xatolik yuz berdi"),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/operation-types/${id}`),
+    mutationFn: (id: string) => {
+      setDeletingId(id);
+      return api.delete(`/operation-types/${id}`);
+    },
     onSuccess: () => {
       invalidate();
       toast.success("Operatsiya turi o'chirildi");
@@ -81,16 +110,22 @@ export default function OperationTypesPage() {
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "O'chirishda xatolik yuz berdi");
     },
+    onSettled: () => setDeletingId(null),
   });
 
   const handleAdd = () => {
-    setEditing(null);
+    setEditingId(null);
     setIsSheetOpen(true);
   };
 
   const handleEdit = (type: OperationType) => {
-    setEditing(type);
+    setEditingId(type.id);
     setIsSheetOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsSheetOpen(false);
+    setEditingId(null);
   };
 
   const handleDelete = (id: string) => {
@@ -100,14 +135,13 @@ export default function OperationTypesPage() {
   };
 
   const handleSubmit = (data: OperationTypeFormValues) => {
-    if (editing) {
+    if (editingId) {
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data);
     }
   };
 
-  // ── Columns ───────────────────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<OperationType>[]>(
     () => [
       {
@@ -121,24 +155,50 @@ export default function OperationTypesPage() {
             <div>
               <p className="font-medium text-text">{row.original.name}</p>
               {row.original.description && (
-                <p className="text-xs text-text-muted truncate max-w-[260px]">{row.original.description}</p>
+                <p className="text-xs text-text-muted truncate max-w-[260px]">
+                  {row.original.description}
+                </p>
               )}
             </div>
           </div>
         ),
       },
       {
+        id: "doctors",
+        header: "Doktorlar",
+        cell: ({ row }) => {
+          const doctors = row.original.doctors ?? [];
+          if (doctors.length === 0)
+            return <span className="text-xs text-text-muted italic">—</span>;
+          return (
+            <div className="flex flex-wrap gap-1 max-w-[260px]">
+              {doctors.map(({ doctor }) => (
+                <span
+                  key={doctor.id}
+                  className="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success font-medium"
+                >
+                  {doctor.first_name} {doctor.last_name}
+                </span>
+              ))}
+            </div>
+          );
+        },
+      },
+      {
         id: "items",
         header: "Xizmatlar",
         cell: ({ row }) => {
           const items = row.original.items ?? [];
-          if (items.length === 0) return <span className="text-xs text-text-muted italic">—</span>;
+          if (items.length === 0)
+            return <span className="text-xs text-text-muted italic">—</span>;
           return (
             <div className="flex flex-wrap gap-1 max-w-[320px]">
               {items.map((item) => (
                 <span
                   key={item.id}
-                  className={`text-xs px-2 py-0.5 rounded-full ${item.isActive ? "bg-surface-hover text-text" : "bg-surface-hover text-text-muted line-through"
+                  className={`text-xs px-2 py-0.5 rounded-full ${item.isActive
+                      ? "bg-surface-hover text-text"
+                      : "bg-surface-hover text-text-muted line-through"
                     }`}
                 >
                   {item.name} · {fmt(item.price)} so'm
@@ -152,14 +212,19 @@ export default function OperationTypesPage() {
         id: "basePrice",
         header: "Bazaviy narx",
         cell: ({ row }) => (
-          <span className="text-text-muted text-sm">{fmt(row.original.basePrice ?? 0)} so'm</span>
+          <span className="text-text-muted text-sm">
+            {fmt(row.original.basePrice ?? 0)} so'm
+          </span>
         ),
       },
       {
         id: "total",
         header: "Umumiy narx",
         cell: ({ row }) => {
-          const itemsTotal = (row.original.items ?? []).reduce((sum, i) => sum + Number(i.price), 0);
+          const itemsTotal = (row.original.items ?? []).reduce(
+            (sum, i) => sum + Number(i.price),
+            0
+          );
           const total = Number(row.original.basePrice ?? 0) + itemsTotal;
           return <span className="font-medium text-text">{fmt(total)} so'm</span>;
         },
@@ -181,32 +246,39 @@ export default function OperationTypesPage() {
       {
         id: "actions",
         header: "",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-2">
-            <Can roles={["ADMIN", "DIREKTOR"]}>
-              <button
-                onClick={() => handleEdit(row.original)}
-                className="p-1 rounded-md hover:bg-surface-hover text-text-muted transition-colors cursor-pointer"
-                title="Tahrirlash"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </Can>
-            <Can roles={["ADMIN"]}>
-              <button
-                onClick={() => handleDelete(row.original.id)}
-                disabled={deleteMutation.isPending}
-                className="p-1 rounded-md hover:bg-danger-50 text-text-muted hover:text-danger transition-colors cursor-pointer disabled:opacity-50"
-                title="O'chirish"
-              >
-                {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-              </button>
-            </Can>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const isDeleting = deletingId === row.original.id;
+          return (
+            <div className="flex items-center justify-end gap-2">
+              <Can roles={["ADMIN", "DIREKTOR"]}>
+                <button
+                  onClick={() => handleEdit(row.original)}
+                  className="p-1 rounded-md hover:bg-surface-hover text-text-muted transition-colors cursor-pointer"
+                  title="Tahrirlash"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              </Can>
+              <Can roles={["ADMIN"]}>
+                <button
+                  onClick={() => handleDelete(row.original.id)}
+                  disabled={isDeleting}
+                  className="p-1 rounded-md hover:bg-danger-50 text-text-muted hover:text-danger transition-colors cursor-pointer disabled:opacity-50"
+                  {...{title: t("common.delete")}}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </Can>
+            </div>
+          );
+        },
       },
     ],
-    [deleteMutation.isPending]
+    [deletingId]
   );
 
   return (
@@ -238,14 +310,12 @@ export default function OperationTypesPage() {
 
       <Sheet
         isOpen={isSheetOpen}
-        onClose={() => {
-          setIsSheetOpen(false);
-          setEditing(null);
-        }}
+        onClose={handleClose}
         title={editing ? "Operatsiya turini tahrirlash" : "Yangi operatsiya turi"}
         description="Operatsiya turi va unga tegishli xizmatlar narxlarini kiriting"
       >
         <OperationTypeForm
+          key={editingId ?? "create"}
           initialData={
             editing
               ? {
@@ -262,11 +332,10 @@ export default function OperationTypesPage() {
               }
               : undefined
           }
+          editingId={editing?.id}
+          assignedDoctors={editing?.doctors ?? []}
           onSubmit={handleSubmit}
-          onCancel={() => {
-            setIsSheetOpen(false);
-            setEditing(null);
-          }}
+          onCancel={handleClose}
           isPending={createMutation.isPending || updateMutation.isPending}
         />
       </Sheet>

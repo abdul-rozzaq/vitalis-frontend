@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { fmtHM, ShiftChangeEvent, ShiftEventType, shiftsApi, SHIFT_EVENT_COLOR, SHIFT_EVENT_LABEL } from "@/lib/shifts-api";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +16,7 @@ const EVENT_TYPES: ShiftEventType[] = [
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
 export default function AssignmentHistoryPage() {
+  const t = useTranslations();
   const [from, setFrom] = useState(ymd(new Date(Date.now() - 30 * 86400000)));
   const [to, setTo] = useState(ymd(new Date()));
   const [type, setType] = useState<ShiftEventType | "">("");
@@ -25,7 +28,7 @@ export default function AssignmentHistoryPage() {
 
   return (
     <>
-      <PageHeader title="O'zgarishlar tarixi" subtitle="Almashtirish, o'tkazish, override va qo'shimcha ish vaqti — barcha tarixiy yozuvlar" />
+      <PageHeader title={t("adminHistory.title")} subtitle={t("adminHistory.subtitle")} />
 
       <PageContent>
         <div className="flex flex-wrap items-end gap-3">
@@ -34,13 +37,13 @@ export default function AssignmentHistoryPage() {
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
           </div>
           <div>
-            <label className="text-xs text-text-muted block mb-1">Gacha</label>
+            <label className="text-xs text-text-muted block mb-1">{t("adminHistory.to")}</label>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-background text-text" />
           </div>
           <div>
             <label className="text-xs text-text-muted block mb-1">Tur</label>
             <select value={type} onChange={(e) => setType(e.target.value as ShiftEventType | "")} className="border border-border rounded-lg px-3 py-2 text-sm bg-background text-text">
-              <option value="">Barchasi</option>
+              <option value="">{t("adminHistory.all")}</option>
               {EVENT_TYPES.map((t) => <option key={t} value={t}>{SHIFT_EVENT_LABEL[t]}</option>)}
             </select>
           </div>
@@ -63,7 +66,7 @@ export default function AssignmentHistoryPage() {
                   <th className="p-3 font-medium">Kimdan</th>
                   <th className="p-3 font-medium">Kimga</th>
                   <th className="p-3 font-medium">Oyna</th>
-                  <th className="p-3 font-medium">So'ragan</th>
+                  <th className="p-3 font-medium">{t("adminHistory.requestedBy")}</th>
                   <th className="p-3 font-medium">Sabab</th>
                 </tr>
               </thead>

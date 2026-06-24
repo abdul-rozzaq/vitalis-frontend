@@ -151,7 +151,7 @@ export default function NewMedicalCardPage() {
             <Field label={t("medicalCard.departmentName")}>
               <input
                 {...register("departmentName")}
-                placeholder="Terapiya bo'limi"
+                placeholder={t("medicalCard.wardPlaceholder")}
                 className={inputCls}
               />
             </Field>
@@ -168,7 +168,7 @@ export default function NewMedicalCardPage() {
             <Field label={t("medicalCard.nurseName")}>
               <input
                 {...register("nurseName")}
-                placeholder="Hamshira Azimova"
+                placeholder={t("medicalCard.nursePlaceholder")}
                 className={inputCls}
               />
             </Field>
@@ -188,7 +188,7 @@ export default function NewMedicalCardPage() {
               {...register("complaints")}
               rows={4}
               className={textareaCls}
-              placeholder="Bemorning shikoyatlarini kiriting..."
+              placeholder={t("medicalCard.complaintPlaceholder")}
             />
           </Field>
         </motion.div>
@@ -231,14 +231,14 @@ export default function NewMedicalCardPage() {
             <input
               {...register("diagnosisInitial")}
               className={inputCls}
-              placeholder="Dastlabki tashxis..."
+              placeholder={t("medicalCard.preliminaryDiagnosisPlaceholder")}
             />
           </Field>
           <Field label={t("medicalCard.diagnosisFinal")}>
             <input
               {...register("diagnosisFinal")}
               className={inputCls}
-              placeholder="Yakuniy tashxis..."
+              placeholder={t("medicalCard.finalDiagnosisPlaceholder")}
             />
           </Field>
         </motion.div>
@@ -256,7 +256,7 @@ export default function NewMedicalCardPage() {
               {...register("treatment")}
               rows={5}
               className={textareaCls}
-              placeholder="Davolash rejasi va buyurilgan dorilar..."
+              placeholder={t("medicalCard.treatmentPlanPlaceholder")}
             />
           </Field>
         </motion.div>

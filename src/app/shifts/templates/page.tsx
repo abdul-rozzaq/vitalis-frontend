@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DEFAULT_SHIFT_COLORS } from "@/components/shifts/ShiftTimeline";
@@ -41,6 +42,7 @@ function parseTime(t: string): { hour: number; minute: number } {
 }
 
 export default function ShiftTemplatesPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState<"new" | "edit" | null>(null);
   const [editTarget, setEditTarget] = useState<RoomShift | null>(null);
@@ -127,8 +129,8 @@ export default function ShiftTemplatesPage() {
   return (
     <>
       <PageHeader
-        title="Smena shablonlari"
-        subtitle="Xonalar va vaqt oralig'ini birlashtiruvchi shablonlar"
+        title={t("shifts.templatesTitle")}
+        subtitle={t("shifts.templatesSubtitle")}
         actions={
           <button onClick={openNew} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
             <Plus className="w-4 h-4" /> Yangi shablon
@@ -266,7 +268,7 @@ function TemplateCard({ shift, onEdit, onAssign, onDelete }: { shift: RoomShift;
           </span>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <button onClick={onAssign} className="p-1.5 text-text-muted hover:text-primary rounded-lg hover:bg-primary/10" title="Shifokor tayinlash"><UserPlus className="w-4 h-4" /></button>
+          <button onClick={onAssign} className="p-1.5 text-text-muted hover:text-primary rounded-lg hover:bg-primary/10" title={t("shifts.assignDoctorBtn")}><UserPlus className="w-4 h-4" /></button>
           <button onClick={onEdit} className="p-1.5 text-text-muted hover:text-text rounded-lg hover:bg-surface-hover"><Edit2 className="w-4 h-4" /></button>
           <button onClick={onDelete} className="p-1.5 text-text-muted hover:text-danger-600 rounded-lg hover:bg-red-50"><Trash2 className="w-4 h-4" /></button>
         </div>

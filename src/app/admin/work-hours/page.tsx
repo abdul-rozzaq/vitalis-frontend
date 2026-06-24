@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
@@ -11,6 +12,7 @@ interface Staff { id: string; first_name: string; last_name: string; role: strin
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
 export default function WorkHoursPage() {
+  const t = useTranslations();
   const [userId, setUserId] = useState("");
   const [period, setPeriod] = useState<"week" | "month">("week");
   const days = period === "week" ? 7 : 30;
@@ -34,8 +36,8 @@ export default function WorkHoursPage() {
   return (
     <>
       <PageHeader
-        title="Ish soatlari"
-        subtitle="Rejalashtirilgan, ishlangan va qo'shimcha soatlar"
+        title={t("adminWorkHours.title")}
+        subtitle={t("adminWorkHours.subtitle")}
         actions={
           <div className="flex items-center gap-2">
             <select value={userId} onChange={(e) => setUserId(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-background text-text">
@@ -57,7 +59,7 @@ export default function WorkHoursPage() {
         {userId && summary && (
           <Grid cols={4}>
             <Card><Stat label="Reja soatlari" value={summary.totalPlanned.toFixed(1)} unit="soat" /></Card>
-            <Card><Stat label="Ishlangan" value={summary.totalActual.toFixed(1)} unit="soat" /></Card>
+            <Card><Stat label={t("adminWorkHours.worked")} value={summary.totalActual.toFixed(1)} unit="soat" /></Card>
             <Card>
               <div className="space-y-2">
                 <p className="text-sm text-text-muted">Qo'shimcha</p>
@@ -67,7 +69,7 @@ export default function WorkHoursPage() {
                 </div>
               </div>
             </Card>
-            <Card><Stat label="Ish kunlari" value={summary.days} unit="kun" /></Card>
+            <Card><Stat label={t("adminWorkHours.workDays")} value={summary.days} unit="kun" /></Card>
           </Grid>
         )}
 

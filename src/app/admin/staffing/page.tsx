@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
 import { fmtHM, ResolvedSlot, shiftsApi, WorkingHoursLog } from "@/lib/shifts-api";
@@ -9,6 +10,7 @@ import { useMemo } from "react";
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
 export default function StaffingOverviewPage() {
+  const t = useTranslations();
   const today = ymd(new Date());
   const weekAgo = ymd(new Date(Date.now() - 6 * 86400000));
 
@@ -53,13 +55,13 @@ export default function StaffingOverviewPage() {
 
       <PageContent>
         <Grid cols={4}>
-          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Stethoscope className="w-5 h-5 text-primary" /></div><Stat label="Faol shifokorlar" value={m.docs} /></div></Card>
-          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Users className="w-5 h-5 text-primary" /></div><Stat label="Faol hamshiralar" value={m.nurses} /></div></Card>
+          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Stethoscope className="w-5 h-5 text-primary" /></div><Stat label={t("adminStaffing.activeDoctors")} value={m.docs} /></div></Card>
+          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Users className="w-5 h-5 text-primary" /></div><Stat label={t("adminStaffing.activeNurses")} value={m.nurses} /></div></Card>
           <Card>
             <div className="space-y-2"><p className="text-sm text-text-muted">Qamrov</p>
               <span className={`text-2xl font-bold ${m.coverage >= 90 ? "text-success" : m.coverage >= 60 ? "text-amber-600" : "text-danger-500"}`}>{m.coverage}%</span></div>
           </Card>
-          <Card><Stat label="Qo'shimcha vaqt (hafta)" value={m.overtimeCount} unit="xodim" /></Card>
+          <Card><Stat label={t("adminStaffing.overtimeWeek")} value={m.overtimeCount} unit="xodim" /></Card>
         </Grid>
 
         <Grid cols={2}>
