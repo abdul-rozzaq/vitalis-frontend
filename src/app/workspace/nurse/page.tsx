@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
 import { ActiveShift, fmtHM, shiftsApi, WardPatient, WardRoundRef } from "@/lib/shifts-api";
@@ -10,6 +11,7 @@ import { useMemo } from "react";
 type TaskStatus = "pending" | "in_progress" | "done";
 
 export default function NurseDashboardPage() {
+  const t = useTranslations();
   const { data: active = [], isLoading } = useQuery<ActiveShift[]>({
     queryKey: ["my-active-shifts"], queryFn: shiftsApi.myActiveShifts, refetchInterval: 60000,
   });
@@ -49,7 +51,7 @@ export default function NurseDashboardPage() {
 
   return (
     <>
-      <PageHeader title="Hamshira paneli" subtitle="Joriy smena, xonalar, bemorlar va vazifalar"
+      <PageHeader title={t("workspace.nurseTitle")} subtitle={t("workspace.nurseSubtitle")}
         actions={<Link href="/wards/duty" className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90"><ClipboardList className="w-4 h-4" /> Navbatga o'tish</Link>} />
 
       <PageContent>
@@ -57,7 +59,7 @@ export default function NurseDashboardPage() {
           <Card><div className="flex items-center gap-3"><IconBox><Clock className="w-5 h-5 text-primary" /></IconBox><Stat label="Joriy smenalar" value={active.length} /></div></Card>
           <Card><div className="flex items-center gap-3"><IconBox><BedDouble className="w-5 h-5 text-primary" /></IconBox><Stat label="Xonalar" value={rooms.length} /></div></Card>
           <Card><div className="flex items-center gap-3"><IconBox><Users className="w-5 h-5 text-primary" /></IconBox><Stat label="Bemorlar" value={allPatients.length} /></div></Card>
-          <Card><div className="flex items-center gap-3"><IconBox><ListTodo className="w-5 h-5 text-primary" /></IconBox><Stat label="Kutilayotgan vazifa" value={pending} /></div></Card>
+          <Card><div className="flex items-center gap-3"><IconBox><ListTodo className="w-5 h-5 text-primary" /></IconBox><Stat label={t("adminStaffing.pendingTask")} value={pending} /></div></Card>
         </Grid>
 
         <Grid cols={2}>
@@ -82,7 +84,7 @@ export default function NurseDashboardPage() {
               )}
           </Card>
 
-          <Card title="Bugungi yakunlangan">
+          <Card title={t("workspace.completedToday")}>
             {done === 0 ? <p className="text-sm text-text-muted py-4">Hali yakunlangan apoxot yo'q</p>
               : (
                 <div className="space-y-2">

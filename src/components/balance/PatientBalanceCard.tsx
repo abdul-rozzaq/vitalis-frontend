@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ const BONUS_SOURCES = [
 type BonusSource = typeof BONUS_SOURCES[number]["value"];
 
 export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
+  const t = useTranslations();
   const [modal, setModal]               = useState<ModalType>(null);
   const [menuOpen, setMenuOpen]         = useState(false);
 
@@ -173,17 +175,17 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
       </Card>
 
       {/* Cash deposit */}
-      <Modal isOpen={modal === "cash"} onClose={closeModal} title="Balansni to'ldirish" size="sm">
+      <Modal isOpen={modal === "cash"} onClose={closeModal} title={t("balance.topUp")} size="sm">
         <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(cashAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } cashMutation.mutate({ amount: cashAmount, note: cashNote || undefined }); }} className="space-y-4">
           <AmountField label="Miqdor (UZS)" value={cashAmount} onChange={setCashAmount} />
           <NoteField value={cashNote} onChange={setCashNote} />
           {error && <ErrorMsg msg={error} />}
-          <Actions onCancel={closeModal} isPending={cashMutation.isPending} label="To'ldirish" color="primary" />
+          <Actions onCancel={closeModal} isPending={cashMutation.isPending} label={t("balance.topUpBtn")} color="primary" />
         </form>
       </Modal>
 
       {/* Bonus deposit */}
-      <Modal isOpen={modal === "bonus"} onClose={closeModal} title="Bonus qo'shish" size="sm">
+      <Modal isOpen={modal === "bonus"} onClose={closeModal} title={t("balance.addBonus")} size="sm">
         <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(bonusAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } bonusMutation.mutate({ amount: bonusAmount, source: bonusSource, note: bonusNote || undefined }); }} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">Bonus turi</label>
@@ -199,25 +201,25 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
           <AmountField label="Miqdor (UZS)" value={bonusAmount} onChange={setBonusAmount} accent="warning" />
           <NoteField value={bonusNote} onChange={setBonusNote} />
           {error && <ErrorMsg msg={error} />}
-          <Actions onCancel={closeModal} isPending={bonusMutation.isPending} label="Bonus berish" color="warning" />
+          <Actions onCancel={closeModal} isPending={bonusMutation.isPending} label={t("balance.giveBonus")} color="warning" />
         </form>
       </Modal>
 
       {/* Refund */}
-      <Modal isOpen={modal === "refund"} onClose={closeModal} title="Qaytarish (Refund)" size="sm">
+      <Modal isOpen={modal === "refund"} onClose={closeModal} title={t("balance.refund")} size="sm">
         <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(refundAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } refundMutation.mutate({ amount: refundAmount, note: refundNote || undefined }); }} className="space-y-4">
           <div className="bg-warning-50 rounded-lg p-3 text-xs text-warning">
             Bemor balansidan ko&apos;rsatilgan miqdor yechiladi va naqd pul qo&apos;lga qaytariladi. Balans yetarli bo&apos;lmasa amal bajarilmaydi.
           </div>
-          <AmountField label="Qaytarish miqdori (UZS)" value={refundAmount} onChange={setRefundAmount} accent="info" />
+          <AmountField label={t("balance.refundAmount")} value={refundAmount} onChange={setRefundAmount} accent="info" />
           <NoteField value={refundNote} onChange={setRefundNote} />
           {error && <ErrorMsg msg={error} />}
-          <Actions onCancel={closeModal} isPending={refundMutation.isPending} label="Qaytarish" color="info" />
+          <Actions onCancel={closeModal} isPending={refundMutation.isPending} label={t("balance.refundBtn")} color="info" />
         </form>
       </Modal>
 
       {/* Adjustment */}
-      <Modal isOpen={modal === "adjustment"} onClose={closeModal} title="Balans tuzatish" size="sm">
+      <Modal isOpen={modal === "adjustment"} onClose={closeModal} title={t("balance.adjust")} size="sm">
         <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(adjAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } adjMutation.mutate({ amount: adjAmount, type: adjType, note: adjNote || undefined }); }} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">Amal turi</label>
@@ -235,7 +237,7 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
           <AmountField label="Miqdor (UZS)" value={adjAmount} onChange={setAdjAmount} accent={adjType === "CREDIT" ? "success" : "danger"} />
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">Sabab <span className="text-danger">*</span></label>
-            <textarea placeholder="Tuzatish sababi..." value={adjNote} onChange={(e) => setAdjNote(e.target.value)} rows={2}
+            <textarea placeholder={t("balance.adjustReason")} value={adjNote} onChange={(e) => setAdjNote(e.target.value)} rows={2}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
           </div>
           {error && <ErrorMsg msg={error} />}

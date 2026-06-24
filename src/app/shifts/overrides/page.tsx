@@ -1,11 +1,12 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
 import { fmtHM, ResolvedSlot, shiftsApi } from "@/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftRight, Clock4, Scissors, UserCog, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface Staff { id: string; first_name: string; last_name: string; role: string }
@@ -14,6 +15,7 @@ type Op = { kind: "override" | "overtime" | "partial"; slot: ResolvedSlot } | { 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 
 export default function ShiftOverridesPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [date, setDate] = useState(ymd(new Date()));
   const [op, setOp] = useState<Op>(null);
@@ -30,7 +32,7 @@ export default function ShiftOverridesPage() {
   return (
     <>
       <PageHeader
-        title="Smena almashtirish"
+        title={t("shifts.overridesTitle")}
         subtitle="Almashtirish, o'tkazish, qisman o'tkazish, qo'shimcha ish vaqti va 1-kunlik override"
         actions={
           <div className="flex items-center gap-2">
@@ -47,7 +49,7 @@ export default function ShiftOverridesPage() {
         <div className="flex gap-2 text-xs text-text-muted">
           <Legend color="bg-background border-border" label="Standart" />
           <Legend color="bg-indigo-50 border-indigo-200" label="Override" />
-          <Legend color="bg-amber-50 border-amber-200" label="Bo'sh" />
+          <Legend color="bg-amber-50 border-amber-200" label={t("shifts.free")} />
         </div>
 
         {isLoading ? (
@@ -75,17 +77,16 @@ export default function ShiftOverridesPage() {
                     <td className="p-3 text-text-muted">{fmtHM(s.shift.startHour)}–{fmtHM(s.shift.endHour)}</td>
                     <td className="p-3 text-text">{s.doctor ? `${s.doctor.first_name} ${s.doctor.last_name}` : <span className="text-amber-600">biriktirilmagan</span>}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                        s.source === "assigned" ? "bg-success-50 text-success border-success-100"
-                        : "bg-amber-50 text-amber-700 border-amber-200"}`}>
-                        {s.source === "assigned" ? "Tayinlangan" : "Bo'sh"}
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${s.source === "assigned" ? "bg-success-50 text-success border-success-100"
+                          : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                        {s.source === "assigned" ? "Tayinlangan" : t("shifts.free")}
                       </span>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1 justify-end">
                         <IconBtn title="1-kunlik override" onClick={() => setOp({ kind: "override", slot: s })}><UserCog className="w-4 h-4" /></IconBtn>
-                        <IconBtn title="Qisman o'tkazish" disabled={!s.assignment} onClick={() => setOp({ kind: "partial", slot: s })}><Scissors className="w-4 h-4" /></IconBtn>
-                        <IconBtn title="Qo'shimcha ish vaqti" disabled={!s.assignment} onClick={() => setOp({ kind: "overtime", slot: s })}><Clock4 className="w-4 h-4" /></IconBtn>
+                        <IconBtn title={t("shifts.partialTransfer")} disabled={!s.assignment} onClick={() => setOp({ kind: "partial", slot: s })}><Scissors className="w-4 h-4" /></IconBtn>
+                        <IconBtn title={t("shifts.overtime")} disabled={!s.assignment} onClick={() => setOp({ kind: "overtime", slot: s })}><Clock4 className="w-4 h-4" /></IconBtn>
                       </div>
                     </td>
                   </tr>
@@ -152,12 +153,13 @@ function OverrideModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose
 function OvertimeModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose: () => void; onSaved: () => void }) {
   const [newEndHour, setNewEndHour] = useState(slot.shift.endHour + 2);
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.overtime({ assignmentId: slot.assignment!.id, newEndHour, reason: reason || undefined }),
     onSuccess: () => { toast.success("Qo'shimcha vaqt qo'shildi"); onSaved(); }, onError: () => toast.error("Xatolik"),
   });
   return (
-    <ModalShell title="Qo'shimcha ish vaqti" icon={<Clock4 className="w-5 h-5 text-purple-600" />} onClose={onClose}>
+    <ModalShell title={t("shifts.overtime")} icon={<Clock4 className="w-5 h-5 text-purple-600" />} onClose={onClose}>
       <p className="text-sm text-text-muted mb-3">{slot.doctor?.first_name} {slot.doctor?.last_name} · {slot.shift.name}</p>
       <label className="text-xs text-text-muted block mb-1">Yangi tugash soati (mavjud: {slot.shift.endHour})</label>
       <input type="number" min={slot.shift.endHour + 1} max={48} value={newEndHour} onChange={(e) => setNewEndHour(+e.target.value)} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text mb-3" />
@@ -174,12 +176,13 @@ function PartialModal({ slot, onClose, onSaved }: { slot: ResolvedSlot; onClose:
   const [windowStart, setWindowStart] = useState(slot.shift.startHour);
   const [windowEnd, setWindowEnd] = useState(slot.shift.endHour);
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.partialTransfer({ assignmentId: slot.assignment!.id, toDoctorId, windowStart, windowEnd, reason: reason || undefined }),
     onSuccess: () => { toast.success("Qisman o'tkazildi"); onSaved(); }, onError: () => toast.error("Xatolik"),
   });
   return (
-    <ModalShell title="Qisman o'tkazish" icon={<Scissors className="w-5 h-5 text-indigo-600" />} onClose={onClose}>
+    <ModalShell title={t("shifts.partialTransfer")} icon={<Scissors className="w-5 h-5 text-indigo-600" />} onClose={onClose}>
       <p className="text-sm text-text-muted mb-3">{slot.doctor?.first_name} {slot.doctor?.last_name} dan boshqa shifokorga</p>
       <label className="text-xs text-text-muted block mb-1">Qabul qiluvchi shifokor</label>
       <select value={toDoctorId} onChange={(e) => setToDoctorId(e.target.value)} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text mb-3">
@@ -203,13 +206,14 @@ function SwapModal({ slots, onClose, onSaved }: { slots: ResolvedSlot[]; onClose
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [reason, setReason] = useState("");
+  const t = useTranslations();
   const save = useMutation({
     mutationFn: () => shiftsApi.swap({ fromAssignmentId: a, toAssignmentId: b, reason: reason || undefined }),
     onSuccess: () => { toast.success("Smenalar almashtirildi"); onSaved(); }, onError: () => toast.error("Xatolik"),
   });
   const label = (s: ResolvedSlot) => `${s.shift.name} · ${s.room.name} · ${s.doctor?.first_name} ${s.doctor?.last_name}`;
   return (
-    <ModalShell title="Smena almashtirish" icon={<ArrowLeftRight className="w-5 h-5 text-primary" />} onClose={onClose}>
+    <ModalShell title={t("shifts.overridesTitle")} icon={<ArrowLeftRight className="w-5 h-5 text-primary" />} onClose={onClose}>
       <label className="text-xs text-text-muted block mb-1">Birinchi smena</label>
       <select value={a} onChange={(e) => setA(e.target.value)} className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-text mb-3">
         <option value="">— Tanlang —</option>

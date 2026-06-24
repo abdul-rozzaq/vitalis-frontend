@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
 import { ActiveShift, fmtHM, MyShifts, shiftsApi, WardPatient, WorkingHoursLog } from "@/lib/shifts-api";
@@ -8,6 +9,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 export default function DoctorDashboardPage() {
+  const t = useTranslations();
   const { data: active = [], isLoading } = useQuery<ActiveShift[]>({
     queryKey: ["my-active-shifts"], queryFn: shiftsApi.myActiveShifts, refetchInterval: 60000,
   });
@@ -29,7 +31,7 @@ export default function DoctorDashboardPage() {
 
   return (
     <>
-      <PageHeader title="Shifokor paneli" subtitle="Joriy smena, xonalar, bemorlar va ish soatlari"
+      <PageHeader title={t("workspace.doctorTitle")} subtitle={t("workspace.doctorSubtitle")}
         actions={<Link href="/wards/duty" className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90"><ClipboardList className="w-4 h-4" /> Navbatga o'tish</Link>} />
 
       <PageContent>

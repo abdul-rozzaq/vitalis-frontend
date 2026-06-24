@@ -1,10 +1,11 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { RoundModal } from "@/components/rounds/RoundModal";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BedDouble, CheckCircle2, Clock, ClipboardList, Users } from "lucide-react";
+import { BedDouble, CheckCircle2, ClipboardList, Clock, Users } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -61,6 +62,7 @@ const CONDITION_LABELS: Record<string, string> = {
 };
 
 export default function DutyPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [roundModalData, setRoundModalData] = useState<{
     roundId: string;
@@ -76,7 +78,7 @@ export default function DutyPage() {
   return (
     <>
       <PageHeader
-        title="Mening navbatim"
+        title={t("wards.myDuty")}
         subtitle="Joriy smena — palatalar va bemorlar"
       />
       <PageContent>
@@ -132,6 +134,7 @@ function ShiftDutyCard({
     patients: { patientId: string; patientName: string; currentCondition?: "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" }[]
   ) => void;
 }) {
+  const t = useTranslations();
   const { data: patients = [] } = useQuery<WardPatient[]>({
     queryKey: ["room-patients", shift.room.id],
     queryFn: () => api.get(`/wards/room/${shift.room.id}`).then((r) => r.data),
@@ -155,8 +158,8 @@ function ShiftDutyCard({
       const resolvedId = assignmentId
         ? assignmentId
         : await api
-            .post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id })
-            .then((r) => r.data.id);
+          .post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id })
+          .then((r) => r.data.id);
       return api.post("/ward-rounds", { shiftAssignmentId: resolvedId });
     },
     onSuccess: (res) => {
@@ -275,9 +278,8 @@ function ShiftDutyCard({
                 <div className="flex items-center gap-2">
                   {lastNote ? (
                     <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"
-                      }`}
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"
+                        }`}
                     >
                       {CONDITION_LABELS[lastNote.condition] ?? lastNote.condition}
                     </span>
@@ -294,7 +296,7 @@ function ShiftDutyCard({
       {/* Past rounds */}
       {rounds.filter((r) => r.completedAt).length > 0 && (
         <div className="px-5 py-3 border-t border-border bg-background">
-          <p className="text-xs font-medium text-text-muted mb-2">O'tgan apoxotlar</p>
+          <p className="text-xs font-medium text-text-muted mb-2">{t("wards.pastRounds")}</p>
           <div className="flex gap-2 flex-wrap">
             {rounds
               .filter((r) => r.completedAt)

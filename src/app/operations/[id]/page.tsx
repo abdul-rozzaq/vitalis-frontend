@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
@@ -61,47 +62,11 @@ const initials = (first: string, last: string) =>
 
 // ─── Status config ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-  OperationStatus,
-  { label: string; badgeCls: string; dotCls: string; icon: React.ElementType }
-> = {
-  SCHEDULED: {
-    label: "Rejalashtirilgan",
-    badgeCls: "bg-info-50 text-info",
-    dotCls: "bg-info",
-    icon: Clock,
-  },
-  IN_PROGRESS: {
-    label: "Jarayonda",
-    badgeCls: "bg-warning-50 text-warning",
-    dotCls: "bg-warning",
-    icon: Play,
-  },
-  COMPLETED: {
-    label: "Yakunlangan",
-    badgeCls: "bg-success-50 text-success",
-    dotCls: "bg-success",
-    icon: CheckCircle2,
-  },
-  CANCELLED: {
-    label: "Bekor qilingan",
-    badgeCls: "bg-danger-50 text-danger",
-    dotCls: "bg-danger",
-    icon: XCircle,
-  },
-};
+
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: OperationStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.SCHEDULED;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${cfg.badgeCls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotCls}`} />
-      {cfg.label}
-    </span>
-  );
-}
+
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -156,10 +121,50 @@ function ActionButton({
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function OperationDetailsPage() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useParams();
   const operationId = params?.id as string;
   const queryClient = useQueryClient();
+
+  const STATUS_CONFIG: Record<
+    OperationStatus,
+    { label: string; badgeCls: string; dotCls: string; icon: React.ElementType }
+  > = {
+    SCHEDULED: {
+      label: t("operations.statusScheduled"),
+      badgeCls: "bg-info-50 text-info",
+      dotCls: "bg-info",
+      icon: Clock,
+    },
+    IN_PROGRESS: {
+      label: "Jarayonda",
+      badgeCls: "bg-warning-50 text-warning",
+      dotCls: "bg-warning",
+      icon: Play,
+    },
+    COMPLETED: {
+      label: "Yakunlangan",
+      badgeCls: "bg-success-50 text-success",
+      dotCls: "bg-success",
+      icon: CheckCircle2,
+    },
+    CANCELLED: {
+      label: "Bekor qilingan",
+      badgeCls: "bg-danger-50 text-danger",
+      dotCls: "bg-danger",
+      icon: XCircle,
+    },
+  };
+  function StatusBadge({ status }: { status: OperationStatus }) {
+    const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.SCHEDULED;
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${cfg.badgeCls}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotCls}`} />
+        {cfg.label}
+      </span>
+    );
+  }
 
   const { data: op, isLoading } = useQuery<Operation>({
     queryKey: ["operation", operationId],
@@ -419,12 +424,12 @@ export default function OperationDetailsPage() {
             <div className="bg-surface border border-border rounded-xl p-5">
               <SectionLabel>Ma'lumotlar</SectionLabel>
               <InfoItem
-                label="Rejalashtirilgan"
+                label={t("operations.statusScheduled")}
                 value={new Date(op.scheduledAt).toLocaleDateString("uz-UZ")}
               />
               {op.startedAt && (
                 <InfoItem
-                  label="Boshlandi"
+                  label={t("operations.statusStarted")}
                   value={new Date(op.startedAt).toLocaleTimeString("uz-UZ", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -453,7 +458,7 @@ export default function OperationDetailsPage() {
                   <ActionButton
                     onClick={() => router.push(`/operations/${op.id}/edit`)}
                     icon={<Edit className="w-4 h-4" />}
-                    label="Tahrirlash"
+                    label={t("operations.actionEdit")}
                     variant="ghost"
                     isPending={isActionPending}
                   />
@@ -463,7 +468,7 @@ export default function OperationDetailsPage() {
                   <ActionButton
                     onClick={() => startMutation.mutate()}
                     icon={<Play className="w-4 h-4" />}
-                    label="Boshlash"
+                    label={t("operations.actionStart")}
                     variant="primary"
                     isPending={isActionPending}
                   />
@@ -476,7 +481,7 @@ export default function OperationDetailsPage() {
                         completeMutation.mutate();
                     }}
                     icon={<CheckCircle2 className="w-4 h-4" />}
-                    label="Yakunlash"
+                    label={t("operations.actionComplete")}
                     variant="success"
                     isPending={isActionPending}
                   />
@@ -491,7 +496,7 @@ export default function OperationDetailsPage() {
                           cancelMutation.mutate();
                       }}
                       icon={<XCircle className="w-4 h-4" />}
-                      label="Bekor qilish"
+                      label={t("operations.actionCancel")}
                       variant="danger"
                       isPending={isActionPending}
                     />
@@ -505,7 +510,7 @@ export default function OperationDetailsPage() {
                         deleteMutation.mutate();
                     }}
                     icon={<Trash2 className="w-4 h-4" />}
-                    label="O'chirish"
+                    label={t("operations.actionDelete")}
                     variant="ghost-danger"
                     isPending={isActionPending}
                   />

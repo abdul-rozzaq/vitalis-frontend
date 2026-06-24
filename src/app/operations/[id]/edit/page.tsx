@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Combobox } from "@/components/ui/combobox";
@@ -46,12 +47,17 @@ interface OperationTypeItem {
   isActive: boolean;
 }
 
+interface OperationTypeDoctor {
+  doctor: { id: string; first_name: string; last_name: string; role: string };
+}
+
 interface OperationType {
   id: string;
   name: string;
   basePrice: number;
   description?: string;
   items: OperationTypeItem[];
+  doctors: OperationTypeDoctor[];
 }
 
 interface Room { id: string; name: string }
@@ -124,6 +130,7 @@ const fieldCls =
 // ─── Page ────────────────────────────────────────────────────────────────────────
 
 export default function EditOperationPage() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useParams();
   const operationId = params?.id as string;
@@ -140,8 +147,6 @@ export default function EditOperationPage() {
   const [items, setItems] = useState<OperationItemInput[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialized, setInitialized] = useState(false);
-
-  // Yangi xizmat qo'shish (operation type ga)
   const [showNewItemForm, setShowNewItemForm] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState<number>(0);
@@ -168,7 +173,7 @@ export default function EditOperationPage() {
     queryFn: () => api.get("/rooms").then((r) => r.data),
   });
 
-  // ── Initialize form from operation data ───────────────────────────────────────
+  // ── Initialize form ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (operation && !initialized) {
       setOperationTypeId(operation.operationType.id);
@@ -193,13 +198,12 @@ export default function EditOperationPage() {
     }
   }, [operation, initialized]);
 
-  // ── Yangi xizmat (OperationTypeItem) qo'shish mutation ───────────────────────
+  // ── Yangi xizmat mutation ─────────────────────────────────────────────────────
   const addOpTypeItemMutation = useMutation({
     mutationFn: async (newItem: { name: string; price: number }) => {
       const currentType = operationTypes.find((t) => t.id === operationTypeId);
       if (!currentType) throw new Error("Operatsiya turi topilmadi");
 
-      // Mavjud itemlarni + yangi itemni birgalikda yuboramiz
       const updatedItems = [
         ...currentType.items.map((i) => ({
           id: i.id,
@@ -216,12 +220,10 @@ export default function EditOperationPage() {
       return response.data;
     },
     onSuccess: (updatedType: OperationType) => {
-      // Cache-ni yangilaymiz
       queryClient.setQueryData<OperationType[]>(["operation-types"], (old = []) =>
         old.map((t) => (t.id === operationTypeId ? updatedType : t))
       );
 
-      // Yangi qo'shilgan itemni topib, operatsiya itemlariga qo'shamiz
       const newItem = updatedType.items[updatedType.items.length - 1];
       if (newItem) {
         setItems((prev) => [
@@ -276,9 +278,7 @@ export default function EditOperationPage() {
   // ── Items ─────────────────────────────────────────────────────────────────────
   const addItem = () =>
     setItems([...items, { operationTypeItemId: "", name: "", unitPrice: 0, quantity: 1 }]);
-
   const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
-
   const updateItem = (idx: number, field: keyof OperationItemInput, value: string | number) =>
     setItems(
       items.map((item, i) => {
@@ -302,19 +302,41 @@ export default function EditOperationPage() {
 
   const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name }));
 
-  const doctorOptions = doctors.map((d) => ({
-    value: d.id,
-    label: `${d.first_name} ${d.last_name}`,
-    sublabel: d.role,
-    avatar: `${d.first_name[0]}${d.last_name[0]}`.toUpperCase(),
+  // ── Grouped doctor options ────────────────────────────────────────────────────
+  const recommendedDoctorIds = new Set(
+    (selectedOpType?.doctors ?? []).map((d) => d.doctor.id)
+  );
+
+  const recommendedDoctors = (selectedOpType?.doctors ?? []).map((d) => ({
+    value: d.doctor.id,
+    label: `${d.doctor.first_name} ${d.doctor.last_name}`,
+    sublabel: d.doctor.role,
+    avatar: `${d.doctor.first_name[0]}${d.doctor.last_name[0]}`.toUpperCase(),
+    group: "recommended",
   }));
+
+  const otherDoctors = doctors
+    .filter((d) => !recommendedDoctorIds.has(d.id))
+    .map((d) => ({
+      value: d.id,
+      label: `${d.first_name} ${d.last_name}`,
+      sublabel: d.role,
+      avatar: `${d.first_name[0]}${d.last_name[0]}`.toUpperCase(),
+      group: "other",
+    }));
+
+  const doctorOptions = [...recommendedDoctors, ...otherDoctors];
+
+  const doctorGroupLabels: Record<string, string> = {
+    recommended: "⭐ Tavsiya etilgan",
+    other: "Boshqa doktorlar",
+  };
 
   const roleOptions = [
     { value: "LEAD", label: "Bosh jarroh (LEAD)" },
     { value: "ASSISTANT", label: "Yordamchi (ASSISTANT)" },
   ];
 
-  // Har doim barcha itemlarni ko'rsatamiz (isActive filter yo'q — edit sahifasida)
   const opTypeItemOptions = (selectedOpType?.items ?? []).map((ti) => ({
     value: ti.id,
     label: ti.name,
@@ -354,7 +376,7 @@ export default function EditOperationPage() {
   if (isOpLoading) {
     return (
       <>
-        <PageHeader title="Operatsiyani tahrirlash" />
+        <PageHeader title={t("operations.editTitle")} />
         <PageContent>
           <div className="flex justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-text-muted" />
@@ -367,7 +389,7 @@ export default function EditOperationPage() {
   if (!operation) {
     return (
       <>
-        <PageHeader title="Operatsiyani tahrirlash" />
+        <PageHeader title={t("operations.editTitle")} />
         <PageContent>
           <div className="text-center py-20 text-text-muted text-sm">Operatsiya topilmadi</div>
         </PageContent>
@@ -405,7 +427,7 @@ export default function EditOperationPage() {
                   options={opTypeOptions}
                   value={operationTypeId}
                   onChange={setOperationTypeId}
-                  placeholder="Operatsiya turini tanlang..."
+                  placeholder={t("operationForm.selectOperationType")}
                   searchPlaceholder="Operatsiya turini qidiring..."
                   error={!!errors.operationTypeId}
                 />
@@ -474,7 +496,7 @@ export default function EditOperationPage() {
                     options={roomOptions}
                     value={roomId}
                     onChange={setRoomId}
-                    placeholder="Xona tanlang..."
+                    placeholder={t("operationForm.room")}
                     searchPlaceholder="Xona nomi..."
                   />
                 </div>
@@ -526,9 +548,10 @@ export default function EditOperationPage() {
                             options={doctorOptions}
                             value={s.surgeonId}
                             onChange={(v) => updateSurgeon(idx, "surgeonId", v)}
-                            placeholder="Tanlang..."
+                            placeholder={t("forms.select")}
                             searchPlaceholder="Ism yoki familiya..."
                             error={!!errors.surgeons && !s.surgeonId}
+                            groupLabels={operationTypeId ? doctorGroupLabels : undefined}
                           />
                         </div>
                         <div>
@@ -592,7 +615,7 @@ export default function EditOperationPage() {
                 </div>
               </div>
 
-              {/* ── Yangi xizmat form (inline) ── */}
+              {/* Yangi xizmat form */}
               {showNewItemForm && operationTypeId && (
                 <div className="mb-4 p-3.5 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
                   <div className="flex items-center justify-between">
@@ -601,11 +624,7 @@ export default function EditOperationPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowNewItemForm(false);
-                        setNewItemName("");
-                        setNewItemPrice(0);
-                      }}
+                      onClick={() => { setShowNewItemForm(false); setNewItemName(""); setNewItemPrice(0); }}
                       className="text-text-muted hover:text-text transition-colors cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -639,11 +658,7 @@ export default function EditOperationPage() {
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowNewItemForm(false);
-                        setNewItemName("");
-                        setNewItemPrice(0);
-                      }}
+                      onClick={() => { setShowNewItemForm(false); setNewItemName(""); setNewItemPrice(0); }}
                       className="px-3 py-1.5 text-xs rounded-lg border border-border text-text-muted hover:bg-surface-hover transition-all cursor-pointer"
                     >
                       Bekor
@@ -668,20 +683,12 @@ export default function EditOperationPage() {
                   <p className="text-xs text-text-muted">Hozircha xizmat qo'shilmagan</p>
                   <div className="flex items-center justify-center gap-3 mt-2">
                     {opTypeItemOptions.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={addItem}
-                        className="text-xs text-text-muted hover:text-text transition-colors cursor-pointer"
-                      >
+                      <button type="button" onClick={addItem} className="text-xs text-text-muted hover:text-text transition-colors cursor-pointer">
                         + Ro'yxatdan tanlash
                       </button>
                     )}
                     {operationTypeId && (
-                      <button
-                        type="button"
-                        onClick={() => setShowNewItemForm(true)}
-                        className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                      >
+                      <button type="button" onClick={() => setShowNewItemForm(true)} className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer">
                         + Yangi xizmat yaratish
                       </button>
                     )}
@@ -699,7 +706,7 @@ export default function EditOperationPage() {
                               options={opTypeItemOptions}
                               value={item.operationTypeItemId}
                               onChange={(v) => updateItem(idx, "operationTypeItemId", v)}
-                              placeholder="Xizmat tanlang..."
+                              placeholder={t("operationForm.selectService")}
                               searchPlaceholder="Xizmat qidiring..."
                             />
                           ) : (
@@ -745,10 +752,7 @@ export default function EditOperationPage() {
 
                       <div className="flex justify-end">
                         <span className="text-xs text-text-muted">
-                          Jami:{" "}
-                          <span className="font-semibold text-text">
-                            {fmt(item.unitPrice * item.quantity)} so'm
-                          </span>
+                          Jami: <span className="font-semibold text-text">{fmt(item.unitPrice * item.quantity)} so'm</span>
                         </span>
                       </div>
                     </div>
@@ -756,7 +760,6 @@ export default function EditOperationPage() {
                 </div>
               )}
 
-              {/* Price summary */}
               {(items.length > 0 || basePrice > 0) && (
                 <div className="mt-4 pt-4 border-t border-border space-y-1.5">
                   {basePrice > 0 && (
@@ -781,13 +784,13 @@ export default function EditOperationPage() {
 
             {/* Izoh */}
             <div className="bg-surface border border-border rounded-xl p-5">
-              <SectionTitle icon={CheckCircle2} title="Qo'shimcha" />
+              <SectionTitle icon={CheckCircle2} title={t("operations.additionalNote")} />
               <FieldLabel>Izoh (ixtiyoriy)</FieldLabel>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
-                placeholder="Operatsiya haqida qo'shimcha ma'lumot..."
+                placeholder={t("operations.additionalNotePlaceholder")}
                 className={fieldCls + " resize-none"}
               />
             </div>
@@ -795,7 +798,7 @@ export default function EditOperationPage() {
           </div>
         </div>
 
-        {/* ── Sticky action bar ─────────────────────────────────────────────────── */}
+        {/* Sticky action bar */}
         <div className="max-w-6xl mx-auto mt-6">
           <div className="bg-surface border border-border rounded-xl px-5 py-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -806,7 +809,6 @@ export default function EditOperationPage() {
                 </>
               )}
             </div>
-
             <div className="flex items-center gap-3">
               <button
                 type="button"

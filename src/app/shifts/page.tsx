@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
@@ -21,6 +22,7 @@ const DOW = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
 const MONTHS = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
 export default function ShiftCalendarPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(() => new Date(ymd(new Date())));

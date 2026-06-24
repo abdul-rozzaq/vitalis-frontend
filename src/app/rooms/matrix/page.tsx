@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
@@ -11,6 +12,7 @@ import toast from "react-hot-toast";
 interface Room { id: string; name: string; roomType: string; floor: number | null }
 
 export default function AssignmentMatrixPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>("");
 
@@ -49,7 +51,7 @@ export default function AssignmentMatrixPage() {
 
   return (
     <>
-      <PageHeader title="Xona matritsasi" subtitle="Smena shablonini tanlab, xonalarni bir vaqtda biriktiring" />
+      <PageHeader title="Xona matritsasi" subtitle={t("rooms.matrixSubtitle")} />
 
       <PageContent>
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 items-start">

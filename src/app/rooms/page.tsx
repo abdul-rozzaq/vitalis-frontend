@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/lib/api";
@@ -19,6 +20,7 @@ interface Room {
 interface Ward { roomId?: string; room?: { id: string }; status: string }
 
 export default function RoomsPage() {
+  const t = useTranslations();
   const qc = useQueryClient();
   const [edit, setEdit] = useState<Room | null>(null);
 
@@ -126,13 +128,13 @@ export default function RoomsPage() {
 
   return (
     <>
-      <PageHeader title="Xonalar" subtitle="Binoning qavatlar bo'yicha ko'rinishi" />
+      <PageHeader title="Xonalar" subtitle={t("rooms.floorViewSubtitle")} />
 
       <PageContent>
         <div className="flex gap-3 items-center flex-wrap">
-          <Legend cls="bg-success" label="Bo'sh" />
+          <Legend cls="bg-success" label={t("rooms.free")} />
           <Legend cls="bg-amber-500" label="Qisman" />
-          <Legend cls="bg-danger-500" label="To'la" />
+          <Legend cls="bg-danger-500" label={t("rooms.full")} />
           {isDragging && (
             <span className="ml-2 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full flex items-center gap-1.5">
               <GripVertical className="w-3 h-3" />

@@ -10,6 +10,7 @@ export interface ComboboxOption {
   sublabel?: string;
   avatar?: string;
   indent?: boolean;
+  group?: string;
 }
 
 interface ComboboxProps {
@@ -21,6 +22,7 @@ interface ComboboxProps {
   disabled?: boolean;
   className?: string;
   error?: boolean;
+  groupLabels?: Record<string, string>;
 }
 
 export function Combobox({
@@ -32,6 +34,7 @@ export function Combobox({
   disabled = false,
   className = "",
   error = false,
+  groupLabels,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -50,14 +53,34 @@ export function Combobox({
     );
   });
 
-  // Dropdown pozitsiyasini trigger'ga qarab hisoblash
+  // Group qilib chiqarish
+  const grouped: { groupKey: string | null; items: ComboboxOption[] }[] = [];
+  if (groupLabels) {
+    const seen = new Set<string>();
+    const groupMap: Record<string, ComboboxOption[]> = {};
+    const groupOrder: string[] = [];
+
+    for (const opt of filtered) {
+      const key = opt.group ?? "__none__";
+      if (!seen.has(key)) {
+        seen.add(key);
+        groupOrder.push(key);
+        groupMap[key] = [];
+      }
+      groupMap[key].push(opt);
+    }
+
+    for (const key of groupOrder) {
+      grouped.push({ groupKey: key === "__none__" ? null : key, items: groupMap[key] });
+    }
+  }
+
   const updatePosition = () => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
-    const dropdownHeight = 240; // max-h-52 + search bar
-
+    const dropdownHeight = 240;
     const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
 
     setDropdownStyle({
@@ -81,7 +104,6 @@ export function Combobox({
 
   useEffect(() => {
     if (!open) return;
-
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
     const handleMouseDown = (e: MouseEvent) => {
@@ -97,11 +119,9 @@ export function Combobox({
         setSearch("");
       }
     };
-
     window.addEventListener("scroll", handleScroll, true);
     window.addEventListener("resize", handleResize);
     document.addEventListener("mousedown", handleMouseDown);
-
     return () => {
       window.removeEventListener("scroll", handleScroll, true);
       window.removeEventListener("resize", handleResize);
@@ -119,6 +139,51 @@ export function Combobox({
     e.stopPropagation();
     onChange("");
     setSearch("");
+  };
+
+  const renderOption = (option: ComboboxOption) => {
+    const isSelected = option.value === value;
+    return (
+      <button
+        key={option.value}
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          handleSelect(option.value);
+        }}
+        className={`
+          w-full flex items-center gap-2.5 text-sm text-left
+          transition-colors cursor-pointer
+          ${option.indent ? "pl-6 pr-2.5 py-1.5" : "px-2.5 py-2"}
+          ${isSelected ? "bg-primary/10 text-primary" : "text-text hover:bg-surface-hover"}
+        `}
+      >
+        {option.indent && (
+          <span className={`shrink-0 text-xs ${isSelected ? "text-primary/50" : "text-text-muted"}`}>
+            ›
+          </span>
+        )}
+        {option.avatar && (
+          <span
+            className={`w-6 h-6 rounded-full text-[10px] font-semibold flex items-center justify-center shrink-0 ${isSelected ? "bg-primary/20 text-primary" : "bg-surface-hover text-text-muted"
+              }`}
+          >
+            {option.avatar}
+          </span>
+        )}
+        <span className="flex-1 min-w-0">
+          <span className={`block truncate ${option.indent ? "font-normal" : "font-medium"}`}>
+            {option.label}
+          </span>
+          {option.sublabel && (
+            <span className={`block text-xs truncate ${isSelected ? "text-primary/70" : "text-text-muted"}`}>
+              {option.sublabel}
+            </span>
+          )}
+        </span>
+        {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+      </button>
+    );
   };
 
   const dropdown = open ? (
@@ -152,70 +217,23 @@ export function Combobox({
       {/* Options */}
       <div className="max-h-52 overflow-y-auto py-1">
         {filtered.length === 0 ? (
-          <p className="px-3 py-4 text-xs text-text-muted text-center">
-            Natija topilmadi
-          </p>
+          <p className="px-3 py-4 text-xs text-text-muted text-center">Natija topilmadi</p>
+        ) : groupLabels ? (
+          grouped.map(({ groupKey, items }) => (
+            <div key={groupKey ?? "none"}>
+              {groupKey && groupLabels[groupKey] && (
+                <div className="px-2.5 pt-2 pb-1 flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                    {groupLabels[groupKey]}
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+              )}
+              {items.map(renderOption)}
+            </div>
+          ))
         ) : (
-          filtered.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(option.value);
-                }}
-                className={`
-                  w-full flex items-center gap-2.5 text-sm text-left
-                  transition-colors cursor-pointer
-                  ${option.indent ? "pl-6 pr-2.5 py-1.5" : "px-2.5 py-2"}
-                  ${isSelected
-                    ? "bg-primary/10 text-primary"
-                    : "text-text hover:bg-surface-hover"}
-                `}
-              >
-                {option.indent && (
-                  <span className={`shrink-0 text-xs ${isSelected ? "text-primary/50" : "text-text-muted"}`}>
-                    ›
-                  </span>
-                )}
-
-                {option.avatar && (
-                  <span
-                    className={`w-6 h-6 rounded-full text-[10px] font-semibold flex items-center justify-center shrink-0 ${
-                      isSelected
-                        ? "bg-primary/20 text-primary"
-                        : "bg-surface-hover text-text-muted"
-                    }`}
-                  >
-                    {option.avatar}
-                  </span>
-                )}
-
-                <span className="flex-1 min-w-0">
-                  <span
-                    className={`block truncate ${
-                      option.indent ? "font-normal" : "font-medium"
-                    }`}
-                  >
-                    {option.label}
-                  </span>
-                  {option.sublabel && (
-                    <span
-                      className={`block text-xs truncate ${
-                        isSelected ? "text-primary/70" : "text-text-muted"
-                      }`}
-                    >
-                      {option.sublabel}
-                    </span>
-                  )}
-                </span>
-
-                {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-              </button>
-            );
-          })
+          filtered.map(renderOption)
         )}
       </div>
     </div>
@@ -223,7 +241,6 @@ export function Combobox({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Trigger button */}
       <button
         type="button"
         disabled={disabled}
@@ -237,8 +254,8 @@ export function Combobox({
           ${error
             ? "border-danger"
             : open
-            ? "border-primary ring-2 ring-primary/20"
-            : "border-border hover:border-border/80"}
+              ? "border-primary ring-2 ring-primary/20"
+              : "border-border hover:border-border/80"}
         `}
       >
         <span className="flex items-center gap-2 min-w-0 flex-1">
@@ -270,14 +287,12 @@ export function Combobox({
             </span>
           )}
           <ChevronDown
-            className={`w-3.5 h-3.5 text-text-muted transition-transform duration-150 ${
-              open ? "rotate-180" : ""
-            }`}
+            className={`w-3.5 h-3.5 text-text-muted transition-transform duration-150 ${open ? "rotate-180" : ""
+              }`}
           />
         </span>
       </button>
 
-      {/* Portal: dropdown body ga render bo'ladi, overflow kesilmaydi */}
       {typeof window !== "undefined" && dropdown
         ? createPortal(dropdown, document.body)
         : null}
