@@ -34,8 +34,9 @@ export interface AppointmentTimelineItem {
 export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
 export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE" | "DIAGNOSTIC" | "OPERATION";
 export type CaseStepStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
-export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+
+// export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+// export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 
 export interface CaseStep {
   id: string;
