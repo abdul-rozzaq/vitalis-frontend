@@ -1,7 +1,7 @@
 "use client";
 
 import { PatientForm } from "@/features/patients/components/patient-form";
-import { NewPatientPayload } from "@/features/patients/new/types";
+import { NewPatientPayload } from "@/features/patients/types";
 import { api } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";

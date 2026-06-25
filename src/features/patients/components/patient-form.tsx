@@ -1,6 +1,6 @@
 "use client";
 
-import formatPhone from "@/components/formatPhone";
+import formatPhone from "@/components/ui/format-phone";
 import { FormButtons } from "@/components/ui/form-buttons";
 import { api } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";

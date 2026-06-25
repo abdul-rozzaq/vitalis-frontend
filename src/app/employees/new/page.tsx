@@ -1,6 +1,6 @@
 "use client";
 
-import { EmployeeForm, EmployeeSubmitData } from "@/features/employees/employee-form";
+import { EmployeeForm, EmployeeSubmitData } from "@/features/employees/components/employee-form";
 import { api } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";

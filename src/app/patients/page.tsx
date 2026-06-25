@@ -1,6 +1,6 @@
 "use client";
 
-import formatPhone from "@/components/formatPhone";
+import formatPhone from "@/components/ui/format-phone";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";

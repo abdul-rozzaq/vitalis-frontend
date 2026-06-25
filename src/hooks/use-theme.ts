@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { storageService } from "@/services/storage";
-import { STORAGE_KEYS } from "@/services/storage/storage.keys";
+import { storageService, STORAGE_KEYS } from "@/lib/services/storage";
 
 type Theme = "light" | "dark";
 

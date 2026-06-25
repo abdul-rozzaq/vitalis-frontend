@@ -1,5 +1,5 @@
 import { Providers } from "@/app/providers";
-import { AppLayout } from "@/components/app-layout";
+import { AppLayout } from "@/components/layouts/app-layout";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";

@@ -1,16 +1,16 @@
 "use client";
 
-import formatPhone from "@/components/formatPhone";
-import usePhoneFormatter from "@/components/formatPhoneinput";
+import formatPhone from "@/components/ui/format-phone";
+import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
 import { PatientBalanceCard } from "@/features/balance/components/PatientBalanceCard";
 import { PatientInvoiceList } from "@/features/balance/components/PatientInvoiceList";
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
 import { AddCaseStepForm } from "@/features/cases/components/add-case-step-form";
-import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/detail/types";
+import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/types";
 import { formatDateLong as formatDate, formatTime } from "@/lib/formatters";
-import { resolveFileUrl } from "@/features/patients/detail/utils";
+import { resolveFileUrl } from "@/features/patients/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";

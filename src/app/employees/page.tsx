@@ -1,6 +1,6 @@
 "use client";
 
-import formatPhone from "@/components/formatPhone";
+import formatPhone from "@/components/ui/format-phone";
 import { ROLE_STYLES } from "@/lib/status-styles";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";

@@ -5,7 +5,7 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { AssignedDoctor, OperationTypeForm, OperationTypeFormValues } from "@/features/operation-types/components/operation-type-form";
+import { AssignedDoctor, OperationTypeForm, OperationTypeFormValues } from "@/features/operations/components/operation-type-form";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";

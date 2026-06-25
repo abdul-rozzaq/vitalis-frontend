@@ -2,7 +2,7 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import type { DiagnosticOrder, DiagnosticOrderItem, DiagnosticItemStatus } from "@/features/diagnostic/types";
-import { resolveFileUrl } from "@/features/patients/detail/utils";
+import { resolveFileUrl } from "@/features/patients/utils";
 import { formatDateTime as formatDate } from "@/lib/formatters";
 import { deriveOrderStatus, initialsOf } from "@/lib/helpers";
 import { api } from "@/lib/api";

@@ -2,7 +2,7 @@
 
 import { api } from "@/lib/api";
 import { User } from "@/types/user";
-import { storageService, STORAGE_KEYS } from "@/services/storage";
+import { storageService, STORAGE_KEYS } from "@/lib/services/storage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";

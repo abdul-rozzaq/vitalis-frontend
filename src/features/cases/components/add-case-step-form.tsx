@@ -1,7 +1,7 @@
 "use client";
 
-import type { AssignmentSource, CaseStepType } from "@/features/patients/detail/types";
-import { toAssignmentOptions } from "@/features/patients/detail/utils";
+import type { AssignmentSource, CaseStepType } from "@/features/patients/types";
+import { toAssignmentOptions } from "@/features/patients/utils";
 import { api } from "@/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
