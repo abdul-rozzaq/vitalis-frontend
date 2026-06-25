@@ -5,8 +5,9 @@ import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { AppointmentForm } from "@/features/appointments/components/appointment-form";
-import { Appointment, AppointmentFormPayload, Assignment, Patient } from "@/features/appointments/types";
+import { Appointment, AppointmentFormPayload, Assignment } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES, filterAppointmentsByPatientName, getAppointmentStatus, toAssignmentOptions, toPatientOptions } from "@/features/appointments/utils";
+import { CaseStep, Patient } from "@/features/patients/types";
 import { api } from "@/shared/lib/api";
 import { exportToExcel } from "@/shared/lib/export-excel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,6 @@ export default function AppointmentsPage() {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filterText, setFilterText] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
 
   const { data: appointmentsData, isLoading } = useQuery<Appointment[]>({
     queryKey: ["appointments"],
@@ -99,12 +99,14 @@ export default function AppointmentsPage() {
   const handleExport = () => {
     const appts = appointmentsData ?? [];
     const headers = [t("appointments.colPatient"), t("appointments.colAssignment"), t("appointments.colDateTime"), t("appointments.colStatus")];
+
     const rows = appts.map((a: Appointment) => [
       `${a.patient?.first_name ?? ""} ${a.patient?.last_name ?? ""}`.trim(),
       a.assignment ? `${a.assignment.user?.first_name} ${a.assignment.user?.last_name} — ${a.assignment.department?.name}` : "",
       a.dateTime ? new Date(a.dateTime).toLocaleString() : "",
       a.caseStep?.case?.status ?? "",
     ]);
+
     exportToExcel("appointments", headers, rows, t("appointments.title"));
   };
 
@@ -175,13 +177,17 @@ export default function AppointmentsPage() {
         header: t("appointments.colStatus"),
         cell: ({ row }) => {
           const status = getAppointmentStatus(row.original);
+
           if (!status) return <span className="text-[10px] text-secondary">—</span>;
+
           let displayStatus = status;
+
           try {
-            displayStatus = t(`appointments.status.${status.toLowerCase()}`);
+            displayStatus = t(`appointments.status.${status.toLowerCase()}`) as any;
           } catch (e) {
             displayStatus = status;
           }
+
           return <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${CASE_STATUS_STYLES[status] ?? "bg-surface-hover text-secondary"}`}>{displayStatus}</span>;
         },
       },

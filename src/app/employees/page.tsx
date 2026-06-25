@@ -4,7 +4,7 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import formatPhone from "@/components/ui/format-phone";
-import { Employee } from "@/features/employees/types";
+import { User as Employee } from "@/shared/types/user";
 import { api } from "@/shared/lib/api";
 import { exportToExcel } from "@/shared/lib/export-excel";
 import { ROLE_STYLES } from "@/shared/lib/status-styles";

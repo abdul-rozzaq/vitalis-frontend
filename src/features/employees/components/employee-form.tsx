@@ -1,8 +1,8 @@
 "use client";
 
-import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { FormButtons } from "@/components/ui/form-buttons";
 import { FormError } from "@/components/ui/form-error";
+import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Calendar, Phone, Shield, Upload, User, X } from "lucide-react";
 import { useTranslations } from "next-intl";

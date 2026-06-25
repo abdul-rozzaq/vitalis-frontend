@@ -51,6 +51,8 @@ export interface CaseStep {
   assignment?: Assignment | null;
   appointment?: AppointmentTimelineItem | null;
 
+  case: { id: string; status: CaseStatus };
+
   prescription?: Prescription | null;
 
   labOrder?: {
@@ -87,6 +89,7 @@ export interface CaseStep {
     }[];
   } | null;
 }
+
 export interface PatientCase {
   id: string;
   patientId: string;

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\"",
-    "clean": "next clean"
+    "clean": "next clean",
+    "type-check:watch": "tsc --watch --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

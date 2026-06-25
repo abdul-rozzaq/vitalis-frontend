@@ -8,4 +8,5 @@ export interface User {
   birthday?: string | null;
   photo?: string | null;
   role: UserRole;
+  createdAt: string;
 }

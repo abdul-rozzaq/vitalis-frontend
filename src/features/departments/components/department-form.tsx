@@ -1,11 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, Building2, DollarSign, GitBranch } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { FormError } from "@/components/ui/form-error";
+import { Department } from "../types";
 
 type DepartmentFormInput = {
   name: string;
@@ -20,11 +21,6 @@ type DepartmentFormValues = {
   parentId?: string;
   price?: number;
 };
-
-interface Department {
-  id: string;
-  name: string;
-}
 
 interface DepartmentFormProps {
   initialData?: Partial<DepartmentFormInput>;
@@ -124,17 +120,10 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-        >
+        <button type="button" onClick={onCancel} className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer">
           {t("forms.cancel")}
         </button>
-        <button
-          type="submit"
-          className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer"
-        >
+        <button type="submit" className="flex-1 bg-primary hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm shadow-primary-600/20 cursor-pointer">
           {isEditing ? t("forms.updateDepartment") : t("forms.addDepartment")}
         </button>
       </div>

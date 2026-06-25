@@ -1,4 +1,5 @@
-import { Appointment, Patient } from "./types";
+import { Patient } from "../patients/types";
+import { Appointment } from "./types";
 import { toAssignmentOptions } from "@/shared/lib/helpers";
 
 export { toAssignmentOptions };
@@ -33,9 +34,11 @@ export function getAppointmentStatus(appointment: Appointment) {
   if (appointment.caseStep?.status) {
     return appointment.caseStep.status;
   }
+
   // Fallback — patient.cases dan
-  if (appointment.patient?.cases?.length) {
-    return appointment.patient.cases[0].status;
-  }
+  // if (appointment.patient?.cases?.length) {
+  //   return appointment.patient.cases[0].status;
+  // }
+
   return null;
 }
