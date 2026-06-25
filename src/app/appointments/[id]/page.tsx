@@ -10,7 +10,7 @@ import { CASE_STATUS_STYLES } from "@/features/appointments/utils";
 import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
 import { AssignmentSource } from "@/features/patients/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRightCircle, Building2, Calendar, CheckCircle2, Edit, FileText, FlaskConical, Loader2, LogOut, Printer, Scissors, Stethoscope, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";

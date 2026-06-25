@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/user";
+import type { UserRole } from "@/shared/types/user";
 import { Activity, CalendarDays, CreditCard, LayoutDashboard, Settings2, UserRound, Users, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -75,11 +75,6 @@ export const WORKSPACES: Workspace[] = [
         labelKey: "nav.operations",
         href: "/operations",
         roles: ["ADMIN", "DOCTOR", "LABARANT"],
-      },
-      {
-        labelKey: "nav.operation-types",
-        href: "/assignments/operation-types",
-        roles: ["ADMIN", "DIREKTOR"],
       },
       {
         labelKey: "nav.lab",
@@ -190,11 +185,6 @@ export const WORKSPACES: Workspace[] = [
       {
         labelKey: "nav.rooms-matrix",
         href: "/rooms/matrix",
-        roles: ["ADMIN", "DIREKTOR"],
-      },
-      {
-        labelKey: "nav.rooms-floor-view",
-        href: "/rooms/floor-view",
         roles: ["ADMIN", "DIREKTOR"],
       },
       {

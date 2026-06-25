@@ -1,4 +1,4 @@
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/shared/types/user";
 
 export type RoomType = "WARD" | "EXAMINATION" | "OPERATION";
 

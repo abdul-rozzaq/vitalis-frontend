@@ -3,8 +3,8 @@
 import { createPasswordSchema, createProfileSchema } from "@/features/settings/schemas";
 import { ChangePasswordPayload, PasswordFormValues, ProfileFormValues } from "@/features/settings/types";
 import { getApiErrorMessage, getInitialPhotoPreview } from "@/features/settings/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { api } from "@/lib/api";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { api } from "@/shared/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Camera, KeyRound, Loader2, LogOut, Phone, Shield, User, X } from "lucide-react";

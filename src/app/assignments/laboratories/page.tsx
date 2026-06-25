@@ -5,7 +5,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import type { Laboratory, LaboratoryService } from "@/features/lab/types";
 import { asArray, getTableRowIndex } from "@/features/assignments/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, FlaskConical, Loader2, Plus, Trash2 } from "lucide-react";

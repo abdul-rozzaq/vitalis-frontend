@@ -9,11 +9,11 @@ import { PatientInvoiceList } from "@/features/balance/components/PatientInvoice
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
 import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
 import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/types";
-import { formatDateLong as formatDate, formatTime } from "@/lib/formatters";
+import { formatDateLong as formatDate, formatTime } from "@/shared/lib/formatters";
 import { resolveFileUrl } from "@/features/patients/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { api } from "@/lib/api";
-import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { api } from "@/shared/lib/api";
+import { PATIENTS_MOCK_DATA } from "@/shared/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,

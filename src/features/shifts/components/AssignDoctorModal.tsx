@@ -1,8 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
 
-import { api } from "@/lib/api";
-import { fmtHM, RoomShift, shiftsApi } from "@/lib/shifts-api";
+import { api } from "@/shared/lib/api";
+import { fmtHM, RoomShift, shiftsApi } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useMemo, useState } from "react";

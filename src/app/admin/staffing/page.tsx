@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
-import { fmtHM, ResolvedSlot, shiftsApi, WorkingHoursLog } from "@/lib/shifts-api";
-import { ymd } from "@/lib/utils";
+import { fmtHM, ResolvedSlot, shiftsApi, WorkingHoursLog } from "@/shared/lib/shifts-api";
+import { ymd } from "@/shared/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Stethoscope, UserCheck, Users } from "lucide-react";
 import { useMemo } from "react";

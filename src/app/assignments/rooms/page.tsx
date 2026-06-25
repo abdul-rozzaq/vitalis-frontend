@@ -6,8 +6,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { Room, RoomPayload } from "@/features/assignments/types";
 import { asArray, getTableRowIndex } from "@/features/assignments/utils";
-import { formatDateShort as formatShortDate } from "@/lib/formatters";
-import { api } from "@/lib/api";
+import { formatDateShort as formatShortDate } from "@/shared/lib/formatters";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import {

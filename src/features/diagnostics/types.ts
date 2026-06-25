@@ -45,3 +45,11 @@ export interface DiagnosticOrder {
   items: DiagnosticOrderItem[];
   createdAt: string;
 }
+
+
+export interface ItemEditForm {
+  status: DiagnosticItemStatus;
+  note: string;
+}
+
+export type ViewMode = "tasks" | "orders";

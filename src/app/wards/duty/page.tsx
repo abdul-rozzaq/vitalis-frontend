@@ -2,8 +2,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { RoundModal } from "@/features/wards/components/RoundModal";
-import { api } from "@/lib/api";
+import { RoundModal } from "@/features/rooms/components/RoundModal";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, CheckCircle2, ClipboardList, Clock, Users } from "lucide-react";
 import { useState } from "react";

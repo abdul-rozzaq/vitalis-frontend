@@ -3,8 +3,8 @@ import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/formatters";
+import { api } from "@/shared/lib/api";
+import { formatCurrency } from "@/shared/lib/formatters";
 import { Modal } from "@/components/design-system/Modal";
 
 interface BalanceData {

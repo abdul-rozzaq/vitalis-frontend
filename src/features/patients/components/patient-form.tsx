@@ -2,7 +2,7 @@
 
 import formatPhone from "@/components/ui/format-phone";
 import { FormButtons } from "@/components/ui/form-buttons";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, CreditCard, Droplet, Heart, MapPin, Phone, User } from "lucide-react";

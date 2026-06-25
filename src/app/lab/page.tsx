@@ -3,9 +3,9 @@
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import type { LabItemStatus, LabOrder, LabOrderItem } from "@/features/lab/types";
 import { resolveFileUrl } from "@/features/patients/utils";
-import { formatDateTime as formatDate } from "@/lib/formatters";
-import { deriveOrderStatus, initialsOf } from "@/lib/helpers";
-import { api } from "@/lib/api";
+import { formatDateTime as formatDate } from "@/shared/lib/formatters";
+import { deriveOrderStatus, initialsOf } from "@/shared/lib/helpers";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,

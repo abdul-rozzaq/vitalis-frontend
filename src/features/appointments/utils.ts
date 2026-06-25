@@ -1,5 +1,5 @@
 import { Appointment, Patient } from "./types";
-import { toAssignmentOptions } from "@/lib/helpers";
+import { toAssignmentOptions } from "@/shared/lib/helpers";
 
 export { toAssignmentOptions };
 

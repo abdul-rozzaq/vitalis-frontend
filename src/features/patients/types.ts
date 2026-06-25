@@ -1,3 +1,6 @@
+import { District } from "@/shared/types/localtion";
+import { AppointmentFile, Assignment, Prescription } from "../appointments/types";
+
 export type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
 export type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_POSITIVE" | "B_NEGATIVE" | "AB_POSITIVE" | "AB_NEGATIVE";
@@ -15,19 +18,7 @@ export interface Patient {
   document_number?: string | null;
   pinfl?: string | null;
   blood_type: BloodType | null;
-  district?: {
-    name: string;
-    region?: {
-      name: string;
-    } | null;
-  } | null;
-}
-
-export interface AppointmentFile {
-  id: string;
-  name: string;
-  url: string;
-  createdAt: string;
+  district?: District | null;
 }
 
 export interface AppointmentTimelineItem {
@@ -36,11 +27,7 @@ export interface AppointmentTimelineItem {
   dateTime: string;
   conclusion?: string | null;
   files?: AppointmentFile[];
-  assignment: {
-    id?: string;
-    department: { name: string };
-    user: { first_name: string; last_name: string };
-  };
+  assignment: Assignment;
   caseStep?: { case?: { id: string; status: CaseStatus } | null } | null;
 }
 
@@ -61,24 +48,10 @@ export interface CaseStep {
   assignmentId?: string | null;
   appointmentId?: string | null;
 
-  assignment?: {
-    id: string;
-    department: { name: string; id: string };
-    user: { first_name: string; last_name: string };
-    room?: { name: string } | null;
-  } | null;
+  assignment?: Assignment | null;
+  appointment?: AppointmentTimelineItem | null;
 
-  appointment?: (AppointmentTimelineItem & { id: string }) | null;
-
-  prescription?: {
-    id: string;
-    items: {
-      id: string;
-      medicine: { name: string };
-      dosage: string;
-      frequency: number;
-    }[];
-  } | null;
+  prescription?: Prescription | null;
 
   labOrder?: {
     id: string;

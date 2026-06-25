@@ -3,7 +3,7 @@
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { PatientSearch } from "@/components/ui/patient-search";
 import { ShiftNotificationBell } from "@/features/shifts/components/ShiftNotificationBell";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/shared/hooks/use-theme";
 import { ChevronRight, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";

@@ -35,4 +35,4 @@ export function resolveFileUrl(url: string) {
   return url.startsWith("/") ? url : `/${url}`;
 }
 
-export { toAssignmentOptions } from "@/lib/helpers";
+export { toAssignmentOptions } from "@/shared/lib/helpers";

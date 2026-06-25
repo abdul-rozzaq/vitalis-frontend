@@ -1,4 +1,4 @@
-import { STORAGE_KEYS, storageService } from "@/lib/services/storage";
+import { STORAGE_KEYS, storageService } from "@/shared/lib/services/storage";
 import axios from "axios";
 import toast from "react-hot-toast";
 

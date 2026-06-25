@@ -5,7 +5,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { ROLE_STYLES, asArray, getTableRowIndex } from "@/features/assignments/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Edit, Loader2, Plus, Trash2, XCircle } from "lucide-react";

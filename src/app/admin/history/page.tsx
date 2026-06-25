@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { fmtHM, SHIFT_EVENT_COLOR, SHIFT_EVENT_LABEL, ShiftChangeEvent, ShiftEventType, shiftsApi } from "@/lib/shifts-api";
-import { ymd } from "@/lib/utils";
+import { fmtHM, SHIFT_EVENT_COLOR, SHIFT_EVENT_LABEL, ShiftChangeEvent, ShiftEventType, shiftsApi } from "@/shared/lib/shifts-api";
+import { ymd } from "@/shared/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { History } from "lucide-react";
 import { useState } from "react";

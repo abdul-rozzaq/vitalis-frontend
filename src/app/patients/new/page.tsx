@@ -2,7 +2,7 @@
 
 import { PatientForm } from "@/features/patients/components/patient-form";
 import { NewPatientPayload } from "@/features/patients/types";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";

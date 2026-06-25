@@ -1,7 +1,7 @@
 "use client";
 
 import { Medicine } from "@/features/appointments/types";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Loader2, Plus, Search } from "lucide-react";
 import { useTranslations } from "next-intl";

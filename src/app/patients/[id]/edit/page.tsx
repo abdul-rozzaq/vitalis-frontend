@@ -1,8 +1,8 @@
 "use client";
 
 import { PatientForm } from "@/features/patients/components/patient-form";
-import { api } from "@/lib/api";
-import { PATIENTS_MOCK_DATA } from "@/lib/mock-data";
+import { api } from "@/shared/lib/api";
+import { PATIENTS_MOCK_DATA } from "@/shared/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "motion/react";

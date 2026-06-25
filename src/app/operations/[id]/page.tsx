@@ -2,8 +2,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { api } from "@/lib/api";
-import { formatAmount } from "@/lib/formatters";
+import { api } from "@/shared/lib/api";
+import { formatAmount } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,

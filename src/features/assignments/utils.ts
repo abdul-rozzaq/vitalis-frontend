@@ -1,7 +1,7 @@
 import { DoorOpen, FlaskConical, KeyRound, Shield, User } from "lucide-react";
 import { TabId } from "./types";
 
-export { ROLE_STYLES } from "@/lib/status-styles";
+export { ROLE_STYLES } from "@/shared/lib/status-styles";
 
 export const TAB_BASE = "px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer";
 export const TAB_ACTIVE = "bg-primary text-white shadow-sm shadow-primary-600/20";
@@ -26,17 +26,17 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
   },
   {
     id: "diagnostics" as TabId,
-    label: "diagnotika",
+    label: t("assignments.tabDiagnostics"),
     icon: Shield,
   },
   {
     id: "diagnostics-assignments" as TabId,
-    label: "diagnotika tayinlovi",
+    label: t("assignments.tabDiagnosticsAssignments"),
     icon: FlaskConical,
   },
   {
     id: "operation-types" as TabId,
-    label: "operatsiya turlari",
+    label: t("assignments.tabOperationTypes"),
     icon: KeyRound,
   },
 ];

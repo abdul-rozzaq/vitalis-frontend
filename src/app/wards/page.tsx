@@ -4,10 +4,10 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { WardCheckInModal } from "@/features/wards/components/ward-checkin-modal";
-import { WardEditModal } from "@/features/wards/components/ward-edit-modal";
-import { api } from "@/lib/api";
-import { formatDateUz } from "@/lib/formatters";
+import { WardCheckInModal } from "@/features/rooms/components/ward-checkin-modal";
+import { WardEditModal } from "@/features/rooms/components/ward-edit-modal";
+import { api } from "@/shared/lib/api";
+import { formatDateUz } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { BedDouble, Calendar, CalendarCheck, ChevronDown, Clock, Edit, Filter, Loader2, Plus, RotateCcw, Trash2, Users, X } from "lucide-react";
@@ -469,9 +469,7 @@ export default function WardsPage() {
                     <span className="flex items-center gap-2 text-secondary">
                       <CalendarCheck className="w-3.5 h-3.5" /> {t("wards.colExpectedOut")}
                     </span>
-                    <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date() ? "text-red-500" : "text-text"}`}>
-                      {formatDateUz(wardDetail.expectedOut)}
-                    </span>
+                    <span className={`font-medium ${wardDetail.status === "OCCUPIED" && new Date(wardDetail.expectedOut) < new Date() ? "text-red-500" : "text-text"}`}>{formatDateUz(wardDetail.expectedOut)}</span>
                   </div>
                 )}
 

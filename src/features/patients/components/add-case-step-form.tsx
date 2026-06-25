@@ -2,7 +2,7 @@
 
 import type { AssignmentSource, CaseStepType } from "@/features/patients/types";
 import { toAssignmentOptions } from "@/features/patients/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";

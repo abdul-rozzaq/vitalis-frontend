@@ -2,9 +2,9 @@
 
 import { Card, CardHeader } from "@/components/design-system/Card";
 import { Can } from "@/components/ui/can";
-import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/formatters";
-import { INVOICE_STATUS_CONFIG, type InvoiceStatus } from "@/lib/status-styles";
+import { api } from "@/shared/lib/api";
+import { formatCurrency } from "@/shared/lib/formatters";
+import { INVOICE_STATUS_CONFIG, type InvoiceStatus } from "@/shared/lib/status-styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";

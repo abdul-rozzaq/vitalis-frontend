@@ -2,8 +2,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { api } from "@/lib/api";
-import { fmtHM, ResolvedSlot, shiftsApi } from "@/lib/shifts-api";
+import { api } from "@/shared/lib/api";
+import { fmtHM, ResolvedSlot, shiftsApi } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useMemo, useState } from "react";

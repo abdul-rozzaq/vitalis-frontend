@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/formatters";
+import { api } from "@/shared/lib/api";
+import { formatCurrency } from "@/shared/lib/formatters";
 import { Card, CardHeader } from "@/components/design-system/Card";
 
 interface CashTransaction {

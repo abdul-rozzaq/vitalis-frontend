@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2, UserCheck, Users } from "lucide-react";
 import { useTranslations } from "next-intl";

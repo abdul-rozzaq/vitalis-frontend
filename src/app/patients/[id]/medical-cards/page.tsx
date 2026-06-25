@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ClipboardList, FileText, Plus } from "lucide-react";
 import { motion } from "motion/react";

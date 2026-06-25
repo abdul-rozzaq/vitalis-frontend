@@ -1,7 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useState } from "react";

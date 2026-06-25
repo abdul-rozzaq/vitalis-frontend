@@ -1,12 +1,13 @@
 "use client";
 
-import formatPhone from "@/components/ui/format-phone";
-import { ROLE_STYLES } from "@/lib/status-styles";
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
-import { api } from "@/lib/api";
-import { exportToExcel } from "@/lib/export-excel";
+import formatPhone from "@/components/ui/format-phone";
+import { Employee } from "@/features/employees/types";
+import { api } from "@/shared/lib/api";
+import { exportToExcel } from "@/shared/lib/export-excel";
+import { ROLE_STYLES } from "@/shared/lib/status-styles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Download, Loader2, Plus, Trash2 } from "lucide-react";
@@ -15,18 +16,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-interface Employee {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  birthday?: string | null;
-  photo?: string | null;
-  role: string;
-  createdAt: string;
-}
-
-
 export default function EmployeesPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
@@ -34,10 +23,7 @@ export default function EmployeesPage() {
 
   const { data: employeesData = [] } = useQuery({
     queryKey: ["employees"],
-    queryFn: () =>
-      api
-        .get("/users")
-        .then((res) => res.data),
+    queryFn: () => api.get("/users").then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -153,10 +139,7 @@ export default function EmployeesPage() {
         subtitle={t("employees.description")}
         actions={
           <div className="flex gap-2">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium"
-            >
+            <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
               <Download className="w-4 h-4" />
               <span>Export</span>
             </button>
@@ -173,13 +156,7 @@ export default function EmployeesPage() {
       />
 
       <PageContent>
-        <EnterpriseDataTable
-          columns={columns}
-          data={employeesData}
-          pageSize={20}
-          searchKey="name"
-          searchPlaceholder={t("common.filterPlaceholder")}
-        />
+        <EnterpriseDataTable columns={columns} data={employeesData} pageSize={20} searchKey="name" searchPlaceholder={t("common.filterPlaceholder")} />
       </PageContent>
     </div>
   );

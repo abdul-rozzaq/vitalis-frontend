@@ -1,7 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 
-import { shiftsApi, ShiftNotification } from "@/lib/shifts-api";
+import { shiftsApi, ShiftNotification } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check } from "lucide-react";
 import { useState } from "react";

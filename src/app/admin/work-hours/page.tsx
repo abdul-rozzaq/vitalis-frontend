@@ -3,9 +3,9 @@
 import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
-import { api } from "@/lib/api";
-import { fmtHM, shiftsApi, WorkingHoursLog, WorkingHoursSummary } from "@/lib/shifts-api";
-import { ymd } from "@/lib/utils";
+import { api } from "@/shared/lib/api";
+import { fmtHM, shiftsApi, WorkingHoursLog, WorkingHoursSummary } from "@/shared/lib/shifts-api";
+import { ymd } from "@/shared/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import { useState } from "react";

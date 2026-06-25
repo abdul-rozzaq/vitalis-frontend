@@ -3,7 +3,7 @@
 import { ContextualPanel } from "@/components/navigation/ContextualPanel";
 import { IconRail } from "@/components/navigation/IconRail";
 import { Topbar } from "@/components/navigation/Topbar";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/shared/hooks/use-auth";
 import Lottie from "lottie-react";
 import { motion } from "motion/react";
 import { usePathname } from "next/navigation";

@@ -10,7 +10,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "editor.codeLens": true,
-  "js/ts.referencesCodeLens.enabled": true,
+  // "js/ts.referencesCodeLens.enabled": true,
   "search.exclude": {
     "**/.next/**": true,
     "**/node_modules/**": true,

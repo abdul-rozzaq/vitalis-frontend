@@ -1,6 +1,6 @@
 "use client";
 
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/shared/types/user";
 import { useAuth } from "./use-auth";
 
 /**

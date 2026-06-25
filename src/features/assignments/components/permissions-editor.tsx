@@ -1,7 +1,7 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckSquare2, KeyRound, Loader2, Save, Shield, Square } from "lucide-react";
 import { useTranslations } from "next-intl";

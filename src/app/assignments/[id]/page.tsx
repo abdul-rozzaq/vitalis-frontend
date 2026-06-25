@@ -1,13 +1,13 @@
 "use client";
 
-import { AssignmentForm, type AssignmentFormValues } from "@/features/assignments/components/assignment-form";
 import { Can } from "@/components/ui/can";
 import { Sheet } from "@/components/ui/sheet";
+import { AssignmentForm, type AssignmentFormValues } from "@/features/assignments/components/assignment-form";
 import { UserOption } from "@/features/assignments/types";
-import { api } from "@/lib/api";
-import { UserRole } from "@/types/user";
+import { api } from "@/shared/lib/api";
+import { ROLE_STYLES } from "@/shared/lib/status-styles";
+import { UserRole } from "@/shared/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ROLE_STYLES } from "@/lib/status-styles";
 import { ArrowLeft, BedDouble, Building2, Calendar, CheckCircle2, Clock, DoorOpen, Edit, Loader2, User, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -16,7 +16,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
-
 
 interface Schedule {
   id: string;
@@ -39,11 +38,16 @@ interface Assignment {
   schedules?: Schedule[];
 }
 
-interface DeptOption { id: string; name: string }
-interface RoomOption { id: string; name: string }
+interface DeptOption {
+  id: string;
+  name: string;
+}
+interface RoomOption {
+  id: string;
+  name: string;
+}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
-
 
 const DAY_COLS: Record<number, string> = {
   1: "bg-surface border-border border-l-4 border-l-blue-400",
@@ -75,7 +79,11 @@ export default function AssignmentDetailPage() {
   };
 
   // ── Fetch assignment ──
-  const { data: assignment, isLoading, isError } = useQuery<Assignment>({
+  const {
+    data: assignment,
+    isLoading,
+    isError,
+  } = useQuery<Assignment>({
     queryKey: ["assignment", id],
     queryFn: () => api.get(`/assignments/${id}`).then((r) => r.data),
   });
@@ -99,8 +107,7 @@ export default function AssignmentDetailPage() {
 
   // ── Update mutation ──
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<AssignmentFormValues>) =>
-      api.patch(`/assignments/${id}`, data).then((r) => r.data),
+    mutationFn: (data: Partial<AssignmentFormValues>) => api.patch(`/assignments/${id}`, data).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignment", id] });
       qc.invalidateQueries({ queryKey: ["assignments"] });
@@ -129,9 +136,7 @@ export default function AssignmentDetailPage() {
     );
   }
 
-  const fullName = assignment.user
-    ? `${assignment.user.first_name} ${assignment.user.last_name}`
-    : "—";
+  const fullName = assignment.user ? `${assignment.user.first_name} ${assignment.user.last_name}` : "—";
   const roleName = assignment.user?.role;
   const roleStyle = (roleName ? ROLE_STYLES[roleName] : undefined) ?? { bg: "bg-gray-100", text: "text-gray-700" };
   const schedules = assignment.schedules ?? [];
@@ -141,29 +146,19 @@ export default function AssignmentDetailPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link
-          href="/assignments"
-          className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
-        >
+        <Link href="/assignments" className="flex items-center gap-2 text-sm text-secondary hover:text-primary transition-colors">
           <ArrowLeft className="w-4 h-4" />
           {t("assignments.backToAssignments")}
         </Link>
         <Can roles={["ADMIN"]}>
-          <button
-            onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-surface border border-border hover:bg-surface-hover transition-colors text-text cursor-pointer"
-          >
+          <button onClick={() => setEditOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-surface border border-border hover:bg-surface-hover transition-colors text-text cursor-pointer">
             <Edit className="w-4 h-4" />
             {t("common.edit")}
           </button>
         </Can>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-      >
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Left card ── */}
         <div className="lg:col-span-1 space-y-4">
           {/* Employee card */}
@@ -174,11 +169,7 @@ export default function AssignmentDetailPage() {
               </div>
               <div>
                 <p className="font-semibold text-text">{fullName}</p>
-                {roleName && (
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${roleStyle.bg} ${roleStyle.text}`}>
-                    {roleName}
-                  </span>
-                )}
+                {roleName && <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${roleStyle.bg} ${roleStyle.text}`}>{roleName}</span>}
               </div>
             </div>
 
@@ -196,8 +187,7 @@ export default function AssignmentDetailPage() {
               <div className="flex items-center gap-2.5 text-sm text-secondary">
                 <Calendar className="w-4 h-4 text-text-muted shrink-0" />
                 <span>
-                  {t("assignments.createdAt")}:{" "}
-                  {new Date(assignment.createdAt).toLocaleDateString()}
+                  {t("assignments.createdAt")}: {new Date(assignment.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -220,18 +210,14 @@ export default function AssignmentDetailPage() {
           {/* Room info card */}
           {assignment.room && (
             <div className="bg-surface border border-border rounded-xl p-5 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                {t("assignments.colRoom")}
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">{t("assignments.colRoom")}</p>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-cyan-100 flex items-center justify-center shrink-0">
                   <BedDouble className="w-4 h-4 text-cyan-600" />
                 </div>
                 <div>
                   <p className="font-medium text-text">{assignment.room.name}</p>
-                  <p className="text-xs text-secondary">
-                    {assignment.room.roomType === "WARD" ? "Ward" : "Examination"}
-                  </p>
+                  <p className="text-xs text-secondary">{assignment.room.roomType === "WARD" ? "Ward" : "Examination"}</p>
                 </div>
               </div>
             </div>
@@ -252,13 +238,8 @@ export default function AssignmentDetailPage() {
               {scheduledDays.map((day) => {
                 const daySchedules = schedules.filter((s) => s.dayOfWeek === day);
                 return (
-                  <div
-                    key={day}
-                    className={`rounded-lg border p-3 space-y-1.5 ${DAY_COLS[day] ?? "bg-gray-50 border-gray-200"}`}
-                  >
-                    <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">
-                      {DAY_LABELS[day]}
-                    </p>
+                  <div key={day} className={`rounded-lg border p-3 space-y-1.5 ${DAY_COLS[day] ?? "bg-gray-50 border-gray-200"}`}>
+                    <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{DAY_LABELS[day]}</p>
                     {daySchedules.map((s) => (
                       <div key={s.id} className="flex items-center gap-1 text-sm text-text">
                         <Clock className="w-3 h-3 text-text-muted shrink-0" />
@@ -274,12 +255,7 @@ export default function AssignmentDetailPage() {
       </motion.div>
 
       {/* Edit sheet */}
-      <Sheet
-        isOpen={editOpen}
-        onClose={() => setEditOpen(false)}
-        title={t("assignments.editAssignmentTitle")}
-        description={t("assignments.editAssignmentDesc")}
-      >
+      <Sheet isOpen={editOpen} onClose={() => setEditOpen(false)} title={t("assignments.editAssignmentTitle")} description={t("assignments.editAssignmentDesc")}>
         <AssignmentForm
           initialData={{
             userId: assignment.userId,

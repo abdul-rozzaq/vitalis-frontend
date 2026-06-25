@@ -2,7 +2,7 @@
 
 import { MedicineCombobox } from "@/features/appointments/components/medicine-combobox";
 import { MealRelation, Prescription } from "@/features/appointments/types";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";

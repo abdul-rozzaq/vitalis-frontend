@@ -2,7 +2,7 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -16,7 +16,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { formatAmount } from "@/lib/formatters";
+import { formatAmount } from "@/shared/lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";

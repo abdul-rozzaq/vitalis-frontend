@@ -16,4 +16,4 @@ export { Container, GridLayout, PageLayout, Stack, type ContainerProps, type Gri
 export { PageHeader, type PageHeaderProps } from "./layouts/PageHeader";
 
 // Design Tokens
-export * from "@/lib/design-tokens";
+export * from "@/shared/lib/design-tokens";

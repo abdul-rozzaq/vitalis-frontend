@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
 import Link from "next/link";
