@@ -1010,5 +1010,109 @@
     "editServiceTitle": "Редактировать услугу",
     "editServiceDesc": "Изменить данные этой услуги.",
     "deleteServiceConfirm": "Вы уверены, что хотите удалить эту услугу?"
+  },
+  "shifts": {
+    "overridesTitle": "Замена смен",
+    "overridesSubtitle": "Замены, пропуски, частичные пропуски и переработка",
+    "free": "Свободно",
+    "noShiftToday": "Смены в этот день нет",
+    "partialTransfer": "Частичный пропуск",
+    "overtime": "Переработка",
+    "partialOvertimeNote": "Частичный пропуск и переработка доступны только для назначенных смен",
+    "newDoctor": "Новый врач",
+    "toHour": "До (час)",
+    "swap": "Замена смены",
+    "firstShift": "Первая смена",
+    "secondShift": "Вторая смена",
+    "noShiftInPeriod": "Смены в этом периоде отсутствуют",
+    "quickAssign": "Быстрое назначение",
+    "assignDoctor": "Назначить врача",
+    "templatesTitle": "Шаблоны смен",
+    "templatesSubtitle": "Шаблоны, объединяющие комнаты и временные интервалы",
+    "noTemplatesList": "Шаблонов нет",
+    "startTime": "Время начала",
+    "endTime": "Время окончания",
+    "hasRounds": "В этой смене будут обходы",
+    "noNurse": "Медсестры нет",
+    "assignDoctorBtn": "Назначить врача",
+    "notificationTitle": "Уведомления",
+    "noNotification": "Уведомлений нет",
+    "assignDoctorTitle": "Назначить врача"
+  },
+  "adminHistory": {
+    "title": "История изменений",
+    "subtitle": "Замены, переводы, переработка и дополнительные часы — все исторические записи",
+    "to": "До",
+    "all": "Всё",
+    "noRecords": "Нет записей в истории",
+    "requestedBy": "Запрошено"
+  },
+  "adminStaffing": {
+    "activeDoctors": "Активные врачи",
+    "activeNurses": "Активные медсёстры",
+    "overtimeWeek": "Переработка (неделя)",
+    "noDoctorsToday": "Сегодня врачей не назначено",
+    "pendingTask": "Ожидающие задачи"
+  },
+  "adminWorkHours": {
+    "title": "Рабочие часы",
+    "subtitle": "Запланированные, отработанные и дополнительные часы",
+    "allEmployees": "Все сотрудники",
+    "worked": "Отработано",
+    "overtime": "Переработка",
+    "workDays": "Рабочие дни",
+    "noRecords": "Нет записей о рабочих часах",
+    "autoCalc": "Записи рассчитываются автоматически каждую ночь"
+  },
+  "invoices": {
+    "all": "Всё",
+    "partiallyPaid": "Частично оплачено",
+    "paid": "Оплачено",
+    "cancelled": "Отменено",
+    "to": "До",
+    "search": "Поиск...",
+    "noRows": "Нет строк",
+    "showRows": "Показать строки",
+    "new": "Новый счёт",
+    "statusPaid": "Оплачено"
+  },
+  "rooms": {
+    "matrixSubtitle": "Выберите шаблон смены и привяжите комнаты одновременно",
+    "templates": "Шаблоны смен",
+    "noTemplates": "Шаблонов нет",
+    "clear": "Очистить",
+    "noWardRooms": "Нет палатных комнат",
+    "floorViewSubtitle": "Вид этажей здания",
+    "free": "Свободно",
+    "full": "Полно",
+    "capacity": "Вместимость"
+  },
+  "workspace": {
+    "doctorTitle": "Панель врача",
+    "doctorSubtitle": "Текущие смены, комнаты, пациенты и рабочие часы",
+    "goToDuty": "Перейти к дежурству",
+    "nurseTitle": "Панель медсестры",
+    "nurseSubtitle": "Текущие смены, комнаты, пациенты и задачи",
+    "doTask": "Выполнить задачу",
+    "noActiveTasks": "Нет активных задач",
+    "completedToday": "Выполнено сегодня",
+    "noCompletedRounds": "Пока нет завершённых обходов",
+    "noUpcomingShifts": "Нет предстоящих смен"
+  },
+  "rounds": {
+    "noPatientsInWard": "Нет пациентов в палате"
+  },
+  "balance": {
+    "topUp": "Пополнить баланс",
+    "topUpBtn": "Пополнить",
+    "addBonus": "Добавить бонус",
+    "giveBonus": "Дать бонус",
+    "refund": "Возврат",
+    "refundAmount": "Сумма возврата (UZS)",
+    "refundBtn": "Возврат",
+    "adjust": "Отрегулировать баланс",
+    "adjustReason": "Причина корректировки...",
+    "paying": "Оплата",
+    "topUpWard": "Пополнить баланс"
   }
 }

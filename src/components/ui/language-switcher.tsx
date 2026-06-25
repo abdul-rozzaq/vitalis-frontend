@@ -8,7 +8,6 @@ import { useTransition } from "react";
 const LOCALES = [
   { code: "uz", label: "UZ", flag: "🇺🇿" },
   { code: "ru", label: "RU", flag: "🇷🇺" },
-  { code: "en", label: "EN", flag: "🇬🇧" },
 ] as const;
 
 export function LanguageSwitcher() {

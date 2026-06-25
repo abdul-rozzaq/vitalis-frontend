@@ -1138,7 +1138,8 @@
     "activeDoctors": "Faol shifokorlar",
     "activeNurses": "Faol hamshiralar",
     "overtimeWeek": "Qo'shimcha vaqt (hafta)",
-    "noDoctorsToday": "Bugun tayinlangan shifokor yo'q"
+    "noDoctorsToday": "Bugun tayinlangan shifokor yo'q",
+    "pendingTask": "Kutilayotgan vazifalar"
   },
   "adminWorkHours": {
     "title": "Ish soatlari",
@@ -1202,6 +1203,7 @@
     "assignDoctorTitle": "Shifokor tayinlash"
   },
   "workspace": {
+    "doctorTitle": "Shifokor boshqaruv paneli",
     "doctorSubtitle": "Joriy smena, xonalar, bemorlar va ish soatlari",
     "goToDuty": "Navbatga o'tish",
     "nurseTitle": "Hamshira paneli",
