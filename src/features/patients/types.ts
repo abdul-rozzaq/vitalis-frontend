@@ -1,5 +1,6 @@
 import { District } from "@/shared/types/localtion";
 import { AppointmentFile, Assignment, Prescription } from "../appointments/types";
+import { LabItemStatus, LabOrderStatus } from "../lab/types";
 
 export type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
