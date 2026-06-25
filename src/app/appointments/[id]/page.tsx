@@ -7,7 +7,7 @@ import { FileUploadModal } from "@/features/appointments/components/file-upload-
 import { PrescriptionEditor } from "@/features/appointments/components/prescription-editor";
 import { Appointment } from "@/features/appointments/types";
 import { CASE_STATUS_STYLES } from "@/features/appointments/utils";
-import { AddCaseStepForm } from "@/features/cases/components/add-case-step-form";
+import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
 import { AssignmentSource } from "@/features/patients/types";
 import { resolveFileUrl, toAssignmentOptions } from "@/features/patients/utils";
 import { api } from "@/lib/api";
