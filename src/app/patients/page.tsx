@@ -1,26 +1,18 @@
 "use client";
 
-import formatPhone from "@/components/formatPhone";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
-import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { api } from "@/lib/api";
-import { exportToExcel } from "@/lib/export-excel";
+import formatPhone from "@/components/ui/format-phone";
+import { Patient } from "@/features/patients/types";
+import { api } from "@/shared/lib/api";
+import { exportToExcel } from "@/shared/lib/export-excel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Download, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  gender: "male" | "female";
-  birth_date: string | null;
-}
 
 export default function PatientsPage() {
   const t = useTranslations();

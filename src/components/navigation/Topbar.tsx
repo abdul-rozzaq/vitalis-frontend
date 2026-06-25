@@ -1,9 +1,9 @@
 "use client";
 
-import { useTheme } from "@/hooks/use-theme";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { PatientSearch } from "@/components/ui/patient-search";
-import { ShiftNotificationBell } from "@/components/shifts/ShiftNotificationBell";
+import { ShiftNotificationBell } from "@/features/shifts/components/ShiftNotificationBell";
+import { useTheme } from "@/shared/hooks/use-theme";
 import { ChevronRight, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
@@ -25,9 +25,7 @@ export function Topbar() {
         {activeItem && (
           <>
             <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-text-muted" />
-            <span className="truncate font-semibold text-text">
-              {t(activeItem.labelKey)}
-            </span>
+            <span className="truncate font-semibold text-text">{t(activeItem.labelKey)}</span>
           </>
         )}
       </div>

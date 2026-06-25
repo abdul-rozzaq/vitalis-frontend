@@ -1,10 +1,14 @@
+import { Department } from "@/features/departments/types";
+import { CaseStep, Patient } from "@/features/patients/types";
+import { User } from "@/shared/types/user";
+import { Room } from "../assignments/types";
+
 export interface Assignment {
   id: string;
-  user: { id: string; first_name: string; last_name: string };
-  department: { id: string; name: string };
-  room: { id: string; name: string } | null;
+  user: User;
+  department: Department;
+  room: Room | null;
 }
-
 
 export interface AppointmentFile {
   id: string;
@@ -45,29 +49,13 @@ export interface Appointment {
   id: string;
   dateTime: string;
   conclusion?: string | null;
-  patient: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    cases?: { id: string; status: string }[]; // ← shu qator
-  };
+  patient: Patient;
   patientId: string;
   assignment: Assignment;
   assignmentId: string;
   files?: AppointmentFile[];
   prescription?: Prescription | null;
-  caseStep?: {
-    id: string;
-    type: string;
-    status: string;
-    caseId: string;
-    case?: { id: string; status: string };
-  } | null;
-}
-export interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
+  caseStep?: CaseStep | null;
 }
 
 export interface AppointmentFormPayload {

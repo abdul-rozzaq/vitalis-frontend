@@ -1,14 +1,5 @@
-import type { UserRole } from "@/types/user";
-import {
-  Activity,
-  CalendarDays,
-  CreditCard,
-  LayoutDashboard,
-  Settings2,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import type { UserRole } from "@/shared/types/user";
+import { Activity, CalendarDays, CreditCard, LayoutDashboard, Settings2, UserRound, Users, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   /** i18n key under `nav.*` */
@@ -84,11 +75,6 @@ export const WORKSPACES: Workspace[] = [
         labelKey: "nav.operations",
         href: "/operations",
         roles: ["ADMIN", "DOCTOR", "LABARANT"],
-      },
-      {
-        labelKey: "nav.operation-types",
-        href: "/assignments/operation-types",
-        roles: ["ADMIN", "DIREKTOR"],
       },
       {
         labelKey: "nav.lab",
@@ -202,11 +188,6 @@ export const WORKSPACES: Workspace[] = [
         roles: ["ADMIN", "DIREKTOR"],
       },
       {
-        labelKey: "nav.rooms-floor-view",
-        href: "/rooms/floor-view",
-        roles: ["ADMIN", "DIREKTOR"],
-      },
-      {
         labelKey: "nav.assignments",
         href: "/assignments",
         roles: ["ADMIN"],
@@ -218,18 +199,12 @@ export const WORKSPACES: Workspace[] = [
 /** Matches the active-state logic previously inlined in Sidebar.tsx. */
 export function isItemActive(pathname: string, item: Pick<NavItem, "href" | "exact">): boolean {
   if (item.exact) return pathname === item.href;
-  return (
-    pathname === item.href ||
-    (item.href !== "/" && pathname.startsWith(item.href + "/"))
-  );
+  return pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
 }
 
 /** First workspace (in declaration order) that owns the current pathname. */
 export function activeWorkspace(pathname: string): Workspace {
-  return (
-    WORKSPACES.find((ws) => ws.items.some((item) => isItemActive(pathname, item))) ??
-    WORKSPACES[0]
-  );
+  return WORKSPACES.find((ws) => ws.items.some((item) => isItemActive(pathname, item))) ?? WORKSPACES[0];
 }
 
 /** Union of all roles across a workspace's items — used to gate the rail hub. */

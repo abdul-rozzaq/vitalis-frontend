@@ -4,7 +4,7 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { asArray, getTableRowIndex } from "@/features/assignments/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, Loader2, Plus, Stethoscope, Trash2 } from "lucide-react";

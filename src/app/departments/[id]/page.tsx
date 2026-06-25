@@ -1,63 +1,22 @@
 "use client";
 
-import { DepartmentForm } from "@/components/departments/department-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { api } from "@/lib/api";
+import { Appointment } from "@/features/appointments/types";
+import { STATUS_STYLES } from "@/features/appointments/utils/status-colors";
+import { DepartmentForm } from "@/features/departments/components/department-form";
+import { Department } from "@/features/departments/types";
+import { getDepartmentColor } from "@/features/departments/utils/department-colors";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, DollarSign, Edit, ExternalLink, GitBranch, Loader2, Plus, Trash2, User, XCircle } from "lucide-react";
+import { ArrowLeft, Building2, Calendar, DollarSign, Edit, ExternalLink, GitBranch, Loader2, Plus, Trash2, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
-
-interface Department {
-  id: string;
-  name: string;
-  description?: string;
-  price?: number | null;
-  parentId?: string | null;
-  parent?: { id: string; name: string } | null;
-  children?: Department[];
-}
-
-type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
-
-interface Appointment {
-  id: string;
-  dateTime: string;
-  createdAt: string;
-  patient: { id: string; first_name: string; last_name: string };
-  assignment: {
-    department?: { id: string; name: string } | null;
-    user: { first_name: string; last_name: string };
-    room?: { name: string } | null;
-  };
-  caseStep?: { case?: { status: CaseStatus } | null } | null;
-}
-
-const STATUS_STYLES: Record<CaseStatus, { bg: string; text: string; icon: React.ElementType }> = {
-  ACTIVE: { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", icon: Clock },
-  COMPLETED: { bg: "bg-success-50 border-success-100", text: "text-success", icon: CheckCircle2 },
-  CANCELLED: { bg: "bg-red-50 border-red-200", text: "text-red-600", icon: XCircle },
-};
-
-const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
-  { bg: "bg-blue-100", icon: "text-blue-600" },
-  { bg: "bg-purple-100", icon: "text-purple-600" },
-  { bg: "bg-success-100", icon: "text-success" },
-  { bg: "bg-amber-100", icon: "text-amber-600" },
-  { bg: "bg-rose-100", icon: "text-rose-600" },
-  { bg: "bg-cyan-100", icon: "text-cyan-600" },
-];
-
-function getDepartmentColor(id: string) {
-  const index = id.charCodeAt(0) % DEPARTMENT_COLORS.length;
-  return DEPARTMENT_COLORS[index];
-}
 
 export default function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -328,6 +287,7 @@ export default function DepartmentDetailPage() {
                     </div>
                     <div className="flex items-center gap-1.5 text-sm text-secondary">
                       <Calendar className="w-3.5 h-3.5 text-text-muted shrink-0" />
+
                       {new Date(appt.dateTime).toLocaleString("uz-UZ", {
                         year: "numeric",
                         month: "short",

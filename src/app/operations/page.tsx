@@ -2,20 +2,11 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  CheckCircle2,
-  Clock,
-  Edit,
-  Loader2,
-  Play,
-  Plus,
-  SlidersHorizontal,
-  X,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, Clock, Edit, Loader2, Play, Plus, SlidersHorizontal, X, XCircle } from "lucide-react";
+import { formatAmount } from "@/shared/lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -62,13 +53,12 @@ const STATUS_STYLES: Record<OperationStatus, { bg: string; text: string; dot: st
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) =>
-  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+const fmt = formatAmount;
 
 function StatusBadge({ status }: { status: OperationStatus }) {
   const t = useTranslations();
   const style = STATUS_STYLES[status] ?? STATUS_STYLES.SCHEDULED;
-  const Icon = style.icon;
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
@@ -79,41 +69,18 @@ function StatusBadge({ status }: { status: OperationStatus }) {
 
 // ─── Filter Panel ───────────────────────────────────────────────────────────────
 
-function FilterPanel({
-  filters,
-  onChange,
-  onReset,
-  activeCount,
-}: {
-  filters: Filters;
-  onChange: (k: keyof Filters, v: string) => void;
-  onReset: () => void;
-  activeCount: number;
-}) {
+function FilterPanel({ filters, onChange, onReset, activeCount }: { filters: Filters; onChange: (k: keyof Filters, v: string) => void; onReset: () => void; activeCount: number }) {
   const t = useTranslations();
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.15 }}
-      className="bg-surface border border-border rounded-lg p-3 mb-4"
-    >
+    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }} className="bg-surface border border-border rounded-lg p-3 mb-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-text-muted flex items-center gap-2">
           <SlidersHorizontal className="w-3.5 h-3.5" />
           {t("operations.filter")}
-          {activeCount > 0 && (
-            <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
-              {activeCount}
-            </span>
-          )}
+          {activeCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">{activeCount}</span>}
         </span>
         {activeCount > 0 && (
-          <button
-            onClick={onReset}
-            className="text-xs text-text-muted hover:text-danger transition-colors cursor-pointer flex items-center gap-1"
-          >
+          <button onClick={onReset} className="text-xs text-text-muted hover:text-danger transition-colors cursor-pointer flex items-center gap-1">
             <X className="w-3 h-3" /> {t("operations.clear")}
           </button>
         )}
@@ -227,11 +194,7 @@ export default function OperationsPage() {
       {
         accessorKey: "id",
         header: t("operations.id"),
-        cell: ({ row }) => (
-          <span className="font-mono text-xs text-text-muted">
-            {row.original.id.slice(0, 6).toUpperCase()}
-          </span>
-        ),
+        cell: ({ row }) => <span className="font-mono text-xs text-text-muted">{row.original.id.slice(0, 6).toUpperCase()}</span>,
       },
       {
         id: "patient",
@@ -245,9 +208,7 @@ export default function OperationsPage() {
       {
         id: "operationType",
         header: t("operations.operationType"),
-        cell: ({ row }) => (
-          <span className="text-text-muted text-sm">{row.original.operationType.name}</span>
-        ),
+        cell: ({ row }) => <span className="text-text-muted text-sm">{row.original.operationType.name}</span>,
       },
       {
         accessorKey: "scheduledAt",
@@ -281,9 +242,7 @@ export default function OperationsPage() {
       {
         accessorKey: "totalPrice",
         header: t("operations.amount"),
-        cell: ({ row }) => (
-          <span className="font-medium text-text">{fmt(row.original.totalPrice)} so'm</span>
-        ),
+        cell: ({ row }) => <span className="font-medium text-text">{fmt(row.original.totalPrice)} so'm</span>,
       },
       {
         accessorKey: "status",
@@ -297,7 +256,10 @@ export default function OperationsPage() {
           <div className="flex items-center justify-end gap-3">
             {(row.original.status === "SCHEDULED" || row.original.status === "IN_PROGRESS") && (
               <button
-                onClick={(e) => { e.stopPropagation(); router.push(`/operations/${row.original.id}/edit`); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/operations/${row.original.id}/edit`);
+                }}
                 className="text-text-muted hover:text-primary transition-colors cursor-pointer"
                 title={t("operations.edit")}
               >
@@ -305,7 +267,10 @@ export default function OperationsPage() {
               </button>
             )}
             <button
-              onClick={(e) => { e.stopPropagation(); router.push(`/operations/${row.original.id}`); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/operations/${row.original.id}`);
+              }}
               className="text-xs text-primary hover:underline cursor-pointer font-medium"
             >
               {t("operations.view")}
@@ -314,15 +279,18 @@ export default function OperationsPage() {
         ),
       },
     ],
-    [router, t]
+    [router, t],
   );
 
-  const stats = useMemo(() => ({
-    total: operations.length,
-    scheduled: operations.filter((o) => o.status === "SCHEDULED").length,
-    inProgress: operations.filter((o) => o.status === "IN_PROGRESS").length,
-    completed: operations.filter((o) => o.status === "COMPLETED").length,
-  }), [operations]);
+  const stats = useMemo(
+    () => ({
+      total: operations.length,
+      scheduled: operations.filter((o) => o.status === "SCHEDULED").length,
+      inProgress: operations.filter((o) => o.status === "IN_PROGRESS").length,
+      completed: operations.filter((o) => o.status === "COMPLETED").length,
+    }),
+    [operations],
+  );
 
   return (
     <>
@@ -337,10 +305,7 @@ export default function OperationsPage() {
               <SlidersHorizontal className="w-4 h-4" />
               {t("operations.filter")}
             </button>
-            <button
-              onClick={() => router.push("/operations/new")}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer"
-            >
+            <button onClick={() => router.push("/operations/new")} className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer">
               <Plus className="w-4 h-4" />
               {t("operations.newOperation")}
             </button>
@@ -357,14 +322,7 @@ export default function OperationsPage() {
         </div>
 
         <AnimatePresence>
-          {showFilter && (
-            <FilterPanel
-              filters={filters}
-              onChange={(k, v) => setFilters((f) => ({ ...f, [k]: v }))}
-              onReset={() => setFilters(INITIAL_FILTERS)}
-              activeCount={activeFilterCount}
-            />
-          )}
+          {showFilter && <FilterPanel filters={filters} onChange={(k, v) => setFilters((f) => ({ ...f, [k]: v }))} onReset={() => setFilters(INITIAL_FILTERS)} activeCount={activeFilterCount} />}
         </AnimatePresence>
 
         {isLoading ? (
@@ -375,7 +333,7 @@ export default function OperationsPage() {
           <DataTable
             columns={columns}
             data={filtered}
-          // onRowClick={(row) => router.push(`/operations/${row.id}`)}
+            // onRowClick={(row) => router.push(`/operations/${row.id}`)}
           />
         )}
       </PageContent>

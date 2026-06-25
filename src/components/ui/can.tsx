@@ -1,7 +1,7 @@
 "use client";
 
-import { useRole } from "@/hooks/use-permissions";
-import { UserRole } from "@/types/user";
+import { useRole } from "@/shared/hooks/use-permissions";
+import { UserRole } from "@/shared/types/user";
 import React from "react";
 
 interface CanProps {

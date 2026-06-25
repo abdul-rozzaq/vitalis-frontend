@@ -1,4 +1,4 @@
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/shared/types/user";
 
 export type RoomType = "WARD" | "EXAMINATION" | "OPERATION";
 
@@ -77,5 +77,5 @@ export type RoomPayload = {
 
 export type RolePayload = {
   name: string;
-  description?: string; 
+  description?: string;
 };

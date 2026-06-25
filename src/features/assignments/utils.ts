@@ -1,25 +1,13 @@
 import { DoorOpen, FlaskConical, KeyRound, Shield, User } from "lucide-react";
 import { TabId } from "./types";
 
-export const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-success-100", text: "text-success" },
-  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
-};
+export { ROLE_STYLES } from "@/shared/lib/status-styles";
 
 export const TAB_BASE = "px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer";
 export const TAB_ACTIVE = "bg-primary text-white shadow-sm shadow-primary-600/20";
 export const TAB_IDLE = "text-secondary hover:bg-surface-hover hover:text-text";
 
 export const getTableRowIndex = (pageIndex: number, pageSize: number, rowIndex: number) => pageIndex * pageSize + rowIndex + 1;
-
-export const formatShortDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 
 export const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
@@ -36,22 +24,21 @@ export const getAssignmentTabs = (t: (key: string) => string) => [
     label: t("assignments.tabLabAssignments"),
     icon: FlaskConical,
   },
-    {
+  {
     id: "diagnostics" as TabId,
-    label: "diagnotika",
+    label: t("assignments.tabDiagnostics"),
     icon: Shield,
   },
-    {
+  {
     id: "diagnostics-assignments" as TabId,
-    label: "diagnotika tayinlovi",
+    label: t("assignments.tabDiagnosticsAssignments"),
     icon: FlaskConical,
   },
   {
     id: "operation-types" as TabId,
-    label: "operatsiya turlari",
+    label: t("assignments.tabOperationTypes"),
     icon: KeyRound,
   },
 ];
 
-export const getAssignmentsTabHref = (tabId: TabId) =>
-  tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`;
+export const getAssignmentsTabHref = (tabId: TabId) => (tabId === "assignments" ? "/assignments" : `/assignments/${tabId}`);

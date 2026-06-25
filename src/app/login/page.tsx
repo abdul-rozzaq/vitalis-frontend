@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Lock, Phone } from "lucide-react";

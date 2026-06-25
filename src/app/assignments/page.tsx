@@ -1,12 +1,12 @@
 "use client";
 
-import { AssignmentForm, type AssignmentFormValues } from "@/components/assignments/assignment-form";
+import { AssignmentForm, type AssignmentFormValues } from "@/features/assignments/components/assignment-form";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { Assignment, DepartmentOption, UserOption } from "@/features/assignments/types";
 import { ROLE_STYLES, asArray, getTableRowIndex } from "@/features/assignments/utils";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, CheckCircle2, DoorOpen, Edit, ExternalLink, Loader2, Plus, Trash2, XCircle } from "lucide-react";

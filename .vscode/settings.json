@@ -7,6 +7,13 @@
     "source.organizeImports": "explicit"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.codeLens": true,
+  // "js/ts.referencesCodeLens.enabled": true,
+  "search.exclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true
   }
 }

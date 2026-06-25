@@ -1,15 +1,12 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import {
-  AssignedDoctor,
-  OperationTypeForm,
-  OperationTypeFormValues,
-} from "@/components/operation-types/operation-type-form";
+
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { api } from "@/lib/api";
+import { AssignedDoctor, OperationTypeForm, OperationTypeFormValues } from "@/features/operations/components/operation-type-form";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, Loader2, Plus, Scissors, Trash2 } from "lucide-react";
@@ -38,8 +35,7 @@ interface OperationType {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const fmt = (val: string | number) =>
-  Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
+const fmt = (val: string | number) => Number(val).toLocaleString("uz-UZ", { minimumFractionDigits: 0 });
 
 // ─── Page ───────────────────────────────────────────────────────────────────────
 
@@ -59,8 +55,7 @@ export default function OperationTypesPage() {
 
   const editing = operationTypes.find((t) => t.id === editingId) ?? null;
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["operation-types"] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["operation-types"] });
 
   const createMutation = useMutation({
     mutationFn: async (dto: OperationTypeFormValues) => {
@@ -68,11 +63,7 @@ export default function OperationTypesPage() {
       const res = await api.post("/operation-types", rest);
       const newId: string = res.data.id;
       if (doctorIds && doctorIds.length > 0) {
-        await Promise.all(
-          doctorIds.map((doctorId) =>
-            api.post(`/operation-types/${newId}/doctors`, { doctorId })
-          )
-        );
+        await Promise.all(doctorIds.map((doctorId) => api.post(`/operation-types/${newId}/doctors`, { doctorId })));
       }
       return res.data;
     },
@@ -154,11 +145,7 @@ export default function OperationTypesPage() {
             </div>
             <div>
               <p className="font-medium text-text">{row.original.name}</p>
-              {row.original.description && (
-                <p className="text-xs text-text-muted truncate max-w-[260px]">
-                  {row.original.description}
-                </p>
-              )}
+              {row.original.description && <p className="text-xs text-text-muted truncate max-w-[260px]">{row.original.description}</p>}
             </div>
           </div>
         ),
@@ -168,15 +155,11 @@ export default function OperationTypesPage() {
         header: "Doktorlar",
         cell: ({ row }) => {
           const doctors = row.original.doctors ?? [];
-          if (doctors.length === 0)
-            return <span className="text-xs text-text-muted italic">—</span>;
+          if (doctors.length === 0) return <span className="text-xs text-text-muted italic">—</span>;
           return (
             <div className="flex flex-wrap gap-1 max-w-[260px]">
               {doctors.map(({ doctor }) => (
-                <span
-                  key={doctor.id}
-                  className="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success font-medium"
-                >
+                <span key={doctor.id} className="text-xs px-2 py-0.5 rounded-full bg-success-50 text-success font-medium">
                   {doctor.first_name} {doctor.last_name}
                 </span>
               ))}
@@ -189,18 +172,11 @@ export default function OperationTypesPage() {
         header: "Xizmatlar",
         cell: ({ row }) => {
           const items = row.original.items ?? [];
-          if (items.length === 0)
-            return <span className="text-xs text-text-muted italic">—</span>;
+          if (items.length === 0) return <span className="text-xs text-text-muted italic">—</span>;
           return (
             <div className="flex flex-wrap gap-1 max-w-[320px]">
               {items.map((item) => (
-                <span
-                  key={item.id}
-                  className={`text-xs px-2 py-0.5 rounded-full ${item.isActive
-                      ? "bg-surface-hover text-text"
-                      : "bg-surface-hover text-text-muted line-through"
-                    }`}
-                >
+                <span key={item.id} className={`text-xs px-2 py-0.5 rounded-full ${item.isActive ? "bg-surface-hover text-text" : "bg-surface-hover text-text-muted line-through"}`}>
                   {item.name} · {fmt(item.price)} so'm
                 </span>
               ))}
@@ -211,20 +187,13 @@ export default function OperationTypesPage() {
       {
         id: "basePrice",
         header: "Bazaviy narx",
-        cell: ({ row }) => (
-          <span className="text-text-muted text-sm">
-            {fmt(row.original.basePrice ?? 0)} so'm
-          </span>
-        ),
+        cell: ({ row }) => <span className="text-text-muted text-sm">{fmt(row.original.basePrice ?? 0)} so'm</span>,
       },
       {
         id: "total",
         header: "Umumiy narx",
         cell: ({ row }) => {
-          const itemsTotal = (row.original.items ?? []).reduce(
-            (sum, i) => sum + Number(i.price),
-            0
-          );
+          const itemsTotal = (row.original.items ?? []).reduce((sum, i) => sum + Number(i.price), 0);
           const total = Number(row.original.basePrice ?? 0) + itemsTotal;
           return <span className="font-medium text-text">{fmt(total)} so'm</span>;
         },
@@ -234,13 +203,9 @@ export default function OperationTypesPage() {
         header: "Holat",
         cell: ({ row }) =>
           row.original.isActive ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success">
-              Faol
-            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success">Faol</span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-text-muted">
-              Nofaol
-            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-text-muted">Nofaol</span>
           ),
       },
       {
@@ -251,11 +216,7 @@ export default function OperationTypesPage() {
           return (
             <div className="flex items-center justify-end gap-2">
               <Can roles={["ADMIN", "DIREKTOR"]}>
-                <button
-                  onClick={() => handleEdit(row.original)}
-                  className="p-1 rounded-md hover:bg-surface-hover text-text-muted transition-colors cursor-pointer"
-                  title="Tahrirlash"
-                >
+                <button onClick={() => handleEdit(row.original)} className="p-1 rounded-md hover:bg-surface-hover text-text-muted transition-colors cursor-pointer" title="Tahrirlash">
                   <Edit className="w-4 h-4" />
                 </button>
               </Can>
@@ -264,13 +225,9 @@ export default function OperationTypesPage() {
                   onClick={() => handleDelete(row.original.id)}
                   disabled={isDeleting}
                   className="p-1 rounded-md hover:bg-danger-50 text-text-muted hover:text-danger transition-colors cursor-pointer disabled:opacity-50"
-                  {...{title: t("common.delete")}}
+                  {...{ title: t("common.delete") }}
                 >
-                  {isDeleting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
+                  {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
               </Can>
             </div>
@@ -278,7 +235,7 @@ export default function OperationTypesPage() {
         },
       },
     ],
-    [deletingId]
+    [deletingId],
   );
 
   return (
@@ -287,10 +244,7 @@ export default function OperationTypesPage() {
         title={t("operationTypes.title")}
         actions={
           <Can roles={["ADMIN", "DIREKTOR"]}>
-            <button
-              onClick={handleAdd}
-              className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer"
-            >
+            <button onClick={handleAdd} className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer">
               <Plus className="w-4 h-4" />
               Yangi tur
             </button>
@@ -308,28 +262,23 @@ export default function OperationTypesPage() {
         )}
       </PageContent>
 
-      <Sheet
-        isOpen={isSheetOpen}
-        onClose={handleClose}
-        title={editing ? "Operatsiya turini tahrirlash" : "Yangi operatsiya turi"}
-        description="Operatsiya turi va unga tegishli xizmatlar narxlarini kiriting"
-      >
+      <Sheet isOpen={isSheetOpen} onClose={handleClose} title={editing ? "Operatsiya turini tahrirlash" : "Yangi operatsiya turi"} description="Operatsiya turi va unga tegishli xizmatlar narxlarini kiriting">
         <OperationTypeForm
           key={editingId ?? "create"}
           initialData={
             editing
               ? {
-                name: editing.name,
-                description: editing.description,
-                basePrice: Number(editing.basePrice ?? 0),
-                isActive: editing.isActive,
-                items: (editing.items ?? []).map((i) => ({
-                  id: i.id,
-                  name: i.name,
-                  price: Number(i.price),
-                  isActive: i.isActive,
-                })),
-              }
+                  name: editing.name,
+                  description: editing.description,
+                  basePrice: Number(editing.basePrice ?? 0),
+                  isActive: editing.isActive,
+                  items: (editing.items ?? []).map((i) => ({
+                    id: i.id,
+                    name: i.name,
+                    price: Number(i.price),
+                    isActive: i.isActive,
+                  })),
+                }
               : undefined
           }
           editingId={editing?.id}

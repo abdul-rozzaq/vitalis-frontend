@@ -1,4 +1,8 @@
-import { Appointment, Assignment, Patient } from "./types";
+import { Patient } from "../patients/types";
+import { Appointment } from "./types";
+import { toAssignmentOptions } from "@/shared/lib/helpers";
+
+export { toAssignmentOptions };
 
 export const CASE_STATUS_STYLES: Record<string, string> = {
   // PatientCase statuslari
@@ -17,12 +21,6 @@ export const toPatientOptions = (patients: Patient[]) =>
     name: `${patient.first_name} ${patient.last_name}`,
   }));
 
-export const toAssignmentOptions = (assignments: Assignment[]) =>
-  assignments.map((assignment) => ({
-    id: assignment.id,
-    label: `Dr. ${assignment.user.first_name} ${assignment.user.last_name} — ${assignment.department.name}${assignment.room ? ` (${assignment.room.name})` : ""}`,
-  }));
-
 export const filterAppointmentsByPatientName = (appointments: Appointment[], filterText: string) => {
   const trimmed = filterText.trim();
   if (!trimmed) return appointments;
@@ -36,9 +34,11 @@ export function getAppointmentStatus(appointment: Appointment) {
   if (appointment.caseStep?.status) {
     return appointment.caseStep.status;
   }
+
   // Fallback — patient.cases dan
-  if (appointment.patient?.cases?.length) {
-    return appointment.patient.cases[0].status;
-  }
+  // if (appointment.patient?.cases?.length) {
+  //   return appointment.patient.cases[0].status;
+  // }
+
   return null;
 }

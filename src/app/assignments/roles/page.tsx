@@ -6,7 +6,7 @@
 // import { Sheet } from "@/components/ui/sheet";
 // import { Role, RolePayload } from "@/features/assignments/types";
 // import { asArray, formatShortDate, getTableRowIndex } from "@/features/assignments/utils";
-// import { api } from "@/lib/api";
+// import { api } from "@/shared/lib/api";
 // import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // import { ColumnDef } from "@tanstack/react-table";
 // import { Edit, Loader2, Plus, Shield, Trash2 } from "lucide-react";

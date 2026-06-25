@@ -1,8 +1,8 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
-import { useAuth } from "@/hooks/use-auth";
-import { useRole } from "@/hooks/use-permissions";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useRole } from "@/shared/hooks/use-permissions";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";

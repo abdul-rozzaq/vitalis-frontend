@@ -1,21 +1,15 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
-import { useAuth } from "@/hooks/use-auth";
-import { useRole } from "@/hooks/use-permissions";
-import { api } from "@/lib/api";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useRole } from "@/shared/hooks/use-permissions";
+import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, ChevronRight, Clock, CreditCard, DoorOpen, Plus, UserPen, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { ROLE_STYLES } from "@/shared/lib/status-styles";
 import Link from "next/link";
-
-const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-  ADMIN: { bg: "bg-purple-100", text: "text-purple-700" },
-  DOCTOR: { bg: "bg-blue-100", text: "text-blue-700" },
-  NURSE: { bg: "bg-success-100", text: "text-success" },
-  RECEPTIONIST: { bg: "bg-amber-100", text: "text-amber-700" },
-};
 
 const APPT_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   ACTIVE: { bg: "bg-primary-50", text: "text-primary", label: "Active" },

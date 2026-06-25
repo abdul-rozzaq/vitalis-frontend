@@ -1,41 +1,19 @@
 "use client";
 
-import { DepartmentForm } from "@/components/departments/department-form";
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
-import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Sheet } from "@/components/ui/sheet";
-import { api } from "@/lib/api";
+import { DepartmentForm } from "@/features/departments/components/department-form";
+import { Department } from "@/features/departments/types";
+import { getDepartmentColor } from "@/features/departments/utils/department-colors";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { Building2, Download, Edit, GitBranch, Loader2, Plus, Trash2 } from "lucide-react";
+import { Building2, Download, Edit, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-interface Department {
-  id: string;
-  name: string;
-  description?: string;
-  price?: number | null;
-  parentId?: string | null;
-  parent?: { id: string; name: string } | null;
-  children?: Department[];
-}
-
-const DEPARTMENT_COLORS: { bg: string; icon: string }[] = [
-  { bg: "bg-primary-50", icon: "text-primary" },
-  { bg: "bg-info-50", icon: "text-info" },
-  { bg: "bg-success-50", icon: "text-success" },
-  { bg: "bg-warning-50", icon: "text-warning" },
-  { bg: "bg-danger-50", icon: "text-danger" },
-  { bg: "bg-surface-hover", icon: "text-text-muted" },
-];
-
-function getDepartmentColor(id: string) {
-  const index = id.charCodeAt(0) % DEPARTMENT_COLORS.length;
-  return DEPARTMENT_COLORS[index];
-}
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
@@ -209,13 +187,7 @@ export default function DepartmentsPage() {
             <Loader2 className="w-8 h-8 text-text-muted animate-spin" />
           </div>
         ) : (
-          <EnterpriseDataTable
-              columns={columns}
-              data={departmentsData ?? []}
-              pageSize={20}
-              searchKey="name"
-              searchPlaceholder={t("common.filterPlaceholder")}
-            />
+          <EnterpriseDataTable columns={columns} data={departmentsData ?? []} pageSize={20} searchKey="name" searchPlaceholder={t("common.filterPlaceholder")} />
         )}
       </PageContent>
 

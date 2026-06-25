@@ -43,9 +43,84 @@ This is the Axios `baseURL`. The backend must already include `/api` in its rout
 4. `<Sheet>` (slide-over panel) containing a form component for create/edit.
 5. `<Can>` gates around action buttons.
 
-**Forms:** All forms live in `src/components/<module>/<module>-form.tsx`, use `react-hook-form` + Zod validation.
+**Forms:** All forms live in `src/features/<module>/components/<module>-form.tsx`, use `react-hook-form` + Zod validation.
 
-**Storage service (`src/services/storage/`):** Typed localStorage wrapper. Keys are defined in `storage.keys.ts`. Use `storageService.getItem<T>()` / `setItem` / `removeItem`.
+**Storage service (`src/lib/services/storage/`):** Typed localStorage wrapper. Keys are defined in `storage.keys.ts`. Use `storageService.getItem<T>()` / `setItem` / `removeItem`.
+
+## Directory Structure Rules
+
+These conventions were established during refactoring and must be followed when adding new files.
+
+### `src/features/`
+
+Each feature module follows this layout:
+
+```
+src/features/<module>/
+  components/     ← all React components for this module
+  types.ts        ← TypeScript types/interfaces (if needed)
+  utils.ts        ← helper functions, constants, style maps (if needed)
+```
+
+**Rules:**
+- Components always go inside `components/` — never directly in the feature root.
+- A feature must be justified by **multiple files or multiple consumers**. A single component used only by one parent module does not deserve its own feature folder — place it inside the parent's `components/`.
+- Example: `RoundModal` (only used in wards) lives in `features/wards/components/`, not `features/rounds/`.
+- Example: `AddCaseStepForm` (patient-centric) lives in `features/patients/components/`, not `features/cases/`.
+- A `types.ts`-only feature (no components) is acceptable when the types are shared across multiple pages (e.g. `features/lab/types.ts`).
+
+**Current feature modules:**
+
+| Module | Contents |
+|--------|----------|
+| `appointments` | components + types.ts + utils.ts |
+| `assignments` | components + types.ts + utils.ts |
+| `balance` | components (patient billing, used from patients and invoices pages) |
+| `departments` | components |
+| `diagnostic` | components + types.ts |
+| `employees` | components |
+| `lab` | types.ts only (shared across lab and assignments pages) |
+| `operations` | components (includes operation-type-form) |
+| `patients` | components + types.ts + utils.ts (includes add-case-step-form) |
+| `settings` | schemas.ts + types.ts + utils.ts |
+| `shifts` | components |
+| `wards` | components (includes RoundModal and ward-payment-panel) |
+
+### `src/components/`
+
+Shared UI primitives and layout — not feature-specific.
+
+```
+src/components/
+  layouts/        ← page/app layout components (AppLayout, PageLayout)
+  navigation/     ← sidebar, topbar, contextual panel
+  ui/             ← reusable primitives: Sheet, DataTable, Can, FormError,
+                     FormButtons, FormField, format-phone, use-phone-formatter, …
+  design-system/  ← design token components (Badge, Button, Card, …)
+```
+
+**Rules:**
+- Utility functions that are components or hooks go in `components/ui/`, not in the `components/` root.
+- Layout wrappers go in `components/layouts/`, not in the `components/` root.
+- Never place loose `.tsx` files directly in `src/components/`.
+
+### `src/lib/`
+
+Shared pure utilities — no React, no API calls.
+
+```
+src/lib/
+  formatters.ts      ← date/time/currency formatting functions
+  status-styles.ts   ← INVOICE_STATUS_CONFIG, ROLE_STYLES
+  helpers.ts         ← initialsOf, deriveOrderStatus, toAssignmentOptions
+  api.ts             ← Axios instance with auth interceptor
+  services/storage/  ← typed localStorage wrapper
+  …
+```
+
+**Rules:**
+- Before adding a formatter/helper inline in a page, check if it belongs in `formatters.ts` or `helpers.ts`.
+- Status color maps (badge styles, role colors) belong in `status-styles.ts`.
 
 ## Known Gaps
 

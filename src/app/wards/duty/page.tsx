@@ -2,8 +2,8 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { RoundModal } from "@/components/rounds/RoundModal";
-import { api } from "@/lib/api";
+import { RoundModal } from "@/features/rooms/components/RoundModal";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, CheckCircle2, ClipboardList, Clock, Users } from "lucide-react";
 import { useState } from "react";
@@ -77,10 +77,7 @@ export default function DutyPage() {
 
   return (
     <>
-      <PageHeader
-        title={t("wards.myDuty")}
-        subtitle="Joriy smena — palatalar va bemorlar"
-      />
+      <PageHeader title={t("wards.myDuty")} subtitle="Joriy smena — palatalar va bemorlar" />
       <PageContent>
         {isLoading && (
           <div className="flex items-center justify-center py-16 text-text-muted">
@@ -100,23 +97,12 @@ export default function DutyPage() {
         {activeShifts.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5 items-start">
             {activeShifts.map((shift) => (
-              <ShiftDutyCard
-                key={`${shift.roomShiftId}-${shift.roomId}`}
-                shift={shift}
-                qc={qc}
-                onStartRound={(roundId, patients) => setRoundModalData({ roundId, patients })}
-              />
+              <ShiftDutyCard key={`${shift.roomShiftId}-${shift.roomId}`} shift={shift} qc={qc} onStartRound={(roundId, patients) => setRoundModalData({ roundId, patients })} />
             ))}
           </div>
         )}
 
-        {roundModalData && (
-          <RoundModal
-            roundId={roundModalData.roundId}
-            patients={roundModalData.patients}
-            onClose={() => setRoundModalData(null)}
-          />
-        )}
+        {roundModalData && <RoundModal roundId={roundModalData.roundId} patients={roundModalData.patients} onClose={() => setRoundModalData(null)} />}
       </PageContent>
     </>
   );
@@ -129,10 +115,7 @@ function ShiftDutyCard({
 }: {
   shift: ActiveShift;
   qc: ReturnType<typeof useQueryClient>;
-  onStartRound: (
-    roundId: string,
-    patients: { patientId: string; patientName: string; currentCondition?: "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" }[]
-  ) => void;
+  onStartRound: (roundId: string, patients: { patientId: string; patientName: string; currentCondition?: "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" }[]) => void;
 }) {
   const t = useTranslations();
   const { data: patients = [] } = useQuery<WardPatient[]>({
@@ -145,21 +128,14 @@ function ShiftDutyCard({
 
   const { data: rounds = [] } = useQuery<WardRound[]>({
     queryKey: ["ward-rounds", assignmentId],
-    queryFn: () =>
-      assignmentId
-        ? api.get(`/ward-rounds?shiftAssignmentId=${assignmentId}`).then((r) => r.data)
-        : Promise.resolve([]),
+    queryFn: () => (assignmentId ? api.get(`/ward-rounds?shiftAssignmentId=${assignmentId}`).then((r) => r.data) : Promise.resolve([])),
     enabled: !!assignmentId,
   });
 
   const createRoundMutation = useMutation({
     mutationFn: async () => {
       // assignmentId yo'q bo'lsa (template-based smena) — avval materiallashtiramiz
-      const resolvedId = assignmentId
-        ? assignmentId
-        : await api
-          .post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id })
-          .then((r) => r.data.id);
+      const resolvedId = assignmentId ? assignmentId : await api.post("/shift-assignments/materialize", { roomShiftId: shift.roomShiftId, roomId: shift.room.id }).then((r) => r.data.id);
       return api.post("/ward-rounds", { shiftAssignmentId: resolvedId });
     },
     onSuccess: (res) => {
@@ -170,7 +146,7 @@ function ShiftDutyCard({
         occupiedPatients.map((p) => ({
           patientId: p.patient.id,
           patientName: `${p.patient.first_name} ${p.patient.last_name}`,
-        }))
+        })),
       );
     },
     onError: () => toast.error("Xatolik"),
@@ -190,8 +166,7 @@ function ShiftDutyCard({
           <div>
             <h3 className="font-semibold text-text">{shift.room.name}</h3>
             <p className="text-xs text-text-muted">
-              {shift.roomShift.name} —{" "}
-              {String(shift.roomShift.startHour).padStart(2, "0")}:00–{String(shift.roomShift.endHour).padStart(2, "0")}:00
+              {shift.roomShift.name} — {String(shift.roomShift.startHour).padStart(2, "0")}:00–{String(shift.roomShift.endHour).padStart(2, "0")}:00
             </p>
           </div>
         </div>
@@ -208,9 +183,8 @@ function ShiftDutyCard({
                   occupiedPatients.map((p) => ({
                     patientId: p.patient.id,
                     patientName: `${p.patient.first_name} ${p.patient.last_name}`,
-                    currentCondition: activeRound.patientNotes.find((n) => n.patientId === p.patient.id)
-                      ?.condition as "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" | undefined,
-                  }))
+                    currentCondition: activeRound.patientNotes.find((n) => n.patientId === p.patient.id)?.condition as "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL" | undefined,
+                  })),
                 );
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 border border-amber-300 rounded-lg text-xs font-medium hover:bg-amber-200"
@@ -241,10 +215,7 @@ function ShiftDutyCard({
         </span>
         {shift.nurses.length > 0 && (
           <span>
-            Hamshiralar:{" "}
-            <span className="text-text">
-              {shift.nurses.map((n) => `${n.nurse.first_name} ${n.nurse.last_name}`).join(", ")}
-            </span>
+            Hamshiralar: <span className="text-text">{shift.nurses.map((n) => `${n.nurse.first_name} ${n.nurse.last_name}`).join(", ")}</span>
           </span>
         )}
       </div>
@@ -262,25 +233,18 @@ function ShiftDutyCard({
               .at(-1);
 
             return (
-              <div
-                key={ward.id}
-                className="flex items-center justify-between px-5 py-3 hover:bg-surface-hover transition-colors"
-              >
+              <div key={ward.id} className="flex items-center justify-between px-5 py-3 hover:bg-surface-hover transition-colors">
                 <div>
                   <p className="font-medium text-text text-sm">
                     {ward.patient.first_name} {ward.patient.last_name}
                   </p>
                   <p className="text-xs text-text-muted">
-                    Yotgan: {new Date(ward.checkIn).toLocaleDateString("uz-UZ")} ·{" "}
-                    {ward.daysStayed ?? 0} kun
+                    Yotgan: {new Date(ward.checkIn).toLocaleDateString("uz-UZ")} · {ward.daysStayed ?? 0} kun
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   {lastNote ? (
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"
-                        }`}
-                    >
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CONDITION_STYLES[lastNote.condition] ?? "bg-surface text-text-muted"}`}>
                       {CONDITION_LABELS[lastNote.condition] ?? lastNote.condition}
                     </span>
                   ) : (
@@ -302,10 +266,7 @@ function ShiftDutyCard({
               .filter((r) => r.completedAt)
               .slice(0, 5)
               .map((r) => (
-                <span
-                  key={r.id}
-                  className="flex items-center gap-1 text-xs text-success bg-success-50 border border-success-100 px-2 py-0.5 rounded-full"
-                >
+                <span key={r.id} className="flex items-center gap-1 text-xs text-success bg-success-50 border border-success-100 px-2 py-0.5 rounded-full">
                   <CheckCircle2 className="w-3 h-3" />
                   {new Date(r.completedAt!).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
                 </span>

@@ -3,7 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Combobox } from "@/components/ui/combobox";
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,

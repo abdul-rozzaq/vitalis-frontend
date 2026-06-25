@@ -2,7 +2,7 @@
 import { useTranslations } from "next-intl";
 
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
-import { ActiveShift, fmtHM, shiftsApi, WardPatient, WardRoundRef } from "@/lib/shifts-api";
+import { ActiveShift, fmtHM, shiftsApi, WardPatient, WardRoundRef } from "@/shared/lib/shifts-api";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { BedDouble, CheckCircle2, ClipboardList, Clock, ListTodo, Users } from "lucide-react";
 import Link from "next/link";

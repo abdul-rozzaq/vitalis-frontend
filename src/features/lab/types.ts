@@ -25,7 +25,6 @@ export interface LaboratoryAssignment {
   laboratory: { id: string; name: string };
 }
 
-
 export interface LabOrderItemFile {
   id: string;
   url: string;
