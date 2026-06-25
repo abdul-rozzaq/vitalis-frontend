@@ -990,6 +990,12 @@
   "diagnostics": {
     "title": "Диагностика",
     "description": "Управление диагностическими центрами и их услугами.",
+    "addCenter": "Добавить центр",
+    "editCenter": "Редактировать центр",
+    "centerName": "Название",
+    "descriptionField": "Описание",
+    "serviceName": "Название услуги",
+    "servicePrice": "Цена",
     "addDiagnostic": "Добавить диагностический центр",
     "colDiagnostic": "Диагностический центр",
     "colServices": "Услуги",
