@@ -54,7 +54,7 @@ export default function InvoicesPage() {
   });
 
   const { mutateAsync: cancelInvoice, isPending: isCancelling } = useMutation({
-    mutationFn: (id: string) => api.patch(`/invoices/${id}`),
+    mutationFn: (id: string) => api.patch(`/invoices/${id}`, { status: "CANCELLED" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
   });
 
@@ -133,6 +133,9 @@ export default function InvoicesPage() {
           const paid = Number(row.original.paidCash) + Number(row.original.paidBonus);
           const total = Number(row.original.totalAmount);
           const pct = total > 0 ? Math.round((paid / total) * 100) : 0;
+          if (pct >= 100) {
+            return <span className="text-sm font-semibold text-success-600">{fmt(total)} UZS</span>;
+          }
           return (
             <div className="min-w-[100px]">
               <div className="text-xs text-text-muted mb-1">
