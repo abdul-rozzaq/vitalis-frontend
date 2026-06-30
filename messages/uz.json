@@ -143,6 +143,7 @@
     "colId": "Bemor ID",
     "colName": "Ism",
     "colGender": "Jins",
+    "colRegion": "Viloyat",
     "colBirthDate": "Tug'ilgan sana",
     "colPhone": "Telefon raqam",
     "editPatient": "Bemorni tahrirlash",

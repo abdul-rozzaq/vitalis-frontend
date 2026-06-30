@@ -35,8 +35,8 @@ export default function PatientsPage() {
   });
 
   const handleExport = () => {
-    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colBirthDate"), t("patients.colPhone")];
-    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
+    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colRegion"), t("patients.colBirthDate"), t("patients.colPhone")];
+    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.district?.region?.name ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
@@ -53,11 +53,8 @@ export default function PatientsPage() {
         accessorKey: "id",
         header: "ID",
         cell: ({ row }) => {
-          // const pageIndex = table.getState().pagination.pageIndex;
-          // const pageSize = table.getState().pagination.pageSize;
           return (
             <span className="font-mono text-xs text-text-muted">
-              {/* {String(pageIndex * pageSize + row.index + 1).padStart(4, "0")} */}
               {String(row.original.id).slice(0, 6).toUpperCase()}
             </span>
           );
@@ -68,12 +65,26 @@ export default function PatientsPage() {
         id: "name",
         header: t("patients.colName"),
         cell: ({ row }) => (
-          <Link href={`/patients/${row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
+          <Link
+            href={`/patients/${row.original.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-text hover:text-primary transition-colors"
+          >
             {row.original.first_name} {row.original.last_name}
           </Link>
         ),
       },
-  
+      {
+        id: "region",
+        accessorFn: (row: Patient) => row.district?.region?.name,
+        header: t("patients.colRegion") || "Viloyat",
+        cell: ({ row }) => (
+          <span className="text-text-muted text-sm">
+            {row.original.district?.region?.name || t("common.na")}
+          </span>
+        ),
+      },
       {
         accessorKey: "birth_date",
         header: t("patients.colBirthDate"),
