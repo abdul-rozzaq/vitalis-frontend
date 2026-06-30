@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/shared/lib/api";
 import { formatCurrency } from "@/shared/lib/formatters";
 import { Card, CardHeader } from "@/components/design-system/Card";
+import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
 
 interface CashTransaction {
   id: string;
@@ -14,6 +15,7 @@ interface CashTransaction {
   source: string;
   sourceId?: string;
   note?: string;
+  paymentMethod?: PaymentMethod;
   createdAt: string;
 }
 
@@ -161,7 +163,14 @@ export function PatientTransactionHistory({ patientId }: PatientTransactionHisto
                       {formatDate(tx.createdAt)}
                     </td>
                     <td className="py-2 px-3 text-text">
-                      {SOURCE_LABELS[tx.source] ?? tx.source}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {SOURCE_LABELS[tx.source] ?? tx.source}
+                        {activeTab === "cash" && (tx as CashTransaction).paymentMethod && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border text-text-muted font-medium">
+                            {PAYMENT_METHOD_LABELS[(tx as CashTransaction).paymentMethod!]}
+                          </span>
+                        )}
+                      </div>
                       {tx.note && (
                         <span className="block text-xs text-text-muted">{tx.note}</span>
                       )}

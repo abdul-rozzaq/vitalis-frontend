@@ -7,6 +7,9 @@ import { api } from "@/shared/lib/api";
 import { Card, CardHeader } from "@/components/design-system/Card";
 import { Modal } from "@/components/design-system/Modal";
 import { ChevronDown } from "lucide-react";
+import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
+
+const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "CARD", "TRANSFER", "OTHER"];
 
 interface BalanceData {
   cash: string;
@@ -35,6 +38,7 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
 
   const [cashAmount, setCashAmount]     = useState("");
   const [cashNote, setCashNote]         = useState("");
+  const [cashMethod, setCashMethod]     = useState<PaymentMethod>("CASH");
 
   const [bonusAmount, setBonusAmount]   = useState("");
   const [bonusSource, setBonusSource]   = useState<BonusSource>("FIRST_VISIT");
@@ -63,7 +67,7 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
 
   const closeModal = () => {
     setModal(null);
-    setCashAmount(""); setCashNote("");
+    setCashAmount(""); setCashNote(""); setCashMethod("CASH");
     setBonusAmount(""); setBonusSource("FIRST_VISIT"); setBonusNote("");
     setRefundAmount(""); setRefundNote("");
     setAdjAmount(""); setAdjType("CREDIT"); setAdjNote("");
@@ -73,7 +77,7 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
   const openModal = (type: ModalType) => { setMenuOpen(false); setModal(type); };
 
   const cashMutation = useMutation({
-    mutationFn: (v: { amount: string; note?: string }) =>
+    mutationFn: (v: { amount: string; paymentMethod: PaymentMethod; note?: string }) =>
       api.post(`/patients/${patientId}/balance/deposit`, { patientId, ...v }),
     onSuccess: () => { invalidate(); closeModal(); },
     onError: (e: any) => setError(e?.response?.data?.message || "Xatolik yuz berdi"),
@@ -176,7 +180,18 @@ export function PatientBalanceCard({ patientId }: PatientBalanceCardProps) {
 
       {/* Cash deposit */}
       <Modal isOpen={modal === "cash"} onClose={closeModal} title={t("balance.topUp")} size="sm">
-        <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(cashAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } cashMutation.mutate({ amount: cashAmount, note: cashNote || undefined }); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); setError(""); const n = validate(cashAmount); if (!n) { setError("To'g'ri miqdor kiriting"); return; } cashMutation.mutate({ amount: cashAmount, paymentMethod: cashMethod, note: cashNote || undefined }); }} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">To'lov usuli</label>
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHODS.map((m) => (
+                <button key={m} type="button" onClick={() => setCashMethod(m)}
+                  className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer text-left ${cashMethod === m ? "bg-primary/10 border-primary text-primary" : "bg-surface border-border text-text-muted hover:border-border-strong hover:text-text"}`}>
+                  {PAYMENT_METHOD_LABELS[m]}
+                </button>
+              ))}
+            </div>
+          </div>
           <AmountField label="Miqdor (UZS)" value={cashAmount} onChange={setCashAmount} />
           <NoteField value={cashNote} onChange={setCashNote} />
           {error && <ErrorMsg msg={error} />}

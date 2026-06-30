@@ -1,4 +1,5 @@
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { ArrowRightCircle, CheckCircle2, ClipboardCheck, Clock, FlaskConical, LogOut, Scissors, Stethoscope, XCircle } from "lucide-react";
+import type { CaseStepStatus, CaseStepType } from "./types";
 
 export const PAYMENT_STATUS_STYLES = {
   PAID: {
@@ -36,3 +37,52 @@ export function resolveFileUrl(url: string) {
 }
 
 export { toAssignmentOptions } from "@/shared/lib/helpers";
+
+export const STEP_ICONS: Record<CaseStepType, React.ElementType> = {
+  CHECKIN: ClipboardCheck,
+  CONSULTATION: Stethoscope,
+  LAB: FlaskConical,
+  PROCEDURE: Scissors,
+  REFERRAL: ArrowRightCircle,
+  DIAGNOSTIC: FlaskConical,
+  OPERATION: Scissors,
+  DISCHARGE: LogOut,
+};
+
+export const STEP_TYPE_COLOR: Record<CaseStepType, string> = {
+  CHECKIN: "bg-info-50 text-info",
+  CONSULTATION: "bg-success-50 text-success",
+  LAB: "bg-info-50 text-info",
+  PROCEDURE: "bg-warning-50 text-warning",
+  REFERRAL: "bg-warning-50 text-warning",
+  DIAGNOSTIC: "bg-info-50 text-info",
+  OPERATION: "bg-warning-50 text-warning",
+  DISCHARGE: "bg-danger-50 text-danger",
+};
+
+export const STEP_STATUS_COLOR: Record<CaseStepStatus, string> = {
+  PENDING: "bg-surface-secondary text-text-muted border-border",
+  IN_PROGRESS: "bg-info-50 text-info border-info-100",
+  DONE: "bg-success-50 text-success border-success-100",
+  CANCELLED: "bg-danger-50 text-danger border-danger-100",
+};
+
+export const CASE_STATUS_COLOR: Record<string, string> = {
+  ACTIVE: "bg-info-50 text-info border-info-100",
+  COMPLETED: "bg-success-50 text-success border-success-100",
+  CANCELLED: "bg-surface-secondary text-text-muted border-border",
+};
+
+export const CASE_STATUS_BORDER: Record<string, string> = {
+  ACTIVE: "border-l-info",
+  COMPLETED: "border-l-success",
+  CANCELLED: "border-l-border",
+};
+
+export const LAB_ITEM_STATUS_COLOR: Record<string, string> = {
+  PENDING: "bg-warning-50 text-warning border-warning-100",
+  IN_PROGRESS: "bg-info-50 text-info border-info-100",
+  READY: "bg-success-50 text-success border-success-100",
+  DELIVERED: "bg-success text-white border-transparent",
+  CANCELLED: "bg-danger-50 text-danger border-danger-100",
+};
