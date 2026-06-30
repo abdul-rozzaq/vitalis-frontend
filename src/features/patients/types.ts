@@ -1,6 +1,7 @@
 import { District } from "@/shared/types/localtion";
 import { AppointmentFile, Assignment, Prescription } from "../appointments/types";
-import { LabItemStatus, LabOrderStatus } from "../lab/types";
+import { DiagnosticOrder } from "../diagnostics/types";
+import { LabOrder } from "../lab/types";
 
 export type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 
@@ -36,9 +37,6 @@ export type CaseStatus = "ACTIVE" | "COMPLETED" | "CANCELLED";
 export type CaseStepType = "CHECKIN" | "CONSULTATION" | "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE" | "DIAGNOSTIC" | "OPERATION";
 export type CaseStepStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 
-// export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-// export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELLED";
-
 export interface CaseStep {
   id: string;
   caseId: string;
@@ -49,47 +47,12 @@ export interface CaseStep {
   completedAt?: string | null;
   assignmentId?: string | null;
   appointmentId?: string | null;
-
   assignment?: Assignment | null;
   appointment?: AppointmentTimelineItem | null;
-
   case: { id: string; status: CaseStatus };
-
   prescription?: Prescription | null;
-
-  labOrder?: {
-    id: string;
-    status: LabOrderStatus;
-    laboratory: { id: string; name: string };
-    items: {
-      id: string;
-      status: LabItemStatus;
-      service: { id: string; name: string; price?: number | null };
-      files: { id: string; url: string; name: string }[];
-    }[];
-  } | null;
-
-  diagnosticOrder?: {
-    id: string;
-    diagnostics: {
-      id: string;
-      name: string;
-    };
-    items: {
-      id: string;
-      status: LabItemStatus;
-      service: {
-        id: string;
-        name: string;
-        price?: number | null;
-      };
-      files: {
-        id: string;
-        url: string;
-        name: string;
-      }[];
-    }[];
-  } | null;
+  labOrder?: LabOrder | null;
+  diagnosticOrder?: DiagnosticOrder | null;
 }
 
 export interface PatientCase {
@@ -132,3 +95,41 @@ export type NewPatientPayload = {
   pinfl?: string | null;
   districtId?: string | null;
 };
+
+export interface DailyNote {
+  date: string;
+  note: string;
+}
+
+export interface MedicalCard003Summary {
+  id: string;
+  admissionDate: string;
+  dischargeDate: string | null;
+  departmentName: string | null;
+  doctorName: string | null;
+  diagnosisFinal: string | null;
+  diagnosisInitial: string | null;
+  createdAt: string;
+}
+
+export interface MedicalCard003 extends MedicalCard003Summary {
+  wardNumber: string | null;
+  nurseName: string | null;
+  complaints: string | null;
+  anamnesis: string | null;
+  lifeAnamnesis: string | null;
+  treatment: string | null;
+  dailyNotes: DailyNote[];
+  patient: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    birth_date: string;
+    gender: string;
+    phone_number: string;
+    blood_type: string | null;
+    pinfl: string | null;
+    address: string | null;
+    district: { name: string; region: { name: string } | null } | null;
+  };
+}
