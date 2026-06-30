@@ -1,9 +1,9 @@
 "use client";
 
+import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import formatPhone from "@/components/ui/format-phone";
 import { Sheet } from "@/components/ui/sheet";
-import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { PatientBalanceCard } from "@/features/balance/components/PatientBalanceCard";
 import { PatientInvoiceList } from "@/features/balance/components/PatientInvoiceList";
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
@@ -341,18 +341,16 @@ export default function PatientDetailPage() {
               <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
                 <button
                   onClick={() => setActiveTab("timeline")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                    activeTab === "timeline" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeTab === "timeline" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
+                    }`}
                 >
                   <ClipboardList className="w-3.5 h-3.5" />
                   {t("patients.activityTimeline")}
                 </button>
                 <button
                   onClick={() => setActiveTab("balance")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                    activeTab === "balance" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeTab === "balance" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
+                    }`}
                 >
                   <Wallet className="w-3.5 h-3.5" />
                   {t("patients.balance")}
