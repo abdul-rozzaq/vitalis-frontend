@@ -4,7 +4,7 @@ name: ci
 
 on:
   push:
-    branches: [main, new-features/*]
+    branches: [main, new-features/*, muslimbek]
 
 jobs:
   docker:
