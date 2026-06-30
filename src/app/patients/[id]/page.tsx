@@ -1,18 +1,17 @@
 "use client";
 
-import formatPhone from "@/components/ui/format-phone";
-import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { Can } from "@/components/ui/can";
+import formatPhone from "@/components/ui/format-phone";
 import { Sheet } from "@/components/ui/sheet";
+import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { PatientBalanceCard } from "@/features/balance/components/PatientBalanceCard";
 import { PatientInvoiceList } from "@/features/balance/components/PatientInvoiceList";
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
-import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
 import { CaseStep, CaseStepStatus, CaseStepType, Patient, PatientCase, SheetMode } from "@/features/patients/types";
-import { formatDateLong as formatDate, formatTime } from "@/shared/lib/formatters";
 import { resolveFileUrl } from "@/features/patients/utils";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { api } from "@/shared/lib/api";
+import { formatDateLong as formatDate, formatTime } from "@/shared/lib/formatters";
 import { PATIENTS_MOCK_DATA } from "@/shared/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -382,7 +381,6 @@ export default function PatientDetailPage() {
 
   const queryClient = useQueryClient();
   const [sheetMode, setSheetMode] = useState<SheetMode | "ward">(null);
-  const [addStepCaseId, setAddStepCaseId] = useState<string | null>(null);
   const [docRevealed, setDocRevealed] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
 
@@ -778,7 +776,7 @@ export default function PatientDetailPage() {
                     <motion.div key={patientCase.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.03 }}>
                       <CaseCard
                         patientCase={patientCase}
-                        onAddStep={() => setAddStepCaseId(patientCase.id)}
+                        onAddStep={() => router.push(`/patients/${id}/cases/${patientCase.id}/steps/new`)}
                         onCloseCase={(status) => {
                           const msg = status === "COMPLETED" ? "Kasusni yakunlashni tasdiqlaysizmi?" : "Kasusni bekor qilishni tasdiqlaysizmi?";
                           if (confirm(msg)) closeCase({ caseId: patientCase.id, status });
@@ -959,18 +957,6 @@ export default function PatientDetailPage() {
         </div>
       </Sheet>
 
-      {/* Add Case Step — diagnostika ham shu ichida */}
-      <Sheet isOpen={addStepCaseId !== null} onClose={() => setAddStepCaseId(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
-        <AddCaseStepForm
-          caseId={addStepCaseId ?? ""}
-          availableStepTypes={["CONSULTATION", "LAB", "DIAGNOSTIC", "REFERRAL", "DISCHARGE"]}
-          onClose={() => setAddStepCaseId(null)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
-            setAddStepCaseId(null);
-          }}
-        />
-      </Sheet>
     </div>
   );
 }

@@ -140,6 +140,7 @@
     "colId": "ID пациента",
     "colName": "Имя",
     "colGender": "Пол",
+    "colRegion": "Регион",
     "colBirthDate": "Дата рождения",
     "colPhone": "Номер телефона",
     "editPatient": "Редактировать пациента",
