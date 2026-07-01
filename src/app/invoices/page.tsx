@@ -5,7 +5,13 @@ import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
-import { Invoice, InvoiceStatus, SOURCE_LABELS } from "@/features/invoices/types";
+import { CreateInvoiceForm } from "@/features/invoices/components/CreateInvoiceForm";
+import { FilterPanel, Filters } from "@/features/invoices/components/FilterPanel";
+import { InvoiceItemsRow } from "@/features/invoices/components/InvoiceItemsRow";
+import { InvoicePaymentsRow } from "@/features/invoices/components/InvoicePaymentsRow";
+import { StatusBadge } from "@/features/invoices/components/StatusBadge";
+import { Invoice, InvoiceStatus } from "@/features/invoices/types";
+import { Patient } from "@/features/patients/types";
 import { api } from "@/shared/lib/api";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,13 +20,8 @@ import { CheckCircle2, Clock, FileText, Loader2, Plus, SlidersHorizontal, Wallet
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { Patient } from "@/features/patients/types";
-import { StatusBadge } from "@/features/invoices/components/StatusBadge";
-import { Filters, FilterPanel } from "@/features/invoices/components/FilterPanel";
-import { CreateInvoiceForm } from "@/features/invoices/components/CreateInvoiceForm";
-import { InvoiceItemsRow } from "@/features/invoices/components/InvoiceItemsRow";
 
-const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "" };
+const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "" };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -35,12 +36,14 @@ export default function InvoicesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { data: invoicesRaw, isLoading } = useQuery<Invoice[]>({
-    queryKey: ["invoices", filters.status, filters.dateFrom, filters.dateTo],
+    queryKey: ["invoices", filters.status, filters.dateFrom, filters.dateTo, filters.sourceType.join(","), filters.doctorId],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.status) params.set("status", filters.status);
       if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
       if (filters.dateTo) params.set("dateTo", filters.dateTo);
+      if (filters.sourceType.length > 0) params.set("sourceType", filters.sourceType.join(","));
+      if (filters.doctorId) params.set("doctorId", filters.doctorId);
       const res = await api.get(`/invoices?${params.toString()}`);
       return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
     },
@@ -82,8 +85,11 @@ export default function InvoicesPage() {
   const pendingCount = invoices.filter((i) => i.status === "ISSUED" || i.status === "PARTIALLY_PAID").length;
   const paidCount = invoices.filter((i) => i.status === "PAID").length;
 
-  const handleFilterChange = (k: keyof Filters, v: string) => setFilters((prev) => ({ ...prev, [k]: v }));
-  const activeFilterCount = useMemo(() => Object.values(filters).filter((v) => v !== "").length, [filters]);
+  const handleFilterChange = (k: keyof Filters, v: string | string[]) => setFilters((prev) => ({ ...prev, [k]: v }) as Filters);
+  const activeFilterCount = useMemo(() => {
+    const { sourceType, doctorId, ...rest } = filters;
+    return Object.values(rest).filter((v) => v !== "").length + (sourceType.length > 0 ? 1 : 0) + (doctorId ? 1 : 0);
+  }, [filters]);
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -97,7 +103,7 @@ export default function InvoicesPage() {
       },
       {
         id: "patient",
-        header: "Bemor",
+        header: t("invoices.table.patient"),
         cell: ({ row }) => {
           const p = row.original.patient;
           const name = p ? `${p.first_name} ${p.last_name}` : "—";
@@ -118,17 +124,20 @@ export default function InvoicesPage() {
       },
       {
         accessorKey: "sourceType",
-        header: "Manba",
-        cell: (info) => <span className="text-secondary text-sm">{SOURCE_LABELS[info.getValue() as string] ?? info.getValue()}</span>,
+        header: t("invoices.table.source"),
+        cell: (info) => {
+          const value = info.getValue() as string;
+          return <span className="text-secondary text-sm">{t.has(`invoices.source.${value}`) ? t(`invoices.source.${value}`) : value}</span>;
+        },
       },
       {
         accessorKey: "totalAmount",
-        header: "Jami summa",
+        header: t("invoices.table.totalAmount"),
         cell: (info) => <span className="font-semibold text-text text-sm">{fmt(info.getValue() as string)} UZS</span>,
       },
       {
         id: "paid",
-        header: "To'langan",
+        header: t("invoices.table.paid"),
         cell: ({ row }) => {
           const paid = Number(row.original.paidCash) + Number(row.original.paidBonus);
           const total = Number(row.original.totalAmount);
@@ -150,17 +159,17 @@ export default function InvoicesPage() {
       },
       {
         accessorKey: "status",
-        header: "Holat",
+        header: t("invoices.table.status"),
         cell: (info) => <StatusBadge status={info.getValue() as InvoiceStatus} />,
       },
       {
         accessorKey: "createdAt",
-        header: "Sana",
+        header: t("invoices.table.date"),
         cell: (info) => <span className="text-secondary text-sm">{new Date(info.getValue() as string).toLocaleDateString("uz-UZ", { year: "numeric", month: "short", day: "numeric" })}</span>,
       },
       {
         id: "actions",
-        header: () => <div className="text-right">Amallar</div>,
+        header: () => <div className="text-right">{t("invoices.table.actions")}</div>,
         cell: ({ row }) => {
           const inv = row.original;
           const canPay = inv.status === "ISSUED" || inv.status === "PARTIALLY_PAID";
@@ -168,7 +177,7 @@ export default function InvoicesPage() {
           const isExpanded = expandedId === inv.id;
           return (
             <div className="flex justify-end items-center gap-1">
-              <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-hover transition-colors cursor-pointer text-xs" title="Satrlarni ko'rsatish">
+              <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-hover transition-colors cursor-pointer text-xs" title={t("invoices.actions.showItems")}>
                 <FileText className="w-3.5 h-3.5" />
               </button>
               <Can roles={["ADMIN", "KASSIR"]}>
@@ -178,7 +187,7 @@ export default function InvoicesPage() {
                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success-50 text-success border border-success/20 hover:bg-success/10 transition-colors cursor-pointer"
                   >
                     <Wallet className="w-3 h-3" />
-                    To'lash
+                    {t("invoices.actions.pay")}
                   </button>
                 )}
               </Can>
@@ -186,12 +195,12 @@ export default function InvoicesPage() {
                 {canCancel && (
                   <button
                     onClick={() => {
-                      if (confirm("Invoiceni bekor qilasizmi?")) cancelInvoice(inv.id);
+                      if (confirm(t("invoices.actions.cancelConfirm"))) cancelInvoice(inv.id);
                     }}
                     disabled={isCancelling}
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-danger hover:bg-danger-50 transition-colors cursor-pointer disabled:opacity-40"
                   >
-                    <X className="w-3 h-3" /> Bekor
+                    <X className="w-3 h-3" /> {t("invoices.actions.cancel")}
                   </button>
                 )}
               </Can>
@@ -200,30 +209,29 @@ export default function InvoicesPage() {
         },
       },
     ],
-    [isCancelling, cancelInvoice, expandedId],
+    [isCancelling, cancelInvoice, expandedId, t],
   );
 
   return (
     <div className="flex flex-col min-h-screen">
       <PageHeader
         title={t("nav.invoices")}
-        subtitle="Bemorlar hisob-fakturalarini kuzatish va to'lovlarni boshqarish"
+        subtitle={t("invoices.subtitle")}
         actions={
           <div className="flex items-center gap-2">
             <button
               onClick={() => setFilterOpen((v) => !v)}
-              className={`text-sm font-medium flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${
-                filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary text-primary" : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-hover"
-              }`}
+              className={`text-sm font-medium flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary text-primary" : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-hover"
+                }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filter
+              {t("invoices.filter")}
               {activeFilterCount > 0 && <span className="bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">{activeFilterCount}</span>}
             </button>
             <Can roles={["ADMIN", "KASSIR"]}>
               <button onClick={() => setIsSheetOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors text-sm font-medium cursor-pointer">
                 <Plus className="w-4 h-4" />
-                Yangi invoice
+                {t("invoices.newInvoice")}
               </button>
             </Can>
           </div>
@@ -237,10 +245,10 @@ export default function InvoicesPage() {
         {/* Summary */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
           {[
-            { label: "Jami to'lovlar", value: `${fmt(totalRevenue)} UZS`, icon: CheckCircle2, color: "bg-success-50 text-success" },
-            { label: "Jami invoicelar", value: String(invoices.length), icon: FileText, color: "bg-info-50 text-info" },
-            { label: "To'langan", value: String(paidCount), icon: CheckCircle2, color: "bg-success-50 text-success" },
-            { label: "Kutilmoqda", value: String(pendingCount), icon: Clock, color: "bg-warning-50 text-warning" },
+            { label: t("invoices.summary.totalRevenue"), value: `${fmt(totalRevenue)} UZS`, icon: CheckCircle2, color: "bg-success-50 text-success" },
+            { label: t("invoices.summary.totalInvoices"), value: String(invoices.length), icon: FileText, color: "bg-info-50 text-info" },
+            { label: t("invoices.summary.paid"), value: String(paidCount), icon: CheckCircle2, color: "bg-success-50 text-success" },
+            { label: t("invoices.summary.pending"), value: String(pendingCount), icon: Clock, color: "bg-warning-50 text-warning" },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-surface border border-border rounded-lg px-4 py-3 flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center shrink-0`}>
@@ -268,6 +276,7 @@ export default function InvoicesPage() {
               renderExpanded={(row) => (
                 <div className="px-4 py-3 bg-surface-hover border-t border-border">
                   <InvoiceItemsRow items={row.items} />
+                  <InvoicePaymentsRow payments={row.payments} />
                 </div>
               )}
             />
@@ -293,7 +302,7 @@ export default function InvoicesPage() {
       )}
 
       {/* Create Sheet */}
-      <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title="Yangi invoice" description="Bemor uchun qo'lda invoice yarating">
+      <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title={t("invoices.sheet.title")} description={t("invoices.sheet.description")}>
         <CreateInvoiceForm patients={patientsData} onSubmit={createInvoice} onCancel={() => setIsSheetOpen(false)} isLoading={isCreating} />
       </Sheet>
     </div>
