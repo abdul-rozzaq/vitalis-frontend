@@ -1165,7 +1165,63 @@
     "noRows": "Satrlar yo'q",
     "showRows": "Satrlarni ko'rsatish",
     "new": "Yangi invoice",
-    "statusPaid": "To'langan"
+    "statusPaid": "To'langan",
+    "title": "Invoicelar",
+    "subtitle": "Bemorlar hisob-fakturalarini kuzatish va to'lovlarni boshqarish",
+    "filter": "Filter",
+    "reset": "Tozalash",
+    "newInvoice": "Yangi invoice",
+    "fields": {
+      "status": "Holat",
+      "patient": "Bemor",
+      "patientPlaceholder": "Ism...",
+      "dateFrom": "Dan",
+      "dateTo": "Gacha",
+      "source": "Manba",
+      "doctor": "Shifokor",
+      "doctorAll": "Barcha shifokorlar"
+    },
+    "statusOptions": {
+      "ALL": "Barchasi",
+      "DRAFT": "Qoralama",
+      "ISSUED": "Chiqarilgan",
+      "PARTIALLY_PAID": "Qisman to'langan",
+      "PAID": "To'langan",
+      "CANCELLED": "Bekor qilingan"
+    },
+    "source": {
+      "WARD": "Palata",
+      "APPOINTMENT": "Qabul",
+      "OPERATION": "Operatsiya",
+      "DIAGNOSTIC_ORDER": "Diagnostika",
+      "LAB_ORDER": "Laboratoriya",
+      "MANUAL": "Qo'lda"
+    },
+    "summary": {
+      "totalRevenue": "Jami to'lovlar",
+      "totalInvoices": "Jami invoicelar",
+      "paid": "To'langan",
+      "pending": "Kutilmoqda"
+    },
+    "table": {
+      "patient": "Bemor",
+      "source": "Manba",
+      "totalAmount": "Jami summa",
+      "paid": "To'langan",
+      "status": "Holat",
+      "date": "Sana",
+      "actions": "Amallar"
+    },
+    "actions": {
+      "showItems": "Satrlarni ko'rsatish",
+      "pay": "To'lash",
+      "cancel": "Bekor",
+      "cancelConfirm": "Invoiceni bekor qilasizmi?"
+    },
+    "sheet": {
+      "title": "Yangi invoice",
+      "description": "Bemor uchun qo'lda invoice yarating"
+    }
   },
   "rooms": {
     "matrixSubtitle": "Smena shablonini tanlab, xonalarni bir vaqtda biriktiring",

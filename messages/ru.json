@@ -1084,7 +1084,63 @@
     "noRows": "Нет строк",
     "showRows": "Показать строки",
     "new": "Новый счёт",
-    "statusPaid": "Оплачено"
+    "statusPaid": "Оплачено",
+    "title": "Счета",
+    "subtitle": "Отслеживание счетов пациентов и управление платежами",
+    "filter": "Фильтр",
+    "reset": "Сбросить",
+    "newInvoice": "Новый счёт",
+    "fields": {
+      "status": "Статус",
+      "patient": "Пациент",
+      "patientPlaceholder": "Имя...",
+      "dateFrom": "С",
+      "dateTo": "По",
+      "source": "Источник",
+      "doctor": "Врач",
+      "doctorAll": "Все врачи"
+    },
+    "statusOptions": {
+      "ALL": "Все",
+      "DRAFT": "Черновик",
+      "ISSUED": "Выставлен",
+      "PARTIALLY_PAID": "Частично оплачен",
+      "PAID": "Оплачен",
+      "CANCELLED": "Отменён"
+    },
+    "source": {
+      "WARD": "Палата",
+      "APPOINTMENT": "Приём",
+      "OPERATION": "Операция",
+      "DIAGNOSTIC_ORDER": "Диагностика",
+      "LAB_ORDER": "Лаборатория",
+      "MANUAL": "Вручную"
+    },
+    "summary": {
+      "totalRevenue": "Общая выручка",
+      "totalInvoices": "Всего счетов",
+      "paid": "Оплачено",
+      "pending": "В ожидании"
+    },
+    "table": {
+      "patient": "Пациент",
+      "source": "Источник",
+      "totalAmount": "Общая сумма",
+      "paid": "Оплачено",
+      "status": "Статус",
+      "date": "Дата",
+      "actions": "Действия"
+    },
+    "actions": {
+      "showItems": "Показать позиции",
+      "pay": "Оплатить",
+      "cancel": "Отмена",
+      "cancelConfirm": "Отменить счёт?"
+    },
+    "sheet": {
+      "title": "Новый счёт",
+      "description": "Создать счёт для пациента вручную"
+    }
   },
   "rooms": {
     "matrixSubtitle": "Выберите шаблон смены и привяжите комнаты одновременно",
