@@ -8,6 +8,7 @@ import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
 import { CreateInvoiceForm } from "@/features/invoices/components/CreateInvoiceForm";
 import { FilterPanel, Filters } from "@/features/invoices/components/FilterPanel";
 import { InvoiceItemsRow } from "@/features/invoices/components/InvoiceItemsRow";
+import { InvoicePaymentsRow } from "@/features/invoices/components/InvoicePaymentsRow";
 import { StatusBadge } from "@/features/invoices/components/StatusBadge";
 import { Invoice, InvoiceStatus } from "@/features/invoices/types";
 import { Patient } from "@/features/patients/types";
@@ -275,6 +276,7 @@ export default function InvoicesPage() {
               renderExpanded={(row) => (
                 <div className="px-4 py-3 bg-surface-hover border-t border-border">
                   <InvoiceItemsRow items={row.items} />
+                  <InvoicePaymentsRow payments={row.payments} />
                 </div>
               )}
             />

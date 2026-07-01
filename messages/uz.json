@@ -1221,6 +1221,9 @@
     "sheet": {
       "title": "Yangi invoice",
       "description": "Bemor uchun qo'lda invoice yarating"
+    },
+    "payments": {
+      "title": "To'lovlar tarixi"
     }
   },
   "rooms": {

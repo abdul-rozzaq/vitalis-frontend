@@ -19,6 +19,16 @@ export interface InvoiceItem {
   totalPrice: string;
   sourceType: string;
 }
+export interface InvoicePayment {
+  id: string;
+  invoiceId: string;
+  cashAmount: string;
+  bonusAmount: string;
+  totalAmount: string;
+  note?: string | null;
+  createdById: string;
+  createdAt: string;
+}
 
 export interface Invoice {
   id: string;
@@ -34,6 +44,7 @@ export interface Invoice {
   createdAt: string;
   patient?: { id: string; first_name: string; last_name: string };
   items: InvoiceItem[];
+  payments: InvoicePayment[]
 }
 
 
