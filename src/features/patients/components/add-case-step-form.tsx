@@ -1,5 +1,6 @@
 "use client";
 
+import { Combobox } from "@/components/ui/combobox";
 import type { AssignmentSource, CaseStepType } from "@/features/patients/types";
 import { toAssignmentOptions } from "@/features/patients/utils";
 import { api } from "@/shared/lib/api";
@@ -148,6 +149,7 @@ export function AddCaseStepForm({
   const inputCls =
     "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
 
+  const selectedLabDept = labDepts.find((d) => d.id === labDepartmentId);
   const selectedDiagnosticsCenter = diagnosticCenters.find((d) => d.id === diagnosticsId);
 
   return (
@@ -238,31 +240,19 @@ export function AddCaseStepForm({
           {labDepartmentId && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("lab.services")}</label>
-              <div className="border border-border rounded-md overflow-hidden max-h-44 overflow-y-auto divide-y divide-border">
-                {labDepts
-                  .find((d) => d.id === labDepartmentId)
-                  ?.services.map((svc) => (
-                    <label
-                      key={svc.id}
-                      className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedServiceIds.includes(svc.id)}
-                        onChange={(e) =>
-                          setSelectedServiceIds((prev) =>
-                            e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)
-                          )
-                        }
-                        className="w-4 h-4 accent-primary-600"
-                      />
-                      <span className="text-sm text-text flex-1">{svc.name}</span>
-                      {svc.price != null && (
-                        <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>
-                      )}
-                    </label>
-                  ))}
-              </div>
+              <Combobox
+                multiple
+                options={
+                  selectedLabDept?.services.map((svc) => ({
+                    value: svc.id,
+                    label: svc.name,
+                    sublabel: svc.price != null ? `${svc.price.toLocaleString()} UZS` : undefined,
+                  })) ?? []
+                }
+                value={selectedServiceIds}
+                onChange={setSelectedServiceIds}
+                placeholder={t("lab.services")}
+              />
               {selectedServiceIds.length > 0 && (
                 <p className="text-xs text-primary">
                   {selectedServiceIds.length} {t("lab.servicesSelected")}
@@ -298,32 +288,19 @@ export function AddCaseStepForm({
           {diagnosticsId && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("diagnostics.services")}</label>
-              <div className="border border-border rounded-md overflow-hidden max-h-44 overflow-y-auto divide-y divide-border">
-                {selectedDiagnosticsCenter?.services.length === 0 && (
-                  <p className="text-xs text-text-muted text-center py-4">{t("common.noData")}</p>
-                )}
-                {selectedDiagnosticsCenter?.services.map((svc) => (
-                  <label
-                    key={svc.id}
-                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-hover transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedDiagnosticServiceIds.includes(svc.id)}
-                      onChange={(e) =>
-                        setSelectedDiagnosticServiceIds((prev) =>
-                          e.target.checked ? [...prev, svc.id] : prev.filter((i) => i !== svc.id)
-                        )
-                      }
-                      className="w-4 h-4 accent-primary-600"
-                    />
-                    <span className="text-sm text-text flex-1">{svc.name}</span>
-                    {svc.price != null && (
-                      <span className="text-xs text-text-muted font-mono">{svc.price.toLocaleString()} UZS</span>
-                    )}
-                  </label>
-                ))}
-              </div>
+              <Combobox
+                multiple
+                options={
+                  selectedDiagnosticsCenter?.services.map((svc) => ({
+                    value: svc.id,
+                    label: svc.name,
+                    sublabel: svc.price != null ? `${svc.price.toLocaleString()} UZS` : undefined,
+                  })) ?? []
+                }
+                value={selectedDiagnosticServiceIds}
+                onChange={setSelectedDiagnosticServiceIds}
+                placeholder={t("diagnostics.services")}
+              />
               {selectedDiagnosticServiceIds.length > 0 && (
                 <p className="text-xs text-primary">
                   {selectedDiagnosticServiceIds.length} {t("lab.servicesSelected")}
