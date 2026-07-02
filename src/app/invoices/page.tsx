@@ -21,7 +21,7 @@ import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "" };
+const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", amountMin: "", amountMax: "" };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,17 @@ export default function InvoicesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const { data: invoicesRaw, isLoading } = useQuery<Invoice[]>({
-    queryKey: ["invoices", filters.status, filters.dateFrom, filters.dateTo, filters.sourceType.join(","), filters.doctorId],
+    queryKey: [
+      "invoices",
+      filters.status,
+      filters.dateFrom,
+      filters.dateTo,
+      filters.sourceType.join(","),
+      filters.doctorId,
+      filters.patientSearch,
+      filters.amountMin,
+      filters.amountMax,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.status) params.set("status", filters.status);
@@ -44,6 +54,9 @@ export default function InvoicesPage() {
       if (filters.dateTo) params.set("dateTo", filters.dateTo);
       if (filters.sourceType.length > 0) params.set("sourceType", filters.sourceType.join(","));
       if (filters.doctorId) params.set("doctorId", filters.doctorId);
+      if (filters.patientSearch) params.set("patientSearch", filters.patientSearch);
+      if (filters.amountMin) params.set("amountMin", filters.amountMin);
+      if (filters.amountMax) params.set("amountMax", filters.amountMax);
       const res = await api.get(`/invoices?${params.toString()}`);
       return Array.isArray(res.data) ? res.data : (res.data.data ?? []);
     },
@@ -70,16 +83,8 @@ export default function InvoicesPage() {
   });
 
   const invoices: Invoice[] = useMemo(() => {
-    let list = invoicesRaw ?? [];
-    if (filters.patientSearch) {
-      const q = filters.patientSearch.toLowerCase();
-      list = list.filter((inv) => {
-        const name = inv.patient ? `${inv.patient.first_name} ${inv.patient.last_name}`.toLowerCase() : "";
-        return name.includes(q);
-      });
-    }
-    return list;
-  }, [invoicesRaw, filters.patientSearch]);
+    return invoicesRaw ?? [];
+  }, [invoicesRaw]);
 
   const totalRevenue = invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.totalAmount), 0);
   const pendingCount = invoices.filter((i) => i.status === "ISSUED" || i.status === "PARTIALLY_PAID").length;

@@ -11,6 +11,7 @@
     "signOut": "Выйти",
     "wards": "Палаты",
     "invoices": "Счета",
+    "payments": "Платежи",
     "shifts": "Смены",
     "duty": "Моё дежурство",
     "operations": "Операции",
@@ -1098,7 +1099,9 @@
       "dateTo": "По",
       "source": "Источник",
       "doctor": "Врач",
-      "doctorAll": "Все врачи"
+      "doctorAll": "Все врачи",
+      "amountMin": "Мин. сумма",
+      "amountMax": "Макс. сумма"
     },
     "statusOptions": {
       "ALL": "Все",
@@ -1142,7 +1145,21 @@
       "description": "Создать счёт для пациента вручную"
     },
     "payments": {
-      "title": "История платежей"
+      "title": "История платежей",
+      "subtitle": "Все платежи, совершенные по счетам",
+      "cashAmount": "Наличные",
+      "bonusAmount": "Бонус",
+      "totalPaid": "Итого оплачено",
+      "cashier": "Кассир",
+      "date": "Дата",
+      "colMethod": "Способ оплаты",
+      "note": "Примечание",
+      "summary": {
+        "totalPayments": "Итого оплачено",
+        "cashPaid": "Наличные платежи",
+        "bonusPaid": "Бонусные платежи",
+        "count": "Количество платежей"
+      }
     }
   },
   "rooms": {
