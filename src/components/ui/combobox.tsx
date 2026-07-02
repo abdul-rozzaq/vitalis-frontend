@@ -13,7 +13,8 @@ export interface ComboboxOption {
   group?: string;
 }
 
-interface ComboboxProps {
+interface SingleComboboxProps {
+  multiple?: false;
   options: ComboboxOption[];
   value?: string;
   onChange: (value: string) => void;
@@ -25,17 +26,32 @@ interface ComboboxProps {
   groupLabels?: Record<string, string>;
 }
 
-export function Combobox({
-  options,
-  value,
-  onChange,
-  placeholder = "Tanlang...",
-  searchPlaceholder = "Qidirish...",
-  disabled = false,
-  className = "",
-  error = false,
-  groupLabels,
-}: ComboboxProps) {
+interface MultiComboboxProps {
+  multiple: true;
+  options: ComboboxOption[];
+  value?: string[];
+  onChange: (value: string[]) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  disabled?: boolean;
+  className?: string;
+  error?: boolean;
+  groupLabels?: Record<string, string>;
+}
+
+type ComboboxProps = SingleComboboxProps | MultiComboboxProps;
+
+export function Combobox(props: ComboboxProps) {
+  const {
+    options,
+    placeholder = "Tanlang...",
+    searchPlaceholder = "Qidirish...",
+    disabled = false,
+    className = "",
+    error = false,
+    groupLabels,
+  } = props;
+
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -43,7 +59,10 @@ export function Combobox({
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const selected = options.find((o) => o.value === value);
+  const isMultiple = props.multiple === true;
+  const selectedValues: string[] = isMultiple ? (props.value ?? []) : props.value ? [props.value] : [];
+  const selected = !isMultiple ? options.find((o) => o.value === selectedValues[0]) : undefined;
+  const selectedOptions = isMultiple ? options.filter((o) => selectedValues.includes(o.value)) : [];
 
   const filtered = options.filter((o) => {
     const q = search.toLowerCase();
@@ -130,19 +149,31 @@ export function Combobox({
   }, [open]);
 
   const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
-    setOpen(false);
-    setSearch("");
+    if (isMultiple) {
+      const next = selectedValues.includes(optionValue)
+        ? selectedValues.filter((v) => v !== optionValue)
+        : [...selectedValues, optionValue];
+      (props as MultiComboboxProps).onChange(next);
+      // multiple rejimda dropdown ochiq qoladi, qidiruv tozalanmaydi
+    } else {
+      (props as SingleComboboxProps).onChange(optionValue);
+      setOpen(false);
+      setSearch("");
+    }
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange("");
+    if (isMultiple) {
+      (props as MultiComboboxProps).onChange([]);
+    } else {
+      (props as SingleComboboxProps).onChange("");
+    }
     setSearch("");
   };
 
   const renderOption = (option: ComboboxOption) => {
-    const isSelected = option.value === value;
+    const isSelected = selectedValues.includes(option.value);
     return (
       <button
         key={option.value}
@@ -163,6 +194,14 @@ export function Combobox({
             ›
           </span>
         )}
+        {isMultiple && (
+          <span
+            className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "bg-primary border-primary" : "border-border"
+              }`}
+          >
+            {isSelected && <Check className="w-3 h-3 text-white" />}
+          </span>
+        )}
         {option.avatar && (
           <span
             className={`w-6 h-6 rounded-full text-[10px] font-semibold flex items-center justify-center shrink-0 ${isSelected ? "bg-primary/20 text-primary" : "bg-surface-hover text-text-muted"
@@ -181,7 +220,7 @@ export function Combobox({
             </span>
           )}
         </span>
-        {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+        {!isMultiple && isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
       </button>
     );
   };
@@ -259,7 +298,13 @@ export function Combobox({
         `}
       >
         <span className="flex items-center gap-2 min-w-0 flex-1">
-          {selected ? (
+          {isMultiple ? (
+            selectedOptions.length > 0 ? (
+              <span className="truncate text-text">{selectedOptions.length} ta tanlandi</span>
+            ) : (
+              <span className="text-text-muted">{placeholder}</span>
+            )
+          ) : selected ? (
             <>
               {selected.avatar && (
                 <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
@@ -278,7 +323,7 @@ export function Combobox({
           )}
         </span>
         <span className="flex items-center gap-1 shrink-0">
-          {selected && (
+          {(isMultiple ? selectedOptions.length > 0 : !!selected) && (
             <span
               onClick={handleClear}
               className="p-0.5 rounded hover:bg-surface-hover text-text-muted hover:text-text transition-colors"
