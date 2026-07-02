@@ -14,6 +14,8 @@ export interface Filters {
   dateTo: string;
   sourceType: string[];
   doctorId: string;
+  amountMin?: string;
+  amountMax?: string;
 }
 
 // Har bir manba turi uchun ikonka + faol rang. Label t("invoices.source.<KEY>")
@@ -81,7 +83,7 @@ export function FilterPanel({ filters, onChange, onReset, activeCount }: { filte
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         <div className="space-y-1">
           <label className="text-xs font-medium text-text-muted">{t("fields.status")}</label>
           <select
@@ -122,6 +124,26 @@ export function FilterPanel({ filters, onChange, onReset, activeCount }: { filte
             value={filters.dateTo}
             onChange={(e) => onChange("dateTo", e.target.value)}
             className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-text-muted">{t("fields.amountMin")}</label>
+          <input
+            type="number"
+            value={filters.amountMin ?? ""}
+            onChange={(e) => onChange("amountMin", e.target.value)}
+            placeholder="0"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-text-muted">{t("fields.amountMax")}</label>
+          <input
+            type="number"
+            value={filters.amountMax ?? ""}
+            onChange={(e) => onChange("amountMax", e.target.value)}
+            placeholder="9999999"
+            className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
       </div>

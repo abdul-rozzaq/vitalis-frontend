@@ -11,6 +11,7 @@
     "signOut": "Chiqish",
     "wards": "Palatalar",
     "invoices": "Invoicelar",
+    "payments": "To'lovlar",
     "shifts": "Smenalar",
     "duty": "Mening navbatim",
     "operations": "Operatsiyalar",
@@ -1179,7 +1180,9 @@
       "dateTo": "Gacha",
       "source": "Manba",
       "doctor": "Shifokor",
-      "doctorAll": "Barcha shifokorlar"
+      "doctorAll": "Barcha shifokorlar",
+      "amountMin": "Min miqdor",
+      "amountMax": "Maks miqdor"
     },
     "statusOptions": {
       "ALL": "Barchasi",
@@ -1223,7 +1226,21 @@
       "description": "Bemor uchun qo'lda invoice yarating"
     },
     "payments": {
-      "title": "To'lovlar tarixi"
+      "title": "To'lovlar tarixi",
+      "subtitle": "Invoicelar bo'yicha amalga oshirilgan barcha to'lovlar",
+      "cashAmount": "Naqd",
+      "bonusAmount": "Bonus",
+      "totalPaid": "Jami to'langan",
+      "cashier": "Kassir",
+      "date": "Sana",
+      "colMethod": "To'lov usuli",
+      "note": "Izoh",
+      "summary": {
+        "totalPayments": "Jami to'langan",
+        "cashPaid": "Naqd to'lovlar",
+        "bonusPaid": "Bonus to'lovlar",
+        "count": "To'lovlar soni"
+      }
     }
   },
   "rooms": {

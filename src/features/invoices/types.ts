@@ -25,9 +25,12 @@ export interface InvoicePayment {
   cashAmount: string;
   bonusAmount: string;
   totalAmount: string;
+  paymentMethod?: string | null;
   note?: string | null;
   createdById: string;
   createdAt: string;
+  invoice?: Invoice;
+  createdBy?: { id: string; first_name: string; last_name: string; role: string };
 }
 
 export interface Invoice {

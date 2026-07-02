@@ -163,6 +163,12 @@ export const WORKSPACES: Workspace[] = [
         labelKey: "nav.invoices",
         href: "/invoices",
         roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR"],
+        exact: true,
+      },
+      {
+        labelKey: "nav.payments",
+        href: "/invoices/payments",
+        roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR"],
       },
     ],
   },
