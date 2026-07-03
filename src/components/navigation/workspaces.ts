@@ -19,7 +19,7 @@ export interface Workspace {
   labelKey: string;
   icon: LucideIcon;
   /** primary create action for the contextual panel footer, if any */
-  create?: { labelKey: string; href: string };
+  create?: { labelKey: string; href: string; roles?: UserRole[] };
   items: NavItem[];
 }
 
@@ -46,12 +46,12 @@ export const WORKSPACES: Workspace[] = [
     id: "patients",
     labelKey: "nav.ws-patients",
     icon: Users,
-    create: { labelKey: "nav.new-patient", href: "/patients/new" },
+    create: { labelKey: "nav.new-patient", href: "/patients/new", roles: ["ADMIN", "KASSIR", "DIREKTOR"] },
     items: [
       {
         labelKey: "nav.patients",
         href: "/patients",
-        roles: ["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR"],
+        roles: ["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIAGNOST", "DIREKTOR"],
       },
       {
         labelKey: "nav.appointments",
@@ -74,12 +74,12 @@ export const WORKSPACES: Workspace[] = [
       {
         labelKey: "nav.operations",
         href: "/operations",
-        roles: ["ADMIN", "DOCTOR", "LABARANT"],
+        roles: ["ADMIN", "DOCTOR", "HAMSHIRA", "DIREKTOR"],
       },
       {
         labelKey: "nav.lab",
         href: "/lab",
-        roles: ["ADMIN", "DOCTOR", "LABARANT"],
+        roles: ["ADMIN", "DOCTOR", "LABARANT", "DIREKTOR"],
       },
       {
         labelKey: "nav.diagnostics",
@@ -130,7 +130,7 @@ export const WORKSPACES: Workspace[] = [
     id: "staff",
     labelKey: "nav.ws-staff",
     icon: UserRound,
-    create: { labelKey: "nav.new-employee", href: "/employees/new" },
+    create: { labelKey: "nav.new-employee", href: "/employees/new", roles: ["ADMIN", "DIREKTOR"] },
     items: [
       {
         labelKey: "nav.employees",
@@ -180,7 +180,7 @@ export const WORKSPACES: Workspace[] = [
       {
         labelKey: "nav.departments",
         href: "/departments",
-        roles: ["ADMIN", "DIREKTOR", "DOCTOR", "HAMSHIRA", "KASSIR"],
+        roles: ["ADMIN", "DIREKTOR"],
       },
       {
         labelKey: "nav.rooms",
@@ -196,7 +196,7 @@ export const WORKSPACES: Workspace[] = [
       {
         labelKey: "nav.assignments",
         href: "/assignments",
-        roles: ["ADMIN"],
+        roles: ["ADMIN", "DIREKTOR"],
       },
     ],
   },

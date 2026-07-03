@@ -50,7 +50,7 @@ export function ContextualPanel() {
       {/* Footer create action */}
       {ws.create && (
         <div className="border-t border-border p-2.5">
-          <Can roles={ws.items[0].roles}>
+          <Can roles={ws.create.roles || ws.items[0].roles}>
             <Link
               href={ws.create.href}
               className="flex w-full items-center justify-center gap-1.5 rounded-[9px] bg-primary py-2.5 text-[13px] font-semibold text-white transition-colors hover:opacity-90"

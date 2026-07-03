@@ -122,11 +122,13 @@ export default function HomePage() {
   const { user } = useAuth();
   const { hasRole } = useRole();
   const t = useTranslations();
-  const canReadAssignments = hasRole("ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR");
+  const canReadAssignments = hasRole("ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIAGNOST", "DIREKTOR");
+  const canSeeStats = hasRole("ADMIN", "DIREKTOR", "HISOBCHI");
 
   const { data: stats, isLoading: statsLoading } = useQuery<StatsData>({
     queryKey: ["stats"],
     queryFn: () => api.get("/stats").then((r) => r.data),
+    enabled: canSeeStats,
     refetchOnWindowFocus: false,
     staleTime: 60 * 1000,
   });
@@ -191,133 +193,137 @@ export default function HomePage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, i) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-surface p-4 rounded-[13px] border border-border">
-            <div className="flex items-center justify-between mb-3">
-              <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
-                <stat.icon className="w-4 h-4" />
+      <Can roles={["ADMIN", "DIREKTOR", "HISOBCHI"]}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {statCards.map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-surface p-4 rounded-[13px] border border-border">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                  <stat.icon className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-text-muted text-[12.5px] font-medium">{stat.label}</p>
+              <h3 className="text-[27px] font-extrabold text-text mt-0.5 leading-tight">{statsLoading ? <span className="inline-block w-10 h-7 bg-border animate-pulse rounded" /> : stat.value}</h3>
+            </motion.div>
+          ))}
+        </div>
+      </Can>
+
+      <Can roles={["ADMIN", "DIREKTOR", "HISOBCHI"]}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Patients */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface rounded-lg border border-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-text">{t("dashboard.recentPatients")}</h3>
+              <Link href="/patients" className="text-primary text-xs font-medium hover:underline cursor-pointer">
+                {t("dashboard.viewAll")}
+              </Link>
             </div>
-            <p className="text-text-muted text-[12.5px] font-medium">{stat.label}</p>
-            <h3 className="text-[27px] font-extrabold text-text mt-0.5 leading-tight">{statsLoading ? <span className="inline-block w-10 h-7 bg-border animate-pulse rounded" /> : stat.value}</h3>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Recent Patients */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface rounded-lg border border-border overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text">{t("dashboard.recentPatients")}</h3>
-            <Link href="/patients" className="text-primary text-xs font-medium hover:underline cursor-pointer">
-              {t("dashboard.viewAll")}
-            </Link>
-          </div>
-          <div className="divide-y divide-border">
-            {statsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="px-4 py-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-md bg-border animate-pulse shrink-0" />
-                  <div className="space-y-1.5 flex-1">
-                    <div className="h-3 bg-border animate-pulse rounded w-32" />
-                    <div className="h-2.5 bg-border animate-pulse rounded w-20" />
-                  </div>
-                </div>
-              ))
-            ) : !stats?.recentPatients.length ? (
-              <div className="px-4 py-8 text-center text-sm text-text-muted">{t("dashboard.noRecentPatients")}</div>
-            ) : (
-              stats.recentPatients.map((patient) => {
-                const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
-                return (
-                  <Link key={patient.id} href={`/patients/${patient.id}`}>
-                    <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
-                        <div>
-                          <p className="text-sm font-medium text-text">
-                            {patient.first_name} {patient.last_name}
-                          </p>
-                          <p className="text-[11px] text-text-muted font-mono">{patient.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                          <p className="text-[10px] text-text-muted">
-                            {t("dashboard.joined")} {new Date(patient.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                          </p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
-                      </div>
+            <div className="divide-y divide-border">
+              {statsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-md bg-border animate-pulse shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-3 bg-border animate-pulse rounded w-32" />
+                      <div className="h-2.5 bg-border animate-pulse rounded w-20" />
                     </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </motion.div>
-
-        {/* Recent Appointments */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="bg-surface rounded-lg border border-border overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-text">{t("dashboard.recentAppointments")}</h3>
-            <Link href="/appointments" className="text-primary text-xs font-medium hover:underline cursor-pointer">
-              {t("dashboard.viewAll")}
-            </Link>
-          </div>
-          <div className="divide-y divide-border">
-            {statsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="px-4 py-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-md bg-border animate-pulse shrink-0" />
-                  <div className="space-y-1.5 flex-1">
-                    <div className="h-3 bg-border animate-pulse rounded w-36" />
-                    <div className="h-2.5 bg-border animate-pulse rounded w-24" />
                   </div>
-                </div>
-              ))
-            ) : !stats?.recentAppointments.length ? (
-              <div className="px-4 py-8 text-center text-sm text-text-muted">{t("dashboard.noRecentAppointments")}</div>
-            ) : (
-              stats.recentAppointments.map((appt) => {
-                const statusStyle = APPT_STATUS_STYLES[appt.caseStep?.case?.status ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-600", label: appt.caseStep?.case?.status ?? "" };
-                const initials = `${appt.patient.first_name[0]}${appt.patient.last_name[0]}`.toUpperCase();
-                return (
-                  <Link key={appt.id} href={`/patients/${appt.patient.id}`}>
-                    <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
-                        <div>
-                          <p className="text-sm font-medium text-text">
-                            {appt.patient.first_name} {appt.patient.last_name}
-                          </p>
-                          <p className="text-[11px] text-text-muted truncate max-w-[160px]">
-                            {appt.assignment.department.name} · Dr. {appt.assignment.user.last_name}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <div className="text-right hidden sm:block">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusStyle.bg} ${statusStyle.text}`}>{statusStyle.label}</span>
-                          <div className="flex items-center gap-1 text-text-muted text-[10px] mt-0.5 justify-end">
-                            <Clock className="w-3 h-3" />
-                            {new Date(appt.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                ))
+              ) : !stats?.recentPatients.length ? (
+                <div className="px-4 py-8 text-center text-sm text-text-muted">{t("dashboard.noRecentPatients")}</div>
+              ) : (
+                stats.recentPatients.map((patient) => {
+                  const initials = `${patient.first_name[0]}${patient.last_name[0]}`.toUpperCase();
+                  return (
+                    <Link key={patient.id} href={`/patients/${patient.id}`}>
+                      <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
+                          <div>
+                            <p className="text-sm font-medium text-text">
+                              {patient.first_name} {patient.last_name}
+                            </p>
+                            <p className="text-[11px] text-text-muted font-mono">{patient.phone}</p>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
+                        <div className="flex items-center gap-3">
+                          <div className="text-right hidden sm:block">
+                            <p className="text-[10px] text-text-muted">
+                              {t("dashboard.joined")} {new Date(patient.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
+                        </div>
                       </div>
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+
+          {/* Recent Appointments */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="bg-surface rounded-lg border border-border overflow-hidden">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-text">{t("dashboard.recentAppointments")}</h3>
+              <Link href="/appointments" className="text-primary text-xs font-medium hover:underline cursor-pointer">
+                {t("dashboard.viewAll")}
+              </Link>
+            </div>
+            <div className="divide-y divide-border">
+              {statsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-md bg-border animate-pulse shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-3 bg-border animate-pulse rounded w-36" />
+                      <div className="h-2.5 bg-border animate-pulse rounded w-24" />
                     </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </motion.div>
-      </div>
+                  </div>
+                ))
+              ) : !stats?.recentAppointments.length ? (
+                <div className="px-4 py-8 text-center text-sm text-text-muted">{t("dashboard.noRecentAppointments")}</div>
+              ) : (
+                stats.recentAppointments.map((appt) => {
+                  const statusStyle = APPT_STATUS_STYLES[appt.caseStep?.case?.status ?? ""] ?? { bg: "bg-gray-100", text: "text-gray-600", label: appt.caseStep?.case?.status ?? "" };
+                  const initials = `${appt.patient.first_name[0]}${appt.patient.last_name[0]}`.toUpperCase();
+                  return (
+                    <Link key={appt.id} href={`/patients/${appt.patient.id}`}>
+                      <div className="px-4 py-3 flex items-center justify-between hover:bg-surface-hover transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-primary-50 rounded-md flex items-center justify-center text-primary text-xs font-semibold shrink-0">{initials}</div>
+                          <div>
+                            <p className="text-sm font-medium text-text">
+                              {appt.patient.first_name} {appt.patient.last_name}
+                            </p>
+                            <p className="text-[11px] text-text-muted truncate max-w-[160px]">
+                              {appt.assignment.department.name} · Dr. {appt.assignment.user.last_name}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                          <div className="text-right hidden sm:block">
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${statusStyle.bg} ${statusStyle.text}`}>{statusStyle.label}</span>
+                            <div className="flex items-center gap-1 text-text-muted text-[10px] mt-0.5 justify-end">
+                              <Clock className="w-3 h-3" />
+                              {new Date(appt.dateTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        </div>
+      </Can>
 
       {/* Weekly Schedule */}
-      <Can roles={["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIREKTOR"]}>
+      <Can roles={["ADMIN", "KASSIR", "DOCTOR", "HAMSHIRA", "LABARANT", "DIAGNOST", "DIREKTOR"]}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
           <div className="flex items-center justify-between mb-3">
             <div>

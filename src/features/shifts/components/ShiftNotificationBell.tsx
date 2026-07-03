@@ -25,6 +25,7 @@ export function ShiftNotificationBell() {
     queryKey: ["shift-notifications"],
     queryFn: shiftsApi.myNotifications,
     refetchInterval: 30000,
+    enabled: false,
   });
 
   const unread = notifications.filter((n) => !n.readAt).length;
