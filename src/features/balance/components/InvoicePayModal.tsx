@@ -68,21 +68,16 @@ export function InvoicePayModal({
     onError: (err: any) => setError(err?.response?.data?.message || "To'lov amalga oshmadi"),
   });
 
-  // ─── Direct mode mutation (deposit → pay) ────────────────────────────────────
+  // ─── Direct mode mutation (top-up + pay, atomic on backend) ─────────────────
   const directMutation = useMutation({
-    mutationFn: async ({ amount, paymentMethod, note }: { amount: string; paymentMethod: PaymentMethod; note?: string }) => {
-      await api.post(`/patients/${patientId}/balance/deposit`, {
-        patientId,
-        amount,
-        paymentMethod,
-        note,
-      });
-      await api.post(`/invoices/${invoiceId}/pay`, {
+    mutationFn: ({ amount, paymentMethod, note }: { amount: string; paymentMethod: PaymentMethod; note?: string }) =>
+      api.post(`/invoices/${invoiceId}/pay`, {
         cashAmount: amount,
         bonusAmount: "0",
+        paymentMethod,
+        topUp: true,
         note,
-      });
-    },
+      }).then((r) => r.data),
     onSuccess: () => { onSuccess(); onClose(); },
     onError: (err: any) => setError(err?.response?.data?.message || "To'lov amalga oshmadi"),
   });
