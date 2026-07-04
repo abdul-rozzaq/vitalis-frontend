@@ -2,7 +2,6 @@
 
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { PatientSearch } from "@/components/ui/patient-search";
-import { ShiftNotificationBell } from "@/features/shifts/components/ShiftNotificationBell";
 import { useTheme } from "@/shared/hooks/use-theme";
 import { ChevronRight, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -45,8 +44,6 @@ export function Topbar() {
         >
           {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
         </button>
-
-        <ShiftNotificationBell />
 
         <LanguageSwitcher />
       </div>

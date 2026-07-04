@@ -3,7 +3,6 @@ import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { api } from "@/shared/lib/api";
-import { RoomShift, shiftsApi } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building, DoorOpen, Edit2, GripVertical, Layers, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -37,10 +36,6 @@ export default function RoomsPage() {
     queryKey: ["rooms-all"],
     queryFn: () => api.get("/rooms").then((r) => r.data.data ?? r.data),
   });
-  const { data: shifts = [] } = useQuery<RoomShift[]>({
-    queryKey: ["room-shifts"],
-    queryFn: () => shiftsApi.listTemplates(),
-  });
   const { data: wards = [] } = useQuery<Ward[]>({
     queryKey: ["wards-all"],
     queryFn: () => api.get("/wards").then((r) => r.data.data ?? r.data),
@@ -54,18 +49,6 @@ export default function RoomsPage() {
     });
     return map;
   }, [wards]);
-
-  const nursesByRoom = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    shifts.forEach((sh) => {
-      sh.rooms.forEach((sr) => {
-        const cur = map.get(sr.roomId) ?? new Set<string>();
-        sh.defaultNurses.forEach((n) => cur.add(`${n.nurse.first_name} ${n.nurse.last_name}`));
-        map.set(sr.roomId, cur);
-      });
-    });
-    return map;
-  }, [shifts]);
 
   const dataFloors = useMemo(() => {
     const s = new Set<number>();
@@ -184,7 +167,6 @@ export default function RoomsPage() {
                       const cap = r.capacity ?? 0;
                       const pct = cap ? (occ / cap) * 100 : 0;
                       const bar = pct >= 100 ? "bg-danger-500" : pct >= 70 ? "bg-amber-500" : "bg-success";
-                      const nurses = nursesByRoom.get(r.id);
                       return (
                         <div
                           key={r.id}
@@ -218,11 +200,6 @@ export default function RoomsPage() {
                             <div className={`h-full ${bar}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                           </div>
                           <div className="text-xs text-text-muted">{occ}/{cap} o'rin</div>
-                          {nurses && nurses.size > 0 && (
-                            <div className="text-xs text-text-muted mt-1 truncate">
-                              👩‍⚕️ {nurses.size} hamshira
-                            </div>
-                          )}
                         </div>
                       );
                     })}

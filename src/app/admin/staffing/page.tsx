@@ -1,100 +1,91 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import { Card, Grid, PageContent, PageHeader, Stat } from "@/components/layouts/PageLayout";
-import { fmtHM, ResolvedSlot, shiftsApi, WorkingHoursLog } from "@/shared/lib/shifts-api";
-import { ymd } from "@/shared/lib/utils";
+import { StaffingBadge } from "@/features/shifts/components/staffing-badge";
+import type { Shift } from "@/shared/lib/shifts-api";
+import { fmtShiftDay, fmtShiftRange, isUnderstaffed, shiftsApi } from "@/shared/lib/shifts-api";
 import { useQuery } from "@tanstack/react-query";
-import { Stethoscope, UserCheck, Users } from "lucide-react";
+import { addDays, format } from "date-fns";
+import { AlertTriangle, CalendarRange, CheckCircle2, Users } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
-
 export default function StaffingOverviewPage() {
-  const t = useTranslations();
-  const today = ymd(new Date());
-  const weekAgo = ymd(new Date(Date.now() - 6 * 86400000));
+  const from = format(new Date(), "yyyy-MM-dd");
+  const to = format(addDays(new Date(), 14), "yyyy-MM-dd");
 
-  const { data: slots = [] } = useQuery<ResolvedSlot[]>({
-    queryKey: ["resolved-range", today, today],
-    queryFn: () => shiftsApi.resolvedRange({ from: today, to: today }),
-  });
-  const { data: hours = [] } = useQuery<WorkingHoursLog[]>({
-    queryKey: ["work-hours-week", weekAgo, today],
-    queryFn: () => shiftsApi.workHours({ from: weekAgo, to: today }),
+  const { data: shifts = [], isLoading } = useQuery<Shift[]>({
+    queryKey: ["shifts", "staffing", from, to],
+    queryFn: () => shiftsApi.list({ from, to }),
   });
 
   const m = useMemo(() => {
-    const docs = new Set<string>();
-    const nurses = new Set<string>();
-    slots.forEach((s) => {
-      if (s.doctor) docs.add(s.doctor.id);
-      s.nurses.forEach((n) => nurses.add(n.nurseId));
-    });
-    const total = slots.length;
-    const assigned = slots.filter((s) => s.doctor).length;
-    const coverage = total ? Math.round((assigned / total) * 100) : 0;
-    const overtimeCount = new Set(hours.filter((h) => h.overtimeHours > 0).map((h) => h.user.id)).size;
-
-    // per-doctor load today
-    const load = new Map<string, { name: string; rooms: number; shifts: Set<string> }>();
-    slots.forEach((s) => {
-      if (!s.doctor) return;
-      const cur = load.get(s.doctor.id) ?? { name: `${s.doctor.first_name} ${s.doctor.last_name}`, rooms: 0, shifts: new Set() };
-      cur.rooms += 1; cur.shifts.add(s.shift.id); load.set(s.doctor.id, cur);
-    });
-    return {
-      docs: docs.size, nurses: nurses.size, coverage, overtimeCount,
-      load: [...load.values()].sort((a, b) => b.rooms - a.rooms),
-      unassigned: slots.filter((s) => !s.doctor),
-    };
-  }, [slots, hours]);
+    const understaffed = shifts.filter((s) => isUnderstaffed(s.staffing));
+    return { total: shifts.length, understaffed, fullyStaffed: shifts.length - understaffed.length };
+  }, [shifts]);
 
   return (
     <>
-      <PageHeader title="Xodimlar qamrovi" subtitle={`Bugungi holat — ${today}`} />
+      <PageHeader title="Xodimlar qamrovi" subtitle="Keyingi 14 kun — smenalar qamrovi" />
 
       <PageContent>
-        <Grid cols={4}>
-          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Stethoscope className="w-5 h-5 text-primary" /></div><Stat label={t("adminStaffing.activeDoctors")} value={m.docs} /></div></Card>
-          <Card><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center"><Users className="w-5 h-5 text-primary" /></div><Stat label={t("adminStaffing.activeNurses")} value={m.nurses} /></div></Card>
+        <Grid cols={3}>
           <Card>
-            <div className="space-y-2"><p className="text-sm text-text-muted">Qamrov</p>
-              <span className={`text-2xl font-bold ${m.coverage >= 90 ? "text-success" : m.coverage >= 60 ? "text-amber-600" : "text-danger-500"}`}>{m.coverage}%</span></div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+                <CalendarRange className="w-5 h-5 text-primary" />
+              </div>
+              <Stat label="Jami smenalar" value={m.total} />
+            </div>
           </Card>
-          <Card><Stat label={t("adminStaffing.overtimeWeek")} value={m.overtimeCount} unit="xodim" /></Card>
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-success-50 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+              <Stat label="To'liq qamrab olingan" value={m.fullyStaffed} />
+            </div>
+          </Card>
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-danger-600" />
+              </div>
+              <Stat label="Yetishmovchilik" value={m.understaffed.length} />
+            </div>
+          </Card>
         </Grid>
 
-        <Grid cols={2}>
-          <Card title="Shifokorlar yuklamasi (bugun)">
-            {m.load.length === 0 ? <p className="text-sm text-text-muted py-4">Bugun tayinlangan shifokor yo'q</p> : (
-              <div className="space-y-2">
-                {m.load.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-background border border-border">
-                    <div className="flex items-center gap-2"><UserCheck className="w-4 h-4 text-primary" /><span className="text-sm text-text">{d.name}</span></div>
-                    <div className="flex gap-2 text-xs text-text-muted">
-                      <span className="px-2 py-0.5 bg-surface rounded-full border border-border">{d.shifts.size} smena</span>
-                      <span className="px-2 py-0.5 bg-surface rounded-full border border-border">{d.rooms} xona</span>
+        <Card title="Xodim yetishmayotgan smenalar">
+          {isLoading ? (
+            <p className="text-sm text-text-muted py-4">Yuklanmoqda…</p>
+          ) : m.understaffed.length === 0 ? (
+            <p className="text-sm text-success py-4 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" /> Barcha smenalar to'liq qamrab olingan
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {m.understaffed.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/shifts/${s.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-red-50/50 border border-red-200 hover:border-red-300 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-danger-600" />
+                    <div>
+                      <p className="text-sm text-text font-medium">{s.department.name}</p>
+                      <p className="text-xs text-text-muted">
+                        {fmtShiftDay(s.startAt)} · {fmtShiftRange(s.startAt, s.endAt)}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          <Card title="Qamrovsiz smenalar">
-            {m.unassigned.length === 0 ? <p className="text-sm text-success py-4">Barcha smenalar qamrab olingan ✓</p> : (
-              <div className="space-y-2">
-                {m.unassigned.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200">
-                    <span className="text-sm text-text">{s.room.name} · {s.shift.name}</span>
-                    <span className="text-xs text-amber-700">{fmtHM(s.shift.startHour)}–{fmtHM(s.shift.endHour)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </Grid>
+                  <StaffingBadge staffing={s.staffing} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card>
       </PageContent>
     </>
   );
