@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { useBoardContext } from '../board/BoardContext';
 import { useDepartments, useBoardShifts } from '../api';
 
-export const InspectorPanel: React.FC = () => {
+interface InspectorPanelProps {
+  onEditClick?: () => void;
+}
+
+export const InspectorPanel: React.FC<InspectorPanelProps> = ({ onEditClick }) => {
   const { selectedItemIds, timelineStart } = useBoardContext();
   
   const timelineEnd = useMemo(() => {
@@ -41,10 +45,22 @@ export const InspectorPanel: React.FC = () => {
 
   return (
     <div className="w-80 border-l border-border bg-surface flex-shrink-0 flex flex-col overflow-y-auto">
-      <div className="p-4 border-b border-border-light">
-        <h2 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Shift Details</h2>
-        <h3 className="text-xl font-bold text-text">{shiftName}</h3>
-        <p className="text-sm text-text-secondary mt-1">{department?.name}</p>
+      <div className="p-4 border-b border-border-light flex justify-between items-start">
+        <div>
+          <h2 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Shift Details</h2>
+          <h3 className="text-xl font-bold text-text">{shiftName}</h3>
+          <p className="text-sm text-text-secondary mt-1">{department?.name}</p>
+        </div>
+        <button 
+          onClick={onEditClick}
+          className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-50 rounded-md transition-colors"
+          title="Edit Shift"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.68-10.68z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 7.125L16.875 4.5" />
+          </svg>
+        </button>
       </div>
       
       <div className="p-4 flex flex-col gap-6">
@@ -53,11 +69,11 @@ export const InspectorPanel: React.FC = () => {
           <div className="bg-surface-secondary p-3 rounded-md border border-border-light">
             <div className="flex justify-between items-center text-sm mb-1">
               <span className="text-text-muted">Start</span>
-              <span className="font-medium text-text">{new Date(shift.startAt).toLocaleString()}</span>
+              <span className="font-medium text-text">{new Date(shift.startAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-text-muted">End</span>
-              <span className="font-medium text-text">{new Date(shift.endAt).toLocaleString()}</span>
+              <span className="font-medium text-text">{new Date(shift.endAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</span>
             </div>
           </div>
         </div>

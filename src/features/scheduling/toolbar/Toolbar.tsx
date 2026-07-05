@@ -1,7 +1,11 @@
 import React from 'react';
 import { useBoardContext } from '../board/BoardContext';
 
-export const Toolbar: React.FC = () => {
+interface ToolbarProps {
+  onCreateClick?: () => void;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({ onCreateClick }) => {
   const { config, setConfig } = useBoardContext();
 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +47,16 @@ export const Toolbar: React.FC = () => {
             title="Zoom Timeline"
           />
         </div>
+
+        <button 
+          onClick={onCreateClick}
+          className="bg-primary hover:brightness-110 text-white px-4 py-1.5 rounded-md text-sm font-semibold shadow-sm transition-all flex items-center gap-1.5"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Add Shift
+        </button>
       </div>
     </div>
   );

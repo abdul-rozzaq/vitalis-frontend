@@ -26,16 +26,19 @@ const SCHEDULE_API = {
     const { data } = await api.get(`/scheduling/schedules/${scheduleId}`);
     return data.shifts || [];
   },
-  createShift: async (shift: Partial<Shift>): Promise<Shift> => {
-    const { data } = await api.post('/scheduling/shifts', shift);
+  createShift: async (shift: any): Promise<any> => {
+    const { data } = await api.post('/shifts', shift);
     return data;
   },
-  updateShift: async (shiftId: string, payload: Partial<Shift>): Promise<Shift> => {
-    const { data } = await api.patch(`/scheduling/shifts/${shiftId}`, payload);
+  updateShift: async (shiftId: string, payload: any): Promise<any> => {
+    const { data } = await api.patch(`/shifts/${shiftId}`, payload);
     return data;
+  },
+  deleteShift: async (shiftId: string): Promise<void> => {
+    await api.delete(`/shifts/${shiftId}`);
   },
   updateAssignment: async (shiftId: string, payload: Partial<ShiftAssignment>): Promise<ShiftAssignment> => {
-    const { data } = await api.post(`/scheduling/shifts/${shiftId}/assign`, payload);
+    const { data } = await api.post(`/shifts/${shiftId}/staff`, payload);
     return data;
   }
 };
@@ -114,10 +117,30 @@ export const useUpdateAssignment = () => {
 export const useUpdateShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Shift> }) => 
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
       SCHEDULE_API.updateShift(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      queryClient.invalidateQueries({ queryKey: ['board-shifts'] });
+    },
+  });
+};
+
+export const useCreateBoardShift = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => SCHEDULE_API.createShift(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['board-shifts'] });
+    },
+  });
+};
+
+export const useDeleteBoardShift = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => SCHEDULE_API.deleteShift(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['board-shifts'] });
     },
   });
 };

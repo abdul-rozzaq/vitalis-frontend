@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Toolbar } from '../toolbar/Toolbar';
 import { Sidebar } from '../sidebar/Sidebar';
 import { TimelineHeader } from '../timeline/TimelineHeader';
@@ -13,9 +13,12 @@ import { TimelineRow } from '../timeline/types';
 import { useTimelineEngine } from '../timeline/engine/useTimelineEngine';
 import { BoardProvider, useBoardContext } from './BoardContext';
 import { useKeyboardNavigation } from '../timeline/engine/useKeyboardNavigation';
+import { ShiftCrudModal } from '../components/ShiftCrudModal';
 
 const BoardContent: React.FC = () => {
-  const { config, timelineStart } = useBoardContext();
+  const { config, timelineStart, selectedItemIds } = useBoardContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
 
   // Load from API instead of mock
   const timelineEnd = useMemo(() => {
@@ -51,6 +54,17 @@ const BoardContent: React.FC = () => {
 
   useKeyboardNavigation(positionedItems);
 
+  // Helper to open modal
+  const handleOpenCreateModal = () => {
+    setEditingShiftId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (id: string) => {
+    setEditingShiftId(id);
+    setIsModalOpen(true);
+  };
+
   if (isLoadingDepts || isLoadingShifts) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background text-text">
@@ -62,17 +76,25 @@ const BoardContent: React.FC = () => {
     );
   }
 
+  const shiftToEdit = editingShiftId ? shifts.find((s: any) => s.id === editingShiftId) : null;
+
   return (
     <div className="h-screen w-full flex flex-col bg-background text-text font-sans overflow-hidden">
-      <Toolbar />
+      <Toolbar onCreateClick={handleOpenCreateModal} />
       <div className="flex flex-1 overflow-hidden">
         <TimelineCanvas 
           sidebar={<Sidebar rows={positionedRows} />}
           header={<TimelineHeader />}
           grid={<TimelineGrid positionedItems={positionedItems} positionedRows={positionedRows} totalWidth={totalWidth} />}
         />
-        <InspectorPanel />
+        <InspectorPanel onEditClick={() => selectedItemIds[0] && handleOpenEditModal(selectedItemIds[0])} />
       </div>
+      
+      <ShiftCrudModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        shiftToEdit={shiftToEdit} 
+      />
     </div>
   );
 };
