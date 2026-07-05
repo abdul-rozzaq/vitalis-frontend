@@ -15,6 +15,8 @@ interface BoardState {
   setSelectedItemIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   hoveredItemId: string | null;
   setHoveredItemId: (id: string | null) => void;
+  viewportElement: HTMLDivElement | null;
+  setViewportElement: (el: HTMLDivElement | null) => void;
 }
 
 const BoardContext = createContext<BoardState | undefined>(undefined);
@@ -31,6 +33,7 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [viewportX, setViewportX] = useState<number>(0);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+  const [viewportElement, setViewportElement] = useState<HTMLDivElement | null>(null);
 
   const value = useMemo(() => ({
     config,
@@ -42,8 +45,10 @@ export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     selectedItemIds,
     setSelectedItemIds,
     hoveredItemId,
-    setHoveredItemId
-  }), [config, timelineStart, viewportX, selectedItemIds, hoveredItemId]);
+    setHoveredItemId,
+    viewportElement,
+    setViewportElement
+  }), [config, timelineStart, viewportX, selectedItemIds, hoveredItemId, viewportElement]);
 
   return <BoardContext.Provider value={value}>{children}</BoardContext.Provider>;
 };

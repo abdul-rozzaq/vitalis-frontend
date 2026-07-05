@@ -35,6 +35,7 @@ export const useTimelineEngine = ({
   return { 
     positionedRows, 
     positionedItems, 
-    totalWidth: config.dayColumnWidth * 30 // Support 30 days fixed boundary for interaction testing
+    totalWidth: config.dayColumnWidth * 365, // 1 year timeline
+    daysCount: 365
   };
 };

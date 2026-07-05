@@ -8,19 +8,18 @@ interface TimelineViewportProps {
 }
 
 export const TimelineViewport: React.FC<TimelineViewportProps> = ({ children }) => {
-  const { setViewportX } = useBoardContext();
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const { setViewportX, viewportElement, setViewportElement } = useBoardContext();
 
   const handleScroll = () => {
-    if (viewportRef.current) {
-      setViewportX(viewportRef.current.scrollLeft);
+    if (viewportElement) {
+      setViewportX(viewportElement.scrollLeft);
     }
   };
 
   return (
     <div 
-      ref={viewportRef}
-      className="flex-1 flex flex-col overflow-x-auto bg-surface relative will-change-scroll"
+      ref={setViewportElement}
+      className="flex-1 flex flex-col overflow-auto bg-surface relative will-change-scroll"
       onScroll={handleScroll}
     >
       {children}
