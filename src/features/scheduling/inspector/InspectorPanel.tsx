@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useBoardContext } from '../board/BoardContext';
-import { mockShifts, mockDepartments } from '../utils/mockRepository';
+import { useDepartments, useBoardShifts } from '../api';
 
 export const InspectorPanel: React.FC = () => {
-  const { selectedItemIds } = useBoardContext();
+  const { selectedItemIds, timelineStart } = useBoardContext();
   
+  const timelineEnd = useMemo(() => {
+    const end = new Date(timelineStart);
+    end.setDate(end.getDate() + 365);
+    return end.toISOString();
+  }, [timelineStart]);
+
+  const { data: departments = [] } = useDepartments();
+  const { data: shifts = [] } = useBoardShifts(
+    timelineStart.toISOString(), 
+    timelineEnd
+  );
+
   // For Phase 3: We only inspect the first selected item
   const selectedId = selectedItemIds.length > 0 ? selectedItemIds[0] : null;
-  const shift = selectedId ? mockShifts.find(s => s.id === selectedId) : null;
-  const department = shift ? mockDepartments.find(d => d.id === shift.departmentId) : null;
+  const shift = selectedId ? shifts.find((s: any) => s.id === selectedId) : null;
+  const department = shift ? departments.find((d: any) => d.id === shift.departmentId) : null;
 
   if (!shift) {
     return (
@@ -21,11 +33,17 @@ export const InspectorPanel: React.FC = () => {
     );
   }
 
+  const shiftName = shift.note || `${department?.name || 'Department'} Shift`;
+  const isStaffed = shift.staffing 
+    ? shift.staffing.assignedDoctors >= shift.staffing.requiredDoctors && shift.staffing.assignedNurses >= shift.staffing.requiredNurses
+    : shift.status === 'staffed';
+  const displayStatus = isStaffed ? 'staffed' : 'understaffed';
+
   return (
     <div className="w-80 border-l border-border bg-surface flex-shrink-0 flex flex-col overflow-y-auto">
       <div className="p-4 border-b border-border-light">
         <h2 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Shift Details</h2>
-        <h3 className="text-xl font-bold text-text">{shift.name}</h3>
+        <h3 className="text-xl font-bold text-text">{shiftName}</h3>
         <p className="text-sm text-text-secondary mt-1">{department?.name}</p>
       </div>
       
@@ -47,40 +65,39 @@ export const InspectorPanel: React.FC = () => {
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-xs font-semibold text-text-muted uppercase">Coverage</h4>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              shift.status === 'staffed' ? 'bg-success-50 text-success' :
-              shift.status === 'understaffed' ? 'bg-danger-50 text-danger' :
+              displayStatus === 'staffed' ? 'bg-success-50 text-success' :
+              displayStatus === 'understaffed' ? 'bg-danger-50 text-danger' :
               'bg-info-50 text-info'
             }`}>
-              {shift.status}
+              {displayStatus}
             </span>
           </div>
           <div className="h-2 bg-surface-secondary rounded-full overflow-hidden">
-            <div className={`h-full ${shift.status === 'understaffed' ? 'bg-danger w-1/3' : 'bg-success w-full'}`} />
+            <div className={`h-full ${displayStatus === 'understaffed' ? 'bg-danger w-1/3' : 'bg-success w-full'}`} />
           </div>
-          {shift.status === 'understaffed' && (
-            <p className="text-xs text-danger mt-2 font-medium">Missing: 1 Registered Nurse</p>
+          {displayStatus === 'understaffed' && shift.staffing && (
+            <p className="text-xs text-danger mt-2 font-medium">
+              Missing: {shift.staffing.requiredDoctors - shift.staffing.assignedDoctors > 0 && `${shift.staffing.requiredDoctors - shift.staffing.assignedDoctors} Doctor(s) `}
+              {shift.staffing.requiredNurses - shift.staffing.assignedNurses > 0 && `${shift.staffing.requiredNurses - shift.staffing.assignedNurses} Nurse(s)`}
+            </p>
           )}
         </div>
 
         <div>
           <h4 className="text-xs font-semibold text-text-muted uppercase mb-2">Assigned Staff</h4>
           <div className="flex flex-col gap-2">
-            {/* Mock assigned staff */}
-            <div className="flex items-center gap-3 p-2 hover:bg-surface-secondary rounded-md cursor-pointer transition-colors border border-transparent hover:border-border">
-              <div className="w-8 h-8 rounded-full bg-info-50 border border-info" />
-              <div>
-                <p className="text-sm font-medium text-text">Dr. Sarah Jenkins</p>
-                <p className="text-xs text-text-secondary">Attending Physician</p>
-              </div>
-            </div>
-            {shift.status !== 'understaffed' && (
-              <div className="flex items-center gap-3 p-2 hover:bg-surface-secondary rounded-md cursor-pointer transition-colors border border-transparent hover:border-border">
-                <div className="w-8 h-8 rounded-full bg-success-50 border border-success" />
-                <div>
-                  <p className="text-sm font-medium text-text">Marcus Webb</p>
-                  <p className="text-xs text-text-secondary">Registered Nurse</p>
+            {shift.staff && shift.staff.length > 0 ? (
+              shift.staff.map((s: any) => (
+                <div key={s.user.id} className="flex items-center gap-3 p-2 hover:bg-surface-secondary rounded-md cursor-pointer transition-colors border border-transparent hover:border-border">
+                  <div className={`w-8 h-8 rounded-full border ${s.role === 'DOCTOR' ? 'bg-info-50 border-info' : 'bg-success-50 border-success'}`} />
+                  <div>
+                    <p className="text-sm font-medium text-text">{s.user.first_name} {s.user.last_name}</p>
+                    <p className="text-xs text-text-secondary">{s.role === 'DOCTOR' ? 'Attending Physician' : 'Registered Nurse'}</p>
+                  </div>
                 </div>
-              </div>
+              ))
+            ) : (
+              <p className="text-sm text-text-muted italic">No staff assigned</p>
             )}
             
             <button className="mt-2 w-full py-2 border-2 border-dashed border-border rounded-md text-sm font-medium text-text-muted hover:text-primary hover:border-primary hover:bg-primary-50 transition-all flex items-center justify-center gap-2">

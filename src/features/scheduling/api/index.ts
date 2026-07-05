@@ -11,6 +11,17 @@ const SCHEDULE_API = {
     const { data } = await api.get(`/scheduling/schedules/${id}`);
     return data;
   },
+  getDepartments: async () => {
+    const { data } = await api.get(`/departments`);
+    return data;
+  },
+  getBoardShifts: async (from: string, to: string) => {
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    const { data } = await api.get(`/shifts?${params.toString()}`);
+    return data;
+  },
   getShifts: async (scheduleId: string): Promise<Shift[]> => {
     const { data } = await api.get(`/scheduling/schedules/${scheduleId}`);
     return data.shifts || [];
@@ -49,6 +60,20 @@ export const useShifts = (scheduleId: string | null) => {
     queryKey: ['shifts', scheduleId],
     queryFn: () => SCHEDULE_API.getShifts(scheduleId!),
     enabled: !!scheduleId,
+  });
+};
+
+export const useDepartments = () => {
+  return useQuery({
+    queryKey: ['departments'],
+    queryFn: () => SCHEDULE_API.getDepartments(),
+  });
+};
+
+export const useBoardShifts = (from: string, to: string) => {
+  return useQuery({
+    queryKey: ['board-shifts', from, to],
+    queryFn: () => SCHEDULE_API.getBoardShifts(from, to),
   });
 };
 

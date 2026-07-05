@@ -43,11 +43,6 @@ export const Toolbar: React.FC = () => {
             title="Zoom Timeline"
           />
         </div>
-
-        {/* Mock Actions */}
-        <button className="bg-primary hover:brightness-110 text-white px-4 py-1.5 rounded-md text-sm font-semibold shadow-sm transition-all">
-          Publish Schedule
-        </button>
       </div>
     </div>
   );

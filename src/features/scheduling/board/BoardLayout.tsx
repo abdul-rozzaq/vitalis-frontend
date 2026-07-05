@@ -7,7 +7,7 @@ import { TimelineHeader } from '../timeline/TimelineHeader';
 import { TimelineGrid } from '../timeline/TimelineGrid';
 import { TimelineCanvas } from '../timeline/TimelineCanvas';
 import { InspectorPanel } from '../inspector/InspectorPanel';
-import { mockDepartments, mockShifts } from '../utils/mockRepository';
+import { useDepartments, useBoardShifts } from '../api';
 import { mapShiftToTimelineItem } from '../adapters/shiftAdapter';
 import { TimelineRow } from '../timeline/types';
 import { useTimelineEngine } from '../timeline/engine/useTimelineEngine';
@@ -17,19 +17,31 @@ import { useKeyboardNavigation } from '../timeline/engine/useKeyboardNavigation'
 const BoardContent: React.FC = () => {
   const { config, timelineStart } = useBoardContext();
 
+  // Load from API instead of mock
+  const timelineEnd = useMemo(() => {
+    const end = new Date(timelineStart);
+    end.setDate(end.getDate() + 365); // fetch for 1 year ahead
+    return end.toISOString();
+  }, [timelineStart]);
+
+  const { data: departments = [], isLoading: isLoadingDepts } = useDepartments();
+  const { data: shifts = [], isLoading: isLoadingShifts } = useBoardShifts(
+    timelineStart.toISOString(), 
+    timelineEnd
+  );
+
   const rows: TimelineRow[] = useMemo(() => 
-    mockDepartments.map(dept => ({
+    departments.map((dept: any) => ({
       id: dept.id,
       title: dept.name,
-      height: 60 // tighter enterprise row height
+      height: 60
     })), 
-  []);
+  [departments]);
 
   const items = useMemo(() => 
-    mockShifts.map(mapShiftToTimelineItem), 
-  []);
+    shifts.map(mapShiftToTimelineItem), 
+  [shifts]);
 
-  // 2. Timeline Engine Processing
   const { positionedRows, positionedItems, totalWidth } = useTimelineEngine({
     items,
     rows,
@@ -37,8 +49,18 @@ const BoardContent: React.FC = () => {
     config
   });
 
-  // 3. Keyboard Navigation Integration
   useKeyboardNavigation(positionedItems);
+
+  if (isLoadingDepts || isLoadingShifts) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background text-text">
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-text-muted">Loading schedule...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full flex flex-col bg-background text-text font-sans overflow-hidden">

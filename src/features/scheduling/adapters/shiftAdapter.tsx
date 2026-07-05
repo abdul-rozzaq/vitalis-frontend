@@ -16,14 +16,21 @@ export const mapShiftToTimelineItem = (shift: any): TimelineItem => {
     startAt: new Date(shift.startAt),
     endAt: new Date(shift.endAt),
     rowId: shift.departmentId,
-    content: (width: number) => (
-      <ShiftCard 
-        id={shift.id}
-        name={shift.name}
-        timeRange={timeRange}
-        status={shift.status}
-        width={width}
-      />
-    ),
+    content: (width: number) => {
+      // Determine coverage status based on the new backend staffing object
+      const isStaffed = shift.staffing 
+        ? shift.staffing.assignedDoctors >= shift.staffing.requiredDoctors && shift.staffing.assignedNurses >= shift.staffing.requiredNurses
+        : shift.status === 'staffed';
+
+      return (
+        <ShiftCard 
+          id={shift.id}
+          name={shift.note || `${shift.department?.name || 'Department'} Shift`}
+          timeRange={timeRange}
+          status={isStaffed ? 'staffed' : 'understaffed'}
+          width={width}
+        />
+      );
+    },
   };
 };
