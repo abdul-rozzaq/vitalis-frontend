@@ -100,13 +100,8 @@ export const WORKSPACES: Workspace[] = [
         exact: true,
       },
       {
-        labelKey: "nav.shifts-templates",
-        href: "/shifts/templates",
-        roles: ["ADMIN", "DIREKTOR"],
-      },
-      {
-        labelKey: "nav.shifts-overrides",
-        href: "/shifts/overrides",
+        labelKey: "nav.shifts-list",
+        href: "/shifts/list",
         roles: ["ADMIN", "DIREKTOR"],
       },
       {
@@ -140,16 +135,6 @@ export const WORKSPACES: Workspace[] = [
       {
         labelKey: "nav.staffing",
         href: "/admin/staffing",
-        roles: ["ADMIN", "DIREKTOR"],
-      },
-      {
-        labelKey: "nav.work-hours",
-        href: "/admin/work-hours",
-        roles: ["ADMIN", "DIREKTOR"],
-      },
-      {
-        labelKey: "nav.history",
-        href: "/admin/history",
         roles: ["ADMIN", "DIREKTOR"],
       },
     ],
@@ -187,11 +172,6 @@ export const WORKSPACES: Workspace[] = [
         href: "/rooms",
         roles: ["ADMIN", "DIREKTOR"],
         exact: true,
-      },
-      {
-        labelKey: "nav.rooms-matrix",
-        href: "/rooms/matrix",
-        roles: ["ADMIN", "DIREKTOR"],
       },
       {
         labelKey: "nav.assignments",

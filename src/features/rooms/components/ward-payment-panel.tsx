@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
+
+const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "CARD", "TRANSFER", "OTHER"];
 
 interface WardData {
   id: string;
@@ -46,6 +49,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositNote, setDepositNote] = useState("");
+  const [depositMethod, setDepositMethod] = useState<PaymentMethod>("CASH");
 
   const { data: ward, isLoading: wardLoading } = useQuery<WardData>({
     queryKey: ["ward", wardId],
@@ -64,6 +68,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
       api.post(`/patients/${ward!.patientId}/balance/deposit`, {
         patientId: ward!.patientId,
         amount: depositAmount,
+        paymentMethod: depositMethod,
         note: depositNote || undefined,
       }),
     onSuccess: () => {
@@ -71,6 +76,7 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
       setShowDeposit(false);
       setDepositAmount("");
       setDepositNote("");
+      setDepositMethod("CASH");
     },
   });
 
@@ -225,6 +231,28 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-secondary mb-1 block">
+              To'lov usuli
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHODS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setDepositMethod(m)}
+                  className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors cursor-pointer text-left ${
+                    depositMethod === m
+                      ? "bg-primary/10 border-primary text-primary"
+                      : "bg-background border-border text-secondary hover:border-border-strong hover:text-text"
+                  }`}
+                >
+                  {PAYMENT_METHOD_LABELS[m]}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
