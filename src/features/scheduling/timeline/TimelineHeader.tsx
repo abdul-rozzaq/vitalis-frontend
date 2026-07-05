@@ -17,6 +17,11 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({ daysCount = 365 
     overscan: 2,
   });
 
+  React.useEffect(() => {
+    // Force the virtualizer to recalculate sizes when zoom level changes
+    columnVirtualizer.measure?.();
+  }, [config.dayColumnWidth, columnVirtualizer]);
+
   return (
     <div className="h-12 bg-surface border-b border-border relative z-20" style={{ width: `${columnVirtualizer.getTotalSize()}px` }}>
       {columnVirtualizer.getVirtualItems().map((virtualColumn) => {

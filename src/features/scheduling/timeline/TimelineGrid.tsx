@@ -33,6 +33,10 @@ export const TimelineGrid: React.FC<TimelineGridProps> = ({
     overscan: 2,
   });
 
+  React.useEffect(() => {
+    columnVirtualizer.measure?.();
+  }, [config.dayColumnWidth, columnVirtualizer]);
+
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalHeight = rowVirtualizer.getTotalSize();
 
