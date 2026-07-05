@@ -1,26 +1,45 @@
 import React from 'react';
+import { useBoardContext } from '../board/BoardContext';
 
-export const TimelineHeader: React.FC = () => {
-  // Mock generated days and hours for architecture
-  const days = Array.from({ length: 7 }).map((_, i) => `Day ${i + 1}`);
-  
+interface TimelineHeaderProps {
+  daysCount?: number;
+}
+
+export const TimelineHeader: React.FC<TimelineHeaderProps> = ({ daysCount = 30 }) => {
+  const { config, timelineStart } = useBoardContext();
+  const days = Array.from({ length: daysCount }).map((_, i) => {
+    const d = new Date(timelineStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
   return (
-    <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 h-10">
-      {days.map((day, idx) => (
-        <div key={idx} className="w-[600px] flex-shrink-0 border-r border-gray-200 dark:border-gray-800 relative">
-          <div className="absolute top-1 left-2 text-[11px] font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{day}</div>
-          
-          {/* Vertical Grid Lines within the header */}
-          <div className="absolute top-0 bottom-0 left-[200px] border-l border-gray-100 dark:border-gray-800/50" />
-          <div className="absolute top-0 bottom-0 left-[400px] border-l border-gray-100 dark:border-gray-800/50" />
-
-          {/* Time Labels exactly centered on the grid lines */}
-          {idx === 0 && (
-            <div className="absolute bottom-0.5 left-0 -translate-x-1/2 text-[10px] text-gray-500 bg-white dark:bg-gray-900 px-1 z-10 font-mono">00:00</div>
-          )}
-          <div className="absolute bottom-0.5 left-[200px] -translate-x-1/2 text-[10px] text-gray-500 bg-white dark:bg-gray-900 px-1 font-mono">08:00</div>
-          <div className="absolute bottom-0.5 left-[400px] -translate-x-1/2 text-[10px] text-gray-500 bg-white dark:bg-gray-900 px-1 font-mono">16:00</div>
-          <div className="absolute bottom-0.5 right-0 translate-x-1/2 text-[10px] text-gray-500 bg-white dark:bg-gray-900 px-1 z-10 font-mono">00:00</div>
+    <div className="flex h-12 bg-surface border-b border-border relative z-20">
+      {days.map((date, index) => (
+        <div 
+          key={index} 
+          className="flex-shrink-0 border-r border-border flex flex-col"
+          style={{ width: `${config.dayColumnWidth}px` }}
+        >
+          <div className="h-6 border-b border-border-light flex items-center justify-center bg-rail">
+            <span className="text-[11px] font-bold text-text-muted uppercase tracking-widest">
+              {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <div className="flex-1 flex relative">
+            {Array.from({ length: 4 }).map((_, segment) => (
+              <div 
+                key={segment} 
+                className={`flex-1 flex items-end justify-center pb-0.5 text-[9px] font-medium text-text-muted
+                ${segment < 3 ? 'border-r border-border-light' : ''}`}
+              >
+                {/* Each segment represents 6 hours (00:00, 06:00, 12:00, 18:00) */}
+                <span className="-translate-x-1/2 absolute" style={{ left: `${(segment * 25)}%` }}>
+                  {String(segment * 6).padStart(2, '0')}:00
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>

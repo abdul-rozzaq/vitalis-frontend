@@ -12,6 +12,7 @@ export const mapShiftToTimelineItem = (shift: any): TimelineItem => {
 
   return {
     id: shift.id,
+    type: 'shift', // Generic identity support
     startAt: new Date(shift.startAt),
     endAt: new Date(shift.endAt),
     rowId: shift.departmentId,

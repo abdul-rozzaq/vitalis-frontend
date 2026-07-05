@@ -1,39 +1,51 @@
 import React from 'react';
+import { useBoardContext } from '../board/BoardContext';
 
 export const Toolbar: React.FC = () => {
+  const { config, setConfig } = useBoardContext();
+
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = parseInt(e.target.value, 10);
+    setConfig(prev => ({
+      ...prev,
+      dayColumnWidth: newWidth,
+      pixelsPerHour: newWidth / 24
+    }));
+  };
+
   return (
-    <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0">
-      <div className="flex space-x-2">
-        <button className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-          Today
-        </button>
-        <div className="flex rounded-md border border-gray-300 dark:border-gray-700 overflow-hidden">
-          <button className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-700 transition-colors">
-            Previous
-          </button>
-          <button className="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-            Next
-          </button>
+    <div className="h-14 border-b border-border bg-surface flex items-center justify-between px-4 z-30 shadow-sm">
+      <div className="flex items-center gap-4">
+        <h1 className="font-bold text-lg text-text tracking-tight">Vitalis <span className="font-medium text-text-muted">Board</span></h1>
+        
+        {/* Mock Navigation controls */}
+        <div className="flex items-center gap-1 bg-surface-secondary p-1 rounded-md ml-4">
+          <button className="px-3 py-1 text-sm font-medium rounded text-text-secondary hover:bg-surface hover:shadow-sm transition-all">&lt;</button>
+          <button className="px-3 py-1 text-sm font-medium rounded text-text-secondary hover:bg-surface hover:shadow-sm transition-all">Today</button>
+          <button className="px-3 py-1 text-sm font-medium rounded text-text-secondary hover:bg-surface hover:shadow-sm transition-all">&gt;</button>
         </div>
-        <button className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-          Zoom
-        </button>
       </div>
-      
-      <div className="flex space-x-3 items-center">
-        <input 
-          type="text" 
-          placeholder="Search..." 
-          className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-        />
-        <button className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-          Filters
-        </button>
-        <button className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors shadow-sm">
-          Create Shift
-        </button>
-        <button className="px-4 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-700 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-          Publish
+      <div className="flex items-center gap-6">
+        {/* Zoom Control */}
+        <div className="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-text-muted">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+          </svg>
+          <input 
+            type="range" 
+            min="100" 
+            max="1200" 
+            step="100" 
+            value={config.dayColumnWidth} 
+            onChange={handleZoomChange}
+            className="w-24 accent-primary cursor-pointer"
+            title="Zoom Timeline"
+          />
+        </div>
+
+        {/* Mock Actions */}
+        <button className="bg-primary hover:brightness-110 text-white px-4 py-1.5 rounded-md text-sm font-semibold shadow-sm transition-all">
+          Publish Schedule
         </button>
       </div>
     </div>

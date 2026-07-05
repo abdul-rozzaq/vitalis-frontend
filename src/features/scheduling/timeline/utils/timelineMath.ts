@@ -1,40 +1,34 @@
 /**
- * Generic mathematics for placing items onto a continuous time-based axis.
- * The timeline engine knows nothing about the actual dates, only about pixels and diffs.
+ * Generic mathematics for converting time into screen coordinates.
+ * Pure functions only. No UI logic. No side effects.
  */
 
 export const getPixelsPerHour = (dayColumnWidth: number): number => {
   return dayColumnWidth / 24;
 };
 
-export const calculateItemX = (
-  itemStart: Date,
-  timelineStart: Date,
-  pixelsPerHour: number
-): number => {
-  const diffMs = itemStart.getTime() - timelineStart.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
+// 1. Date -> Pixel
+export const dateToPixel = (date: Date, timelineStart: Date, pixelsPerHour: number): number => {
+  const diffHours = (date.getTime() - timelineStart.getTime()) / 3600000;
   return diffHours * pixelsPerHour;
 };
 
-export const calculateItemWidth = (
-  itemStart: Date,
-  itemEnd: Date,
-  pixelsPerHour: number
-): number => {
-  const diffMs = itemEnd.getTime() - itemStart.getTime();
-  const diffHours = Math.max(0, diffMs / (1000 * 60 * 60));
+// 2. Pixel -> Date
+export const pixelToDate = (pixel: number, timelineStart: Date, pixelsPerHour: number): Date => {
+  const diffHours = pixel / pixelsPerHour;
+  const ms = diffHours * 3600000;
+  return new Date(timelineStart.getTime() + ms);
+};
+
+// 3. Duration -> Width
+export const durationToWidth = (start: Date, end: Date, pixelsPerHour: number): number => {
+  const diffHours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
   return diffHours * pixelsPerHour;
 };
 
-export const calculateRowTop = (
-  rowId: string,
-  rows: { id: string; height: number }[]
-): number => {
-  let top = 0;
-  for (const row of rows) {
-    if (row.id === rowId) break;
-    top += row.height;
-  }
-  return top;
+// 4. Width -> Duration (Returns ms)
+export const widthToDuration = (width: number, pixelsPerHour: number): number => {
+  const hours = width / pixelsPerHour;
+  return hours * 3600000;
 };
+
