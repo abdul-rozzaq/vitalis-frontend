@@ -33,8 +33,10 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({ daysCount = 30 }
                 className={`flex-1 flex items-end justify-center pb-0.5 text-[9px] font-medium text-text-muted
                 ${segment < 3 ? 'border-r border-border-light' : ''}`}
               >
-                {/* Each segment represents 6 hours (00:00, 06:00, 12:00, 18:00) */}
-                <span className="-translate-x-1/2 absolute" style={{ left: `${(segment * 25)}%` }}>
+                <span 
+                  className={`absolute ${index === 0 && segment === 0 ? 'translate-x-0 pl-2' : '-translate-x-1/2'}`} 
+                  style={{ left: `${(segment * 25)}%` }}
+                >
                   {String(segment * 6).padStart(2, '0')}:00
                 </span>
               </div>

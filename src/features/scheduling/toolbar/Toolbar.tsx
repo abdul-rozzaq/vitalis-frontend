@@ -5,12 +5,13 @@ export const Toolbar: React.FC = () => {
   const { config, setConfig } = useBoardContext();
 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newWidth = parseInt(e.target.value, 10);
-    setConfig(prev => ({
-      ...prev,
-      dayColumnWidth: newWidth,
-      pixelsPerHour: newWidth / 24
-    }));
+    setConfig(prev => {
+      const newWidth = parseInt(e.target.value, 10);
+      return { 
+        ...prev, 
+        dayColumnWidth: newWidth
+      };
+    });
   };
 
   return (
@@ -33,7 +34,7 @@ export const Toolbar: React.FC = () => {
           </svg>
           <input 
             type="range" 
-            min="100" 
+            min="200" 
             max="1200" 
             step="100" 
             value={config.dayColumnWidth} 

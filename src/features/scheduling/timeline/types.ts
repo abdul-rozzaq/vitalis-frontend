@@ -2,7 +2,6 @@ export interface TimelineConfig {
   dayColumnWidth: number;
   zoomLevel: number; // e.g. 100 for 100%
   snapIntervalMinutes: number; // e.g. 15 for 15-min snapping during drag & drop
-  pixelsPerHour: number; // Derived dynamically
 }
 
 export interface TimelineRow {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useBoardContext } from '../board/BoardContext';
+import { Clock } from 'lucide-react';
 
 interface ShiftCardProps {
   id: string;
@@ -9,13 +10,6 @@ interface ShiftCardProps {
   width: number;
   zoomLevel?: 'compressed' | 'normal' | 'expanded'; 
 }
-
-// A generic identity icon for shifts
-const ShiftIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`w-4 h-4 ${className || ''}`}>
-    <path fillRule="evenodd" d="M7.5 5.25a3 3 0 013-3h3a3 3 0 013 3v.205c6.771.925 11.25 5.14 11.25 10.645 0 5.626-4.707 10.15-11.25 10.15C4.707 26.25 0 21.726 0 16.1c0-5.505 4.479-9.72 11.25-10.645v-.205zM12 9a.75.75 0 01.75.75v3.69l2.28 2.28a.75.75 0 11-1.06 1.06l-2.81-2.81A.75.75 0 0111.25 13.5v-3.75A.75.75 0 0112 9z" clipRule="evenodd" />
-  </svg>
-);
 
 export const ShiftCard: React.FC<ShiftCardProps> = ({ id, name, timeRange, status, width, zoomLevel = 'normal' }) => {
   const { selectedItemIds, setSelectedItemIds, hoveredItemId, setHoveredItemId } = useBoardContext();
@@ -74,7 +68,7 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ id, name, timeRange, statu
         className={`${cardClasses} p-1 flex items-center justify-center`} 
         title={name}
       >
-        <ShiftIcon className={iconColor} />
+        <Clock className={iconColor + " w-4 h-4"} />
       </div>
     );
   }
@@ -89,7 +83,7 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ id, name, timeRange, statu
         className={`${cardClasses} p-2 flex flex-col items-center justify-center`} 
         title={name}
       >
-        <ShiftIcon className={`${iconColor} mb-1`} />
+        <Clock className={`${iconColor} mb-1 w-4 h-4`} />
         <div className="text-[9px] font-bold text-text-muted uppercase tracking-wider truncate w-full text-center">{status}</div>
       </div>
     );
@@ -105,7 +99,7 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ id, name, timeRange, statu
         className={`${cardClasses} px-1.5 py-1 flex flex-col justify-center`}
       >
         <div className="text-xs font-bold text-text truncate flex items-center gap-1.5">
-          <ShiftIcon className={`w-3 h-3 ${iconColor}`} />
+          <Clock className={`w-3 h-3 ${iconColor}`} />
           {name}
         </div>
         <div className="text-[10px] text-text-muted truncate mt-0.5 capitalize">{status}</div>
@@ -123,7 +117,7 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ id, name, timeRange, statu
     >
       <div className="flex justify-between items-start">
         <div className="font-bold text-xs text-text truncate pr-2 flex items-center gap-1.5">
-          <ShiftIcon className={`w-3.5 h-3.5 ${iconColor}`} />
+          <Clock className={`w-3.5 h-3.5 ${iconColor}`} />
           {name}
         </div>
         <div className="text-[10px] font-mono text-text-muted bg-surface px-1 rounded border border-border-light flex-shrink-0">

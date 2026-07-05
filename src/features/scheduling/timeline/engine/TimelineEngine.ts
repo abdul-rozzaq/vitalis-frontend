@@ -34,7 +34,7 @@ export class TimelineEngine {
     timelineStart: Date,
     itemHeight: number = 48
   ): PositionedItem[] {
-    const { pixelsPerHour } = this.config;
+    const pixelsPerHour = this.config.dayColumnWidth / 24;
 
     return items.map(item => {
       const row = positionedRows.find(r => r.id === item.rowId);

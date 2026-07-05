@@ -20,7 +20,7 @@ export const TimelineViewport: React.FC<TimelineViewportProps> = ({ children }) 
   return (
     <div 
       ref={viewportRef}
-      className="flex-1 flex flex-col overflow-x-auto bg-surface relative will-change-scroll pl-4 pr-4"
+      className="flex-1 flex flex-col overflow-x-auto bg-surface relative will-change-scroll"
       onScroll={handleScroll}
     >
       {children}

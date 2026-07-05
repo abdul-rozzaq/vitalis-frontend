@@ -3,7 +3,7 @@ import { useBoardContext } from '../../board/BoardContext';
 import { PositionedItem } from '../types';
 
 export const useKeyboardNavigation = (positionedItems: PositionedItem[]) => {
-  const { selectedItemIds, setSelectedItemIds } = useBoardContext();
+  const { selectedItemIds, setSelectedItemIds, setConfig } = useBoardContext();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -11,13 +11,11 @@ export const useKeyboardNavigation = (positionedItems: PositionedItem[]) => {
       if (e.key === 'Enter') {
         if (selectedItemIds.length > 0) {
           e.preventDefault();
-          // In a real app with a collapsible drawer, we'd trigger setInspectorOpen(true) here.
-          // Since our inspector is permanent, we can just visually flash it or log.
           console.log(`[Keyboard] Opening Inspector for shift: ${selectedItemIds[0]}`);
           const inspectorEl = document.getElementById('inspector-panel');
           if (inspectorEl) {
-            inspectorEl.classList.add('ring-2', 'ring-blue-500', 'ring-inset');
-            setTimeout(() => inspectorEl.classList.remove('ring-2', 'ring-blue-500', 'ring-inset'), 300);
+            inspectorEl.classList.add('ring-2', 'ring-primary', 'ring-inset');
+            setTimeout(() => inspectorEl.classList.remove('ring-2', 'ring-primary', 'ring-inset'), 300);
           }
         }
         return;
@@ -29,7 +27,24 @@ export const useKeyboardNavigation = (positionedItems: PositionedItem[]) => {
         return;
       }
 
-      // 3. Arrow Keys Navigation
+      // 3. Zoom Shortcuts (+ / -)
+      if (e.key === '+' || e.key === '=') {
+        setConfig(prev => ({
+          ...prev,
+          dayColumnWidth: Math.min(1200, prev.dayColumnWidth + 100)
+        }));
+        return;
+      }
+
+      if (e.key === '-' || e.key === '_') {
+        setConfig(prev => ({
+          ...prev,
+          dayColumnWidth: Math.max(200, prev.dayColumnWidth - 100)
+        }));
+        return;
+      }
+
+      // 4. Arrow Keys Navigation
       const isArrowKey = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
       
       if (isArrowKey) {
@@ -101,5 +116,5 @@ export const useKeyboardNavigation = (positionedItems: PositionedItem[]) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [positionedItems, selectedItemIds, setSelectedItemIds]);
+  }, [positionedItems, selectedItemIds, setSelectedItemIds, setConfig]);
 };
