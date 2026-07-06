@@ -1,13 +1,15 @@
-import { useTranslations } from "next-intl";
-import { useItemActions } from "../hooks/useItemActions";
-import { initialsOf } from "@/shared/lib/helpers";
-import { LabItemStatus, LabOrder, LabOrderItem } from "../types";
-import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL, NEXT_STATUS, NEXT_STEP_BUTTON_CLASS } from "../constants/status-colors";
-import { ItemFilesAndNote } from "./ItemFilesAndNote";
-import { StatusPicker } from "./StatusPicker";
-import { Loader2, Pencil, Upload } from "lucide-react";
 import { NextStepButton } from "@/features/diagnostics/components/NextStepButton";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
+import { formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
+import { Clock, ClipboardList, Loader2, Pencil, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL, NEXT_STATUS, NEXT_STEP_BUTTON_CLASS } from "../constants/status-colors";
+import { useItemActions } from "../hooks/useItemActions";
+import { LabItemStatus, LabOrder, LabOrderItem } from "../types";
+import { DownloadResultButtons } from "./DownloadResultButtons";
+import { ItemFilesAndNote } from "./ItemFilesAndNote";
+import { ResultTableModal } from "./ResultTableModal";
+import { StatusPicker } from "./StatusPicker";
 
 interface TaskRowProps {
   order: LabOrder;
@@ -34,6 +36,11 @@ export function TaskRow({ order, item }: TaskRowProps) {
               <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
               {ITEM_STATUS_LABELS[item.status]}
             </span>
+            {item.resultTable && (item.status === "PENDING" || item.status === "IN_PROGRESS") && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning-50 text-warning border border-warning-100">
+                {t("lab.draftBadge")}
+              </span>
+            )}
           </div>
           <p className="text-xs text-text-muted mt-0.5">
             {item.service.name}
@@ -41,6 +48,12 @@ export function TaskRow({ order, item }: TaskRowProps) {
             {order.laboratory.name}
             <span className="mx-2 opacity-40">·</span>
             {order.patient.phone_number}
+          </p>
+          <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1">
+            <Clock className="w-3 h-3 shrink-0" />
+            <span className="font-medium text-text">{timeAgoUz(item.createdAt)}</span>
+            <span className="opacity-40">·</span>
+            <span>{formatClockTime(item.createdAt)}</span>
           </p>
 
           <ItemFilesAndNote item={item} order={order} onDeleteFile={(fileId) => actions.deleteFile.mutate({ itemId: item.id, fileId })} isDeletingFile={actions.deleteFile.isPending} isEditing={isEditing} />
@@ -75,6 +88,14 @@ export function TaskRow({ order, item }: TaskRowProps) {
                 <input type="file" hidden onChange={(e) => actions.handleFileUpload(item.id, e)} disabled={actions.uploadingItemId === item.id} />
               </label>
               <button
+                onClick={() => actions.setResultTableItemId(item.id)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
+                title={t("lab.resultTable")}
+                aria-label={t("lab.resultTable")}
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+              </button>
+              <button
                 onClick={() => actions.openEdit(item)}
                 className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
                 title={t("lab.updateItem")}
@@ -83,10 +104,19 @@ export function TaskRow({ order, item }: TaskRowProps) {
                 <Pencil className="w-3.5 h-3.5" />
               </button>
             </div>
+            {item.resultTable && <DownloadResultButtons itemId={item.id} downloadingKey={actions.downloadingKey} onDownload={actions.handleDownload} />}
             <NextStepButton item={item} isSaving={actions.updateItem.isPending} onClick={() => actions.requestAdvance(item)} size="sm" />
           </div>
         )}
       </div>
+
+      <ResultTableModal
+        item={item}
+        isOpen={actions.resultTableItemId === item.id}
+        isSaving={actions.saveResultTable.isPending}
+        onSave={(rows, submit) => actions.saveResultTable.mutate({ itemId: item.id, rows, submit })}
+        onClose={() => actions.setResultTableItemId(null)}
+      />
 
       {actions.pendingAdvanceItem?.id === item.id && (
         <ConfirmDialog

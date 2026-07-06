@@ -1,3 +1,26 @@
+
+export function timeAgoUz(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "hozirgina";
+  if (diffMin < 60) return `${diffMin} daqiqa oldin`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour} soat oldin`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay === 1) return "kecha";
+  return `${diffDay} kun oldin`;
+}
+
+export function formatClockTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const time = date.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+  if (isToday) return time;
+  const day = date.toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" });
+  return `${day} ${time}`;
+}
+
 // ─── Initials ─────────────────────────────────────────────────────────────────
 
 export function initialsOf(firstName: string, lastName: string): string {

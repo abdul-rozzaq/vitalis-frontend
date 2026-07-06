@@ -1,11 +1,20 @@
 export type LabOrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type LabItemStatus = "PENDING" | "IN_PROGRESS" | "READY" | "DELIVERED" | "CANCELLED";
 
+export interface LabDefaultRow {
+  code?: string | null;
+  indicator: string;
+  norm?: string | null;
+  unit?: string | null;
+  sortOrder?: number;
+}
+
 export interface LaboratoryService {
   id: string;
   name: string;
   price?: number | null;
   laboratoryId: string;
+  defaultRows?: LabDefaultRow[] | null;
 }
 
 export interface Laboratory {
@@ -32,12 +41,36 @@ export interface LabOrderItemFile {
   createdAt: string;
 }
 
+export interface LabResultRow {
+  id?: string;
+  code?: string | null;
+  indicator: string;
+  result: string;
+  norm?: string | null;
+  unit?: string | null;
+  sortOrder?: number;
+}
+
+export interface LabResultTable {
+  id: string;
+  labOrderItemId: string;
+  rows: LabResultRow[];
+}
+
 export interface LabOrderItem {
   id: string;
   status: LabItemStatus;
   serviceId: string;
-  service: { id: string; name: string; price?: number | null };
+  service: {
+    id: string;
+    name: string;
+    price?: number | null;
+    // Xizmat uchun standart natija shabloni (backend'dan keladi). Bo'lmasa —
+    // bo'sh qatordan boshlanadi.
+    defaultRows?: LabDefaultRow[] | null;
+  };
   files: LabOrderItemFile[];
+  resultTable?: LabResultTable | null;
   note?: string | null;
   completedAt?: string | null;
   startedAt?: string | null;
