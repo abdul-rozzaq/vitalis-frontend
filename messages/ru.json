@@ -1246,11 +1246,14 @@
       "showItems": "Satrlarni ko'rsatish",
       "pay": "To'lash",
       "cancel": "Bekor",
-      "cancelConfirm": "Invoiceni bekor qilasizmi?"
+      "cancelConfirm": "Invoiceni bekor qilasizmi?",
+      "edit": "Tahrirlash"
     },
     "sheet": {
       "title": "Yangi invoice",
-      "description": "Bemor uchun qo'lda invoice yarating"
+      "description": "Bemor uchun qo'lda invoice yarating",
+      "editTitle": "Invoysni tahrirlash",
+      "editDescription": "Invoys ma'lumotlarini o'zgartiring"
     },
     "payments": {
       "title": "To'lovlar tarixi",

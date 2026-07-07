@@ -6,6 +6,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
 import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
 import { CreateInvoiceForm } from "@/features/invoices/components/CreateInvoiceForm";
+import { EditInvoiceForm } from "@/features/invoices/components/EditInvoiceForm";
 import { FilterPanel, Filters } from "@/features/invoices/components/FilterPanel";
 import { InvoiceItemsRow } from "@/features/invoices/components/InvoiceItemsRow";
 import { InvoicePaymentsRow } from "@/features/invoices/components/InvoicePaymentsRow";
@@ -16,7 +17,7 @@ import { api } from "@/shared/lib/api";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Clock, FileText, Loader2, Plus, SlidersHorizontal, Wallet, X } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Loader2, Pencil, Plus, SlidersHorizontal, Wallet, X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -34,6 +35,7 @@ export default function InvoicesPage() {
   const [payTarget, setPayTarget] = useState<Invoice | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Invoice | null>(null);
 
   const { data: invoicesRaw, isLoading } = useQuery<Invoice[]>({
     queryKey: [
@@ -79,6 +81,14 @@ export default function InvoicesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       setIsSheetOpen(false);
+    },
+  });
+
+  const { mutateAsync: updateInvoice, isPending: isUpdating } = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.patch(`/invoices/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      setEditTarget(null);
     },
   });
 
@@ -179,6 +189,7 @@ export default function InvoicesPage() {
           const inv = row.original;
           const canPay = inv.status === "ISSUED" || inv.status === "PARTIALLY_PAID";
           const canCancel = inv.status === "DRAFT" || inv.status === "ISSUED";
+          const canEdit = inv.status !== "PAID" && inv.status !== "CANCELLED";
           const isExpanded = expandedId === inv.id;
           return (
             <div className="flex justify-end items-center gap-1">
@@ -197,6 +208,14 @@ export default function InvoicesPage() {
                 )}
               </Can>
               <Can roles={["ADMIN"]}>
+                {canEdit && (
+                  <button
+                    onClick={() => setEditTarget(inv)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-3 h-3" /> {t("invoices.actions.edit")}
+                  </button>
+                )}
                 {canCancel && (
                   <button
                     onClick={() => {
@@ -214,7 +233,7 @@ export default function InvoicesPage() {
         },
       },
     ],
-    [isCancelling, cancelInvoice, expandedId, t],
+    [isCancelling, cancelInvoice, expandedId, setEditTarget, t],
   );
 
   return (
@@ -309,6 +328,19 @@ export default function InvoicesPage() {
       {/* Create Sheet */}
       <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title={t("invoices.sheet.title")} description={t("invoices.sheet.description")}>
         <CreateInvoiceForm patients={patientsData} onSubmit={createInvoice} onCancel={() => setIsSheetOpen(false)} isLoading={isCreating} />
+      </Sheet>
+
+      {/* Edit Sheet */}
+      <Sheet isOpen={!!editTarget} onClose={() => setEditTarget(null)} title={t("invoices.sheet.editTitle")} description={t("invoices.sheet.editDescription")}>
+        {editTarget && (
+          <EditInvoiceForm
+            invoice={editTarget}
+            patients={patientsData}
+            onSubmit={(data) => updateInvoice({ id: editTarget.id, data })}
+            onCancel={() => setEditTarget(null)}
+            isLoading={isUpdating}
+          />
+        )}
       </Sheet>
     </div>
   );
