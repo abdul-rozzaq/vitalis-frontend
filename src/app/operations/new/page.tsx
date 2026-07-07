@@ -106,6 +106,37 @@ function ErrorMsg({ msg }: { msg?: string }) {
 const fieldCls =
   "w-full bg-surface-hover border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all";
 
+
+function PriceInput({
+  value,
+  onChange,
+  className,
+  placeholder = "0",
+}: {
+  value: number;
+  onChange: (val: number) => void;
+  className?: string;
+  placeholder?: string;
+}) {
+  const displayValue = value === 0 ? "" : fmt(value);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^\d]/g, "");
+    onChange(raw === "" ? 0 : Number(raw));
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={displayValue}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────────
 
 export default function NewOperationPage() {
@@ -124,6 +155,10 @@ export default function NewOperationPage() {
     { surgeonId: "", role: "LEAD" },
   ]);
   const [items, setItems] = useState<OperationItemInput[]>([]);
+  // Operatsiyaning o'zi uchun tahrirlanadigan bazaviy narx.
+  // Operatsiya turi tanlanganda shu turning basePrice'idan default sifatida to'ldiriladi,
+  // lekin foydalanuvchi buni istalgan vaqt o'zgartirishi mumkin (chegirma/qo'shimcha narx uchun).
+  const [basePrice, setBasePrice] = useState<number>(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showNewCase, setShowNewCase] = useState(false);
   const [newCaseComplaint, setNewCaseComplaint] = useState("");
@@ -235,6 +270,7 @@ export default function NewOperationPage() {
 
   useEffect(() => {
     if (selectedOpType) {
+      setBasePrice(Number(selectedOpType.basePrice));
       setItems(
         selectedOpType.items
           .filter((i) => i.isActive)
@@ -246,11 +282,11 @@ export default function NewOperationPage() {
           }))
       );
     } else {
+      setBasePrice(0);
       setItems([]);
     }
   }, [operationTypeId]);
 
-  const basePrice = Number(selectedOpType?.basePrice ?? 0);
   const itemsTotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const totalPrice = basePrice + itemsTotal;
 
@@ -355,6 +391,7 @@ export default function NewOperationPage() {
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
     if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
     if (surgeons.some((s) => !s.surgeonId)) e.surgeons = "Barcha jarrohlar tanlanishi kerak";
+    if (basePrice < 0) e.basePrice = "Operatsiya narxi manfiy bo'lishi mumkin emas";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -368,6 +405,7 @@ export default function NewOperationPage() {
       roomId: roomId || undefined,
       scheduledAt: new Date(scheduledAt).toISOString(),
       note: note || undefined,
+      basePrice,
       surgeons,
       items: items.filter((i) => i.operationTypeItemId || i.name),
     });
@@ -425,8 +463,15 @@ export default function NewOperationPage() {
                       )}
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-xs text-text-muted">Bazaviy narx</p>
-                      <p className="text-sm font-bold text-primary">{fmt(basePrice)} so'm</p>
+                      <p className="text-xs text-text-muted mb-1">Bazaviy narx</p>
+                      <div className="flex items-center gap-1">
+                        <PriceInput
+                          value={basePrice}
+                          onChange={setBasePrice}
+                          className="w-28 bg-surface border border-primary/20 rounded-md px-2 py-1 text-sm font-bold text-primary text-right focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                        <span className="text-xs text-primary font-semibold">so'm</span>
+                      </div>
                     </div>
                   </div>
                   {selectedOpType.items.length > 0 && (
@@ -571,11 +616,10 @@ export default function NewOperationPage() {
               <div className="space-y-3">
                 {surgeons.map((s, idx) => (
                   <div key={idx} className="relative">
-                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                      s.role === "LEAD"
-                        ? "bg-primary text-white"
-                        : "bg-surface border border-border text-text-muted"
-                    }`}>
+                    <div className={`absolute -top-2 left-3 z-10 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${s.role === "LEAD"
+                      ? "bg-primary text-white"
+                      : "bg-surface border border-border text-text-muted"
+                      }`}>
                       {s.role === "LEAD" ? "Bosh jarroh" : "Yordamchi"}
                     </div>
                     <div className="flex items-end gap-2 p-3 pt-4 bg-surface-hover rounded-lg border border-border">
@@ -683,13 +727,9 @@ export default function NewOperationPage() {
                     </div>
                     <div>
                       <FieldLabel>Narx (so'm)</FieldLabel>
-                      <input
-                        type="number"
-                        min={0}
+                      <PriceInput
                         value={newItemPrice}
-                        onChange={(e) => setNewItemPrice(Number(e.target.value))}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddNewItem()}
-                        placeholder="0"
+                        onChange={setNewItemPrice}
                         className={fieldCls}
                       />
                     </div>
@@ -769,11 +809,9 @@ export default function NewOperationPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <FieldLabel>Narx (so'm)</FieldLabel>
-                          <input
-                            type="number"
-                            min={0}
+                          <PriceInput
                             value={item.unitPrice}
-                            onChange={(e) => updateItem(idx, "unitPrice", Number(e.target.value))}
+                            onChange={(v) => updateItem(idx, "unitPrice", v)}
                             className={fieldCls}
                           />
                         </div>
@@ -799,12 +837,16 @@ export default function NewOperationPage() {
                 </div>
               )}
 
-              {(items.length > 0 || basePrice > 0) && (
+              {(items.length > 0 || basePrice > 0 || operationTypeId) && (
                 <div className="mt-4 pt-4 border-t border-border space-y-1.5">
-                  {basePrice > 0 && (
-                    <div className="flex justify-between text-xs text-text-muted">
+                  {operationTypeId && (
+                    <div className="flex justify-between items-center text-xs text-text-muted">
                       <span>Operatsiya narxi</span>
-                      <span>{fmt(basePrice)} so'm</span>
+                      <PriceInput
+                        value={basePrice}
+                        onChange={setBasePrice}
+                        className="w-28 bg-surface-hover border border-border rounded-md px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      />
                     </div>
                   )}
                   {items.length > 0 && (

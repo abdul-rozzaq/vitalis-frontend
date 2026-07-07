@@ -7,7 +7,7 @@ export interface ModalProps {
   title?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   closeButton?: boolean;
 }
 
@@ -16,6 +16,7 @@ const sizeStyles = {
   md: "max-w-md",
   lg: "max-w-lg",
   xl: "max-w-2xl",
+  "2xl": "max-w-5xl",
 };
 
 export const Modal = ({
@@ -62,13 +63,13 @@ export const Modal = ({
           relative bg-surface rounded-lg shadow-2xl
           ${sizeStyles[size]}
           w-full mx-4
-          max-h-[90vh] overflow-y-auto
+          max-h-[90vh] overflow-hidden
           flex flex-col
         `}
       >
         {/* Header */}
         {(title || closeButton) && (
-          <div className="border-b border-border px-6 py-4 flex items-start justify-between gap-4">
+          <div className="shrink-0 border-b border-border px-6 py-4 flex items-start justify-between gap-4">
             {title && <h2 className="text-xl font-semibold text-text">{title}</h2>}
             {closeButton && (
               <button
@@ -94,12 +95,12 @@ export const Modal = ({
           </div>
         )}
 
-        {/* Body */}
-        <div className="flex-1 px-6 py-4">{children}</div>
+        {/* Body — bu qism mustaqil scroll bo'ladi, header va footer doim ko'rinib turadi */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="border-t border-border px-6 py-4">{footer}</div>
+          <div className="shrink-0 border-t border-border px-6 py-4">{footer}</div>
         )}
       </div>
     </div>,

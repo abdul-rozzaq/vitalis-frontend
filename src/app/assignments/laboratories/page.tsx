@@ -281,7 +281,10 @@ export default function LaboratoriesPage() {
                     <div key={svc.id} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-hover transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-text truncate">{svc.name}</p>
-                        <p className="text-xs text-secondary">{svc.price != null ? `${svc.price.toLocaleString()} UZS` : "-"}</p>
+                        <p className="text-xs text-secondary">
+                          {svc.price != null ? `${svc.price.toLocaleString()} UZS` : "-"}
+                          {svc.defaultRows?.length ? ` · ${svc.defaultRows.length} ${t("laboratories.defaultRowsCount")}` : ""}
+                        </p>
                       </div>
                       <div className="flex items-center gap-1">
                         <Can roles={["ADMIN", "LABARANT"]}>
@@ -387,7 +390,7 @@ export default function LaboratoriesPage() {
         </div>
       </Sheet>
 
-      <Sheet isOpen={svcSheet !== null} onClose={closeSvcSheet} title={svcSheet?.mode === "edit" ? t("laboratories.editService") : t("laboratories.addService")} className="max-w-lg">
+      <Sheet isOpen={svcSheet !== null} onClose={closeSvcSheet} title={svcSheet?.mode === "edit" ? t("laboratories.editService") : t("laboratories.addService")} className="max-w-xl">
         <div className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("laboratories.serviceName")}</label>
@@ -411,6 +414,39 @@ export default function LaboratoriesPage() {
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
           </div>
+
+          {svcSheet?.mode === "edit" && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">{t("laboratories.defaultRows")}</label>
+              <p className="text-xs text-text-muted">{t("laboratories.defaultRowsManagedByBackend")}</p>
+
+              {svcSheet.svc.defaultRows?.length ? (
+                <div className="border border-border rounded-md overflow-hidden mt-1.5">
+                  <div className="grid grid-cols-[60px_1fr_90px_70px] gap-1.5 text-[11px] font-semibold text-text-muted px-2.5 py-1.5 bg-surface-secondary border-b border-border">
+                    <span>{t("lab.code")}</span>
+                    <span>{t("lab.indicator")}</span>
+                    <span>{t("lab.norm")}</span>
+                    <span>{t("lab.unit")}</span>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                    {svcSheet.svc.defaultRows.map((row, i) => (
+                      <div key={i} className="grid grid-cols-[60px_1fr_90px_70px] gap-1.5 px-2.5 py-1.5 text-sm text-text">
+                        <span className="text-text-muted">{row.code ?? "-"}</span>
+                        <span className="truncate">{row.indicator}</span>
+                        <span className="text-text-muted">{row.norm ?? "-"}</span>
+                        <span className="text-text-muted">{row.unit ?? "-"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted bg-surface-secondary rounded-md px-3 py-2 mt-1.5">
+                  {t("laboratories.noDefaultRows")}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -435,4 +471,4 @@ export default function LaboratoriesPage() {
       </Sheet>
     </div>
   );
-}
+} 
