@@ -146,9 +146,19 @@ export default function InvoicesPage() {
         },
       },
       {
-        accessorKey: "totalAmount",
-        header: t("invoices.table.totalAmount"),
-        cell: (info) => <span className="font-semibold text-text text-sm">{fmt(info.getValue() as string)} UZS</span>,
+        id: "sourceAsTotal",
+        header: t("invoices.table.description"),
+        cell: ({ row }) => {
+          const inv = row.original;
+          const desc = inv.items?.length
+            ? inv.items.map((i) => i.description).filter(Boolean).join(", ")
+            : inv.note;
+          return (
+            <span className="text-secondary text-sm truncate max-w-[200px] block" title={desc || undefined}>
+              {desc || "—"}
+            </span>
+          );
+        },
       },
       {
         id: "paid",
@@ -180,7 +190,17 @@ export default function InvoicesPage() {
       {
         accessorKey: "createdAt",
         header: t("invoices.table.date"),
-        cell: (info) => <span className="text-secondary text-sm">{new Date(info.getValue() as string).toLocaleDateString("uz-UZ", { year: "numeric", month: "short", day: "numeric" })}</span>,
+        cell: (info) => (
+          <span className="text-secondary text-sm">
+            {new Date(info.getValue() as string).toLocaleString("uz-UZ", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        ),
       },
       {
         id: "actions",

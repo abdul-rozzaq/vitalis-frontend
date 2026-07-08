@@ -17,7 +17,7 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import { api } from "@/shared/lib/api";
 import { PATIENTS_MOCK_DATA } from "@/shared/lib/mock-data";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BedDouble, Building2, Calendar, ClipboardList, Edit, FileText, Hash, MapPin, Phone, Plus, Users, Wallet } from "lucide-react";
+import { BedDouble, Building2, Calendar, ClipboardList, Edit, FileText, Hash, MapPin, Phone, Plus, Scissors, Users, Wallet } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -266,6 +266,15 @@ export default function PatientDetailPage() {
                   <Edit className="w-4 h-4" />
                   {t("patients.editPatientInfo")}
                 </button>
+              </Can>
+              <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
+                <Link
+                  href={`/operations/new?patientId=${id}`}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-surface border border-border text-secondary hover:bg-surface-hover hover:text-text text-sm font-medium transition-colors cursor-pointer"
+                >
+                  <Scissors className="w-4 h-4" />
+                  {t("patients.referToOperation")}
+                </Link>
               </Can>
               <Link
                 href={`/patients/${id}/medical-cards/new`}
