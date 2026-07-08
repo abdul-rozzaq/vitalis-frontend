@@ -20,7 +20,7 @@ import {
   Wrench,
   X
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -142,10 +142,13 @@ function PriceInput({
 export default function NewOperationPage() {
   const t = useTranslations();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
   // ── State ─────────────────────────────────────────────────────────────────────
-  const [patientId, setPatientId] = useState("");
+  // Bemor sahifasidan "Operatsiyaga yo'naltirish" orqali kelinganda,
+  // ?patientId= query param'i bilan bemor avtomatik tanlanadi.
+  const [patientId, setPatientId] = useState(() => searchParams.get("patientId") ?? "");
   const [operationTypeId, setOperationTypeId] = useState("");
   const [caseId, setCaseId] = useState("");
   const [roomId, setRoomId] = useState("");

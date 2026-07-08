@@ -2,10 +2,10 @@
 
 import { Card, CardHeader } from "@/components/design-system/Card";
 import { Can } from "@/components/ui/can";
-import { api } from "@/shared/lib/api";
-import { formatCurrency } from "@/shared/lib/formatters";
 import { INVOICE_STATUS_CONFIG } from "@/features/invoices/style-colors";
 import type { InvoiceStatus } from "@/features/invoices/types";
+import { api } from "@/shared/lib/api";
+import { formatCurrency } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Wallet, X } from "lucide-react";
 import { useState } from "react";
@@ -120,10 +120,12 @@ export function PatientInvoiceList({ patientId }: Props) {
                       <StatusBadge status={inv.status} />
                     </div>
                     <div className="text-xs text-text-muted mb-1.5">
-                      {new Date(inv.createdAt).toLocaleDateString("uz-UZ", {
+                      {new Date(inv.createdAt).toLocaleString("uz-UZ", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                       {inv.note && <span className="ml-2">· {inv.note}</span>}
                     </div>

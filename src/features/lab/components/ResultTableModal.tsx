@@ -1,7 +1,10 @@
 import { Modal } from "@/components/design-system/Modal";
-import { CheckCircle2, FileClock, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { Combobox } from "@/components/ui/combobox";
+import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
+import { CheckCircle2, FileClock, Layers, Loader2, Pencil, Plus, Send, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useLabResultTemplates } from "../hooks/useLabResultTemplates";
 import { LabOrderItem, LabResultRow } from "../types";
 
 interface ResultTableModalProps {
@@ -19,35 +22,61 @@ const emptyRow = (): LabResultRow => ({ code: "", indicator: "", result: "", nor
 export function ResultTableModal({ item, isOpen, isSaving, onSave, onClose }: ResultTableModalProps) {
   const t = useTranslations();
   const [rows, setRows] = useState<LabResultRow[]>([]);
-  // Ikkala tugma bir xil isSaving'ga bog'liq bo'lgani uchun, qaysi birini bosgani
-  // aniq bo'lishi uchun (spinner faqat bosilgan tugmada chiqishi kerak) alohida
-  // kuzatib boramiz.
+  const [appliedTemplate, setAppliedTemplate] = useState<{ id: string; name: string } | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(true);
+  const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+  const { data: templates, isLoading: isLoadingTemplates } = useLabResultTemplates();
   const [pendingAction, setPendingAction] = useState<"draft" | "submit" | null>(null);
 
   useEffect(() => {
     if (!isSaving) setPendingAction(null);
   }, [isSaving]);
 
-  // Natija hali qoralama holatida (saqlangan, lekin yuborilmagan) — jadval bor,
-  // lekin holat hali PENDING/IN_PROGRESS.
   const isDraft = !!item.resultTable && (item.status === "PENDING" || item.status === "IN_PROGRESS");
   const isSubmitted = !!item.resultTable && (item.status === "READY" || item.status === "DELIVERED");
 
   useEffect(() => {
     if (!isOpen) return;
 
+    setAppliedTemplate(null);
+    setPendingTemplateId(null);
+
     if (item.resultTable?.rows?.length) {
-      // Natija ilgari kiritilgan bo'lsa — o'shani ko'rsatamiz (tahrirlash)
       setRows(item.resultTable.rows.map((r) => ({ ...r })));
-    } else if (item.service.defaultRows?.length) {
-      // Birinchi marta ochilmoqda — xizmatning standart shablonidan ko'rsatkichlar,
-      // me'yor va o'lchov birligini oldindan to'ldiramiz, faqat "Натижа" bo'sh qoladi
-      setRows(item.service.defaultRows.map((r) => ({ ...r, result: "" })));
+      setPickerOpen(false);
     } else {
-      // Bu xizmat uchun hali shablon belgilanmagan — bo'sh qatordan boshlaymiz
       setRows([emptyRow()]);
+      setPickerOpen(true);
     }
-  }, [isOpen, item.resultTable, item.service.defaultRows]);
+  }, [isOpen, item.resultTable]);
+
+  const hasEnteredData = rows.some((r) => r.indicator.trim() || r.code?.trim() || r.result?.trim() || r.norm?.trim() || r.unit?.trim());
+
+  const applyTemplateNow = (templateId: string) => {
+    const template = templates?.find((tpl) => tpl.id === templateId);
+    if (!template) return;
+    setAppliedTemplate({ id: template.id, name: template.name });
+    setRows(template.rows.map((r) => ({ ...r, result: "" })));
+    setPickerOpen(false);
+  };
+
+  const handlePickTemplate = (templateId: string) => {
+    if (!templateId || templateId === appliedTemplate?.id) return;
+    if (hasEnteredData) {
+      setPendingTemplateId(templateId);
+    } else {
+      applyTemplateNow(templateId);
+    }
+  };
+
+  const confirmTemplateChange = () => {
+    if (pendingTemplateId) applyTemplateNow(pendingTemplateId);
+    setPendingTemplateId(null);
+  };
+
+  const cancelTemplateChange = () => setPendingTemplateId(null);
+
+  const pendingTemplateName = templates?.find((tpl) => tpl.id === pendingTemplateId)?.name ?? "";
 
   const updateRow = (index: number, patch: Partial<LabResultRow>) => {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -107,6 +136,46 @@ export function ResultTableModal({ item, isOpen, isSaving, onSave, onClose }: Re
       }
     >
       <div className="space-y-2">
+        {!isSubmitted &&
+          (appliedTemplate && !pickerOpen ? (
+            <div className="flex items-center justify-between gap-2 bg-primary-50 border border-primary-100 rounded-lg px-3 py-2 mb-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-xs font-medium text-primary truncate">{t("lab.templateApplied", { name: appliedTemplate.name })}</span>
+              </div>
+              <button
+                onClick={() => setPickerOpen(true)}
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity shrink-0"
+              >
+                <Pencil className="w-3 h-3" />
+                {t("lab.changeTemplate")}
+              </button>
+            </div>
+          ) : (
+            <div className="border border-dashed border-border rounded-lg p-2.5 mb-1">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Layers className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                <span className="text-xs font-medium text-text">{t("lab.selectTemplateLabel")}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Combobox
+                  options={(templates ?? []).map((tpl) => ({ value: tpl.id, label: tpl.name }))}
+                  value={appliedTemplate?.id}
+                  onChange={handlePickTemplate}
+                  placeholder={isLoadingTemplates ? t("common.loading") : t("lab.selectTemplatePlaceholder")}
+                  searchPlaceholder={t("lab.selectTemplatePlaceholder")}
+                  disabled={isLoadingTemplates}
+                  className="flex-1"
+                />
+                {appliedTemplate && (
+                  <button onClick={() => setPickerOpen(false)} className="text-xs font-medium text-text-muted hover:text-text transition-colors shrink-0">
+                    {t("common.cancel")}
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-text-muted mt-1">{t("lab.selectTemplateHint")}</p>
+            </div>
+          ))}
         {(isDraft || isSubmitted) && (
           <div
             className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg mb-1 ${isSubmitted ? "bg-success-50 text-success border border-success-100" : "bg-warning-50 text-warning border border-warning-100"
@@ -178,6 +247,18 @@ export function ResultTableModal({ item, isOpen, isSaving, onSave, onClose }: Re
 
         <p className="text-xs text-text-muted pt-1">{t("lab.emptyResultHint")}</p>
       </div>
+
+      {pendingTemplateId && (
+        <ConfirmDialog
+          title={t("lab.confirmTemplateChangeTitle")}
+          description={t("lab.confirmTemplateChangeDescription", { name: pendingTemplateName })}
+          confirmLabel={t("lab.confirmTemplateChangeButton")}
+          confirmClassName="bg-primary text-white"
+          isLoading={false}
+          onConfirm={confirmTemplateChange}
+          onCancel={cancelTemplateChange}
+        />
+      )}
     </Modal>
   );
 }

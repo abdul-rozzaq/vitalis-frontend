@@ -9,6 +9,26 @@ export interface LabDefaultRow {
   sortOrder?: number;
 }
 
+export interface LabResultTemplateRow {
+  code?: string | null;
+  indicator: string;
+  norm?: string | null;
+  unit?: string | null;
+}
+
+// Mustaqil natija shabloni — hech qanday laboratoriya/xizmatga tayinlanmagan,
+// natija kiritish oynasida ro'yxatdan tanlab qo'llanadi.
+export interface LabResultTemplate {
+  id: string;
+  name: string;
+  rows: LabResultTemplateRow[];
+}
+
+export interface LabResultTemplateSummary {
+  id: string;
+  name: string;
+}
+
 export interface LaboratoryService {
   id: string;
   name: string;

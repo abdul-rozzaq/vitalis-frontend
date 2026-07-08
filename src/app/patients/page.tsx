@@ -35,8 +35,8 @@ export default function PatientsPage() {
   });
 
   const handleExport = () => {
-    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colRegion"), t("patients.colBirthDate"), t("patients.colPhone")];
-    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.district?.region?.name ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
+    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colDistrict"), t("patients.colBirthDate"), t("patients.colPhone")];
+    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.district?.name ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
@@ -76,12 +76,12 @@ export default function PatientsPage() {
         ),
       },
       {
-        id: "region",
-        accessorFn: (row: Patient) => row.district?.region?.name,
-        header: t("patients.colRegion") || "Viloyat",
+        id: "district",
+        accessorFn: (row: Patient) => row.district?.name,
+        header: t("patients.colDistrict") || "Tuman",
         cell: ({ row }) => (
           <span className="text-text-muted text-sm">
-            {row.original.district?.region?.name || t("common.na")}
+            {row.original.district?.name || t("common.na")}
           </span>
         ),
       },
