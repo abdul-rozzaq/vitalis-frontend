@@ -682,7 +682,9 @@
     "diagnosticServiceNameTooShort": "Xizmat nomi juda qisqa",
     "addDiagnosticService": "Xizmat qo'shish",
     "updateDiagnosticService": "Xizmatni yangilash",
-    "roomTypeOperation": "Operatsiya xonasi"
+    "roomTypeOperation": "Operatsiya xonasi",
+    "patientDailyPrice": "Цена за день для пациента (Стационар)",
+    "companionDailyPrice": "Цена за день для сопровождающего (Стационар)"
   },
   "notifications": {
     "title": "Bildirishnomalar",
@@ -912,7 +914,14 @@
     "myDuty": "Mening navbatim",
     "noPatients": "Palatada bemor yo'q",
     "noRounds": "Apoxot yo'q",
-    "pastRounds": "O'tgan apoxotlar"
+    "pastRounds": "O'tgan apoxotlar",
+    "dailyPrices": "Дневные цены",
+    "patientPricePerDay": "Цена за день для пациента",
+    "companionPricePerDay": "Цена за день для сопровождающего",
+    "accommodationBonus": "Бонус за бесплатные дни",
+    "freeDays": "Количество бесплатных дней",
+    "accommodationBonusAmount": "Сумма бонуса",
+    "futurePricesHint": "Изменение цены влияет только на будущие дни."
   },
   "operations": {
     "title": "Operatsiyalar",

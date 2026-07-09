@@ -2,7 +2,7 @@
 
 import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlignLeft, Building2, DollarSign, GitBranch } from "lucide-react";
+import { AlignLeft, BedDouble, Building2, DollarSign, GitBranch, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -13,6 +13,8 @@ type DepartmentFormInput = {
   description?: string;
   parentId?: string;
   price?: number | string;
+  patientDailyPrice?: number | string;
+  companionDailyPrice?: number | string;
 };
 
 type DepartmentFormValues = {
@@ -20,6 +22,8 @@ type DepartmentFormValues = {
   description?: string;
   parentId?: string;
   price?: number;
+  patientDailyPrice?: number;
+  companionDailyPrice?: number;
 };
 
 interface DepartmentFormProps {
@@ -39,6 +43,8 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
     description: z.string().optional(),
     parentId: z.string().optional(),
     price: z.coerce.number().min(0, t("forms.priceMustBePositive")).optional(),
+    patientDailyPrice: z.coerce.number().min(0, t("forms.priceMustBePositive")).optional(),
+    companionDailyPrice: z.coerce.number().min(0, t("forms.priceMustBePositive")).optional(),
   });
 
   const {
@@ -104,6 +110,38 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
           className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
         />
         <FormError message={errors.price?.message} />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <BedDouble className="w-4 h-4 text-primary-500" />
+          {t("forms.patientDailyPrice")}
+        </label>
+        <input
+          {...register("patientDailyPrice")}
+          type="number"
+          min="0"
+          step="1"
+          placeholder="0"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+        <FormError message={errors.patientDailyPrice?.message} />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary-500" />
+          {t("forms.companionDailyPrice")}
+        </label>
+        <input
+          {...register("companionDailyPrice")}
+          type="number"
+          min="0"
+          step="1"
+          placeholder="0"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+        <FormError message={errors.companionDailyPrice?.message} />
       </div>
 
       <div className="space-y-1.5">

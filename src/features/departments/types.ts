@@ -6,4 +6,6 @@ export interface Department {
   parentId?: string | null;
   parent?: { id: string; name: string } | null;
   children?: Department[];
+  patientDailyPrice?: number | null;
+  companionDailyPrice?: number | null;
 }

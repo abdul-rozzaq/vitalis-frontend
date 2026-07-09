@@ -3,7 +3,7 @@
 import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BedDouble, Loader2, Minus, Plus, UserRound, Users, X } from "lucide-react";
+import { BedDouble, Gift, Loader2, Minus, Plus, UserRound, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -22,6 +22,11 @@ export function WardCheckInModal({ open, onClose }: Props) {
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
   const [companionsCount, setCompanionsCount] = useState(0);
+
+  const [patientPricePerDay, setPatientPricePerDay] = useState("");
+  const [companionPricePerDay, setCompanionPricePerDay] = useState("");
+  const [freeDays, setFreeDays] = useState("");
+
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients-available-for-ward"],
@@ -73,6 +78,9 @@ export function WardCheckInModal({ open, onClose }: Props) {
         expectedOut: expectedOut || undefined,
         note: note || undefined,
         companionsCount,
+        patientPricePerDay: patientPricePerDay ? Number(patientPricePerDay) : undefined,
+        companionPricePerDay: companionPricePerDay ? Number(companionPricePerDay) : undefined,
+        freeDays: freeDays ? Number(freeDays) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
@@ -89,13 +97,26 @@ export function WardCheckInModal({ open, onClose }: Props) {
     setExpectedOut("");
     setNote("");
     setCompanionsCount(0);
+    setPatientPricePerDay("");
+    setCompanionPricePerDay("");
+    setFreeDays("");
     onClose();
   };
 
   const handleRoomChange = (val: string) => {
     setRoomId(val);
     setCompanionsCount(0);
+    const room = rooms.find((r: any) => r.id === val);
+    setPatientPricePerDay(room?.department?.patientDailyPrice?.toString() ?? "");
+    setCompanionPricePerDay(room?.department?.companionDailyPrice?.toString() ?? "");
+    setFreeDays("");
   };
+
+  const bonusAmount =
+    freeDays && patientPricePerDay
+      ? Number(freeDays) * Number(patientPricePerDay)
+      : 0;
+
 
   if (!open) return null;
 
@@ -240,6 +261,66 @@ export function WardCheckInModal({ open, onClose }: Props) {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Kunlik narxlar section */}
+          <div className="rounded-lg border border-border bg-surface-hover/50 p-3 space-y-3">
+            <p className="text-xs font-semibold text-text uppercase tracking-wide">
+              {t("wards.dailyPrices")}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">
+                  {t("wards.patientPricePerDay")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={patientPricePerDay}
+                  onChange={(e) => setPatientPricePerDay(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">
+                  {t("wards.companionPricePerDay")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={companionPricePerDay}
+                  onChange={(e) => setCompanionPricePerDay(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Accommodation bonus section */}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3 space-y-2">
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide flex items-center gap-1.5">
+              <Gift className="w-3.5 h-3.5" />
+              {t("wards.accommodationBonus")}
+              <span className="font-normal normal-case ml-1">({t("common.optional")})</span>
+            </p>
+            <div>
+              <label className="text-sm font-medium text-text mb-1 block">
+                {t("wards.freeDays")}
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={freeDays}
+                onChange={(e) => setFreeDays(e.target.value)}
+                placeholder="0"
+                className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+              />
+            </div>
+            {bonusAmount > 0 && (
+              <p className="text-sm font-medium text-amber-700">
+                {t("wards.accommodationBonusAmount")}: {bonusAmount.toLocaleString("uz-UZ")} {t("common.currency")}
+              </p>
+            )}
           </div>
 
           {/* Yotgan sana */}

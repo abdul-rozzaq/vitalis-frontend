@@ -682,7 +682,9 @@
     "diagnosticServiceNameTooShort": "Xizmat nomi juda qisqa",
     "addDiagnosticService": "Xizmat qo'shish",
     "updateDiagnosticService": "Xizmatni yangilash",
-    "roomTypeOperation": "Operatsiya xonasi"
+    "roomTypeOperation": "Operatsiya xonasi",
+    "patientDailyPrice": "Bemor kunlik narxi (Yotoqxona)",
+    "companionDailyPrice": "Hamroh kunlik narxi (Yotoqxona)"
   },
   "notifications": {
     "title": "Bildirishnomalar",
@@ -912,7 +914,14 @@
     "myDuty": "Mening navbatim",
     "noPatients": "Palatada bemor yo'q",
     "noRounds": "Apoxot yo'q",
-    "pastRounds": "O'tgan apoxotlar"
+    "pastRounds": "O'tgan apoxotlar",
+    "dailyPrices": "Kunlik narxlar",
+    "patientPricePerDay": "Bemor uchun kunlik narx",
+    "companionPricePerDay": "Hamroh uchun kunlik narx",
+    "accommodationBonus": "Bepul kunlar bonusi",
+    "freeDays": "Bepul kunlar soni",
+    "accommodationBonusAmount": "Bonus summasi",
+    "futurePricesHint": "Narx o'zgarishi faqat kelajakdagi kunlar uchun ta'sir qiladi."
   },
   "operations": {
     "title": "Operatsiyalar",

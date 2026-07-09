@@ -14,6 +14,8 @@ interface Ward {
   note: string | null;
   status: "OCCUPIED" | "VACATED";
   companionsCount: number;                           // ← QO'SHILDI
+  patientPricePerDay?: number | null;
+  companionPricePerDay?: number | null;
   patient: { id: string; first_name: string; last_name: string };
   room: { id: string; name: string };
 }
@@ -33,6 +35,10 @@ export function WardEditModal({ ward, onClose }: Props) {
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
   const [companionsCount, setCompanionsCount] = useState(0); // ← QO'SHILDI
+
+  const [patientPricePerDay, setPatientPricePerDay] = useState("");
+  const [companionPricePerDay, setCompanionPricePerDay] = useState("");
+
 
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
@@ -76,6 +82,8 @@ export function WardEditModal({ ward, onClose }: Props) {
       setExpectedOut(ward.expectedOut ? ward.expectedOut.split("T")[0] : "");
       setNote(ward.note ?? "");
       setCompanionsCount(ward.companionsCount ?? 0);  // ← QO'SHILDI
+      setPatientPricePerDay(ward.patientPricePerDay?.toString() ?? "");
+      setCompanionPricePerDay(ward.companionPricePerDay?.toString() ?? "");
     }
   }, [ward]);
 
@@ -94,6 +102,8 @@ export function WardEditModal({ ward, onClose }: Props) {
         expectedOut: expectedOut || null,
         note: note || undefined,
         companionsCount,                             // ← QO'SHILDI (har doim yuboriladi)
+        patientPricePerDay: patientPricePerDay ? Number(patientPricePerDay) : null,
+        companionPricePerDay: companionPricePerDay ? Number(companionPricePerDay) : null,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wards"] });
@@ -186,6 +196,40 @@ export function WardEditModal({ ward, onClose }: Props) {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Kunlik narxlar section */}
+          <div className="rounded-lg border border-border bg-surface-hover/50 p-3 space-y-3">
+            <p className="text-xs font-semibold text-text uppercase tracking-wide">
+              {t("wards.dailyPrices")}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">
+                  {t("wards.patientPricePerDay")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={patientPricePerDay}
+                  onChange={(e) => setPatientPricePerDay(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-text mb-1 block">
+                  {t("wards.companionPricePerDay")}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={companionPricePerDay}
+                  onChange={(e) => setCompanionPricePerDay(e.target.value)}
+                  className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-secondary mt-1">{t("wards.futurePricesHint")}</p>
           </div>
 
           {/* Yotgan sana */}
