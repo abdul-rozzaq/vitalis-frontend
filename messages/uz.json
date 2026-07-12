@@ -67,7 +67,7 @@
     "download": "Yuklab olish",
     "upload": "Yuklash",
     "na": "N/A",
-    "optional": "(ixtiyoriy)",
+    "optional": "ixtiyoriy",
     "notAssigned": "Tayinlanmagan",
     "areYouSure": "Ishonchingiz komilmi?",
     "filterPlaceholder": "Qidirish...",
@@ -610,7 +610,7 @@
     "roleNamePlaceholder": "Masalan: DOCTOR, NURSE, RECEPTIONIST",
     "roleNameRequired": "Rol nomi majburiy",
     "roleDescription": "Tavsif",
-    "roleDescOptional": "(ixtiyoriy)",
+    "roleDescOptional": "ixtiyoriy",
     "roleDescPlaceholder": "Ushbu rolning vazifalari haqida qisqacha tavsif...",
     "addRole": "Rol qo'shish",
     "updateRole": "Rolni yangilash",
@@ -672,7 +672,7 @@
     "doctor": "Shifokor / Tayinlov",
     "note": "Izoh",
     "notePlaceholder": "Qo'shimcha izohlar...",
-    "optional": "(ixtiyoriy)",
+    "optional": "ixtiyoriy",
     "diagnosticName": "Diagnostika markazi nomi",
     "diagnosticNameTooShort": "Diagnostika markazi nomi juda qisqa",
     "diagnosticDescPlaceholder": "Ushbu diagnostika markazi haqida qisqacha tavsif...",
@@ -906,6 +906,7 @@
     "available": "Mavjud",
     "freeSlots": "Bo'sh o'rin",
     "checkInHint": "Bo'sh qoldirsangiz, bugungi sana avtomatik qo'yiladi",
+    "estimatedDays": "Taxminiy yotish kunlari",
     "companionsCount": "Qarovchilar soni",
     "maxCompanions": "Maksimal",
     "person": "kishi",
@@ -921,7 +922,11 @@
     "accommodationBonus": "Bepul kunlar bonusi",
     "freeDays": "Bepul kunlar soni",
     "accommodationBonusAmount": "Bonus summasi",
-    "futurePricesHint": "Narx o'zgarishi faqat kelajakdagi kunlar uchun ta'sir qiladi."
+    "futurePricesHint": "Narx o'zgarishi faqat kelajakdagi kunlar uchun ta'sir qiladi.",
+    "prepayment": "Oldindan to'lov",
+    "prepaymentAmount": "To'lov summasi",
+    "checkInDesc": "Bemorlarni palataga qabul qilish",
+    "bonusForCompanions": "Sheriklar uchun ham hisoblansin"
   },
   "operations": {
     "title": "Operatsiyalar",
@@ -1358,5 +1363,11 @@
     "adjustReason": "Tuzatish sababi...",
     "paying": "To'lanayotgan",
     "topUpWard": "Balansni to'ldirish"
+  },
+  "paymentMethods": {
+    "CASH": "Naqd pul",
+    "CARD": "Plastik karta",
+    "TRANSFER": "Pul o'tkazish",
+    "OTHER": "Boshqa"
   }
 }

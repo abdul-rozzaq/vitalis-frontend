@@ -4,7 +4,6 @@ import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { WardCheckInModal } from "@/features/rooms/components/ward-checkin-modal";
 import { WardEditModal } from "@/features/rooms/components/ward-edit-modal";
 import { api } from "@/shared/lib/api";
 import { formatDateUz } from "@/shared/lib/formatters";
@@ -69,7 +68,6 @@ export default function WardsPage() {
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkingOutId, setCheckingOutId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [editingWard, setEditingWard] = useState<Ward | null>(null);
@@ -292,10 +290,10 @@ export default function WardsPage() {
               <ChevronDown className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} />
             </button>
             <Can roles={["ADMIN", "KASSIR", "HAMSHIRA"]}>
-              <button onClick={() => setCheckInOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:opacity-90 rounded-lg transition-opacity text-sm font-medium">
+              <Link href="/wards/check-in" className="flex items-center gap-2 px-3 py-2 bg-primary text-white hover:opacity-90 rounded-lg transition-opacity text-sm font-medium">
                 <Plus className="w-4 h-4" />
                 {t("wards.checkIn")}
-              </button>
+              </Link>
             </Can>
           </div>
         }
@@ -534,7 +532,6 @@ export default function WardsPage() {
         ) : null}
       </Sheet>
 
-      <WardCheckInModal open={checkInOpen} onClose={() => setCheckInOpen(false)} />
       <WardEditModal ward={editingWard} onClose={() => setEditingWard(null)} />
     </div>
   );
