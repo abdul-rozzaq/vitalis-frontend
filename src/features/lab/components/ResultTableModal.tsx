@@ -44,11 +44,14 @@ export function ResultTableModal({ item, isOpen, isSaving, onSave, onClose }: Re
     if (item.resultTable?.rows?.length) {
       setRows(item.resultTable.rows.map((r) => ({ ...r })));
       setPickerOpen(false);
+    } else if (item.service.defaultRows?.length) {
+      setRows(item.service.defaultRows.map((r) => ({ ...r, result: "" })));
+      setPickerOpen(false);
     } else {
       setRows([emptyRow()]);
       setPickerOpen(true);
     }
-  }, [isOpen, item.resultTable]);
+  }, [isOpen, item.resultTable, item.service.defaultRows]);
 
   const hasEnteredData = rows.some((r) => r.indicator.trim() || r.code?.trim() || r.result?.trim() || r.norm?.trim() || r.unit?.trim());
 

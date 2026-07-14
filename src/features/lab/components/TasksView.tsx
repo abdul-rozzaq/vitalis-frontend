@@ -1,35 +1,34 @@
 import { ArrowDownAZ, CheckCircle2, Clock } from "lucide-react";
-import { TaskRow } from "./TaskRow";
 import { useTranslations } from "next-intl";
-import { LabOrder, LabOrderItem } from "../types";
 import { useMemo, useState } from "react";
+import { LabOrder, LabOrderItem } from "../types";
+import { TaskCard } from "./TaskCard";
 
 type SortMode = "oldest" | "newest";
 
+interface TaskGroup {
+  order: LabOrder;
+  items: LabOrderItem[];
+  sortTime: number;
+}
+
 export function TasksView({ orders }: { orders: LabOrder[] }) {
   const t = useTranslations();
-  // "oldest" — eng uzoq kutgan bemor birinchi (navbat adolatli bo'lishi uchun
-  // standart holat). "newest" — hozirgina labga yuborilgan bemorni tez topish
-  // uchun, bir tugma bilan almashtiriladi.
   const [sortMode, setSortMode] = useState<SortMode>("oldest");
 
-  const tasks = useMemo(() => {
-    const rows: { order: LabOrder; item: LabOrderItem }[] = [];
+  const groups = useMemo(() => {
+    const rows: TaskGroup[] = [];
     for (const order of orders) {
-      for (const item of order.items) {
-        if (item.status === "PENDING" || item.status === "IN_PROGRESS") {
-          rows.push({ order, item });
-        }
-      }
+      const activeItems = order.items.filter((i) => i.status === "PENDING" || i.status === "IN_PROGRESS");
+      if (activeItems.length === 0) continue;
+      const sortTime = Math.min(...activeItems.map((i) => new Date(i.createdAt).getTime()));
+      rows.push({ order, items: activeItems, sortTime });
     }
-    rows.sort((a, b) => {
-      const diff = new Date(a.item.createdAt).getTime() - new Date(b.item.createdAt).getTime();
-      return sortMode === "oldest" ? diff : -diff;
-    });
+    rows.sort((a, b) => (sortMode === "oldest" ? a.sortTime - b.sortTime : b.sortTime - a.sortTime));
     return rows;
   }, [orders, sortMode]);
 
-  if (tasks.length === 0) {
+  if (groups.length === 0) {
     return (
       <div className="flex items-center gap-3 text-center sm:text-left border border-dashed border-border rounded-xl px-5 py-4 bg-surface-hover/40">
         <div className="w-9 h-9 shrink-0 rounded-xl bg-success-50 border border-success-100 flex items-center justify-center">
@@ -63,8 +62,8 @@ export function TasksView({ orders }: { orders: LabOrder[] }) {
           </button>
         </div>
       </div>
-      {tasks.map(({ order, item }) => (
-        <TaskRow key={item.id} order={order} item={item} />
+      {groups.map(({ order, items }) => (
+        <TaskCard key={order.id} order={order} items={items} />
       ))}
     </div>
   );

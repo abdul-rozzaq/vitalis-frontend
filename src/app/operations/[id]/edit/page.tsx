@@ -61,6 +61,7 @@ interface OperationType {
 }
 
 interface Room { id: string; name: string }
+interface Department { id: string; name: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
 
 interface OperationSurgeon {
@@ -84,9 +85,11 @@ interface Operation {
   scheduledAt: string;
   note?: string;
   totalPrice: string;
+  contractNumber?: string;
   patient: { id: string; first_name: string; last_name: string };
   operationType: { id: string; name: string; basePrice?: number };
   room?: { id: string; name: string };
+  department?: { id: string; name: string };
   surgeons: OperationSurgeon[];
   items: OperationItem[];
 }
@@ -139,6 +142,8 @@ export default function EditOperationPage() {
   // ── State ─────────────────────────────────────────────────────────────────────
   const [operationTypeId, setOperationTypeId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [contractNumber, setContractNumber] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
   const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([
@@ -173,11 +178,18 @@ export default function EditOperationPage() {
     queryFn: () => api.get("/rooms").then((r) => r.data),
   });
 
+  const { data: departments = [] } = useQuery<Department[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+  });
+
   // ── Initialize form ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (operation && !initialized) {
       setOperationTypeId(operation.operationType.id);
       setRoomId(operation.room?.id ?? "");
+      setDepartmentId(operation.department?.id ?? "");
+      setContractNumber(operation.contractNumber ?? "");
       setScheduledAt(new Date(operation.scheduledAt).toISOString().slice(0, 16));
       setNote(operation.note ?? "");
       setSurgeons(
@@ -301,6 +313,7 @@ export default function EditOperationPage() {
   }));
 
   const roomOptions = rooms.map((r) => ({ value: r.id, label: r.name }));
+  const departmentOptions = departments.map((d) => ({ value: d.id, label: d.name }));
 
   // ── Grouped doctor options ────────────────────────────────────────────────────
   const recommendedDoctorIds = new Set(
@@ -347,6 +360,7 @@ export default function EditOperationPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
+    if (!departmentId) e.departmentId = "Bo'lim tanlanmadi";
     if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
     if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
@@ -360,8 +374,10 @@ export default function EditOperationPage() {
     updateMutation.mutate({
       operationTypeId,
       roomId: roomId || undefined,
+      departmentId,
       scheduledAt: new Date(scheduledAt).toISOString(),
       note: note || undefined,
+      contractNumber: contractNumber || undefined,
       surgeons,
       items: items.filter((i) => i.operationTypeItemId || i.name),
     });
@@ -498,6 +514,30 @@ export default function EditOperationPage() {
                     onChange={setRoomId}
                     placeholder={t("operationForm.room")}
                     searchPlaceholder="Xona nomi..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <FieldLabel required>Bo&apos;lim</FieldLabel>
+                  <Combobox
+                    options={departmentOptions}
+                    value={departmentId}
+                    onChange={setDepartmentId}
+                    placeholder="Bo'limni tanlang"
+                    searchPlaceholder="Bo'lim nomi..."
+                    error={!!errors.departmentId}
+                  />
+                  <ErrorMsg msg={errors.departmentId} />
+                </div>
+                <div>
+                  <FieldLabel>Shartnoma raqami</FieldLabel>
+                  <input
+                    value={contractNumber}
+                    onChange={(e) => setContractNumber(e.target.value)}
+                    placeholder="masalan: 1"
+                    className={fieldCls}
                   />
                 </div>
               </div>

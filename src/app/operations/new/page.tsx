@@ -61,6 +61,7 @@ interface OperationType {
 }
 
 interface Room { id: string; name: string; roomType: string }
+interface Department { id: string; name: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
 interface Case { id: string; status: string; chiefComplaint?: string | null }
 
@@ -152,6 +153,8 @@ export default function NewOperationPage() {
   const [operationTypeId, setOperationTypeId] = useState("");
   const [caseId, setCaseId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [contractNumber, setContractNumber] = useState("");
   const [scheduledAt, setScheduledAt] = useState(nowLocal());
   const [note, setNote] = useState("");
   const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([
@@ -188,6 +191,11 @@ export default function NewOperationPage() {
   const { data: rooms = [] } = useQuery<Room[]>({
     queryKey: ["rooms"],
     queryFn: () => api.get("/rooms").then((r) => r.data),
+  });
+
+  const { data: departments = [] } = useQuery<Department[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
   });
 
   const { data: cases = [], isLoading: isCasesLoading } = useQuery<Case[]>({
@@ -335,6 +343,7 @@ export default function NewOperationPage() {
 
   const operationRooms = rooms.filter((r) => r.roomType === "OPERATION");
   const roomOptions = operationRooms.map((r) => ({ value: r.id, label: r.name }));
+  const departmentOptions = departments.map((d) => ({ value: d.id, label: d.name }));
 
   const caseOptions = cases
     .filter((c) => c.status === "ACTIVE")
@@ -390,6 +399,7 @@ export default function NewOperationPage() {
     if (!patientId) e.patientId = "Bemor tanlanmadi";
     if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
     if (!caseId) e.caseId = "Holat tanlanmadi";
+    if (!departmentId) e.departmentId = "Bo'lim tanlanmadi";
     if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
     if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
@@ -406,8 +416,10 @@ export default function NewOperationPage() {
       operationTypeId,
       caseId: caseId || undefined,
       roomId: roomId || undefined,
+      departmentId,
       scheduledAt: new Date(scheduledAt).toISOString(),
       note: note || undefined,
+      contractNumber: contractNumber || undefined,
       basePrice,
       surgeons,
       items: items.filter((i) => i.operationTypeItemId || i.name),
@@ -584,6 +596,30 @@ export default function NewOperationPage() {
                     onChange={setRoomId}
                     placeholder={t("operationForm.room")}
                     searchPlaceholder="Xona nomi..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <FieldLabel required>Bo&apos;lim</FieldLabel>
+                  <Combobox
+                    options={departmentOptions}
+                    value={departmentId}
+                    onChange={setDepartmentId}
+                    placeholder="Bo'limni tanlang"
+                    searchPlaceholder="Bo'lim nomi..."
+                    error={!!errors.departmentId}
+                  />
+                  <ErrorMsg msg={errors.departmentId} />
+                </div>
+                <div>
+                  <FieldLabel>Shartnoma raqami</FieldLabel>
+                  <input
+                    value={contractNumber}
+                    onChange={(e) => setContractNumber(e.target.value)}
+                    placeholder="masalan: 1"
+                    className={fieldCls}
                   />
                 </div>
               </div>
