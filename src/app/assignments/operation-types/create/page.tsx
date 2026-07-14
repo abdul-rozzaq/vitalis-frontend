@@ -18,13 +18,20 @@ export default function CreateOperationTypePage() {
 
   const createMutation = useMutation({
     mutationFn: async (dto: OperationTypeFormValues) => {
-      const { doctorIds, ...rest } = dto;
+      const { doctorIds, departmentIds, ...rest } = dto;
       const res = await api.post("/operation-types", rest);
       const newId: string = res.data.id;
       if (doctorIds && doctorIds.length > 0) {
         await Promise.all(
           doctorIds.map((doctorId) =>
             api.post(`/operation-types/${newId}/doctors`, { doctorId })
+          )
+        );
+      }
+      if (departmentIds && departmentIds.length > 0) {
+        await Promise.all(
+          departmentIds.map((departmentId) =>
+            api.post(`/operation-types/${newId}/departments`, { departmentId })
           )
         );
       }
