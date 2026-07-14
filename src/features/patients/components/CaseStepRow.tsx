@@ -3,14 +3,31 @@
 import { CaseStep } from "@/features/patients/types";
 import { LAB_ITEM_STATUS_COLOR, STEP_ICONS, STEP_STATUS_COLOR, STEP_TYPE_COLOR, resolveFileUrl } from "@/features/patients/utils";
 import { formatTime } from "@/shared/lib/formatters";
-import { CheckCircle2, ClipboardList, Download, FileText, Paperclip } from "lucide-react";
+import { CheckCircle2, ClipboardList, Download, FileText, Paperclip, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/shared/lib/api";
+import { Can } from "@/components/ui/can";
 
-export function CaseStepRow({ step }: { step: CaseStep }) {
+export function CaseStepRow({ step, patientId }: { step: CaseStep; patientId?: string }) {
   const t = useTranslations();
+  const queryClient = useQueryClient();
   const Icon = STEP_ICONS[step.type] || ClipboardList;
   const files = step.appointment?.files ?? [];
+
+  const { mutateAsync: markStepDone, isPending: isMarkingDone } = useMutation({
+    mutationFn: async () => {
+      await api.patch(`/cases/${step.caseId}/steps/${step.id}`, {
+        status: "DONE",
+        completedAt: new Date().toISOString(),
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["patient-cases", patientId] });
+      await queryClient.invalidateQueries({ queryKey: ["patient-cases"] });
+    },
+  });
 
   return (
     <div className="flex gap-3 px-4 py-3">
@@ -100,13 +117,31 @@ export function CaseStepRow({ step }: { step: CaseStep }) {
         )}
 
         {step.procedureOrder && (
-          <div className="space-y-1.5 mt-2">
-            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.procedureOrder.procedure.name}</p>
-            {step.procedureOrder.doctor && (
-              <p className="text-xs text-text-secondary mt-0.5">
-                Xizmat ko'rsatuvchi: Dr. {step.procedureOrder.doctor.first_name} {step.procedureOrder.doctor.last_name}
-              </p>
-            )}
+          <div className="space-y-2 mt-2">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.procedureOrder.procedure.name}</p>
+                {step.procedureOrder.doctor && (
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    Xizmat ko'rsatuvchi: Dr. {step.procedureOrder.doctor.first_name} {step.procedureOrder.doctor.last_name}
+                  </p>
+                )}
+              </div>
+              
+              {step.status === "PENDING" || step.status === "IN_PROGRESS" ? (
+                <Can roles={["ADMIN", "DOCTOR", "HAMSHIRA"]}>
+                  <button
+                    type="button"
+                    onClick={() => markStepDone()}
+                    disabled={isMarkingDone}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-success-50 border border-success-100 px-2 py-1 text-xs font-medium text-success hover:bg-success-100/50 transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {isMarkingDone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {t("cases.markDone")}
+                  </button>
+                </Can>
+              ) : null}
+            </div>
           </div>
         )}
 
