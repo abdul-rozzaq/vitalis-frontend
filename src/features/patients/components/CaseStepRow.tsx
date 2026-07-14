@@ -99,6 +99,17 @@ export function CaseStepRow({ step }: { step: CaseStep }) {
           </div>
         )}
 
+        {step.procedureOrder && (
+          <div className="space-y-1.5 mt-2">
+            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.procedureOrder.procedure.name}</p>
+            {step.procedureOrder.doctor && (
+              <p className="text-xs text-text-secondary mt-0.5">
+                Xizmat ko'rsatuvchi: Dr. {step.procedureOrder.doctor.first_name} {step.procedureOrder.doctor.last_name}
+              </p>
+            )}
+          </div>
+        )}
+
         {step.appointment && (
           <Link href={`/appointments/${step.appointment.id}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:text-accent transition-colors mt-1">
             <FileText className="w-3.5 h-3.5" />
