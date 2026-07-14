@@ -795,6 +795,10 @@
     "sortOldestFirst": "Eng ko'p kutgan",
     "sortNewestFirst": "Eng yangi",
     "downloadFormat": "{format} yuklab olish",
+    "combinedResults": "Umumiy natija",
+    "combinedResultsHint": "Buyurtmadagi barcha xizmatlarning natijasini bitta ekranda kiriting.",
+    "combinedResultsButton": "Umumiy natija kiritish",
+    "combinedDownload": "Umumiy hujjat",
     "orderStatus": {
       "PENDING": "Kutilmoqda",
       "IN_PROGRESS": "Jarayonda",

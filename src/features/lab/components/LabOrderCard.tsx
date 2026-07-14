@@ -1,29 +1,28 @@
 import { useItemActions } from "@/features/lab/hooks/useItemActions";
+import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
-import { ChevronDown, ChevronUp, ClipboardList, Clock, Loader2, Package, Pencil, Upload } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, Clock, Loader2, Pencil, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL, NEXT_STATUS, NEXT_STEP_BUTTON_CLASS, ORDER_STATUS_DOT, ORDER_STATUS_LABELS, ORDER_STATUS_PILL } from "../constants/status-colors";
 import { LabItemStatus, LabOrder } from "../types";
+import { CombinedResultsModal } from "./CombinedResultsModal";
 import { DownloadResultButtons } from "./DownloadResultButtons";
 import { ItemFilesAndNote } from "./ItemFilesAndNote";
 import { NextStepButton } from "./NextStepButton";
-import { ResultTableModal } from "./ResultTableModal";
 import { StatusPicker } from "./StatusPicker";
-import { StatusTracker } from "./StatusTracker";
 
 export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceExpanded: boolean }) {
   const t = useTranslations();
   const [expanded, setExpanded] = useState(false);
   const actions = useItemActions(order);
+  const orderActions = useOrderActions(order);
 
   const isExpanded = forceExpanded || expanded;
   const initials = initialsOf(order.patient.first_name, order.patient.last_name);
+  const hasAnyResult = order.items.some((i) => i.resultTable);
 
-  // Hali ish tugamagan (kutilayotgan/jarayondagi) natijalar ro'yxat boshida va
-  // ajralib turishi kerak — laborant nimaga e'tibor berishi kerakligini
-  // pastga tushib qolgan tayyor/berilgan natijalar orasidan qidirmasin.
   const ITEM_PRIORITY: Record<LabItemStatus, number> = { PENDING: 0, IN_PROGRESS: 0, READY: 1, DELIVERED: 2, CANCELLED: 2 };
   const sortedItems = useMemo(() => {
     return [...order.items].sort((a, b) => {
@@ -59,7 +58,6 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
           </p>
           {order.items.length > 1 && (
             <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1">
-              <Package className="w-3 h-3 text-success shrink-0" />
               <span className="font-medium text-success tabular-nums">
                 {order.items.filter((i) => i.status === "DELIVERED").length}/{order.items.length}
               </span>
@@ -89,7 +87,30 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
         </div>
       </div>
 
-      {/* ITEMS */}
+      {/* UMUMIY (BO'LIM DARAJASIDAGI) NATIJA VA HUJJAT — har doim shu yerdan */}
+      {isExpanded && (
+        <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border bg-surface-secondary/40">
+          <span className="text-xs text-text-muted">{t("lab.combinedResultsHint")}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {hasAnyResult && (
+              <DownloadResultButtons
+                itemId="order"
+                downloadingKey={orderActions.downloadingOrderKey}
+                onDownload={(_itemId, format) => orderActions.handleDownloadOrder(format)}
+              />
+            )}
+            <button
+              onClick={() => orderActions.setCombinedModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-medium border border-primary/30 text-primary bg-primary-50 hover:bg-primary-100 rounded-lg px-2.5 py-1.5 transition-colors"
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              {t("lab.combinedResultsButton")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ITEMS — faqat holat, fayl va keyingi bosqich uchun tez amallar */}
       {isExpanded && (
         <div className="border-t border-border divide-y divide-border">
           {sortedItems.map((item) => {
@@ -112,8 +133,6 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
                       </span>
                     )}
                   </div>
-
-                  <StatusTracker item={item} />
 
                   {canAct && (
                     <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1">
@@ -146,42 +165,24 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
 
                 {/* RIGHT: action buttons */}
                 {!isEditing && canAct && (
-                  <div className="flex flex-col gap-1.5 items-end pt-0.5 shrink-0">
-                    <div className="flex items-center gap-1.5">
-                      <label
-                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
-                        title={t("lab.uploadResult")}
-                        aria-label={t("lab.uploadResult")}
-                      >
-                        {actions.uploadingItemId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                        <input type="file" hidden onChange={(e) => actions.handleFileUpload(item.id, e)} disabled={actions.uploadingItemId === item.id} />
-                      </label>
-                      <button
-                        onClick={() => actions.setResultTableItemId(item.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
-                        title={t("lab.resultTable")}
-                        aria-label={t("lab.resultTable")}
-                      >
-                        <ClipboardList className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => actions.openEdit(item)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
-                        title={t("lab.updateItem")}
-                        aria-label={t("lab.updateItem")}
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    {item.resultTable && <DownloadResultButtons itemId={item.id} downloadingKey={actions.downloadingKey} onDownload={actions.handleDownload} />}
+                  <div className="flex items-center gap-1.5 pt-0.5 shrink-0">
+                    <label
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
+                      title={t("lab.uploadResult")}
+                      aria-label={t("lab.uploadResult")}
+                    >
+                      {actions.uploadingItemId === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      <input type="file" hidden onChange={(e) => actions.handleFileUpload(item.id, e)} disabled={actions.uploadingItemId === item.id} />
+                    </label>
+                    <button
+                      onClick={() => actions.openEdit(item)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all"
+                      title={t("lab.updateItem")}
+                      aria-label={t("lab.updateItem")}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     <NextStepButton item={item} isSaving={actions.updateItem.isPending} onClick={() => actions.requestAdvance(item)} size="sm" />
-                  </div>
-                )}
-
-                {/* CANCELLED bo'lsa ham, natija oldin kiritilgan bo'lsa yuklab olish imkoniyati qolsin */}
-                {!isEditing && !canAct && item.resultTable && (
-                  <div className="flex items-center pt-0.5 shrink-0">
-                    <DownloadResultButtons itemId={item.id} downloadingKey={actions.downloadingKey} onDownload={actions.handleDownload} />
                   </div>
                 )}
               </div>
@@ -190,20 +191,15 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
         </div>
       )}
 
-      {actions.resultTableItemId &&
-        (() => {
-          const activeItem = order.items.find((i) => i.id === actions.resultTableItemId);
-          if (!activeItem) return null;
-          return (
-            <ResultTableModal
-              item={activeItem}
-              isOpen
-              isSaving={actions.saveResultTable.isPending}
-              onSave={(rows, submit) => actions.saveResultTable.mutate({ itemId: activeItem.id, rows, submit })}
-              onClose={() => actions.setResultTableItemId(null)}
-            />
-          );
-        })()}
+      {orderActions.combinedModalOpen && (
+        <CombinedResultsModal
+          order={order}
+          isOpen
+          isSaving={orderActions.saveResultTables.isPending}
+          onSave={(items, submit) => orderActions.saveResultTables.mutate({ items, submit })}
+          onClose={() => orderActions.setCombinedModalOpen(false)}
+        />
+      )}
 
       {actions.pendingAdvanceItem && (
         <ConfirmDialog

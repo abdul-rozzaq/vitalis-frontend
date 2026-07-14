@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Edit,
+  FileText,
   Loader2,
   Play,
   Scissors,
@@ -17,6 +18,7 @@ import {
   XCircle
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ interface Operation {
   patient: { id: string; first_name: string; last_name: string };
   operationType: { id: string; name: string };
   room?: { id: string; name: string };
+  department?: { id: string; name: string };
   surgeons: OperationSurgeon[];
   items: OperationItem[];
 }
@@ -210,6 +213,26 @@ export default function OperationDetailsPage() {
     completeMutation.isPending ||
     cancelMutation.isPending ||
     deleteMutation.isPending;
+
+  const [isDownloadingContract, setIsDownloadingContract] = useState(false);
+
+  const handleDownloadContract = async () => {
+    if (!op) return;
+    setIsDownloadingContract(true);
+    try {
+      const res = await api.get(`/operations/${op.id}/contract`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `shartnoma-${op.id.slice(0, 8)}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Shartnomani yuklab olishda xatolik yuz berdi");
+    } finally {
+      setIsDownloadingContract(false);
+    }
+  };
 
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -446,6 +469,7 @@ export default function OperationDetailsPage() {
                 />
               )}
               {op.room && <InfoItem label="Xona" value={op.room.name} />}
+              {op.department && <InfoItem label="Bo'lim" value={op.department.name} />}
               <InfoItem label="Xizmatlar soni" value={`${op.items.length} ta`} />
               <InfoItem label="Jarrohlar soni" value={`${op.surgeons.length} ta`} />
             </div>
@@ -454,6 +478,14 @@ export default function OperationDetailsPage() {
             <div className="bg-surface border border-border rounded-xl p-5">
               <SectionLabel>Amallar</SectionLabel>
               <div className="space-y-2">
+                <ActionButton
+                  onClick={handleDownloadContract}
+                  icon={<FileText className="w-4 h-4" />}
+                  label="Shartnomani yuklab olish"
+                  variant="ghost"
+                  isPending={isDownloadingContract}
+                />
+
                 {(op.status === "SCHEDULED" || op.status === "IN_PROGRESS") && (
                   <ActionButton
                     onClick={() => router.push(`/operations/${op.id}/edit`)}

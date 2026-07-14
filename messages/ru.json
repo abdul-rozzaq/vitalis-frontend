@@ -795,6 +795,10 @@
     "sortOldestFirst": "Самое ожидаемое",
     "sortNewestFirst": "Новейшие",
     "downloadFormat": "{формат} скачать",
+    "combinedResults": "Общий результат",
+    "combinedResultsHint": "Введите результаты всех услуг заказа на одном экране.",
+    "combinedResultsButton": "Ввести общий результат",
+    "combinedDownload": "Общий документ",
     "orderStatus": {
       "PENDING": "Ожидание",
       "IN_PROGRESS": "Jarayonda",

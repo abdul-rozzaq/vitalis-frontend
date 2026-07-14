@@ -53,24 +53,28 @@ export function CaseStepRow({ step }: { step: CaseStep }) {
           </div>
         )}
 
-        {step.labOrder && (
+        {step.labOrders && step.labOrders.length > 0 && (
           <div className="space-y-1.5 mt-2">
-            <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{step.labOrder.laboratory.name}</p>
-            <div className="space-y-1">
-              {step.labOrder.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
-                  <span className="text-text font-medium truncate">{item.service.name}</span>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {item.files?.map((f) => (
-                      <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name} className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors">
-                        <Download className="w-3.5 h-3.5" />
-                      </a>
-                    ))}
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
-                  </div>
+            {step.labOrders.map((labOrder) => (
+              <div key={labOrder.id} className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{labOrder.laboratory.name}</p>
+                <div className="space-y-1">
+                  {labOrder.items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
+                      <span className="text-text font-medium truncate">{item.service.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.files?.map((f) => (
+                          <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name} className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors">
+                            <Download className="w-3.5 h-3.5" />
+                          </a>
+                        ))}
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 

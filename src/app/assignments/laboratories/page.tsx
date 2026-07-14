@@ -3,7 +3,8 @@
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import type { Laboratory, LaboratoryService } from "@/features/lab/types";
+import { DefaultRowsEditor } from "@/features/lab/components/DefaultRowsEditor";
+import type { Laboratory, LaboratoryService, LabDefaultRow } from "@/features/lab/types";
 import { asArray, getTableRowIndex } from "@/features/assignments/utils";
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,6 +36,7 @@ export default function LaboratoriesPage() {
   const [svcSheet, setSvcSheet] = useState<ServiceSheetMode>(null);
   const [svcName, setSvcName] = useState("");
   const [svcPrice, setSvcPrice] = useState("");
+  const [svcRows, setSvcRows] = useState<LabDefaultRow[]>([]);
   const [deletingSvcId, setDeletingSvcId] = useState<string | null>(null);
 
   const { data: labsRaw, isLoading } = useQuery({
@@ -69,9 +71,11 @@ export default function LaboratoriesPage() {
     if (mode.mode === "edit") {
       setSvcName(mode.svc.name);
       setSvcPrice(mode.svc.price != null ? String(mode.svc.price) : "");
+      setSvcRows(mode.svc.defaultRows ?? []);
     } else {
       setSvcName("");
       setSvcPrice("");
+      setSvcRows([]);
     }
     setSvcSheet(mode);
   };
@@ -80,6 +84,7 @@ export default function LaboratoriesPage() {
     setSvcSheet(null);
     setSvcName("");
     setSvcPrice("");
+    setSvcRows([]);
   };
 
   const { mutateAsync: createLab, isPending: isCreating } = useMutation({
@@ -112,9 +117,11 @@ export default function LaboratoriesPage() {
   const { mutateAsync: createSvc, isPending: isCreatingSvc } = useMutation({
     mutationFn: () => {
       const labId = (svcSheet as { labId: string }).labId;
+      const rows = svcRows.filter((r) => r.indicator.trim());
       return api.post(`/laboratories/${labId}/services`, {
         name: svcName.trim(),
         price: svcPrice ? Number(svcPrice) : undefined,
+        defaultRows: rows.length ? rows : undefined,
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["laboratories"] }),
@@ -127,9 +134,11 @@ export default function LaboratoriesPage() {
         labId: string;
         svc: LaboratoryService;
       };
+      const rows = svcRows.filter((r) => r.indicator.trim());
       return api.patch(`/laboratories/${labId}/services/${svc.id}`, {
         name: svcName.trim() || undefined,
         price: svcPrice !== "" ? Number(svcPrice) : undefined,
+        defaultRows: rows.length ? rows : null,
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["laboratories"] }),
@@ -415,37 +424,7 @@ export default function LaboratoriesPage() {
             />
           </div>
 
-          {svcSheet?.mode === "edit" && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-text">{t("laboratories.defaultRows")}</label>
-              <p className="text-xs text-text-muted">{t("laboratories.defaultRowsManagedByBackend")}</p>
-
-              {svcSheet.svc.defaultRows?.length ? (
-                <div className="border border-border rounded-md overflow-hidden mt-1.5">
-                  <div className="grid grid-cols-[60px_1fr_90px_70px] gap-1.5 text-[11px] font-semibold text-text-muted px-2.5 py-1.5 bg-surface-secondary border-b border-border">
-                    <span>{t("lab.code")}</span>
-                    <span>{t("lab.indicator")}</span>
-                    <span>{t("lab.norm")}</span>
-                    <span>{t("lab.unit")}</span>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto divide-y divide-border">
-                    {svcSheet.svc.defaultRows.map((row, i) => (
-                      <div key={i} className="grid grid-cols-[60px_1fr_90px_70px] gap-1.5 px-2.5 py-1.5 text-sm text-text">
-                        <span className="text-text-muted">{row.code ?? "-"}</span>
-                        <span className="truncate">{row.indicator}</span>
-                        <span className="text-text-muted">{row.norm ?? "-"}</span>
-                        <span className="text-text-muted">{row.unit ?? "-"}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-text-muted bg-surface-secondary rounded-md px-3 py-2 mt-1.5">
-                  {t("laboratories.noDefaultRows")}
-                </p>
-              )}
-            </div>
-          )}
+          <DefaultRowsEditor rows={svcRows} onChange={setSvcRows} />
 
           <div className="flex gap-3 pt-2">
             <button
