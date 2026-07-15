@@ -3,6 +3,7 @@
 import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Building2,
   CheckCircle2,
   Loader2,
   Plus,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Doctor, OperationTypeFormValues, OperationTypeItemInput } from "../types";
+import { Department, Doctor, OperationTypeFormValues, OperationTypeItemInput } from "../types";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +124,101 @@ function DoctorSelector({
   );
 }
 
+// ─── Department Selector (Create mode) ───────────────────────────────────────
+
+function DepartmentSelector({
+  selected,
+  onChange,
+}: {
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [search, setSearch] = useState("");
+
+  const { data: allDepartments = [], isLoading } = useQuery<Department[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const selectedSet = new Set(selected);
+  const selectedDepartments = allDepartments.filter((d) => selectedSet.has(d.id));
+  const unselectedDepartments = allDepartments.filter(
+    (d) =>
+      !selectedSet.has(d.id) &&
+      (search === "" || d.name.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const toggle = (id: string) => {
+    onChange(selectedSet.has(id) ? selected.filter((s) => s !== id) : [...selected, id]);
+  };
+
+  return (
+    <div className="space-y-3">
+      {selectedDepartments.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedDepartments.map((department) => (
+            <div
+              key={department.id}
+              className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs text-sky-400 font-medium"
+            >
+              <span>{department.name}</span>
+              <button
+                type="button"
+                onClick={() => toggle(department.id)}
+                className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-sky-500/20 transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Bo'lim qidirish..."
+        className={fieldClass}
+      />
+
+      {isLoading ? (
+        <div className="flex justify-center py-4">
+          <Loader2 className="w-4 h-4 animate-spin text-white/30" />
+        </div>
+      ) : unselectedDepartments.length === 0 ? (
+        <p className="text-xs text-white/30 italic py-2">
+          {search ? "Topilmadi" : selectedDepartments.length > 0 ? "Barcha bo'limlar tanlangan" : "Bo'limlar mavjud emas"}
+        </p>
+      ) : (
+        <div className="space-y-1 max-h-44 overflow-y-auto pr-1">
+          {unselectedDepartments.map((department) => (
+            <div
+              key={department.id}
+              className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/3 hover:bg-white/6 border border-transparent hover:border-white/8 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-[10px] text-sky-400 font-semibold">
+                  {department.name[0]}
+                </div>
+                <span className="text-sm text-white/80">{department.name}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggle(department.id)}
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Tanlash
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface OperationTypeFormProps {
@@ -156,6 +252,7 @@ export function OperationTypeForm({
     (initialData?.items ?? []).map((i) => ({ ...i, price: i.price === 0 ? "" : i.price }))
   );
   const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>([]);
+  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addItem = () => setItems([...items, { name: "", price: "", isActive: true }]);
@@ -189,6 +286,7 @@ export function OperationTypeForm({
           isActive: i.isActive,
         })),
       ...(showDoctorSelector && { doctorIds: selectedDoctorIds }),
+      ...(showDoctorSelector && { departmentIds: selectedDepartmentIds }),
     });
   };
 
@@ -290,6 +388,17 @@ export function OperationTypeForm({
                 Doktorlar (ixtiyoriy)
               </p>
               <DoctorSelector selected={selectedDoctorIds} onChange={setSelectedDoctorIds} />
+            </div>
+          )}
+
+          {/* Department Selector — create only */}
+          {showDoctorSelector && (
+            <div className={sectionClass}>
+              <p className={sectionTitleClass}>
+                <Building2 className="w-3.5 h-3.5" />
+                Bo'limlar (ixtiyoriy)
+              </p>
+              <DepartmentSelector selected={selectedDepartmentIds} onChange={setSelectedDepartmentIds} />
             </div>
           )}
         </div>

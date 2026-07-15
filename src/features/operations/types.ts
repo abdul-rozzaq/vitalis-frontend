@@ -18,6 +18,15 @@ export interface AssignedDoctor {
   doctor: Doctor;
 }
 
+export interface Department {
+  id: string;
+  name: string;
+}
+
+export interface AssignedDepartment {
+  department: Department;
+}
+
 export interface OperationType {
   id: string;
   name: string;
@@ -26,6 +35,7 @@ export interface OperationType {
   isActive: boolean;
   items: OperationTypeItem[];
   doctors: AssignedDoctor[];
+  departments: AssignedDepartment[];
 }
 
 // ─── Form Types ──────────────────────────────────────────────────────────────
@@ -44,4 +54,5 @@ export interface OperationTypeFormValues {
   isActive: boolean;
   items: OperationTypeItemInput[];
   doctorIds?: string[];
+  departmentIds?: string[];
 }
