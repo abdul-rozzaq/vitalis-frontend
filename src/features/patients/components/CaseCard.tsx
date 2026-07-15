@@ -57,7 +57,7 @@ export function CaseCard({ patientCase, onAddStep, onCloseCase }: CaseCardProps)
       </div>
       <div className="divide-y divide-border">
         {patientCase.steps.map((step) => (
-          <CaseStepRow key={step.id} step={step} />
+          <CaseStepRow key={step.id} step={step} patientId={patientCase.patientId} />
         ))}
       </div>
     </div>

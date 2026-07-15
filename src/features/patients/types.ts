@@ -53,6 +53,7 @@ export interface CaseStep {
   prescription?: Prescription | null;
   labOrders?: LabOrder[] | null;
   diagnosticOrder?: DiagnosticOrder | null;
+  procedureOrder?: any | null; // ProcedureOrder
 }
 
 export interface PatientCase {

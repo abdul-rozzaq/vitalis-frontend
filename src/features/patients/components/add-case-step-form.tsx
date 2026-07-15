@@ -57,6 +57,11 @@ export function AddCaseStepForm({
   const [diagnosticsId, setDiagnosticsId] = useState("");
   const [selectedDiagnosticServiceIds, setSelectedDiagnosticServiceIds] = useState<string[]>([]);
 
+  // PROCEDURE state
+  const [procedureDepartmentId, setProcedureDepartmentId] = useState("");
+  const [procedureId, setProcedureId] = useState("");
+  const [procedureDoctorId, setProcedureDoctorId] = useState("");
+
   // Assignments
   const { data: assignmentsDataRaw } = useQuery({
     queryKey: ["assignments"],
@@ -94,6 +99,29 @@ export function AddCaseStepForm({
     refetchOnWindowFocus: false,
   });
 
+  // PROCEDURE
+  const { data: allDepartments = [] } = useQuery<any[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((res) => res.data),
+    enabled: stepType === "PROCEDURE",
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: procedures = [] } = useQuery<any[]>({
+    queryKey: ["procedures", "department", procedureDepartmentId],
+    queryFn: () => api.get("/procedures", { params: { departmentId: procedureDepartmentId } }).then((res) => res.data),
+    enabled: stepType === "PROCEDURE" && !!procedureDepartmentId,
+    refetchOnWindowFocus: false,
+  });
+
+  // Auto-fill price for PROCEDURE
+  useEffect(() => {
+    if (stepType === "PROCEDURE" && procedureId) {
+      const proc = procedures.find((p) => p.id === procedureId);
+      setStepAmount((proc?.price ?? 0).toString());
+    }
+  }, [procedureId, procedures, stepType]);
+
   const reset = () => {
     setStepType(defaultStepType ?? "");
     setStepAssignmentId("");
@@ -104,6 +132,9 @@ export function AddCaseStepForm({
     setSelectedServiceIds([]);
     setDiagnosticsId("");
     setSelectedDiagnosticServiceIds([]);
+    setProcedureDepartmentId("");
+    setProcedureId("");
+    setProcedureDoctorId("");
   };
 
   const { mutate: submit, isPending: isSubmitting } = useMutation({
@@ -129,7 +160,8 @@ export function AddCaseStepForm({
       payload.diagnosticsId = diagnosticsId;
       payload.diagnosticServiceIds = selectedDiagnosticServiceIds;
     } else if (stepType === "PROCEDURE") {
-      payload.appointmentId = appointmentId;
+      payload.procedureId = procedureId;
+      if (procedureDoctorId) payload.assignmentId = procedureDoctorId;
       payload.amount = stepAmount ? Number(stepAmount) : 0;
     } else {
       if (stepAssignmentId) payload.assignmentId = stepAssignmentId;
@@ -144,7 +176,8 @@ export function AddCaseStepForm({
     !stepType ||
     isSubmitting ||
     (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0)) ||
-    (stepType === "DIAGNOSTIC" && (!diagnosticsId || selectedDiagnosticServiceIds.length === 0));
+    (stepType === "DIAGNOSTIC" && (!diagnosticsId || selectedDiagnosticServiceIds.length === 0)) ||
+    (stepType === "PROCEDURE" && (!procedureDepartmentId || !procedureId));
 
   const inputCls =
     "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
@@ -313,17 +346,67 @@ export function AddCaseStepForm({
 
       {/* PROCEDURE */}
       {stepType === "PROCEDURE" && (
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-          <input
-            type="number"
-            min="0"
-            value={stepAmount}
-            onChange={(e) => setStepAmount(e.target.value)}
-            placeholder="0"
-            className={inputCls}
-          />
-        </div>
+        <>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">Bo'limni tanlang</label>
+            <select
+              value={procedureDepartmentId}
+              onChange={(e) => {
+                setProcedureDepartmentId(e.target.value);
+                setProcedureId("");
+              }}
+              className={inputCls}
+            >
+              <option value="">{t("forms.select")}</option>
+              {allDepartments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {procedureDepartmentId && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">Protsedura</label>
+              <select value={procedureId} onChange={(e) => setProcedureId(e.target.value)} className={inputCls}>
+                <option value="">{t("forms.select")}</option>
+                {procedures.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} {p.price != null ? `- ${Number(p.price).toLocaleString()} UZS` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">
+              Shifokor (Xizmat ko'rsatuvchi)
+              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
+            </label>
+            <select value={procedureDoctorId} onChange={(e) => setProcedureDoctorId(e.target.value)} className={inputCls}>
+              <option value="">{t("forms.select")}</option>
+              {assignmentOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
+            <input
+              type="number"
+              min="0"
+              value={stepAmount}
+              onChange={(e) => setStepAmount(e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
+          </div>
+        </>
       )}
 
       {/* REFERRAL */}
