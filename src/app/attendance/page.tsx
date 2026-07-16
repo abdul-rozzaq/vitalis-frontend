@@ -3,29 +3,26 @@
 import { useAttendanceRecords } from "@/features/attendance/hooks/use-attendance";
 import { AttendanceStatsCards } from "@/features/attendance/components/attendance-stats-cards";
 import { AttendanceTable } from "@/features/attendance/components/attendance-table";
-import { PageHeader } from "@/components/layout/page-header";
 import { format } from "date-fns";
 import { useState } from "react";
 import { Calendar, Search } from "lucide-react";
+import { PageHeader } from "@/components/layouts/PageLayout";
 
 export default function AttendancePage() {
   const [date, setDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
-  
+
   const { data: records, isLoading } = useAttendanceRecords({ date });
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Davomat Nazorati" 
-        description="Xodimlar davomatini monitoring qilish va hisobotlar"
-      />
+      <PageHeader title="Davomat Nazorati" subtitle="Xodimlar davomatini monitoring qilish va hisobotlar" />
 
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-surface p-4 rounded-xl border border-border shadow-sm">
         <div className="relative w-full sm:w-auto">
           <label className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">
             <Calendar className="w-4 h-4" />
           </label>
-          <input 
+          <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -36,7 +33,7 @@ export default function AttendancePage() {
           <label className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">
             <Search className="w-4 h-4" />
           </label>
-          <input 
+          <input
             type="text"
             placeholder="Xodimni qidirish..."
             className="w-full bg-surface border border-border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-text"
@@ -55,9 +52,7 @@ export default function AttendancePage() {
           <AttendanceTable records={records} />
         </>
       ) : (
-        <div className="text-center text-secondary py-12">
-          Ma'lumot topilmadi
-        </div>
+        <div className="text-center text-secondary py-12">Ma'lumot topilmadi</div>
       )}
     </div>
   );
