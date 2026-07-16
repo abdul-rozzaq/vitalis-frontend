@@ -3,6 +3,7 @@
 import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Building2,
   CheckCircle2,
   Loader2,
   Plus,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Doctor, OperationTypeFormValues, OperationTypeItemInput } from "../types";
+import { Department, Doctor, OperationTypeFormValues, OperationTypeItemInput } from "../types";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +124,49 @@ function DoctorSelector({
   );
 }
 
+// ─── Department Selector (single department) ─────────────────────────────────
+
+function DepartmentSelector({
+  selected,
+  onChange,
+}: {
+  selected: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const { data: allDepartments = [], isLoading } = useQuery<Department[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Loader2 className="w-4 h-4 animate-spin text-white/30" />
+      </div>
+    );
+  }
+
+  if (allDepartments.length === 0) {
+    return <p className="text-xs text-white/30 italic py-2">Bo'limlar mavjud emas</p>;
+  }
+
+  return (
+    <select
+      value={selected ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className={fieldClass}
+    >
+      <option value="">Bo'limni tanlang</option>
+      {allDepartments.map((department) => (
+        <option key={department.id} value={department.id}>
+          {department.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface OperationTypeFormProps {
@@ -156,6 +200,9 @@ export function OperationTypeForm({
     (initialData?.items ?? []).map((i) => ({ ...i, price: i.price === 0 ? "" : i.price }))
   );
   const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(
+    initialData?.departmentId ?? null
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addItem = () => setItems([...items, { name: "", price: "", isActive: true }]);
@@ -166,6 +213,7 @@ export function OperationTypeForm({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = t("operationTypes.form.errors.nameRequired");
+    if (!selectedDepartmentId) newErrors.departmentId = "Bo'lim tanlanishi shart";
     if (Number(basePrice) < 0) newErrors.basePrice = t("operationTypes.form.errors.negativePrice");
     if (items.some((i) => !i.name.trim())) newErrors.items = t("operationTypes.form.errors.itemNameRequired");
     if (items.some((i) => Number(i.price) < 0)) newErrors.items = t("operationTypes.form.errors.negativePrice");
@@ -189,6 +237,7 @@ export function OperationTypeForm({
           isActive: i.isActive,
         })),
       ...(showDoctorSelector && { doctorIds: selectedDoctorIds }),
+      departmentId: selectedDepartmentId,
     });
   };
 
@@ -202,6 +251,16 @@ export function OperationTypeForm({
 
         {/* LEFT: Asosiy ma'lumotlar */}
         <div className="lg:col-span-3 space-y-5">
+          {/* Department Selector — always shown, single department, required */}
+          <div className={sectionClass}>
+            <p className={sectionTitleClass}>
+              <Building2 className="w-3.5 h-3.5" />
+              Bo'lim *
+            </p>
+            <DepartmentSelector selected={selectedDepartmentId} onChange={setSelectedDepartmentId} />
+            {errors.departmentId && <p className={errorClass}>{errors.departmentId}</p>}
+          </div>
+
           <div className={sectionClass}>
             <p className={sectionTitleClass}>
               <Scissors className="w-3.5 h-3.5" />
@@ -257,11 +316,10 @@ export function OperationTypeForm({
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all ${
-                  isActive
-                    ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
-                    : "bg-white/3 border-white/8 text-white/40"
-                }`}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all ${isActive
+                  ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
+                  : "bg-white/3 border-white/8 text-white/40"
+                  }`}
               >
                 {isActive ? (
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -363,14 +421,12 @@ export function OperationTypeForm({
                           <button
                             type="button"
                             onClick={() => updateItem(idx, "isActive", !item.isActive)}
-                            className={`w-8 h-4.5 rounded-full transition-all relative ${
-                              item.isActive ? "bg-primary" : "bg-white/10"
-                            }`}
+                            className={`w-8 h-4.5 rounded-full transition-all relative ${item.isActive ? "bg-primary" : "bg-white/10"
+                              }`}
                           >
                             <span
-                              className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${
-                                item.isActive ? "left-4" : "left-0.5"
-                              }`}
+                              className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${item.isActive ? "left-4" : "left-0.5"
+                                }`}
                             />
                           </button>
                         </div>

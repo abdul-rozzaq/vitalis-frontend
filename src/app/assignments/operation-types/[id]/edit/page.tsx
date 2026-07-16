@@ -10,9 +10,6 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-// import { DoctorsSectionEdit } from ";
-// import { OperationTypeForm } from "../../components/operation-type-form";
-// import { OperationType, OperationTypeFormValues } from "../../types";
 
 const BASE = "/assignments/operation-types";
 
@@ -87,6 +84,7 @@ export default function EditOperationTypePage() {
               description: operationType.description,
               basePrice: Number(operationType.basePrice ?? 0),
               isActive: operationType.isActive,
+              departmentId: operationType.department?.id ?? null,
               items: operationType.items.map((i) => ({
                 id: i.id,
                 name: i.name,

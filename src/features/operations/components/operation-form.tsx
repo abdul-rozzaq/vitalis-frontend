@@ -45,6 +45,13 @@ interface OperationType {
   name: string;
   basePrice: number;
   items: OperationTypeItem[];
+  departmentId?: string | null;
+  department?: { id: string; name: string } | null;
+}
+
+interface Department {
+  id: string;
+  name: string;
 }
 
 interface Room {
@@ -99,6 +106,7 @@ export function OperationForm({
   const t = useTranslations("operations");
 
   const [patientId, setPatientId] = useState(propPatientId ?? initialData?.patientId ?? "");
+  const [departmentId, setDepartmentId] = useState<string>("");
   const [operationTypeId, setOperationTypeId] = useState(initialData?.operationTypeId ?? "");
   const [caseId, setCaseId] = useState(propCaseId ?? initialData?.caseId ?? "");
   const [roomId, setRoomId] = useState(initialData?.roomId ?? "");
@@ -128,10 +136,34 @@ export function OperationForm({
     enabled: !propPatientId,
   });
 
+  const { data: departments = [] } = useQuery<Department[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+  });
+
   const { data: operationTypes = [] } = useQuery<OperationType[]>({
     queryKey: ["operation-types"],
     queryFn: () => api.get("/operation-types?onlyActive=true").then((r) => r.data),
   });
+
+  // Bo'lim tanlanganda faqat shu bo'limga tegishli operatsiya turlarini ko'rsatish
+  const filteredOperationTypes = operationTypes.filter(
+    (ot) => !departmentId || ot.department?.id === departmentId
+  );
+
+  // Tahrirlashda mavjud operatsiya turining bo'limini avtomatik aniqlash
+  useEffect(() => {
+    if (isEditing && operationTypeId && !departmentId && operationTypes.length) {
+      const currentType = operationTypes.find((ot) => ot.id === operationTypeId);
+      if (currentType?.department?.id) setDepartmentId(currentType.department.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [operationTypes, operationTypeId]);
+
+  const handleDepartmentChange = (value: string) => {
+    setDepartmentId(value);
+    setOperationTypeId("");
+  };
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["users"],
@@ -296,18 +328,40 @@ export function OperationForm({
         </div>
       )}
 
+      {/* ── Bo'lim ── */}
+      <div>
+        <label className={labelClass}>{t("operationForm.department")} *</label>
+        <select
+          value={departmentId}
+          onChange={(e) => handleDepartmentChange(e.target.value)}
+          className={selectClass}
+        >
+          <option value="">{t("operationForm.selectDepartment")}</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* ── Operatsiya turi ── */}
       <div>
         <label className={labelClass}>{t("operationForm.operationType")} *</label>
         <select
           value={operationTypeId}
           onChange={(e) => setOperationTypeId(e.target.value)}
+          disabled={!departmentId}
           className={selectClass}
         >
-          <option value="">{t("operationForm.selectOperationType")}</option>
-          {operationTypes.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}{Number(t.basePrice) > 0 ? ` — ${fmt(Number(t.basePrice))} so'm` : ""}
+          <option value="">
+            {!departmentId
+              ? t("operationForm.selectDepartmentFirst")
+              : t("operationForm.selectOperationType")}
+          </option>
+          {filteredOperationTypes.map((ot) => (
+            <option key={ot.id} value={ot.id}>
+              {ot.name}{Number(ot.basePrice) > 0 ? ` — ${fmt(Number(ot.basePrice))} so'm` : ""}
             </option>
           ))}
         </select>
