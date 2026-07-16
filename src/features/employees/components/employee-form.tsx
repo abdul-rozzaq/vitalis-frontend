@@ -20,7 +20,7 @@ type EmployeeFormValues = {
   role: string;
   birthday: string;
   photo?: string;
-  employeeNo?: string;
+  employeeNo?: string | null;
 };
 
 export type EmployeeSubmitData = Omit<EmployeeFormValues, "confirm_password"> & { photoFile?: File };
@@ -107,9 +107,10 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
   };
 
   const handleFormSubmit = (data: EmployeeFormValues) => {
-    const { confirm_password, password, ...rest } = data;
+    const { confirm_password, password, employeeNo, ...rest } = data;
     onSubmit({
       ...rest,
+      employeeNo: employeeNo || null,
       ...(password ? { password } : {}),
       photoFile: photoFile ?? undefined,
     });

@@ -70,6 +70,7 @@ export default function EditEmployeePage() {
               role: employee.role,
               birthday: employee.birthday ? new Date(employee.birthday).toISOString().split("T")[0] : undefined,
               photo: employee.photo ?? undefined,
+              employeeNo: employee.employeeNo ?? undefined,
             }}
             onSubmit={handleSubmit}
             onCancel={() => router.push("/employees")}
