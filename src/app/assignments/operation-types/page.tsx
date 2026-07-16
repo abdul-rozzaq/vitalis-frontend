@@ -115,23 +115,16 @@ export default function OperationTypesPage() {
         },
       },
       {
-        id: "departments",
-        header: "Bo'limlar",
+        id: "department",
+        header: "Bo'lim",
         cell: ({ row }) => {
-          const departments = row.original.departments ?? [];
-          if (departments.length === 0)
+          const department = row.original.department;
+          if (!department)
             return <span className="text-xs text-text-muted italic">—</span>;
           return (
-            <div className="flex flex-wrap gap-1 max-w-[260px]">
-              {departments.map(({ department }) => (
-                <span
-                  key={department.id}
-                  className="text-xs px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 font-medium"
-                >
-                  {department.name}
-                </span>
-              ))}
-            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-sky-50 text-sky-600 font-medium">
+              {department.name}
+            </span>
           );
         },
       },

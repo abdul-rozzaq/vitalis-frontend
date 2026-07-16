@@ -1,7 +1,6 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { DepartmentsSectionEdit } from "@/features/operations/components/departments-section-edit";
 import { DoctorsSectionEdit } from "@/features/operations/components/doctors-section-edit";
 import { OperationTypeForm } from "@/features/operations/components/operation-type-form";
 import { OperationType, OperationTypeFormValues } from "@/features/operations/types";
@@ -11,9 +10,6 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-// import { DoctorsSectionEdit } from ";
-// import { OperationTypeForm } from "../../components/operation-type-form";
-// import { OperationType, OperationTypeFormValues } from "../../types";
 
 const BASE = "/assignments/operation-types";
 
@@ -31,7 +27,7 @@ export default function EditOperationTypePage() {
 
   const updateMutation = useMutation({
     mutationFn: (dto: OperationTypeFormValues) => {
-      const { doctorIds: _doctorIds, departmentIds: _departmentIds, ...rest } = dto;
+      const { doctorIds: _doctorIds, ...rest } = dto;
       return api.patch(`/operation-types/${id}`, rest);
     },
     onSuccess: () => {
@@ -88,6 +84,7 @@ export default function EditOperationTypePage() {
               description: operationType.description,
               basePrice: Number(operationType.basePrice ?? 0),
               isActive: operationType.isActive,
+              departmentId: operationType.department?.id ?? null,
               items: operationType.items.map((i) => ({
                 id: i.id,
                 name: i.name,
@@ -108,17 +105,6 @@ export default function EditOperationTypePage() {
             <DoctorsSectionEdit
               operationTypeId={id}
               assignedDoctors={operationType.doctors}
-            />
-          </div>
-
-          {/* Departments section — edit only, below doctors */}
-          <div className="bg-[#161824] border border-white/6 rounded-2xl p-5">
-            <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-4">
-              Operatsiya bo'limlari
-            </p>
-            <DepartmentsSectionEdit
-              operationTypeId={id}
-              assignedDepartments={operationType.departments}
             />
           </div>
         </div>
