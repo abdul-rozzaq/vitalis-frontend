@@ -125,6 +125,7 @@ function DoctorSelector({
 }
 
 // ─── Department Selector (single department) ─────────────────────────────────
+// ─── Department Selector (Create mode) ───────────────────────────────────────
 
 function DepartmentSelector({
   selected,
