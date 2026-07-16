@@ -967,6 +967,9 @@
     "operationForm": {
       "patient": "Пациент",
       "selectPatient": "Выберите пациента...",
+      "department": "Отделение",
+      "selectDepartment": "Выберите отделение...",
+      "selectDepartmentFirst": "Сначала выберите отделение",
       "operationType": "Тип операции",
       "selectOperationType": "Выберите тип операции...",
       "case": "Дело (Дело)",

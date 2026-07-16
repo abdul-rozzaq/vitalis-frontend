@@ -251,6 +251,16 @@ export function OperationTypeForm({
 
         {/* LEFT: Asosiy ma'lumotlar */}
         <div className="lg:col-span-3 space-y-5">
+          {/* Department Selector — always shown, single department, required */}
+          <div className={sectionClass}>
+            <p className={sectionTitleClass}>
+              <Building2 className="w-3.5 h-3.5" />
+              Bo'lim *
+            </p>
+            <DepartmentSelector selected={selectedDepartmentId} onChange={setSelectedDepartmentId} />
+            {errors.departmentId && <p className={errorClass}>{errors.departmentId}</p>}
+          </div>
+
           <div className={sectionClass}>
             <p className={sectionTitleClass}>
               <Scissors className="w-3.5 h-3.5" />
@@ -307,8 +317,8 @@ export function OperationTypeForm({
                 type="button"
                 onClick={() => setIsActive(!isActive)}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all ${isActive
-                    ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
-                    : "bg-white/3 border-white/8 text-white/40"
+                  ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
+                  : "bg-white/3 border-white/8 text-white/40"
                   }`}
               >
                 {isActive ? (
@@ -340,16 +350,6 @@ export function OperationTypeForm({
               <DoctorSelector selected={selectedDoctorIds} onChange={setSelectedDoctorIds} />
             </div>
           )}
-
-          {/* Department Selector — always shown, single department, required */}
-          <div className={sectionClass}>
-            <p className={sectionTitleClass}>
-              <Building2 className="w-3.5 h-3.5" />
-              Bo'lim *
-            </p>
-            <DepartmentSelector selected={selectedDepartmentId} onChange={setSelectedDepartmentId} />
-            {errors.departmentId && <p className={errorClass}>{errors.departmentId}</p>}
-          </div>
         </div>
 
         {/* RIGHT: Xizmatlar */}
