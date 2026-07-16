@@ -30,12 +30,6 @@ export function AttendanceEventsTable({ events }: AttendanceEventsTableProps) {
     setExpandedIds(next);
   };
 
-  const getImageUrl = (path: string) => {
-    if (path.startsWith("http")) return path;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-    return `${apiUrl.replace("/api", "")}${path}`;
-  };
-
   if (events.length === 0) {
     return (
       <div className="p-8 text-center text-secondary border border-border rounded-xl bg-surface">
@@ -112,7 +106,7 @@ export function AttendanceEventsTable({ events }: AttendanceEventsTableProps) {
                             onClick={() => setSelectedPicture(event.picturePath as string)}
                           >
                             <Image
-                              src={getImageUrl(event.picturePath)}
+                              src={event.picturePath}
                               alt={`Yuz skaner - ${event.employeeNoStr}`}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -172,7 +166,7 @@ export function AttendanceEventsTable({ events }: AttendanceEventsTableProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={getImageUrl(selectedPicture)}
+              src={selectedPicture}
               alt="Hodim rasmi"
               fill
               className="object-contain"
