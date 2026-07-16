@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api } from "@/shared/lib/api";
 
 export type AttendanceRecordStatus = "PRESENT" | "LATE" | "EARLY_LEAVE" | "LATE_AND_EARLY_LEAVE" | "ABSENT";
 export type AttendanceEventStatus = "PENDING" | "MATCHED" | "UNKNOWN_EMPLOYEE" | "NO_SHIFT";
