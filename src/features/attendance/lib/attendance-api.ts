@@ -8,6 +8,14 @@ export interface AttendanceEvent {
   rawStatus: string;
   eventAt: string;
   status: AttendanceEventStatus;
+  employeeNoStr: string;
+  deviceIp: string;
+  picturePath?: string | null;
+  user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export interface AttendanceRecord {
@@ -49,6 +57,12 @@ export interface AttendanceRecordsQuery {
   status?: AttendanceRecordStatus;
 }
 
+export interface AttendanceEventsQuery {
+  status?: AttendanceEventStatus;
+  from?: string;
+  to?: string;
+}
+
 export const attendanceApi = {
   getRecords: async (query?: AttendanceRecordsQuery): Promise<AttendanceRecord[]> => {
     const searchParams = new URLSearchParams();
@@ -63,6 +77,17 @@ export const attendanceApi = {
     const url = `/attendance/records${queryString ? `?${queryString}` : ""}`;
 
     const res = await api.get<AttendanceRecord[]>(url);
+    return res.data;
+  },
+
+  getEvents: async (query?: AttendanceEventsQuery): Promise<AttendanceEvent[]> => {
+    const searchParams = new URLSearchParams();
+    if (query?.status) searchParams.set("status", query.status);
+    if (query?.from) searchParams.set("from", query.from);
+    if (query?.to) searchParams.set("to", query.to);
+
+    const queryString = searchParams.toString();
+    const res = await api.get<AttendanceEvent[]>(`/attendance/events${queryString ? `?${queryString}` : ""}`);
     return res.data;
   },
 

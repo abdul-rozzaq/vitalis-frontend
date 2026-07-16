@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { attendanceApi, AttendanceRecordsQuery } from "../lib/attendance-api";
+import { attendanceApi, AttendanceRecordsQuery, AttendanceEventsQuery } from "../lib/attendance-api";
 
 export const attendanceKeys = {
   all: ["attendance"] as const,
   records: (query?: AttendanceRecordsQuery) => [...attendanceKeys.all, "records", query] as const,
+  events: (query?: AttendanceEventsQuery) => [...attendanceKeys.all, "events", query] as const,
   record: (id: string) => [...attendanceKeys.all, "record", id] as const,
   my: () => [...attendanceKeys.all, "my"] as const,
 };
@@ -12,6 +13,13 @@ export function useAttendanceRecords(query?: AttendanceRecordsQuery) {
   return useQuery({
     queryKey: attendanceKeys.records(query),
     queryFn: () => attendanceApi.getRecords(query),
+  });
+}
+
+export function useAttendanceEvents(query?: AttendanceEventsQuery) {
+  return useQuery({
+    queryKey: attendanceKeys.events(query),
+    queryFn: () => attendanceApi.getEvents(query),
   });
 }
 
