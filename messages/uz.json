@@ -967,6 +967,9 @@
     "operationForm": {
       "patient": "Bemor",
       "selectPatient": "Bemor tanlang...",
+      "department": "Bo'lim",
+      "selectDepartment": "Bo'lim tanlang...",
+      "selectDepartmentFirst": "Avval bo'limni tanlang",
       "operationType": "Operatsiya turi",
       "selectOperationType": "Operatsiya turi tanlang...",
       "case": "Holat (Case)",

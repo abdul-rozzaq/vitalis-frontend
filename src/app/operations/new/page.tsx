@@ -58,6 +58,7 @@ interface OperationType {
   description?: string;
   items: OperationTypeItem[];
   doctors: OperationTypeDoctor[];
+  department?: { id: string; name: string } | null;
 }
 
 interface Room { id: string; name: string; roomType: string }
@@ -310,6 +311,14 @@ export default function NewOperationPage() {
   const updateSurgeon = (idx: number, field: keyof OperationSurgeonInput, value: string) =>
     setSurgeons(surgeons.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
 
+  // ── Bo'lim ────────────────────────────────────────────────────────────────────
+  // Bo'lim o'zgartirilganda, avval tanlangan operatsiya turi endi mos kelmasligi
+  // mumkin bo'lgani uchun uni tozalaymiz.
+  const handleDepartmentChange = (value: string) => {
+    setDepartmentId(value);
+    setOperationTypeId("");
+  };
+
   // ── Items ─────────────────────────────────────────────────────────────────────
   const addItem = () =>
     setItems([...items, { operationTypeItemId: "", name: "", unitPrice: 0, quantity: 1 }]);
@@ -335,11 +344,13 @@ export default function NewOperationPage() {
     avatar: `${p.first_name[0]}${p.last_name[0]}`.toUpperCase(),
   }));
 
-  const opTypeOptions = operationTypes.map((t) => ({
-    value: t.id,
-    label: t.name,
-    sublabel: Number(t.basePrice) > 0 ? `${fmt(Number(t.basePrice))} so'm` : undefined,
-  }));
+  const opTypeOptions = operationTypes
+    .filter((t) => !departmentId || t.department?.id === departmentId)
+    .map((t) => ({
+      value: t.id,
+      label: t.name,
+      sublabel: Number(t.basePrice) > 0 ? `${fmt(Number(t.basePrice))} so'm` : undefined,
+    }));
 
   const operationRooms = rooms.filter((r) => r.roomType === "OPERATION");
   const roomOptions = operationRooms.map((r) => ({ value: r.id, label: r.name }));
@@ -457,12 +468,32 @@ export default function NewOperationPage() {
             <div className="bg-surface border border-border rounded-xl overflow-hidden">
               <div className="px-5 pt-5 pb-4">
                 <SectionTitle icon={Scissors} title="Operatsiya turi" />
+
+                <div className="mb-4">
+                  <FieldLabel required>Bo&apos;lim</FieldLabel>
+                  <Combobox
+                    options={departmentOptions}
+                    value={departmentId}
+                    onChange={handleDepartmentChange}
+                    placeholder="Bo'limni tanlang"
+                    searchPlaceholder="Bo'lim nomi..."
+                    error={!!errors.departmentId}
+                  />
+                  <ErrorMsg msg={errors.departmentId} />
+                </div>
+
+                <FieldLabel required>Operatsiya turi</FieldLabel>
                 <Combobox
                   options={opTypeOptions}
                   value={operationTypeId}
                   onChange={setOperationTypeId}
-                  placeholder={t("operationForm.selectOperationType")}
+                  placeholder={
+                    !departmentId
+                      ? "Avval bo'limni tanlang"
+                      : t("operationForm.selectOperationType")
+                  }
                   searchPlaceholder="Operatsiya turini qidiring..."
+                  disabled={!departmentId}
                   error={!!errors.operationTypeId}
                 />
                 <ErrorMsg msg={errors.operationTypeId} />
@@ -601,18 +632,6 @@ export default function NewOperationPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <FieldLabel required>Bo&apos;lim</FieldLabel>
-                  <Combobox
-                    options={departmentOptions}
-                    value={departmentId}
-                    onChange={setDepartmentId}
-                    placeholder="Bo'limni tanlang"
-                    searchPlaceholder="Bo'lim nomi..."
-                    error={!!errors.departmentId}
-                  />
-                  <ErrorMsg msg={errors.departmentId} />
-                </div>
                 <div>
                   <FieldLabel>Shartnoma raqami</FieldLabel>
                   <input

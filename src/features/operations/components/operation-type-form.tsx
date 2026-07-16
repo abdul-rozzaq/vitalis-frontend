@@ -124,98 +124,46 @@ function DoctorSelector({
   );
 }
 
-// ─── Department Selector (Create mode) ───────────────────────────────────────
+// ─── Department Selector (single department) ─────────────────────────────────
 
 function DepartmentSelector({
   selected,
   onChange,
 }: {
-  selected: string[];
-  onChange: (ids: string[]) => void;
+  selected: string | null;
+  onChange: (id: string | null) => void;
 }) {
-  const [search, setSearch] = useState("");
-
   const { data: allDepartments = [], isLoading } = useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn: () => api.get("/departments").then((r) => r.data),
     refetchOnWindowFocus: false,
   });
 
-  const selectedSet = new Set(selected);
-  const selectedDepartments = allDepartments.filter((d) => selectedSet.has(d.id));
-  const unselectedDepartments = allDepartments.filter(
-    (d) =>
-      !selectedSet.has(d.id) &&
-      (search === "" || d.name.toLowerCase().includes(search.toLowerCase()))
-  );
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Loader2 className="w-4 h-4 animate-spin text-white/30" />
+      </div>
+    );
+  }
 
-  const toggle = (id: string) => {
-    onChange(selectedSet.has(id) ? selected.filter((s) => s !== id) : [...selected, id]);
-  };
+  if (allDepartments.length === 0) {
+    return <p className="text-xs text-white/30 italic py-2">Bo'limlar mavjud emas</p>;
+  }
 
   return (
-    <div className="space-y-3">
-      {selectedDepartments.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedDepartments.map((department) => (
-            <div
-              key={department.id}
-              className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs text-sky-400 font-medium"
-            >
-              <span>{department.name}</span>
-              <button
-                type="button"
-                onClick={() => toggle(department.id)}
-                className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-sky-500/20 transition-colors"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Bo'lim qidirish..."
-        className={fieldClass}
-      />
-
-      {isLoading ? (
-        <div className="flex justify-center py-4">
-          <Loader2 className="w-4 h-4 animate-spin text-white/30" />
-        </div>
-      ) : unselectedDepartments.length === 0 ? (
-        <p className="text-xs text-white/30 italic py-2">
-          {search ? "Topilmadi" : selectedDepartments.length > 0 ? "Barcha bo'limlar tanlangan" : "Bo'limlar mavjud emas"}
-        </p>
-      ) : (
-        <div className="space-y-1 max-h-44 overflow-y-auto pr-1">
-          {unselectedDepartments.map((department) => (
-            <div
-              key={department.id}
-              className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/3 hover:bg-white/6 border border-transparent hover:border-white/8 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-[10px] text-sky-400 font-semibold">
-                  {department.name[0]}
-                </div>
-                <span className="text-sm text-white/80">{department.name}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => toggle(department.id)}
-                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Tanlash
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <select
+      value={selected ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className={fieldClass}
+    >
+      <option value="">Bo'limni tanlang</option>
+      {allDepartments.map((department) => (
+        <option key={department.id} value={department.id}>
+          {department.name}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -252,7 +200,9 @@ export function OperationTypeForm({
     (initialData?.items ?? []).map((i) => ({ ...i, price: i.price === 0 ? "" : i.price }))
   );
   const [selectedDoctorIds, setSelectedDoctorIds] = useState<string[]>([]);
-  const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(
+    initialData?.departmentId ?? null
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addItem = () => setItems([...items, { name: "", price: "", isActive: true }]);
@@ -263,6 +213,7 @@ export function OperationTypeForm({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!name.trim()) newErrors.name = t("operationTypes.form.errors.nameRequired");
+    if (!selectedDepartmentId) newErrors.departmentId = "Bo'lim tanlanishi shart";
     if (Number(basePrice) < 0) newErrors.basePrice = t("operationTypes.form.errors.negativePrice");
     if (items.some((i) => !i.name.trim())) newErrors.items = t("operationTypes.form.errors.itemNameRequired");
     if (items.some((i) => Number(i.price) < 0)) newErrors.items = t("operationTypes.form.errors.negativePrice");
@@ -286,7 +237,7 @@ export function OperationTypeForm({
           isActive: i.isActive,
         })),
       ...(showDoctorSelector && { doctorIds: selectedDoctorIds }),
-      ...(showDoctorSelector && { departmentIds: selectedDepartmentIds }),
+      departmentId: selectedDepartmentId,
     });
   };
 
@@ -300,6 +251,16 @@ export function OperationTypeForm({
 
         {/* LEFT: Asosiy ma'lumotlar */}
         <div className="lg:col-span-3 space-y-5">
+          {/* Department Selector — always shown, single department, required */}
+          <div className={sectionClass}>
+            <p className={sectionTitleClass}>
+              <Building2 className="w-3.5 h-3.5" />
+              Bo'lim *
+            </p>
+            <DepartmentSelector selected={selectedDepartmentId} onChange={setSelectedDepartmentId} />
+            {errors.departmentId && <p className={errorClass}>{errors.departmentId}</p>}
+          </div>
+
           <div className={sectionClass}>
             <p className={sectionTitleClass}>
               <Scissors className="w-3.5 h-3.5" />
@@ -355,11 +316,10 @@ export function OperationTypeForm({
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
-                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all ${
-                  isActive
-                    ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
-                    : "bg-white/3 border-white/8 text-white/40"
-                }`}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border transition-all ${isActive
+                  ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
+                  : "bg-white/3 border-white/8 text-white/40"
+                  }`}
               >
                 {isActive ? (
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -388,17 +348,6 @@ export function OperationTypeForm({
                 Doktorlar (ixtiyoriy)
               </p>
               <DoctorSelector selected={selectedDoctorIds} onChange={setSelectedDoctorIds} />
-            </div>
-          )}
-
-          {/* Department Selector — create only */}
-          {showDoctorSelector && (
-            <div className={sectionClass}>
-              <p className={sectionTitleClass}>
-                <Building2 className="w-3.5 h-3.5" />
-                Bo'limlar (ixtiyoriy)
-              </p>
-              <DepartmentSelector selected={selectedDepartmentIds} onChange={setSelectedDepartmentIds} />
             </div>
           )}
         </div>
@@ -472,14 +421,12 @@ export function OperationTypeForm({
                           <button
                             type="button"
                             onClick={() => updateItem(idx, "isActive", !item.isActive)}
-                            className={`w-8 h-4.5 rounded-full transition-all relative ${
-                              item.isActive ? "bg-primary" : "bg-white/10"
-                            }`}
+                            className={`w-8 h-4.5 rounded-full transition-all relative ${item.isActive ? "bg-primary" : "bg-white/10"
+                              }`}
                           >
                             <span
-                              className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${
-                                item.isActive ? "left-4" : "left-0.5"
-                              }`}
+                              className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all ${item.isActive ? "left-4" : "left-0.5"
+                                }`}
                             />
                           </button>
                         </div>
