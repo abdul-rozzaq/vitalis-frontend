@@ -20,6 +20,7 @@ type EmployeeFormValues = {
   role: string;
   birthday: string;
   photo?: string;
+  employeeNo?: string | null;
 };
 
 export type EmployeeSubmitData = Omit<EmployeeFormValues, "confirm_password"> & { photoFile?: File };
@@ -64,6 +65,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
       role: z.string().min(1, t("forms.roleRequired")),
       birthday: z.string().min(1, t("forms.birthdayRequired")),
       photo: z.string().max(500).optional(),
+      employeeNo: z.string().max(50).optional(),
     })
     .refine(
       (data) => {
@@ -105,9 +107,10 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
   };
 
   const handleFormSubmit = (data: EmployeeFormValues) => {
-    const { confirm_password, password, ...rest } = data;
+    const { confirm_password, password, employeeNo, ...rest } = data;
     onSubmit({
       ...rest,
+      employeeNo: employeeNo || null,
       ...(password ? { password } : {}),
       photoFile: photoFile ?? undefined,
     });
@@ -283,6 +286,19 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
           ))}
         </select>
         <FormError message={errors.role?.message} />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <User className="w-4 h-4 text-primary-500" />
+          Hikvision Employee No. (ID)
+        </label>
+        <input
+          {...register("employeeNo")}
+          placeholder="e.g. 1"
+          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+        />
+        <FormError message={errors.employeeNo?.message} />
       </div>
 
       <div className="space-y-1.5">

@@ -43,7 +43,8 @@
     "ws-settings": "Настройки",
     "rooms-floor-view": "Вид на этаж",
     "new-patient": "Новый пациент",
-    "new-employee": "Новый сотрудник"
+    "new-employee": "Новый сотрудник",
+    "attendance": "Посещаемость"
   },
   "common": {
     "filter": "Фильтр",

@@ -43,7 +43,8 @@
     "ws-settings": "Sozlamalar",
     "rooms-floor-view": "Qavat ko'rinishi",
     "new-patient": "Yangi bemor",
-    "new-employee": "Yangi xodim"
+    "new-employee": "Yangi xodim",
+    "attendance": "Davomat"
   },
   "common": {
     "filter": "Filtr",

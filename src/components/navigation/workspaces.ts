@@ -128,6 +128,11 @@ export const WORKSPACES: Workspace[] = [
     create: { labelKey: "nav.new-employee", href: "/employees/new", roles: ["ADMIN", "DIREKTOR"] },
     items: [
       {
+        labelKey: "nav.attendance",
+        href: "/attendance",
+        roles: ["ADMIN", "DIREKTOR"],
+      },
+      {
         labelKey: "nav.employees",
         href: "/employees",
         roles: ["ADMIN", "DIREKTOR"],
