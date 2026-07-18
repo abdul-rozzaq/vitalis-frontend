@@ -49,9 +49,9 @@ export function AddCaseStepForm({
   const [stepAmount, setStepAmount] = useState("");
   const [stepNote, setStepNote] = useState("");
 
-  // LAB state
-  const [labDepartmentId, setLabDepartmentId] = useState("");
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  // LAB state — bir nechta laboratoriyaga bir vaqtda yuborish mumkin
+  const [labDepartmentIds, setLabDepartmentIds] = useState<string[]>([]);
+  const [serviceIdsByLab, setServiceIdsByLab] = useState<Record<string, string[]>>({});
 
   // DIAGNOSTIC state
   const [diagnosticsId, setDiagnosticsId] = useState("");
@@ -128,8 +128,8 @@ export function AddCaseStepForm({
     setStepDateTime(new Date().toISOString().slice(0, 16));
     setStepAmount("");
     setStepNote("");
-    setLabDepartmentId("");
-    setSelectedServiceIds([]);
+    setLabDepartmentIds([]);
+    setServiceIdsByLab({});
     setDiagnosticsId("");
     setSelectedDiagnosticServiceIds([]);
     setProcedureDepartmentId("");
@@ -154,8 +154,10 @@ export function AddCaseStepForm({
     if (stepNote) payload.note = stepNote;
 
     if (stepType === "LAB") {
-      payload.laboratoryId = labDepartmentId;
-      payload.serviceIds = selectedServiceIds;
+      // Bir nechta laboratoriyadan tanlangan xizmatlarni birlashtiramiz.
+      // Backend ularni laboratoriyasi bo'yicha guruhlab, har biriga alohida buyurtma yaratadi.
+      const allServiceIds = labDepartmentIds.flatMap((labId) => serviceIdsByLab[labId] ?? []);
+      payload.serviceIds = allServiceIds;
     } else if (stepType === "DIAGNOSTIC") {
       payload.diagnosticsId = diagnosticsId;
       payload.diagnosticServiceIds = selectedDiagnosticServiceIds;
@@ -175,14 +177,14 @@ export function AddCaseStepForm({
   const isDisabled =
     !stepType ||
     isSubmitting ||
-    (stepType === "LAB" && (!labDepartmentId || selectedServiceIds.length === 0)) ||
+    (stepType === "LAB" &&
+      (labDepartmentIds.length === 0 || labDepartmentIds.some((labId) => (serviceIdsByLab[labId] ?? []).length === 0))) ||
     (stepType === "DIAGNOSTIC" && (!diagnosticsId || selectedDiagnosticServiceIds.length === 0)) ||
     (stepType === "PROCEDURE" && (!procedureDepartmentId || !procedureId));
 
   const inputCls =
     "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
 
-  const selectedLabDept = labDepts.find((d) => d.id === labDepartmentId);
   const selectedDiagnosticsCenter = diagnosticCenters.find((d) => d.id === diagnosticsId);
 
   return (
@@ -195,8 +197,8 @@ export function AddCaseStepForm({
           onChange={(e) => {
             setStepType(e.target.value as AvailableStepType);
             setStepAssignmentId("");
-            setLabDepartmentId("");
-            setSelectedServiceIds([]);
+            setLabDepartmentIds([]);
+            setServiceIdsByLab({});
             setDiagnosticsId("");
             setSelectedDiagnosticServiceIds([]);
           }}
@@ -248,51 +250,70 @@ export function AddCaseStepForm({
         </>
       )}
 
-      {/* LAB */}
+      {/* LAB — bir nechta laboratoriya bo'limiga bir vaqtda yuborish mumkin */}
       {stepType === "LAB" && (
         <>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("lab.labDepartment")}</label>
-            <select
-              value={labDepartmentId}
-              onChange={(e) => {
-                setLabDepartmentId(e.target.value);
-                setSelectedServiceIds([]);
+            <label className="text-sm font-medium text-text">{t("lab.labDepartments")}</label>
+            <Combobox
+              multiple
+              options={labDepts.map((d) => ({ value: d.id, label: d.name }))}
+              value={labDepartmentIds}
+              onChange={(next) => {
+                setLabDepartmentIds(next);
+                // olib tashlangan laboratoriyalarning xizmat tanlovlarini ham tozalaymiz
+                setServiceIdsByLab((prev) => {
+                  const updated: Record<string, string[]> = {};
+                  for (const labId of next) updated[labId] = prev[labId] ?? [];
+                  return updated;
+                });
               }}
-              className={inputCls}
-            >
-              <option value="">{t("forms.select")}</option>
-              {labDepts.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              placeholder={t("lab.labDepartments")}
+            />
           </div>
 
-          {labDepartmentId && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-text">{t("lab.services")}</label>
-              <Combobox
-                multiple
-                options={
-                  selectedLabDept?.services.map((svc) => ({
+          {labDepartmentIds.map((labId) => {
+            const dept = labDepts.find((d) => d.id === labId);
+            if (!dept) return null;
+            const selectedForLab = serviceIdsByLab[labId] ?? [];
+            return (
+              <div key={labId} className="space-y-1.5 border border-border rounded-md p-3 bg-surface/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-text">{dept.name}</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLabDepartmentIds((prev) => prev.filter((id) => id !== labId));
+                      setServiceIdsByLab((prev) => {
+                        const rest = { ...prev };
+                        delete rest[labId];
+                        return rest;
+                      });
+                    }}
+                    className="text-xs text-danger-500 hover:underline cursor-pointer"
+                  >
+                    {t("lab.removeLab")}
+                  </button>
+                </div>
+                <Combobox
+                  multiple
+                  options={dept.services.map((svc) => ({
                     value: svc.id,
                     label: svc.name,
                     sublabel: svc.price != null ? `${svc.price.toLocaleString()} UZS` : undefined,
-                  })) ?? []
-                }
-                value={selectedServiceIds}
-                onChange={setSelectedServiceIds}
-                placeholder={t("lab.services")}
-              />
-              {selectedServiceIds.length > 0 && (
-                <p className="text-xs text-primary">
-                  {selectedServiceIds.length} {t("lab.servicesSelected")}
-                </p>
-              )}
-            </div>
-          )}
+                  }))}
+                  value={selectedForLab}
+                  onChange={(ids) => setServiceIdsByLab((prev) => ({ ...prev, [labId]: ids }))}
+                  placeholder={t("lab.services")}
+                />
+                {selectedForLab.length > 0 && (
+                  <p className="text-xs text-primary">
+                    {selectedForLab.length} {t("lab.servicesSelected")}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </>
       )}
 

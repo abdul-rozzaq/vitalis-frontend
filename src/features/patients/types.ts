@@ -21,6 +21,7 @@ export interface Patient {
   pinfl?: string | null;
   blood_type: BloodType | null;
   district?: District | null;
+  createdAt?: string;
 }
 
 export interface AppointmentTimelineItem {
