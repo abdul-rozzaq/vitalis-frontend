@@ -35,8 +35,24 @@ export default function PatientsPage() {
   });
 
   const handleExport = () => {
-    const headers = [t("patients.colId"), t("patients.colName"), t("patients.colGender"), t("patients.colDistrict"), t("patients.colBirthDate"), t("patients.colPhone")];
-    const rows = patientsData.map((p: Patient) => [p.id, `${p.first_name} ${p.last_name}`, p.gender ?? "", p.district?.name ?? "", p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "", p.phone_number ?? ""]);
+    const headers = [
+      t("patients.colId"),
+      t("patients.colName"),
+      t("patients.colGender"),
+      t("patients.colDistrict"),
+      t("patients.colBirthDate"),
+      t("patients.colRegisteredAt"),
+      t("patients.colPhone"),
+    ];
+    const rows = patientsData.map((p: Patient) => [
+      p.id,
+      `${p.first_name} ${p.last_name}`,
+      p.gender ?? "",
+      p.district?.name ?? "",
+      p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
+      p.createdAt ? `${new Date(p.createdAt).toLocaleDateString()} ${new Date(p.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : "",
+      p.phone_number ?? "",
+    ]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
 
@@ -89,6 +105,24 @@ export default function PatientsPage() {
         accessorKey: "birth_date",
         header: t("patients.colBirthDate"),
         cell: (info: any) => <span className="text-text-muted text-sm">{info.getValue() ? new Date(info.getValue()).toLocaleDateString() : t("common.na")}</span>,
+      },
+      {
+        id: "registeredAt",
+        accessorFn: (row: Patient) => (row.createdAt ? new Date(row.createdAt).getTime() : null),
+        header: t("patients.colRegisteredAt"),
+        cell: ({ row }) => {
+          const value = row.original.createdAt;
+          if (!value) return <span className="text-text-muted text-sm">{t("common.na")}</span>;
+          const d = new Date(value);
+          const day = d.getDate().toString().padStart(2, "0");
+          const month = d.toLocaleDateString(undefined, { month: "long" });
+          const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+          return (
+            <span className="text-text-muted text-sm">
+              {day}-{month}, {time}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "phone_number",
