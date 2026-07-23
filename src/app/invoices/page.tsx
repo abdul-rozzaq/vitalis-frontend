@@ -11,13 +11,15 @@ import { FilterPanel, Filters } from "@/features/invoices/components/FilterPanel
 import { InvoiceItemsRow } from "@/features/invoices/components/InvoiceItemsRow";
 import { InvoicePaymentsRow } from "@/features/invoices/components/InvoicePaymentsRow";
 import { StatusBadge } from "@/features/invoices/components/StatusBadge";
+import { INVOICE_STATUS_CONFIG } from "@/features/invoices/style-colors";
 import { Invoice, InvoiceStatus } from "@/features/invoices/types";
 import { Patient } from "@/features/patients/types";
 import { api } from "@/shared/lib/api";
+import { exportToExcel } from "@/shared/lib/export-excel";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Clock, FileText, Loader2, Pencil, Plus, SlidersHorizontal, Wallet, X } from "lucide-react";
+import { CheckCircle2, Clock, Download, FileText, Loader2, Pencil, Plus, SlidersHorizontal, Wallet, X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -105,6 +107,38 @@ export default function InvoicesPage() {
     const { sourceType, doctorId, ...rest } = filters;
     return Object.values(rest).filter((v) => v !== "").length + (sourceType.length > 0 ? 1 : 0) + (doctorId ? 1 : 0);
   }, [filters]);
+
+  const handleExport = () => {
+    const headers = [
+      "#",
+      t("invoices.table.patient"),
+      t("invoices.table.source"),
+      t("invoices.table.description"),
+      t("invoices.table.paid"),
+      t("invoices.table.status"),
+      t("invoices.table.date"),
+    ];
+
+    const rows = invoices.map((inv, idx) => {
+      const patientName = inv.patient ? `${inv.patient.first_name} ${inv.patient.last_name}` : "—";
+      const source = t.has(`invoices.source.${inv.sourceType}`) ? t(`invoices.source.${inv.sourceType}`) : inv.sourceType;
+      const desc = inv.items?.length ? inv.items.map((i) => i.description).filter(Boolean).join(", ") : inv.note || "—";
+      const paid = Number(inv.paidCash) + Number(inv.paidBonus);
+      const total = Number(inv.totalAmount);
+      const status = INVOICE_STATUS_CONFIG[inv.status]?.label ?? inv.status;
+      const date = new Date(inv.createdAt).toLocaleString("uz-UZ", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return [idx + 1, patientName, source, desc, `${paid} / ${total}`, status, date];
+    });
+
+    exportToExcel("invoices", headers, rows, t("nav.invoices"));
+  };
 
   const columns = useMemo<ColumnDef<Invoice>[]>(
     () => [
@@ -263,6 +297,14 @@ export default function InvoicesPage() {
         subtitle={t("invoices.subtitle")}
         actions={
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              disabled={invoices.length === 0}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t("common.export")}</span>
+            </button>
             <button
               onClick={() => setFilterOpen((v) => !v)}
               className={`text-sm font-medium flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0 ? "bg-primary-50 border-primary text-primary" : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-hover"

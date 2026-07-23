@@ -2,14 +2,15 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
-import { PaymentFilterPanel, PaymentFilters } from "@/features/invoices/components/PaymentFilterPanel";
 import { EditPaymentMethodModal } from "@/features/invoices/components/EditPaymentMethodModal";
+import { PaymentFilterPanel, PaymentFilters } from "@/features/invoices/components/PaymentFilterPanel";
 import { InvoicePayment, PAYMENT_METHOD_LABELS, PaymentMethod } from "@/features/invoices/types";
 import { api } from "@/shared/lib/api";
+import { exportToExcel } from "@/shared/lib/export-excel";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { CalendarDays, CheckCircle2, Coins, CreditCard, Edit, Loader2, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, Edit, Loader2, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -60,6 +61,41 @@ export default function PaymentsPage() {
     },
     refetchOnWindowFocus: false,
   });
+
+  const handleExport = () => {
+    const headers = [
+      "#",
+      t("invoices.table.patient"),
+      t("invoices.table.source"),
+      t("invoices.payments.colMethod"),
+      t("invoices.payments.cashAmount"),
+      t("invoices.payments.bonusAmount"),
+      t("invoices.payments.totalPaid"),
+      t("invoices.payments.cashier"),
+      t("invoices.payments.date"),
+      t("invoices.payments.note"),
+    ];
+
+    const rows = payments.map((p, idx) => {
+      const patient = p.invoice?.patient;
+      const patientName = patient ? `${patient.first_name} ${patient.last_name}` : "—";
+      const sourceValue = p.invoice?.sourceType;
+      const source = sourceValue ? (t.has(`invoices.source.${sourceValue}`) ? t(`invoices.source.${sourceValue}`) : sourceValue) : "—";
+      const method = p.paymentMethod ? PAYMENT_METHOD_LABELS[p.paymentMethod as PaymentMethod] || p.paymentMethod : "—";
+      const cashier = p.createdBy ? `${p.createdBy.first_name} ${p.createdBy.last_name}` : "—";
+      const date = new Date(p.createdAt).toLocaleString("uz-UZ", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return [idx + 1, patientName, source, method, Number(p.cashAmount), Number(p.bonusAmount), Number(p.totalAmount), cashier, date, p.note || "—"];
+    });
+
+    exportToExcel("payments", headers, rows, t("invoices.payments.title"));
+  };
 
   const handleFilterChange = (k: keyof PaymentFilters, v: string | string[]) => {
     setFilters((prev) => ({ ...prev, [k]: v }) as PaymentFilters);
@@ -200,12 +236,19 @@ export default function PaymentsPage() {
         actions={
           <div className="flex items-center gap-2">
             <button
+              onClick={handleExport}
+              disabled={payments.length === 0}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t("common.export")}</span>
+            </button>
+            <button
               onClick={() => setFilterOpen((v) => !v)}
-              className={`text-sm font-medium flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${
-                filterOpen || activeFilterCount > 0
+              className={`text-sm font-medium flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors cursor-pointer ${filterOpen || activeFilterCount > 0
                   ? "bg-primary-50 border-primary text-primary"
                   : "bg-surface border-border text-text-muted hover:text-text hover:bg-surface-hover"
-              }`}
+                }`}
             >
               <SlidersHorizontal className="w-4 h-4" />
               {t("invoices.filter")}
