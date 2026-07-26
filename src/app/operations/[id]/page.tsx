@@ -39,6 +39,32 @@ interface OperationItem {
   totalPrice: string;
 }
 
+type LabItemStatus = "PENDING" | "IN_PROGRESS" | "READY" | "DELIVERED" | "CANCELLED";
+
+interface LabResultRow {
+  id: string;
+  code?: string | null;
+  indicator: string;
+  result: string;
+  norm?: string | null;
+  unit?: string | null;
+}
+
+interface LabOrderItem {
+  id: string;
+  status: LabItemStatus;
+  service: { id: string; name: string; price?: number | null };
+  performedBy?: { id: string; first_name: string; last_name: string } | null;
+  resultTable?: { rows: LabResultRow[] } | null;
+}
+
+interface LabOrder {
+  id: string;
+  status: string;
+  laboratory: { id: string; name: string };
+  items: LabOrderItem[];
+}
+
 interface Operation {
   id: string;
   patientId: string;
@@ -54,6 +80,7 @@ interface Operation {
   department?: { id: string; name: string };
   surgeons: OperationSurgeon[];
   items: OperationItem[];
+  caseStep?: { id: string; labOrders?: LabOrder[] } | null;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -118,6 +145,86 @@ function ActionButton({
       {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : icon}
       {label}
     </button>
+  );
+}
+
+const LAB_ITEM_STATUS_LABELS: Record<LabItemStatus, string> = {
+  PENDING: "Navbatda",
+  IN_PROGRESS: "Jarayonda",
+  READY: "Tayyor",
+  DELIVERED: "Topshirildi",
+  CANCELLED: "Bekor qilingan",
+};
+
+const LAB_ITEM_STATUS_PILL: Record<LabItemStatus, string> = {
+  PENDING: "bg-warning-50 text-warning",
+  IN_PROGRESS: "bg-info-50 text-info",
+  READY: "bg-success-50 text-success",
+  DELIVERED: "bg-success-50 text-success",
+  CANCELLED: "bg-danger-50 text-danger",
+};
+
+function OperationLabOrders({ labOrders }: { labOrders: LabOrder[] }) {
+  if (!labOrders.length) return null;
+
+  return (
+    <div className="bg-surface border border-border rounded-xl p-5">
+      <SectionLabel>Laboratoriya tahlillari</SectionLabel>
+      <div className="space-y-4">
+        {labOrders.map((order) => (
+          <div key={order.id} className="border border-border rounded-lg overflow-hidden">
+            <div className="px-3.5 py-2.5 bg-surface-hover text-sm font-medium text-text">
+              {order.laboratory.name}
+            </div>
+            <div className="divide-y divide-border">
+              {order.items.map((item) => (
+                <div key={item.id} className="px-3.5 py-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-sm text-text font-medium">{item.service.name}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${LAB_ITEM_STATUS_PILL[item.status]}`}>
+                      {LAB_ITEM_STATUS_LABELS[item.status]}
+                    </span>
+                  </div>
+
+                  {item.resultTable && item.resultTable.rows.length > 0 ? (
+                    <div className="mt-2.5 rounded-lg border border-border overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-surface-hover border-b border-border">
+                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Ko&apos;rsatkich</th>
+                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Natija</th>
+                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Me&apos;yor</th>
+                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">O&apos;lchov</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {item.resultTable.rows.map((row) => (
+                            <tr key={row.id} className="border-b border-border last:border-0">
+                              <td className="px-2.5 py-1.5 text-text">{row.indicator}</td>
+                              <td className="px-2.5 py-1.5 font-medium text-text">{row.result || "—"}</td>
+                              <td className="px-2.5 py-1.5 text-text-muted">{row.norm || "—"}</td>
+                              <td className="px-2.5 py-1.5 text-text-muted">{row.unit || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-muted mt-1.5">Natija hali kiritilmagan</p>
+                  )}
+
+                  {item.performedBy && item.resultTable && (
+                    <p className="text-[11px] text-text-muted mt-1.5">
+                      Bajardi: {item.performedBy.first_name} {item.performedBy.last_name}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -418,6 +525,11 @@ export default function OperationDetailsPage() {
                   <span className="text-base font-semibold text-text">{fmt(op.totalPrice)} so'm</span>
                 </div>
               </div>
+            )}
+
+            {/* Lab tahlillari */}
+            {op.caseStep?.labOrders && op.caseStep.labOrders.length > 0 && (
+              <OperationLabOrders labOrders={op.caseStep.labOrders} />
             )}
 
             {/* Note */}
