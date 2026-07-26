@@ -846,7 +846,8 @@
     "readyAwaitingDelivery": "готов (ожидает)",
     "confirmAdvanceTitle": "Подтвердить изменение статуса",
     "confirmAdvanceDescription": "Вы хотите установить результат «{service}» на «{status}». Это действие невозможно отменить.",
-    "confirmAdvanceButton": "Да, перевести в {status}"
+    "confirmAdvanceButton": "Да, перевести в {status}",
+    "itemsCompletedHint": "услуг заполнено"
   },
   "laboratories": {
     "title": "Лаборатории",

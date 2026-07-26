@@ -846,7 +846,8 @@
     "readyAwaitingDelivery": "tayyor (kutilmoqda)",
     "confirmAdvanceTitle": "Statusni o'zgartirishni tasdiqlang",
     "confirmAdvanceDescription": "\"{service}\" natijasini \"{status}\" holatiga o'tkazmoqchisiz. Bu amalni qaytarib bo'lmaydi.",
-    "confirmAdvanceButton": "Ha, {status}ga o'tkazish"
+    "confirmAdvanceButton": "Ha, {status}ga o'tkazish",
+    "itemsCompletedHint": "ta xizmat to'ldirilgan"
   },
   "laboratories": {
     "title": "Laboratoriyalar",

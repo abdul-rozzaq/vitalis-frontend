@@ -65,6 +65,7 @@ interface Room { id: string; name: string; roomType: string }
 interface Department { id: string; name: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
 interface Case { id: string; status: string; chiefComplaint?: string | null }
+interface Laboratory { id: string; name: string; services: { id: string; name: string; price?: number | null }[] }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -172,6 +173,10 @@ export default function NewOperationPage() {
   const [showNewItemForm, setShowNewItemForm] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState<number>(0);
+  // Operatsiya bilan bir vaqtda bemorni yuboriladigan lab tahlillari —
+  // laboratoriya bo'yicha guruhlangan holda tanlanadi.
+  const [labIds, setLabIds] = useState<string[]>([]);
+  const [labServiceIdsByLab, setLabServiceIdsByLab] = useState<Record<string, string[]>>({});
 
   // ── Queries ───────────────────────────────────────────────────────────────────
   const { data: patients = [] } = useQuery<{ id: string; first_name: string; last_name: string }[]>({
@@ -197,6 +202,11 @@ export default function NewOperationPage() {
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn: () => api.get("/departments").then((r) => r.data),
+  });
+
+  const { data: laboratories = [] } = useQuery<Laboratory[]>({
+    queryKey: ["laboratories"],
+    queryFn: () => api.get("/laboratories").then((r) => r.data),
   });
 
   const { data: cases = [], isLoading: isCasesLoading } = useQuery<Case[]>({
@@ -422,6 +432,7 @@ export default function NewOperationPage() {
 
   const handleSubmit = () => {
     if (!validate()) return;
+    const labServiceIds = labIds.flatMap((labId) => labServiceIdsByLab[labId] ?? []);
     createMutation.mutate({
       patientId,
       operationTypeId,
@@ -434,6 +445,7 @@ export default function NewOperationPage() {
       basePrice,
       surgeons,
       items: items.filter((i) => i.operationTypeItemId || i.name),
+      labServiceIds: labServiceIds.length ? labServiceIds : undefined,
     });
   };
 
@@ -917,6 +929,79 @@ export default function NewOperationPage() {
                     <span className="text-sm font-bold text-text">Umumiy summa</span>
                     <span className="text-sm font-bold text-primary">{fmt(totalPrice)} so'm</span>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Lab tahlillari */}
+            <div className="bg-surface border border-border rounded-xl p-5">
+              <SectionTitle icon={Stethoscope} title="Lab tahlillari" />
+              <p className="text-xs text-text-muted mb-3 -mt-2">
+                Bemorni operatsiya bilan bir vaqtda laboratoriya tahlillariga ham yuborish mumkin (ixtiyoriy).
+              </p>
+
+              <div className="space-y-1.5 mb-3">
+                <FieldLabel>Laboratoriyalar</FieldLabel>
+                <Combobox
+                  multiple
+                  options={laboratories.map((lab) => ({ value: lab.id, label: lab.name }))}
+                  value={labIds}
+                  onChange={(next) => {
+                    setLabIds(next);
+                    setLabServiceIdsByLab((prev) => {
+                      const updated: Record<string, string[]> = {};
+                      for (const labId of next) updated[labId] = prev[labId] ?? [];
+                      return updated;
+                    });
+                  }}
+                  placeholder="Laboratoriyani tanlang"
+                  searchPlaceholder="Laboratoriya qidiring..."
+                />
+              </div>
+
+              {labIds.length > 0 && (
+                <div className="space-y-3">
+                  {labIds.map((labId) => {
+                    const lab = laboratories.find((l) => l.id === labId);
+                    if (!lab) return null;
+                    const selectedForLab = labServiceIdsByLab[labId] ?? [];
+                    return (
+                      <div key={labId} className="p-3 bg-surface-hover rounded-lg border border-border space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-text">{lab.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLabIds((prev) => prev.filter((id) => id !== labId));
+                              setLabServiceIdsByLab((prev) => {
+                                const rest = { ...prev };
+                                delete rest[labId];
+                                return rest;
+                              });
+                            }}
+                            className="text-xs text-danger hover:underline cursor-pointer"
+                          >
+                            Olib tashlash
+                          </button>
+                        </div>
+                        <Combobox
+                          multiple
+                          options={lab.services.map((svc) => ({
+                            value: svc.id,
+                            label: svc.name,
+                            sublabel: svc.price != null ? `${fmt(Number(svc.price))} so'm` : undefined,
+                          }))}
+                          value={selectedForLab}
+                          onChange={(ids) => setLabServiceIdsByLab((prev) => ({ ...prev, [labId]: ids }))}
+                          placeholder="Tahlillarni tanlang"
+                          searchPlaceholder="Tahlil qidiring..."
+                        />
+                        {selectedForLab.length > 0 && (
+                          <p className="text-xs text-primary">{selectedForLab.length} ta tahlil tanlandi</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

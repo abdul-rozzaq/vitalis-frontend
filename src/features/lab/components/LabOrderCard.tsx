@@ -13,15 +13,32 @@ import { ItemFilesAndNote } from "./ItemFilesAndNote";
 import { NextStepButton } from "./NextStepButton";
 import { StatusPicker } from "./StatusPicker";
 
-export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceExpanded: boolean }) {
+interface LabOrderCardProps {
+  order: LabOrder;
+  forceExpanded?: boolean;
+  // Yangi buyurtma yoki e'tibor talab qiladigan buyurtmalar ro'yxatida
+  // laborant qo'shimcha bosmasdan darhol ishlay olishi uchun boshlanishda
+  // ochiq holatda ko'rsatiladi.
+  defaultExpanded?: boolean;
+  // Kartaning chap chetidagi "hozir e'tibor talab qiladi" urg'usi.
+  highlight?: boolean;
+}
+
+export function LabOrderCard({ order, forceExpanded = false, defaultExpanded = false, highlight = false }: LabOrderCardProps) {
   const t = useTranslations();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const actions = useItemActions(order);
   const orderActions = useOrderActions(order);
 
   const isExpanded = forceExpanded || expanded;
   const initials = initialsOf(order.patient.first_name, order.patient.last_name);
   const hasAnyResult = order.items.some((i) => i.resultTable);
+
+  const pendingCount = order.items.filter((i) => i.status === "PENDING").length;
+  const inProgressCount = order.items.filter((i) => i.status === "IN_PROGRESS").length;
+  const readyCount = order.items.filter((i) => i.status === "READY").length;
+  const deliveredCount = order.items.filter((i) => i.status === "DELIVERED").length;
+  const activeCount = pendingCount + inProgressCount;
 
   const ITEM_PRIORITY: Record<LabItemStatus, number> = { PENDING: 0, IN_PROGRESS: 0, READY: 1, DELIVERED: 2, CANCELLED: 2 };
   const sortedItems = useMemo(() => {
@@ -43,53 +60,66 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
   };
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden hover:border-border-strong transition-colors">
+    <div
+      className={`bg-surface border rounded-xl overflow-hidden transition-colors ${
+        highlight ? "border-warning/40 hover:border-warning/70" : "border-border hover:border-border-strong"
+      }`}
+    >
       {/* HEADER */}
-      <div className="grid grid-cols-[44px_1fr_auto] items-center gap-3 px-5 py-3.5">
-        <div className="w-11 h-11 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">{initials}</div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-text truncate">
-            {order.patient.first_name} {order.patient.last_name}
-          </p>
-          <p className="text-xs text-text-muted truncate mt-0.5">
-            {order.laboratory.name}
-            <span className="mx-2 opacity-40">·</span>
-            {order.patient.phone_number}
-          </p>
-          {order.items.length > 1 && (
-            <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1">
-              <span className="font-medium text-success tabular-nums">
-                {order.items.filter((i) => i.status === "DELIVERED").length}/{order.items.length}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 text-left"
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="relative w-11 h-11 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">
+            {initials}
+            {activeCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-white text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+                {activeCount}
               </span>
-              <span>{t("lab.deliveredOf")}</span>
-              {order.items.some((i) => i.status === "READY") && (
-                <>
-                  <span className="opacity-40">·</span>
-                  <span className="font-medium text-info tabular-nums">{order.items.filter((i) => i.status === "READY").length}</span>
-                  <span>{t("lab.readyAwaitingDelivery")}</span>
-                </>
-              )}
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-text truncate">
+              {order.patient.first_name} {order.patient.last_name}
             </p>
-          )}
+            <p className="text-xs text-text-muted truncate mt-0.5">
+              {order.laboratory.name}
+              <span className="mx-2 opacity-40">·</span>
+              {order.patient.phone_number}
+            </p>
+            {order.items.length > 1 && (
+              <p className="text-[11px] text-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <span className="font-medium text-success tabular-nums">
+                  {deliveredCount}/{order.items.length}
+                </span>
+                <span>{t("lab.deliveredOf")}</span>
+                {readyCount > 0 && (
+                  <>
+                    <span className="opacity-40">·</span>
+                    <span className="font-medium text-info tabular-nums">{readyCount}</span>
+                    <span>{t("lab.readyAwaitingDelivery")}</span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
           <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_PILL[order.status]}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${ORDER_STATUS_DOT[order.status]}`} />
             {ORDER_STATUS_LABELS[order.status]}
           </span>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:border-border-strong transition-all"
-            aria-label={isExpanded ? "Yopish" : "Ochish"}
-          >
+          <span className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted">
             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
+          </span>
         </div>
-      </div>
+      </button>
 
       {/* UMUMIY (BO'LIM DARAJASIDAGI) NATIJA VA HUJJAT — har doim shu yerdan */}
       {isExpanded && (
-        <div className="flex items-center justify-between gap-2 px-5 py-2 border-t border-border bg-surface-secondary/40">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2 border-t border-border bg-surface-secondary/40">
           <span className="text-xs text-text-muted">{t("lab.combinedResultsHint")}</span>
           <div className="flex items-center gap-2 shrink-0">
             {hasAnyResult && (
@@ -118,9 +148,9 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
             const isEditing = actions.editingItemId === item.id;
 
             return (
-              <div key={item.id} className={`grid grid-cols-[1fr_auto] gap-3 items-start px-5 py-3.5 ${ITEM_ROW_ACCENT[item.status]}`}>
+              <div key={item.id} className={`flex flex-col sm:grid sm:grid-cols-[1fr_auto] gap-3 items-start px-4 sm:px-5 py-3.5 ${ITEM_ROW_ACCENT[item.status]}`}>
                 {/* LEFT */}
-                <div className="min-w-0">
+                <div className="min-w-0 w-full">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-text">{item.service.name}</p>
                     <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
@@ -165,7 +195,7 @@ export function LabOrderCard({ order, forceExpanded }: { order: LabOrder; forceE
 
                 {/* RIGHT: action buttons */}
                 {!isEditing && canAct && (
-                  <div className="flex items-center gap-1.5 pt-0.5 shrink-0">
+                  <div className="flex items-center gap-1.5 pt-0.5 shrink-0 self-start sm:self-auto">
                     <label
                       className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:text-primary hover:border-primary/30 transition-all cursor-pointer"
                       title={t("lab.uploadResult")}
