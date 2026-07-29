@@ -800,6 +800,7 @@
     "sortOldestFirst": "Самое ожидаемое",
     "sortNewestFirst": "Новейшие",
     "downloadFormat": "{формат} скачать",
+    "downloadFailed": "Не удалось скачать файл",
     "combinedResults": "Общий результат",
     "combinedResultsHint": "Введите результаты всех услуг заказа на одном экране.",
     "combinedResultsButton": "Ввести общий результат",

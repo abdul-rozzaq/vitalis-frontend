@@ -301,7 +301,7 @@ export default function LaboratoriesPage() {
                             <Edit className="w-3.5 h-3.5" />
                           </button>
                         </Can>
-                        <Can roles={["ADMIN"]}>
+                        <Can roles={["ADMIN", "LABARANT"]}>
                           <button
                             onClick={() => {
                               if (confirm(t("laboratories.deleteServiceConfirm"))) {

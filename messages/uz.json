@@ -800,6 +800,7 @@
     "sortOldestFirst": "Eng ko'p kutgan",
     "sortNewestFirst": "Eng yangi",
     "downloadFormat": "{format} yuklab olish",
+    "downloadFailed": "Faylni yuklab bo'lmadi",
     "combinedResults": "Umumiy natija",
     "combinedResultsHint": "Buyurtmadagi barcha xizmatlarning natijasini bitta ekranda kiriting.",
     "combinedResultsButton": "Umumiy natija kiritish",

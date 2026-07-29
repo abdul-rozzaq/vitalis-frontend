@@ -7,14 +7,59 @@ import { CheckCircle2, ClipboardList, Download, FileText, Paperclip, Loader2 } f
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import { api } from "@/shared/lib/api";
 import { Can } from "@/components/ui/can";
+import { DownloadResultButtons } from "@/features/lab/components/DownloadResultButtons";
 
 export function CaseStepRow({ step, patientId }: { step: CaseStep; patientId?: string }) {
   const t = useTranslations();
   const queryClient = useQueryClient();
   const Icon = STEP_ICONS[step.type] || ClipboardList;
   const files = step.appointment?.files ?? [];
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+
+  // Laborant natijasini (natija jadvalidan generatsiya qilingan PDF/DOCX) bemor
+  // kartasidan — ya'ni patient details ichidan — to'g'ridan-to'g'ri yuklab olish.
+  // Bitta xizmat uchun: /lab-orders/:orderId/items/:itemId/download/:format
+  const handleItemDownload = async (labOrderId: string, itemId: string, format: "pdf" | "docx") => {
+    const key = `${itemId}-${format}`;
+    setDownloadingKey(key);
+    try {
+      const res = await api.get(`/lab-orders/${labOrderId}/items/${itemId}/download/${format}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `natija-${itemId.slice(0, 8)}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("lab.downloadFailed"));
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
+  // Butun buyurtma (bir nechta xizmat natijasi) uchun umumiy hujjat:
+  // /lab-orders/:orderId/download/:format
+  const handleOrderDownload = async (labOrderId: string, format: "pdf" | "docx") => {
+    const key = `order-${labOrderId}-${format}`;
+    setDownloadingKey(key);
+    try {
+      const res = await api.get(`/lab-orders/${labOrderId}/download/${format}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `umumiy-natija-${labOrderId.slice(0, 8)}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("lab.downloadFailed"));
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
 
   const { mutateAsync: markStepDone, isPending: isMarkingDone } = useMutation({
     mutationFn: async () => {
@@ -72,26 +117,45 @@ export function CaseStepRow({ step, patientId }: { step: CaseStep; patientId?: s
 
         {step.labOrders && step.labOrders.length > 0 && (
           <div className="space-y-1.5 mt-2">
-            {step.labOrders.map((labOrder) => (
-              <div key={labOrder.id} className="space-y-1.5">
-                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{labOrder.laboratory.name}</p>
-                <div className="space-y-1">
-                  {labOrder.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
-                      <span className="text-text font-medium truncate">{item.service.name}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {item.files?.map((f) => (
-                          <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name} className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors">
-                            <Download className="w-3.5 h-3.5" />
-                          </a>
-                        ))}
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
+            {step.labOrders.map((labOrder) => {
+              const itemsWithResult = labOrder.items.filter((i) => i.resultTable);
+              return (
+                <div key={labOrder.id} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{labOrder.laboratory.name}</p>
+                    {itemsWithResult.length > 1 && (
+                      <DownloadResultButtons
+                        itemId={`order-${labOrder.id}`}
+                        downloadingKey={downloadingKey}
+                        onDownload={(_itemId, format) => handleOrderDownload(labOrder.id, format)}
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {labOrder.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs bg-info-50 border border-info-100 rounded-md px-2.5 py-1.5 gap-2">
+                        <span className="text-text font-medium truncate">{item.service.name}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {item.files?.map((f) => (
+                            <a key={f.id} href={resolveFileUrl(f.url)} target="_blank" rel="noreferrer" title={f.name} className="p-1 rounded hover:bg-surface-hover text-text-muted hover:text-info transition-colors">
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
+                          ))}
+                          {item.resultTable && (
+                            <DownloadResultButtons
+                              itemId={item.id}
+                              downloadingKey={downloadingKey}
+                              onDownload={(itemId, format) => handleItemDownload(labOrder.id, itemId, format)}
+                            />
+                          )}
+                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${LAB_ITEM_STATUS_COLOR[item.status]}`}>{t(`lab.itemStatus.${item.status}`)}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
