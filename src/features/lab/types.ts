@@ -81,6 +81,8 @@ export interface LabOrderItem {
   id: string;
   status: LabItemStatus;
   serviceId: string;
+  // Xizmat pullik (invoice'ga qo'shilgan) yoki bepul ekanini bildiradi.
+  isPaid: boolean;
   service: {
     id: string;
     name: string;

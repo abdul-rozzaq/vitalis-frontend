@@ -310,7 +310,16 @@ export default function NewOperationPage() {
   }, [operationTypeId]);
 
   const itemsTotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const totalPrice = basePrice + itemsTotal;
+  const labTotal = labIds.reduce((sum, labId) => {
+    const lab = laboratories.find((l) => l.id === labId);
+    if (!lab) return sum;
+    const selectedIds = labServiceIdsByLab[labId] ?? [];
+    const labSum = lab.services
+      .filter((svc) => selectedIds.includes(svc.id))
+      .reduce((s, svc) => s + Number(svc.price ?? 0), 0);
+    return sum + labSum;
+  }, 0);
+  const totalPrice = basePrice + itemsTotal + labTotal;
 
   // ── Surgeons ──────────────────────────────────────────────────────────────────
   const addSurgeon = () => {
@@ -907,7 +916,7 @@ export default function NewOperationPage() {
                 </div>
               )}
 
-              {(items.length > 0 || basePrice > 0 || operationTypeId) && (
+              {(items.length > 0 || basePrice > 0 || operationTypeId || labTotal > 0) && (
                 <div className="mt-4 pt-4 border-t border-border space-y-1.5">
                   {operationTypeId && (
                     <div className="flex justify-between items-center text-xs text-text-muted">
@@ -923,6 +932,12 @@ export default function NewOperationPage() {
                     <div className="flex justify-between text-xs text-text-muted">
                       <span>Xizmatlar jami</span>
                       <span>{fmt(itemsTotal)} so'm</span>
+                    </div>
+                  )}
+                  {labTotal > 0 && (
+                    <div className="flex justify-between text-xs text-text-muted">
+                      <span>Lab tahlillari jami</span>
+                      <span>{fmt(labTotal)} so'm</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-1.5 border-t border-border">
