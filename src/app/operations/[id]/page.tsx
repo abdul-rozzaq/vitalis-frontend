@@ -2,6 +2,7 @@
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
+import { OperationPaymentCard } from "@/features/operations/components/OperationPaymentCard";
 import { api } from "@/shared/lib/api";
 import { formatAmount } from "@/shared/lib/formatters";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -228,6 +229,19 @@ function OperationLabOrders({ labOrders }: { labOrders: LabOrder[] }) {
   );
 }
 
+function StatusBadge({
+  cfg,
+}: {
+  cfg: { label: string; badgeCls: string; dotCls: string };
+}) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${cfg.badgeCls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotCls}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function OperationDetailsPage() {
@@ -266,15 +280,6 @@ export default function OperationDetailsPage() {
       icon: XCircle,
     },
   };
-  function StatusBadge({ status }: { status: OperationStatus }) {
-    const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.SCHEDULED;
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${cfg.badgeCls}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotCls}`} />
-        {cfg.label}
-      </span>
-    );
-  }
 
   const { data: op, isLoading } = useQuery<Operation>({
     queryKey: ["operation", operationId],
@@ -415,7 +420,7 @@ export default function OperationDetailsPage() {
                     </p>
                   </div>
                 </div>
-                <StatusBadge status={op.status} />
+                <StatusBadge cfg={STATUS_CONFIG[op.status] ?? STATUS_CONFIG.SCHEDULED} />
               </div>
 
               {/* Meta info grid */}
@@ -546,14 +551,8 @@ export default function OperationDetailsPage() {
           {/* ══ SIDEBAR (o'ng) ════════════════════════════════════════════════ */}
           <div className="space-y-4">
 
-            {/* Total price */}
-            <div className="bg-surface border border-border rounded-xl p-5">
-              <p className="text-xs text-text-muted mb-1">Umumiy summa</p>
-              <p className="text-2xl font-semibold text-text">
-                {fmt(op.totalPrice)}{" "}
-                <span className="text-sm font-normal text-text-muted">so'm</span>
-              </p>
-            </div>
+            {/* Payment */}
+            <OperationPaymentCard operationId={op.id} patientId={op.patientId} operationTotalPrice={Number(op.totalPrice)} />
 
             {/* Time info */}
             <div className="bg-surface border border-border rounded-xl p-5">
