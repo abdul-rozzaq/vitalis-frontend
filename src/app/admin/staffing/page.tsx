@@ -16,7 +16,7 @@ export default function StaffingOverviewPage() {
 
   const { data: shifts = [], isLoading } = useQuery<Shift[]>({
     queryKey: ["shifts", "staffing", from, to],
-    queryFn: () => shiftsApi.list({ from, to }),
+    queryFn: () => shiftsApi.listAll({ from, to }),
   });
 
   const m = useMemo(() => {

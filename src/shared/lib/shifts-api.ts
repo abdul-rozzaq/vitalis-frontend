@@ -83,11 +83,105 @@ export interface CreateShiftPayload {
 
 export type UpdateShiftPayload = Partial<Omit<CreateShiftPayload, "staff">> & { status?: ShiftStatus };
 
+/** `GET /shifts` sahifalangan javob qaytaradi. */
+export interface Paginated<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ShiftsQuery {
+  departmentId?: string;
+  from?: string;
+  to?: string;
+  status?: ShiftStatus;
+  page?: number;
+  limit?: number;
+}
+
+// ─── Shablonlar ──────────────────────────────────────────────────────────────
+
+export interface ShiftTemplate {
+  id: string;
+  departmentId: string;
+  name: string;
+  /** "HH:mm" — klinika vaqti */
+  startTime: string;
+  endTime: string;
+  requiredDoctors: number;
+  requiredNurses: number;
+  /** [1=Dushanba .. 7=Yakshanba]. Bo'sh = har kuni. */
+  daysOfWeek: number[];
+  isActive: boolean;
+  department: DepartmentRef;
+  /** Backend hisoblaydi: smena yarim tundan o'tadimi. */
+  crossesMidnight: boolean;
+}
+
+export interface CreateTemplatePayload {
+  departmentId: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  requiredDoctors?: number;
+  requiredNurses?: number;
+  daysOfWeek?: number[];
+}
+
+export type UpdateTemplatePayload = Partial<Omit<CreateTemplatePayload, "departmentId">> & { isActive?: boolean };
+
+// ─── Generatsiya / ommaviy biriktirish ───────────────────────────────────────
+
+export interface GeneratePayload {
+  departmentId: string;
+  templateIds: string[];
+  /** "YYYY-MM-DD" */
+  from: string;
+  to: string;
+  daysOfWeek?: number[];
+  dryRun?: boolean;
+}
+
+export interface PlannedShift {
+  templateId: string;
+  templateName: string;
+  startAt: string;
+  endAt: string;
+  requiredDoctors: number;
+  requiredNurses: number;
+}
+
+export interface GenerateResult {
+  created: number;
+  skipped: number;
+  toCreate: PlannedShift[];
+  skippedShifts: PlannedShift[];
+  dryRun: boolean;
+}
+
+export interface BulkAssignPayload {
+  shiftIds: string[];
+  staff: { userId: string; role: ShiftStaffRole }[];
+  dryRun?: boolean;
+}
+
+export interface BulkAssignResult {
+  assigned: number;
+  skipped: { shiftId: string; userId: string; reason: string }[];
+  toCreate: { shiftId: string; userId: string; role: ShiftStaffRole }[];
+  dryRun: boolean;
+}
+
 // ─── API helpers ─────────────────────────────────────────────────────────────
 
 export const shiftsApi = {
-  list: (params?: { departmentId?: string; from?: string; to?: string; status?: ShiftStatus }) =>
-    api.get<Shift[]>("/shifts", { params: params ?? {} }).then((r) => r.data),
+  /** Sahifalangan javob. Faqat massiv kerak bo'lsa `listAll` ishlating. */
+  list: (params?: ShiftsQuery) =>
+    api.get<Paginated<Shift>>("/shifts", { params: params ?? {} }).then((r) => r.data),
+  /** Qulaylik uchun: sahifalash qobig'ini ochib, faqat smenalarni qaytaradi. */
+  listAll: (params?: ShiftsQuery) =>
+    api.get<Paginated<Shift>>("/shifts", { params: params ?? {} }).then((r) => r.data.data),
   retrieve: (id: string) => api.get<Shift>(`/shifts/${id}`).then((r) => r.data),
   create: (data: CreateShiftPayload) => api.post<Shift>("/shifts", data).then((r) => r.data),
   update: (id: string, data: UpdateShiftPayload) => api.patch<Shift>(`/shifts/${id}`, data).then((r) => r.data),
@@ -96,6 +190,20 @@ export const shiftsApi = {
     api.post<Shift>(`/shifts/${id}/staff`, data).then((r) => r.data),
   unassignStaff: (id: string, userId: string) => api.delete<Shift>(`/shifts/${id}/staff/${userId}`).then((r) => r.data),
   board: (id: string) => api.get<BoardRoom[]>(`/shifts/${id}/board`).then((r) => r.data),
+
+  // Shablonlar
+  templates: (params?: { departmentId?: string; includeInactive?: boolean }) =>
+    api.get<ShiftTemplate[]>("/shift-templates", { params: params ?? {} }).then((r) => r.data),
+  createTemplate: (data: CreateTemplatePayload) =>
+    api.post<ShiftTemplate>("/shift-templates", data).then((r) => r.data),
+  updateTemplate: (id: string, data: UpdateTemplatePayload) =>
+    api.patch<ShiftTemplate>(`/shift-templates/${id}`, data).then((r) => r.data),
+  removeTemplate: (id: string) => api.delete(`/shift-templates/${id}`).then((r) => r.data),
+
+  // Ommaviy amallar
+  generate: (data: GeneratePayload) => api.post<GenerateResult>("/shifts/generate", data).then((r) => r.data),
+  bulkAssign: (data: BulkAssignPayload) =>
+    api.post<BulkAssignResult>("/shifts/bulk-assign", data).then((r) => r.data),
 
   // Xodim (duty) ekrani
   myActive: () => api.get<Shift[]>("/shifts/my/active").then((r) => r.data),
@@ -171,4 +279,41 @@ export function departmentColor(departmentId: string): string {
 /** true — biror kvota to'liq emas (yetishmovchilik bor). */
 export function isUnderstaffed(s: Staffing): boolean {
   return s.assignedDoctors < s.requiredDoctors || s.assignedNurses < s.requiredNurses;
+}
+
+/**
+ * Foydalanuvchi roli (`UserRole`) ↔ smena roli (`ShiftStaffRole`) moslashuvi.
+ * Ular ataylab har xil: tizimda rol `HAMSHIRA`, smenada esa `NURSE`.
+ */
+export const SHIFT_ROLE_BY_USER_ROLE: Record<string, ShiftStaffRole> = {
+  DOCTOR: "DOCTOR",
+  HAMSHIRA: "NURSE",
+};
+
+/** Berilgan smena roli uchun mos foydalanuvchi roli. */
+export const USER_ROLE_BY_SHIFT_ROLE: Record<ShiftStaffRole, string> = {
+  DOCTOR: "DOCTOR",
+  NURSE: "HAMSHIRA",
+};
+
+export const SHIFT_ROLE_LABEL: Record<ShiftStaffRole, string> = {
+  DOCTOR: "Shifokor",
+  NURSE: "Hamshira",
+};
+
+/** 1=Dushanba .. 7=Yakshanba */
+export const WEEKDAY_LABELS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] as const;
+
+/** `daysOfWeek` ni o'qiladigan matnga aylantiradi. */
+export function fmtDaysOfWeek(days: number[]): string {
+  if (!days.length) return "Har kuni";
+  return [...days]
+    .sort((a, b) => a - b)
+    .map((d) => WEEKDAY_LABELS[d - 1])
+    .join(", ");
+}
+
+/** Shablon vaqt oralig'i: "22:00 → 06:00 (+1)" */
+export function fmtTemplateRange(t: Pick<ShiftTemplate, "startTime" | "endTime" | "crossesMidnight">): string {
+  return t.crossesMidnight ? `${t.startTime} → ${t.endTime} (+1)` : `${t.startTime} → ${t.endTime}`;
 }
