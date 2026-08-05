@@ -33,6 +33,46 @@ export interface Staffing {
   assignedNurses: number;
 }
 
+export type AttendanceStatus =
+  | "PRESENT"
+  | "LATE"
+  | "EARLY_LEAVE"
+  | "LATE_AND_EARLY_LEAVE"
+  | "ABSENT"
+  | "MISSING_CHECKOUT"
+  | "MISSING_CHECKIN";
+
+/** Bitta xodimning bitta smenadagi haqiqiy davomati. */
+export interface ShiftAttendanceRecord {
+  userId: string;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  lateMinutes: number;
+  earlyLeaveMinutes: number;
+  /** Smena oynasi ichida haqiqatda ichkarida bo'lgan daqiqalar. */
+  workedMinutes: number;
+  absentMinutes: number;
+  status: AttendanceStatus;
+  /** Kirish skanidagi yuz rasmi (Hikvision terminalidan). */
+  checkInPicture: string | null;
+}
+
+/** Smena bo'yicha davomat xulosasi — reja emas, haqiqat. */
+export interface ShiftAttendance {
+  expected: number;
+  arrived: number;
+  late: number;
+  absent: number;
+  /** Kirish yoki chiqish skani yo'q — operator aralashuvi kerak. */
+  incomplete: number;
+  /** Hozir ichkarida (faqat davom etayotgan smenada ma'noli). */
+  insideNow: number;
+  totalLateMinutes: number;
+  totalWorkedMinutes: number;
+  /** Smena ayni damda davom etyaptimi. */
+  isRunning: boolean;
+}
+
 export interface Shift {
   id: string;
   departmentId: string;
@@ -45,6 +85,8 @@ export interface Shift {
   department: DepartmentRef;
   staff: ShiftStaffMember[];
   staffing: Staffing;
+  attendance: ShiftAttendance;
+  attendanceRecords: ShiftAttendanceRecord[];
 }
 
 export interface BoardPatient {
@@ -279,6 +321,48 @@ export function departmentColor(departmentId: string): string {
 /** true — biror kvota to'liq emas (yetishmovchilik bor). */
 export function isUnderstaffed(s: Staffing): boolean {
   return s.assignedDoctors < s.requiredDoctors || s.assignedNurses < s.requiredNurses;
+}
+
+// ─── Davomat helperlari ──────────────────────────────────────────────────────
+
+export const ATTENDANCE_STATUS_LABEL: Record<AttendanceStatus, string> = {
+  PRESENT: "Keldi",
+  LATE: "Kech keldi",
+  EARLY_LEAVE: "Erta ketdi",
+  LATE_AND_EARLY_LEAVE: "Kech keldi, erta ketdi",
+  ABSENT: "Kelmadi",
+  MISSING_CHECKOUT: "Chiqish skani yo'q",
+  MISSING_CHECKIN: "Kirish skani yo'q",
+};
+
+/**
+ * Smenaning davomat holati — kartadagi rang shu bo'yicha tanlanadi.
+ *
+ * `alarm` — smena davom etyapti, lekin biriktirilgan xodimlardan hech kim
+ * kelmagan. Klinika uchun eng kritik holat.
+ */
+export type AttendanceTone = "alarm" | "warning" | "ok" | "idle";
+
+export function attendanceTone(a: ShiftAttendance): AttendanceTone {
+  if (a.expected === 0) return "idle";
+  if (a.isRunning && a.arrived === 0) return "alarm";
+  if (a.absent > 0) return "alarm";
+  if (a.late > 0 || a.incomplete > 0 || a.arrived < a.expected) return "warning";
+  if (a.arrived > 0) return "ok";
+  return "idle";
+}
+
+/** `134` → `2s 14daq`. Nol bo'lsa bo'sh satr. */
+export function fmtMinutes(min: number): string {
+  if (!min) return "";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (!h) return `${m}daq`;
+  return m ? `${h}s ${m}daq` : `${h}s`;
+}
+
+export function fmtClock(iso: string | null): string {
+  return iso ? format(new Date(iso), "HH:mm") : "";
 }
 
 /**

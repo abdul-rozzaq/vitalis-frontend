@@ -8,5 +8,8 @@ export interface User {
   birthday?: string | null;
   photo?: string | null;
   role: UserRole;
+  /** Hikvision Face ID terminalidagi xodim raqami. Bo'sh bo'lsa xodimning
+   *  skanlari hech qaysi smenaga bog'lanmaydi. */
+  employeeNo?: string | null;
   createdAt: string;
 }

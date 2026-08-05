@@ -5,12 +5,14 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { activeWorkspace, isItemActive } from "./workspaces";
+import { activeItemHref, activeWorkspace } from "./workspaces";
 
 export function ContextualPanel() {
   const pathname = usePathname();
   const t = useTranslations();
   const ws = activeWorkspace(pathname);
+  // Faqat eng aniq mos keladigan element ajratiladi.
+  const activeHref = activeItemHref(pathname, ws.items);
 
   return (
     <aside className="flex h-screen w-56 flex-shrink-0 flex-col border-r border-border bg-surface sticky top-0">
@@ -24,7 +26,7 @@ export function ContextualPanel() {
       {/* Items */}
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2.5">
         {ws.items.map((item) => {
-          const active = isItemActive(pathname, item);
+          const active = item.href === activeHref;
           return (
             <Can key={item.href} roles={item.roles}>
               <Link

@@ -40,11 +40,31 @@ export const useDepartments = () =>
     queryFn: () => api.get<DepartmentRef[]>("/departments").then((r) => r.data),
   });
 
-export const useBoardShifts = (from: string, to: string) =>
-  useQuery<Shift[]>({
+/**
+ * Davomat qatlamini yangilab turish davriyligi (ms).
+ *
+ * Polling faqat oyna BUGUNNI o'z ichiga olganda yoqiladi — o'tgan yoki
+ * kelajakdagi oynada davomat o'zgarmaydi, bekorga so'rov yubormaymiz.
+ */
+const BOARD_POLL_MS = 30_000;
+
+export const useBoardShifts = (from: string, to: string) => {
+  /*
+    `Date.now()` render paytida chaqirilmaydi — `refetchInterval` funksiya
+    sifatida berilgan, TanStack Query uni renderdan tashqarida chaqiradi.
+  */
+  const coversToday = () => {
+    const now = Date.now();
+    return new Date(from).getTime() <= now && now <= new Date(to).getTime();
+  };
+
+  return useQuery<Shift[]>({
     queryKey: ["board-shifts", from, to],
     queryFn: () => shiftsApi.listAll({ from, to, limit: 500 }),
+    refetchInterval: () => (coversToday() ? BOARD_POLL_MS : false),
+    refetchOnWindowFocus: () => coversToday(),
   });
+};
 
 export const useShiftTemplates = (departmentId?: string) =>
   useQuery<ShiftTemplate[]>({

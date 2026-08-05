@@ -1,4 +1,4 @@
-import { fmtShiftRange, isUnderstaffed, Shift } from '@/shared/lib/shifts-api';
+import { fmtShiftRange, Shift } from '@/shared/lib/shifts-api';
 import React from 'react';
 import { ShiftCard } from '../shift-card/ShiftCard';
 import { TimelineItem } from '../timeline/types';
@@ -19,9 +19,11 @@ export const mapShiftToTimelineItem = (shift: Shift): TimelineItem => {
     content: (width: number) => (
       <ShiftCard
         id={shift.id}
-        name={shift.note || shift.department?.name || 'Smena'}
+        // Qator allaqachon bo'lim nomi — kartada uni takrorlash ortiqcha.
+        name={shift.note || 'Smena'}
         timeRange={timeRange}
-        status={isUnderstaffed(shift.staffing) ? 'understaffed' : 'staffed'}
+        staffing={shift.staffing}
+        attendance={shift.attendance}
         width={width}
       />
     ),

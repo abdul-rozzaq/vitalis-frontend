@@ -106,6 +106,31 @@ export default function EmployeesPage() {
         },
       },
       {
+        accessorKey: "employeeNo",
+        header: "Face ID",
+        cell: (info: any) => {
+          const no = info.getValue() as string | null;
+          const role = info.row.original.role as string;
+          const needsFaceId = role === "DOCTOR" || role === "HAMSHIRA";
+
+          if (no) {
+            return <span className="text-secondary text-sm font-mono">{no}</span>;
+          }
+          // Tibbiyot xodimining Face ID si yo'q bo'lsa davomat umuman
+          // yig'ilmaydi — buni ro'yxatdayoq ko'rsatamiz.
+          return needsFaceId ? (
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning"
+              title="Face ID bog'lanmagan — bu xodimning skanlari hisobga olinmaydi"
+            >
+              bog&apos;lanmagan
+            </span>
+          ) : (
+            <span className="text-text-muted text-sm">—</span>
+          );
+        },
+      },
+      {
         accessorKey: "createdAt",
         header: t("employees.colJoined"),
         cell: (info: any) => <span className="text-secondary text-sm">{new Date(info.getValue()).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>,

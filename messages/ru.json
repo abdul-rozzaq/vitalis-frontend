@@ -44,7 +44,8 @@
     "rooms-floor-view": "Вид на этаж",
     "new-patient": "Новый пациент",
     "new-employee": "Новый сотрудник",
-    "attendance": "Посещаемость"
+    "attendance": "Посещаемость",
+    "attendance-live": "Кто на смене"
   },
   "common": {
     "filter": "Фильтр",

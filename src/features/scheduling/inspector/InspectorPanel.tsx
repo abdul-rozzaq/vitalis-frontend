@@ -1,7 +1,79 @@
-import { fmtShiftRange, isUnderstaffed, SHIFT_ROLE_LABEL } from '@/shared/lib/shifts-api';
+import {
+  ATTENDANCE_STATUS_LABEL,
+  attendanceTone,
+  fmtClock,
+  fmtMinutes,
+  fmtShiftRange,
+  isUnderstaffed,
+  SHIFT_ROLE_LABEL,
+  ShiftAttendanceRecord,
+} from '@/shared/lib/shifts-api';
 import React, { useMemo } from 'react';
 import { useBoardShifts, useDepartments } from '../api';
 import { useBoardContext } from '../board/BoardContext';
+
+/**
+ * Xodim avatari. Kirish skanida yuz rasmi bo'lsa — o'shani ko'rsatadi
+ * (Hikvision terminali har skanda rasm yuboradi, `picturePath` bazada bor).
+ * Ramka rangi davomat holatini bildiradi.
+ */
+const StaffAvatar: React.FC<{ role: string; record?: ShiftAttendanceRecord }> = ({ role, record }) => {
+  const ring = !record
+    ? 'border-border'
+    : record.status === 'ABSENT'
+      ? 'border-danger'
+      : record.lateMinutes > 0 || record.status.startsWith('MISSING')
+        ? 'border-warning'
+        : 'border-success';
+
+  const fallback = role === 'DOCTOR' ? 'bg-info-50' : 'bg-success-50';
+
+  if (record?.checkInPicture) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={record.checkInPicture}
+        alt=""
+        className={`w-9 h-9 rounded-full object-cover border-2 shrink-0 ${ring}`}
+      />
+    );
+  }
+
+  return <div className={`w-9 h-9 rounded-full border-2 shrink-0 ${fallback} ${ring}`} />;
+};
+
+/** Xodim yonidagi vaqt/holat ustuni. */
+const AttendanceBadge: React.FC<{ record?: ShiftAttendanceRecord; isRunning: boolean }> = ({
+  record,
+  isRunning,
+}) => {
+  if (!record || (!record.checkInAt && record.status !== 'ABSENT')) {
+    return <span className="text-xs text-text-muted shrink-0">kutilmoqda</span>;
+  }
+
+  if (record.status === 'ABSENT') {
+    return <span className="text-xs font-medium text-danger shrink-0">kelmadi</span>;
+  }
+
+  const isLate = record.lateMinutes > 0;
+  const stillInside = record.checkInAt && !record.checkOutAt && isRunning;
+
+  return (
+    <div className="text-right shrink-0" title={ATTENDANCE_STATUS_LABEL[record.status]}>
+      <p className={`text-xs font-medium tabular-nums ${isLate ? 'text-warning' : 'text-success'}`}>
+        {fmtClock(record.checkInAt)}
+        {record.checkOutAt && ` – ${fmtClock(record.checkOutAt)}`}
+      </p>
+      <p className="text-[11px] text-text-muted tabular-nums">
+        {isLate
+          ? `+${fmtMinutes(record.lateMinutes)} kech`
+          : stillInside
+            ? 'ichkarida'
+            : fmtMinutes(record.workedMinutes)}
+      </p>
+    </div>
+  );
+};
 
 interface InspectorPanelProps {
   onEditClick?: () => void;
@@ -37,6 +109,8 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({ onEditClick, onA
       </div>
     );
   }
+
+  const attendanceByUser = new Map(shift.attendanceRecords.map((r) => [r.userId, r]));
 
   const shiftName = shift.note || department?.name || 'Smena';
   const understaffed = isUnderstaffed(shift.staffing);
@@ -107,19 +181,72 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({ onEditClick, onA
           </div>
         </div>
 
+        {/* Davomat xulosasi — faqat boshlangan smenalarda ma'noli */}
+        {shift.attendance.expected > 0 && (shift.attendance.isRunning || shift.attendance.arrived > 0 || shift.attendance.absent > 0) && (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-xs font-semibold text-text-muted uppercase">Davomat</h4>
+              {shift.attendance.isRunning && (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-primary">
+                  <span className="relative flex w-1.5 h-1.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60 animate-ping" />
+                    <span className="relative inline-flex rounded-full h-full w-full bg-primary" />
+                  </span>
+                  Davom etyapti
+                </span>
+              )}
+            </div>
+            <div
+              className={`p-3 rounded-md border ${
+                attendanceTone(shift.attendance) === 'alarm'
+                  ? 'bg-danger-50 border-danger'
+                  : attendanceTone(shift.attendance) === 'warning'
+                    ? 'bg-warning-50 border-warning'
+                    : 'bg-success-50 border-success'
+              }`}
+            >
+              <p className="text-sm font-semibold text-text tabular-nums">
+                {shift.attendance.arrived}/{shift.attendance.expected} keldi
+                {shift.attendance.isRunning && shift.attendance.insideNow > 0 && (
+                  <span className="font-normal text-text-secondary">
+                    {' '}· {shift.attendance.insideNow} hozir ichkarida
+                  </span>
+                )}
+              </p>
+              {(shift.attendance.late > 0 || shift.attendance.absent > 0 || shift.attendance.incomplete > 0) && (
+                <p className="text-xs text-text-secondary mt-1 tabular-nums">
+                  {[
+                    shift.attendance.late > 0
+                      ? `${shift.attendance.late} kech (+${fmtMinutes(shift.attendance.totalLateMinutes)})`
+                      : '',
+                    shift.attendance.absent > 0 ? `${shift.attendance.absent} kelmadi` : '',
+                    shift.attendance.incomplete > 0 ? `${shift.attendance.incomplete} to'liqsiz` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div>
           <h4 className="text-xs font-semibold text-text-muted uppercase mb-2">Biriktirilgan xodimlar</h4>
           <div className="flex flex-col gap-2">
             {shift.staff.length > 0 ? (
-              shift.staff.map((s) => (
-                <div key={s.userId} className="flex items-center gap-3 p-2 rounded-md border border-transparent hover:bg-surface-secondary hover:border-border transition-colors">
-                  <div className={`w-8 h-8 rounded-full border ${s.role === 'DOCTOR' ? 'bg-info-50 border-info' : 'bg-success-50 border-success'}`} />
-                  <div>
-                    <p className="text-sm font-medium text-text">{s.user.first_name} {s.user.last_name}</p>
-                    <p className="text-xs text-text-secondary">{SHIFT_ROLE_LABEL[s.role]}</p>
+              shift.staff.map((s) => {
+                const rec = attendanceByUser.get(s.userId);
+                return (
+                  <div key={s.userId} className="flex items-center gap-3 p-2 rounded-md border border-transparent hover:bg-surface-secondary hover:border-border transition-colors">
+                    <StaffAvatar role={s.role} record={rec} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-text truncate">{s.user.first_name} {s.user.last_name}</p>
+                      <p className="text-xs text-text-secondary">{SHIFT_ROLE_LABEL[s.role]}</p>
+                    </div>
+                    <AttendanceBadge record={rec} isRunning={shift.attendance.isRunning} />
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-sm text-text-muted italic">Xodim biriktirilmagan</p>
             )}
