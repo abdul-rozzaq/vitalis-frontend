@@ -10,6 +10,7 @@ export function useOrderActions(order: LabOrder) {
   const t = useTranslations();
   const [combinedModalOpen, setCombinedModalOpen] = useState(false);
   const [downloadingOrderKey, setDownloadingOrderKey] = useState<string | null>(null);
+  const [confirmAdvanceOpen, setConfirmAdvanceOpen] = useState(false);
 
   const saveResultTables = useMutation({
     mutationFn: ({ items, submit }: { items: { itemId: string; rows: LabResultRow[] }[]; submit: boolean }) =>
@@ -18,6 +19,27 @@ export function useOrderActions(order: LabOrder) {
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
       if (variables.submit) setCombinedModalOpen(false);
       toast.success(variables.submit ? t("lab.resultSubmittedToast") : t("lab.resultDraftSavedToast"));
+    },
+  });
+
+  // Buyurtma kartasidagi YAGONA qo'lda bosiladigan amal — faqat "Tayyor"
+  // xizmatlarni "Bemorga topshirildi" deb belgilaydi.
+  const deliverOrder = useMutation({
+    mutationFn: () => api.post(`/lab-orders/${order.id}/deliver`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      setConfirmAdvanceOpen(false);
+      toast.success(t("lab.orderDeliveredToast"));
+    },
+  });
+
+  // Natija kiritish sahifasidan buyurtmaga yangi xizmat qo'shish.
+  const addItem = useMutation({
+    mutationFn: ({ serviceId, isPaid }: { serviceId: string; isPaid: boolean }) =>
+      api.post(`/lab-orders/${order.id}/items`, { serviceId, isPaid }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      toast.success(t("lab.serviceAddedToast"));
     },
   });
 
@@ -45,5 +67,9 @@ export function useOrderActions(order: LabOrder) {
     saveResultTables,
     downloadingOrderKey,
     handleDownloadOrder,
+    deliverOrder,
+    addItem,
+    confirmAdvanceOpen,
+    setConfirmAdvanceOpen,
   };
 }
