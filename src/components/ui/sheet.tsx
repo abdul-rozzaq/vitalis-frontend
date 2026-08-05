@@ -13,9 +13,24 @@ interface SheetProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
+  /**
+   * Fon (backdrop) bosilganda yopilsinmi.
+   * Default `false` — panellar odatda forma bo'ladi, tasodifiy bosish
+   * to'ldirilgan ma'lumotni yo'qotmasligi kerak. Escape har doim ishlaydi.
+   */
+  closeOnBackdrop?: boolean;
 }
 
-export function Sheet({ isOpen, onClose, title, description, children, footer, className }: SheetProps) {
+export function Sheet({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  footer,
+  className,
+  closeOnBackdrop = false,
+}: SheetProps) {
   // Close on Escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -38,7 +53,13 @@ export function Sheet({ isOpen, onClose, title, description, children, footer, c
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex justify-end">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeOnBackdrop ? onClose : undefined}
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex justify-end"
+          >
             {/* Sheet Content */}
             <motion.div
               initial={{ x: "100%" }}
