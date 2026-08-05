@@ -117,7 +117,13 @@ const BoardContent: React.FC = () => {
 
       <ShiftCrudModal isOpen={activeModal === 'shift'} onClose={closeModal} shiftToEdit={shiftToEdit} />
       <GenerateShiftsModal isOpen={activeModal === 'generate'} onClose={closeModal} />
-      <BulkAssignModal isOpen={activeModal === 'bulkAssign'} onClose={closeModal} shifts={shifts} />
+      {/*
+        Shartli mount — panel yopilganda holati (tanlangan smenalar, xodimlar,
+        preview) o'z-o'zidan tozalanadi, `useEffect` bilan reset qilish shart emas.
+      */}
+      {activeModal === 'bulkAssign' && (
+        <BulkAssignModal isOpen onClose={closeModal} shifts={shifts} />
+      )}
       <ShiftTemplatesModal isOpen={activeModal === 'templates'} onClose={closeModal} />
       <AssignStaffModal isOpen={activeModal === 'assignStaff'} onClose={closeModal} shiftId={assigningShiftId} />
     </div>

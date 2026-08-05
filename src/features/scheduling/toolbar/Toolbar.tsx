@@ -38,7 +38,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="h-14 border-b border-border bg-surface flex items-center justify-between px-4 z-30 shadow-sm">
+    <div className="h-14 border-b border-border bg-surface flex items-center justify-between px-4 z-30">
       <div className="flex items-center gap-4">
         <h1 className="font-bold text-lg text-text tracking-tight">
           Vitalis <span className="font-medium text-text-muted">Jadval</span>

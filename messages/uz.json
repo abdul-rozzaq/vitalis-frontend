@@ -44,7 +44,8 @@
     "rooms-floor-view": "Qavat ko'rinishi",
     "new-patient": "Yangi bemor",
     "new-employee": "Yangi xodim",
-    "attendance": "Davomat"
+    "attendance": "Davomat",
+    "attendance-live": "Kim ishda"
   },
   "common": {
     "filter": "Filtr",

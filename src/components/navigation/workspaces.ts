@@ -128,6 +128,11 @@ export const WORKSPACES: Workspace[] = [
     create: { labelKey: "nav.new-employee", href: "/employees/new", roles: ["ADMIN", "DIREKTOR"] },
     items: [
       {
+        labelKey: "nav.attendance-live",
+        href: "/attendance/live",
+        roles: ["ADMIN", "DIREKTOR"],
+      },
+      {
         labelKey: "nav.attendance",
         href: "/attendance",
         roles: ["ADMIN", "DIREKTOR"],
@@ -191,6 +196,23 @@ export const WORKSPACES: Workspace[] = [
 export function isItemActive(pathname: string, item: Pick<NavItem, "href" | "exact">): boolean {
   if (item.exact) return pathname === item.href;
   return pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+}
+
+/**
+ * Bir ro'yxatdan faqat BITTA element faol bo'ladi — eng uzun (eng aniq) mos
+ * keladigani.
+ *
+ * `isItemActive` yakka o'zi prefiks bo'yicha ishlaydi, shuning uchun
+ * `/attendance/live` sahifasida `/attendance` ham, `/attendance/live` ham
+ * faol bo'lib qolardi. Bu yerda qo'shni elementlar taqqoslanadi.
+ */
+export function activeItemHref(
+  pathname: string,
+  items: Pick<NavItem, "href" | "exact">[],
+): string | null {
+  const matches = items.filter((item) => isItemActive(pathname, item));
+  if (!matches.length) return null;
+  return matches.reduce((best, item) => (item.href.length > best.href.length ? item : best)).href;
 }
 
 /** First workspace (in declaration order) that owns the current pathname. */

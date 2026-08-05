@@ -94,7 +94,7 @@ export const GenerateShiftsModal: React.FC<GenerateShiftsModalProps> = ({ isOpen
     list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Jadval generatsiyasi" size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title="Jadval generatsiyasi" size="xl" closeOnBackdrop={false}>
       <div className="flex flex-col gap-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="sm:col-span-3">
