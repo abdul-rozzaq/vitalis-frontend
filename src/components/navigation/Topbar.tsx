@@ -6,7 +6,7 @@ import { useTheme } from "@/shared/hooks/use-theme";
 import { ChevronRight, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { activeWorkspace, isItemActive } from "./workspaces";
+import { activeItemHref, activeWorkspace } from "./workspaces";
 
 export function Topbar() {
   const pathname = usePathname();
@@ -14,7 +14,10 @@ export function Topbar() {
   const { theme, toggleTheme } = useTheme();
 
   const ws = activeWorkspace(pathname);
-  const activeItem = ws.items.find((item) => isItemActive(pathname, item));
+  // Eng aniq mos keladigani — `find` birinchi prefiksni olib, breadcrumb'da
+  // ota-sahifa nomini ko'rsatib qo'yardi.
+  const activeHref = activeItemHref(pathname, ws.items);
+  const activeItem = ws.items.find((item) => item.href === activeHref);
 
   return (
     <header className="flex h-14 items-center gap-3.5 border-b border-border bg-surface px-[18px] sticky top-0 z-20">

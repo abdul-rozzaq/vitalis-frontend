@@ -2,7 +2,7 @@
 
 import { api } from "@/shared/lib/api";
 import type { Shift, ShiftStaffMember, ShiftStaffRole } from "@/shared/lib/shifts-api";
-import { shiftsApi } from "@/shared/lib/shifts-api";
+import { shiftsApi, USER_ROLE_BY_SHIFT_ROLE } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Stethoscope, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -17,7 +17,13 @@ interface UserRow {
 
 export function AssignStaffPanel({ shift }: { shift: Shift }) {
   const qc = useQueryClient();
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["shift", shift.id] });
+  // Bir nechta ekran shu smenani ko'rsatadi (detal sahifasi, board, ro'yxat) —
+  // biriktirishdan keyin hammasini yangilaymiz.
+  const invalidate = () => {
+    for (const queryKey of [["shift", shift.id], ["shifts"], ["board-shifts"]]) {
+      qc.invalidateQueries({ queryKey });
+    }
+  };
 
   const { data: users = [] } = useQuery<UserRow[]>({
     queryKey: ["staff-all"],
@@ -51,7 +57,7 @@ export function AssignStaffPanel({ shift }: { shift: Shift }) {
         icon={<Stethoscope className="w-4 h-4 text-primary" />}
         required={shift.staffing.requiredDoctors}
         assigned={shift.staff.filter((s) => s.role === "DOCTOR")}
-        candidates={users.filter((u) => u.role === "DOCTOR" && !assignedIds.has(u.id))}
+        candidates={users.filter((u) => u.role === USER_ROLE_BY_SHIFT_ROLE.DOCTOR && !assignedIds.has(u.id))}
         onAdd={(userId) => assign.mutate({ userId, role: "DOCTOR" })}
         onRemove={(userId) => unassign.mutate(userId)}
         busy={busy}
@@ -61,7 +67,7 @@ export function AssignStaffPanel({ shift }: { shift: Shift }) {
         icon={<Users className="w-4 h-4 text-primary" />}
         required={shift.staffing.requiredNurses}
         assigned={shift.staff.filter((s) => s.role === "NURSE")}
-        candidates={users.filter((u) => u.role === "HAMSHIRA" && !assignedIds.has(u.id))}
+        candidates={users.filter((u) => u.role === USER_ROLE_BY_SHIFT_ROLE.NURSE && !assignedIds.has(u.id))}
         onAdd={(userId) => assign.mutate({ userId, role: "NURSE" })}
         onRemove={(userId) => unassign.mutate(userId)}
         busy={busy}

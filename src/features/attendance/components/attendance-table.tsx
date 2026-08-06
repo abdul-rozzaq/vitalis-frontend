@@ -15,6 +15,14 @@ const statusConfig: Record<AttendanceRecordStatus, { label: string; color: strin
   EARLY_LEAVE: { label: "Erta ketgan", color: "bg-warning-100 text-warning-700 border-warning-200" },
   LATE_AND_EARLY_LEAVE: { label: "Kech/Erta ketgan", color: "bg-danger-100 text-danger-700 border-danger-200" },
   ABSENT: { label: "Kelmagan", color: "bg-danger-100 text-danger-700 border-danger-200" },
+  MISSING_CHECKOUT: {
+    label: "Chiqish skani yo'q",
+    color: "bg-warning-100 text-warning-700 border-warning-200",
+  },
+  MISSING_CHECKIN: {
+    label: "Kirish skani yo'q",
+    color: "bg-warning-100 text-warning-700 border-warning-200",
+  },
 };
 
 function formatTime(isoStr: string | null) {
