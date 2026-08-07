@@ -6,6 +6,8 @@ on:
   push:
     branches: [main, new-features/*, muslimbek]
 
+  workflow_dispatch:
+
 jobs:
   docker:
     runs-on: ubuntu-latest

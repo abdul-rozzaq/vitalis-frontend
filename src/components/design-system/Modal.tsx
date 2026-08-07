@@ -9,6 +9,12 @@ export interface ModalProps {
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "2xl";
   closeButton?: boolean;
+  /**
+   * Fon (backdrop) bosilganda yopilsinmi.
+   * Default `false` — modallar odatda forma bo'ladi, tasodifiy bosish
+   * to'ldirilgan ma'lumotni yo'qotmasligi kerak. Escape har doim ishlaydi.
+   */
+  closeOnBackdrop?: boolean;
 }
 
 const sizeStyles = {
@@ -27,6 +33,7 @@ export const Modal = ({
   footer,
   size = "md",
   closeButton = true,
+  closeOnBackdrop = false,
 }: ModalProps) => {
   useEffect(() => {
     if (isOpen) {
@@ -50,12 +57,17 @@ export const Modal = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/*
+        Backdrop. Handler shu yerda turishi shart — u konteynerni to'liq
+        qoplaydi, shuning uchun tashqariga bosilganda `e.target` aynan shu div
+        bo'ladi (konteynerdagi `e.target === e.currentTarget` sharti hech qachon
+        bajarilmasdi).
+      */}
+      <div
+        className="absolute inset-0 bg-black/50"
+        onClick={closeOnBackdrop ? onClose : undefined}
+      />
 
       {/* Modal Content */}
       <div
@@ -109,102 +121,3 @@ export const Modal = ({
 };
 
 Modal.displayName = "Modal";
-
-export interface DrawerProps
-  extends Omit<ModalProps, "size"> {
-  side?: "left" | "right";
-}
-
-export const Drawer = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer,
-  closeButton = true,
-  side = "right",
-}: DrawerProps) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  const isLeft = side === "left";
-
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
-
-      {/* Drawer Content */}
-      <div
-        className={`
-          relative bg-surface w-96 h-full
-          flex flex-col
-          transition-transform duration-300
-          ${isLeft ? "translate-x-0" : "translate-x-0"}
-          overflow-y-auto
-          ${isLeft ? "" : "ml-auto"}
-        `}
-      >
-        {/* Header */}
-        {(title || closeButton) && (
-          <div className="border-b border-border px-6 py-4 flex items-start justify-between gap-4">
-            {title && <h2 className="text-xl font-semibold text-text">{title}</h2>}
-            {closeButton && (
-              <button
-                onClick={onClose}
-                className="flex-shrink-0 -mr-2 -mt-1 p-2 text-text-muted hover:text-text transition-colors"
-                aria-label="Close drawer"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Body */}
-        <div className="flex-1 px-6 py-4">{children}</div>
-
-        {/* Footer */}
-        {footer && (
-          <div className="border-t border-border px-6 py-4">{footer}</div>
-        )}
-      </div>
-    </div>,
-    document.body
-  );
-};
-
-Drawer.displayName = "Drawer";

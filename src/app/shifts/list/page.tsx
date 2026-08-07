@@ -22,7 +22,7 @@ export default function ShiftsListPage() {
 
   const { data: shifts = [], isLoading } = useQuery<Shift[]>({
     queryKey: ["shifts", "list"],
-    queryFn: () => shiftsApi.list(),
+    queryFn: () => shiftsApi.listAll(),
   });
 
   const create = useMutation({
