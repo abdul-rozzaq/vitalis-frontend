@@ -54,7 +54,7 @@ interface LabResultRow {
 interface LabOrderItem {
   id: string;
   status: LabItemStatus;
-  service: { id: string; name: string; price?: number | null };
+  service: { id: string; name: string; price?: number | null; resultLayout?: { columns: { key: string; label: string; width?: number }[] } };
   performedBy?: { id: string; first_name: string; last_name: string } | null;
   resultTable?: { rows: LabResultRow[] } | null;
 }
@@ -165,6 +165,25 @@ const LAB_ITEM_STATUS_PILL: Record<LabItemStatus, string> = {
   CANCELLED: "bg-danger-50 text-danger",
 };
 
+function getLabColumns(serviceName: string, configured?: { columns: { key: string; label: string; width?: number }[] }) {
+  if (configured?.columns?.length) return configured.columns;
+  const name = serviceName.toLowerCase();
+  if (name.includes("biokim") || name.includes("биоким") || name.includes("biochim")) {
+    return [
+      { key: "indicator", label: "Анализ тури" },
+      { key: "result", label: "Натижа" },
+      { key: "norm", label: "Меъёри" },
+    ];
+  }
+  return [
+    { key: "code", label: "" },
+    { key: "indicator", label: "Кўрсаткичлар" },
+    { key: "result", label: "Натижа" },
+    { key: "norm", label: "Меъйёри" },
+    { key: "unit", label: "Ўлчов бирлиги" },
+  ];
+}
+
 function OperationLabOrders({ labOrders }: { labOrders: LabOrder[] }) {
   if (!labOrders.length) return null;
 
@@ -192,19 +211,19 @@ function OperationLabOrders({ labOrders }: { labOrders: LabOrder[] }) {
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="bg-surface-hover border-b border-border">
-                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Ko&apos;rsatkich</th>
-                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Natija</th>
-                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">Me&apos;yor</th>
-                            <th className="text-left px-2.5 py-1.5 font-medium text-text-muted">O&apos;lchov</th>
+                            {getLabColumns(item.service.name, item.service.resultLayout).map((column) => (
+                              <th key={column.key} className="text-left px-2.5 py-1.5 font-medium text-text-muted">{column.label}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
                           {item.resultTable.rows.map((row) => (
                             <tr key={row.id} className="border-b border-border last:border-0">
-                              <td className="px-2.5 py-1.5 text-text">{row.indicator}</td>
-                              <td className="px-2.5 py-1.5 font-medium text-text">{row.result || "—"}</td>
-                              <td className="px-2.5 py-1.5 text-text-muted">{row.norm || "—"}</td>
-                              <td className="px-2.5 py-1.5 text-text-muted">{row.unit || "—"}</td>
+                              {getLabColumns(item.service.name, item.service.resultLayout).map((column) => (
+                                <td key={column.key} className={`px-2.5 py-1.5 ${column.key === "result" ? "font-medium text-text" : "text-text-muted"}`}>
+                                  {String((row as any)[column.key] ?? "") || "—"}
+                                </td>
+                              ))}
                             </tr>
                           ))}
                         </tbody>
