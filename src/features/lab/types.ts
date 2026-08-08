@@ -46,8 +46,6 @@ export interface LabResultTemplateRow {
   unit?: string | null;
 }
 
-// Mustaqil natija shabloni — hech qanday laboratoriya/xizmatga tayinlanmagan,
-// natija kiritish oynasida ro'yxatdan tanlab qo'llanadi.
 export interface LabResultTemplate {
   id: string;
   name: string;
@@ -113,15 +111,13 @@ export interface LabOrderItem {
   id: string;
   status: LabItemStatus;
   serviceId: string;
-  // Xizmat pullik (invoice'ga qo'shilgan) yoki bepul ekanini bildiradi.
   isPaid: boolean;
   service: {
     id: string;
     name: string;
     price?: number | null;
-    // Xizmat uchun standart natija shabloni (backend'dan keladi). Bo'lmasa —
-    // bo'sh qatordan boshlanadi.
     defaultRows?: LabDefaultRow[] | null;
+    resultLayout?: LabResultLayout;
   };
   files: LabOrderItemFile[];
   resultTable?: LabResultTable | null;

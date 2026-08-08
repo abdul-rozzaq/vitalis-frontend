@@ -41,8 +41,6 @@ function initialRowsFor(item: LabOrderItem): LabResultRow[] {
   const template = item.service.defaultRows ?? [];
   const saved = item.resultTable?.rows ?? [];
 
-  // Template mavjud bo'lsa, natija jadvali template bilan DOIM bir xil uzunlikda bo'ladi.
-  // Eski DB'da 1 ta row qolgan bo'lsa ham, qolgan template qatorlari tiklanadi.
   if (template.length) {
     return template.map((tpl, index) => {
       const existing =
@@ -152,17 +150,10 @@ export default function LabOrderResultsPage() {
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<"draft" | "submit" | null>(null);
 
-  // Buyurtma birinchi marta yuklanganda va yangi xizmat qo'shilganda
-  // (item soni o'zgarganda) qatorlarni sinxronlaymiz.
   const itemIdsKey = items.map((i) => i.id).join(",");
-  // Bu effekt ataylab qoldirilgan (lint "set-state-in-effect"ni ogohlantiradi):
-  // `order.items` tashqi manba (server) dan keladi, lekin foydalanuvchi hali
-  // saqlanmagan qatorlarni tahrirlashi mumkin. "key" orqali qayta mount qilish
-  // yechimi sodda bo'lardi, lekin yangi xizmat qo'shilganda boshqa
-  // item'lardagi saqlanmagan (draft) yozuvlarni yo'qotib qo'yardi.
+
   useEffect(() => {
     if (!order) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRowsByItem((prev) => {
       const next: Record<string, LabResultRow[]> = { ...prev };
       for (const item of items) {
@@ -175,7 +166,6 @@ export default function LabOrderResultsPage() {
       const firstIncomplete = items.find((item) => !rowsComplete(rowsByItem[item.id] ?? initialRowsFor(item)));
       return (firstIncomplete ?? items[0])?.id ?? null;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemIdsKey, order]);
 
   const updateRow = (itemId: string, index: number, patch: Partial<LabResultRow>) => {
@@ -208,9 +198,6 @@ export default function LabOrderResultsPage() {
       },
       {
         onSettled: () => setPendingAction(null),
-        // "Yakunlab yuborish" faqat BIR MARTA ishlashi kerak: muvaffaqiyatli
-        // yuborilgach, ro'yxatga qaytaramiz — shu bilan tugma qayta-qayta
-        // bosilib, takroriy so'rov yuborilishining oldi olinadi.
         onSuccess: () => {
           if (submit) router.push("/lab");
         },
@@ -325,9 +312,6 @@ export default function LabOrderResultsPage() {
         </div>
       </PageContent>
 
-      {/* Pastda yopishqoq amal paneli — sahifa uzun bo'lsa ham "Saqlash"/"Yuborish" doim ko'rinib turadi.
-          `sticky` ishlatilgan (fixed emas) — shunda sidebar/topbar kengligini qo'lda hisoblash shart
-          emas, panel avtomatik ravishda asosiy kontent ustunining o'zida joylashadi. */}
       <div className="sticky bottom-0 mt-6 bg-surface border-t border-border px-4 sm:px-6 py-3 flex items-center justify-between gap-3 z-10">
         <p className="text-xs text-text-muted hidden sm:flex items-center gap-1.5">
           <span className="font-semibold text-text tabular-nums">
