@@ -32,7 +32,7 @@ export default function AssignmentsLayout({ children }: { children: React.ReactN
   const hideHeader = isSubPage(pathname);
 
   return (
-    <div className="p-6 space-y-5 max-w-7xl mx-auto w-full">
+    <div className="p-6 space-y-5 max-w-[1600px] mx-auto w-full">
       {!hideHeader && (
         <>
           <div className="flex items-start justify-between gap-3">

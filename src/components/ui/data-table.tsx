@@ -41,11 +41,19 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
             <thead className="bg-surface-secondary border-b border-border text-text-muted text-[11.5px] font-bold uppercase tracking-wider">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-3 whitespace-nowrap">
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    const isActions = header.column.id === "actions";
+                    return (
+                      <th
+                        key={header.id}
+                        className={`px-4 py-3 whitespace-nowrap ${
+                          isActions ? "sticky right-0 z-10 bg-surface-secondary shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]" : ""
+                        }`}
+                      >
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    );
+                  })}
                 </tr>
               ))}
             </thead>
@@ -53,12 +61,22 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <React.Fragment key={row.id}>
-                    <tr key={row.id} className="hover:bg-surface-hover transition-colors">
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
+                    <tr key={row.id} className="group hover:bg-surface-hover transition-colors">
+                      {row.getVisibleCells().map((cell) => {
+                        const isActions = cell.column.id === "actions";
+                        return (
+                          <td
+                            key={cell.id}
+                            className={`px-4 py-3 whitespace-nowrap ${
+                              isActions
+                                ? "sticky right-0 z-10 bg-surface group-hover:bg-surface-hover shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)] transition-colors"
+                                : ""
+                            }`}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {renderExpanded && expandedRowId === row.original.id && (
                       <tr key={`${row.id}-expanded`}>
