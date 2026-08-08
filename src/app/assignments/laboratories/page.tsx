@@ -3,25 +3,24 @@
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
-import { DefaultRowsEditor } from "@/features/lab/components/DefaultRowsEditor";
-import type { Laboratory, LaboratoryService, LabDefaultRow } from "@/features/lab/types";
+import type { Laboratory } from "@/features/lab/types";
 import { asArray, getTableRowIndex } from "@/features/assignments/utils";
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, FlaskConical, Loader2, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 type LaboratoryRow = Laboratory & {
   createdAt?: string;
 };
 
-type ServiceSheetMode = { mode: "add"; labId: string } | { mode: "edit"; labId: string; svc: LaboratoryService } | null;
-
 export default function LaboratoriesPage() {
   const t = useTranslations();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [sheet, setSheet] = useState<{ open: boolean; editing: LaboratoryRow | null }>({
     open: false,
@@ -33,10 +32,6 @@ export default function LaboratoriesPage() {
   const [labName, setLabName] = useState("");
   const [labDesc, setLabDesc] = useState("");
 
-  const [svcSheet, setSvcSheet] = useState<ServiceSheetMode>(null);
-  const [svcName, setSvcName] = useState("");
-  const [svcPrice, setSvcPrice] = useState("");
-  const [svcRows, setSvcRows] = useState<LabDefaultRow[]>([]);
   const [deletingSvcId, setDeletingSvcId] = useState<string | null>(null);
 
   const { data: labsRaw, isLoading } = useQuery({
@@ -66,27 +61,6 @@ export default function LaboratoriesPage() {
     setLabDesc("");
   };
 
-  const openSvcSheet = (mode: ServiceSheetMode) => {
-    if (!mode) return;
-    if (mode.mode === "edit") {
-      setSvcName(mode.svc.name);
-      setSvcPrice(mode.svc.price != null ? String(mode.svc.price) : "");
-      setSvcRows(mode.svc.defaultRows ?? []);
-    } else {
-      setSvcName("");
-      setSvcPrice("");
-      setSvcRows([]);
-    }
-    setSvcSheet(mode);
-  };
-
-  const closeSvcSheet = () => {
-    setSvcSheet(null);
-    setSvcName("");
-    setSvcPrice("");
-    setSvcRows([]);
-  };
-
   const { mutateAsync: createLab, isPending: isCreating } = useMutation({
     mutationFn: () =>
       api.post("/laboratories", {
@@ -112,36 +86,6 @@ export default function LaboratoriesPage() {
       setDeletingId(null);
       setDetailId(null);
     },
-  });
-
-  const { mutateAsync: createSvc, isPending: isCreatingSvc } = useMutation({
-    mutationFn: () => {
-      const labId = (svcSheet as { labId: string }).labId;
-      const rows = svcRows.filter((r) => r.indicator.trim());
-      return api.post(`/laboratories/${labId}/services`, {
-        name: svcName.trim(),
-        price: svcPrice ? Number(svcPrice) : undefined,
-        defaultRows: rows.length ? rows : undefined,
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["laboratories"] }),
-  });
-
-  const { mutateAsync: updateSvc, isPending: isUpdatingSvc } = useMutation({
-    mutationFn: () => {
-      const { labId, svc } = svcSheet as {
-        mode: "edit";
-        labId: string;
-        svc: LaboratoryService;
-      };
-      const rows = svcRows.filter((r) => r.indicator.trim());
-      return api.patch(`/laboratories/${labId}/services/${svc.id}`, {
-        name: svcName.trim() || undefined,
-        price: svcPrice !== "" ? Number(svcPrice) : undefined,
-        defaultRows: rows.length ? rows : null,
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["laboratories"] }),
   });
 
   const { mutateAsync: deleteSvc, isPending: isDeletingSvc } = useMutation({
@@ -222,7 +166,6 @@ export default function LaboratoriesPage() {
   );
 
   const isSavingLab = isCreating || isUpdating;
-  const isSavingSvc = isCreatingSvc || isUpdatingSvc;
 
   return (
     <div className="space-y-4">
@@ -270,7 +213,7 @@ export default function LaboratoriesPage() {
                 </h4>
                 <Can roles={["ADMIN", "LABARANT"]}>
                   <button
-                    onClick={() => openSvcSheet({ mode: "add", labId: selectedLab.id })}
+                    onClick={() => router.push(`/assignments/laboratories/${selectedLab.id}/services/create`)}
                     className="text-xs px-2 py-1 rounded-md border border-border text-secondary hover:bg-surface-hover transition-colors inline-flex items-center gap-1"
                   >
                     <Plus className="w-3 h-3" />
@@ -297,7 +240,11 @@ export default function LaboratoriesPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Can roles={["ADMIN", "LABARANT"]}>
-                          <button onClick={() => openSvcSheet({ mode: "edit", labId: selectedLab.id, svc })} className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors" title={t("common.edit")}>
+                          <button
+                            onClick={() => router.push(`/assignments/laboratories/${selectedLab.id}/services/${svc.id}/edit`)}
+                            className="p-1 rounded-md hover:bg-surface-hover text-secondary transition-colors"
+                            title={t("common.edit")}
+                          >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
                         </Can>
@@ -394,56 +341,6 @@ export default function LaboratoriesPage() {
               className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm cursor-pointer"
             >
               {isSavingLab ? t("common.loading") : t("common.save")}
-            </button>
-          </div>
-        </div>
-      </Sheet>
-
-      <Sheet isOpen={svcSheet !== null} onClose={closeSvcSheet} title={svcSheet?.mode === "edit" ? t("laboratories.editService") : t("laboratories.addService")} className="max-w-xl">
-        <div className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("laboratories.serviceName")}</label>
-            <input
-              autoFocus
-              value={svcName}
-              onChange={(e) => setSvcName(e.target.value)}
-              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">
-              {t("laboratories.servicePrice")}
-              <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={svcPrice}
-              onChange={(e) => setSvcPrice(e.target.value)}
-              className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-            />
-          </div>
-
-          <DefaultRowsEditor rows={svcRows} onChange={setSvcRows} />
-
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={closeSvcSheet}
-              className="flex-1 bg-surface border border-border text-secondary hover:bg-surface-hover px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
-            >
-              {t("forms.cancel")}
-            </button>
-            <button
-              type="button"
-              disabled={!svcName.trim() || isSavingSvc}
-              onClick={() => {
-                const action = svcSheet?.mode === "edit" ? updateSvc() : createSvc();
-                void action.then(closeSvcSheet);
-              }}
-              className="flex-1 bg-primary hover:bg-primary-700 disabled:opacity-60 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm cursor-pointer"
-            >
-              {isSavingSvc ? t("common.loading") : t("common.save")}
             </button>
           </div>
         </div>
