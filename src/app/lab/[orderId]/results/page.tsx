@@ -1,25 +1,13 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { Modal } from "@/components/design-system/Modal";
-import { Combobox } from "@/components/ui/combobox";
 import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL } from "@/features/lab/constants/status-colors";
 import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { BIOCHEMISTRY_RESULT_LAYOUT, CBC_RESULT_LAYOUT, Laboratory, LabOrder, LabOrderItem, LabResultLayout, LabResultRow } from "@/features/lab/types";
 import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  ChevronDown,
-  FileClock,
-  Loader2,
-  Paperclip,
-  Plus,
-  Send,
-  Upload,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, FileClock, Loader2, Plus, Send, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -41,6 +29,8 @@ function initialRowsFor(item: LabOrderItem): LabResultRow[] {
   const template = item.service.defaultRows ?? [];
   const saved = item.resultTable?.rows ?? [];
 
+  // Template mavjud bo'lsa, natija jadvali template bilan DOIM bir xil uzunlikda bo'ladi.
+  // Eski DB'da 1 ta row qolgan bo'lsa ham, qolgan template qatorlari tiklanadi.
   if (template.length) {
     return template.map((tpl, index) => {
       const existing =
@@ -67,59 +57,97 @@ function rowsComplete(rows: LabResultRow[]): boolean {
   return rows.length > 0 && rows.every((r) => r.indicator.trim() && r.result?.trim());
 }
 
+// Natija jadvali muharriri. Xizmatda oldindan belgilangan shablon (defaultRows)
+// bo'lsa — ustunlar (kod/ko'rsatkich/me'yor/birlik) o'zgarmas bo'ladi, laborant
+// faqat "Natija" ustunini to'ldiradi. Shablon bo'lmagan xizmatlar uchun esa
+// (`allowRowManagement`) barcha ustunlar erkin tahrirlanadi va qator
+// qo'shish/o'chirish imkoniyati chiqadi — ozod (ad hoc) tahlil jadvali.
 function ResultTableEditor({
   rows,
   layout,
   onChange,
   allowRowManagement,
+  onAddRow,
+  onRemoveRow,
 }: {
   rows: LabResultRow[];
   layout: LabResultLayout;
   onChange: (index: number, patch: Partial<LabResultRow>) => void;
   allowRowManagement: boolean;
+  onAddRow?: () => void;
+  onRemoveRow?: (index: number) => void;
 }) {
+  const t = useTranslations();
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="w-full min-w-[760px] border-collapse text-xs">
-        <thead>
-          <tr className="bg-surface-hover">
-            {layout.columns.map((column) => (
-              <th
-                key={column.key}
-                style={{ width: `${column.width ?? Math.floor(100 / layout.columns.length)}%` }}
-                className="border-b border-r border-border px-2.5 py-2 text-center font-semibold text-text last:border-r-0"
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={row.id ?? `${row.code}-${index}`} className="hover:bg-surface-hover/40">
-              {layout.columns.map((column) => {
-                const value = String((row as any)[column.key] ?? "");
-                const isResult = column.key === "result";
-                const editable = isResult || allowRowManagement;
-                return (
-                  <td key={column.key} className="border-b border-r border-border p-0 last:border-r-0">
-                    {editable ? (
-                      <input
-                        value={value}
-                        onChange={(e) => onChange(index, { [column.key]: e.target.value })}
-                        className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs text-text outline-none focus:bg-primary-50/40 ${isResult ? "font-semibold text-primary" : ""}`}
-                        placeholder={isResult ? "Natijani kiriting" : ""}
-                      />
-                    ) : (
-                      <div className="min-h-10 px-2.5 py-2 text-xs text-text">{value || "—"}</div>
-                    )}
-                  </td>
-                );
-              })}
+    <div className="space-y-2">
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-[760px] border-collapse text-xs">
+          <thead>
+            <tr className="bg-surface-hover">
+              {layout.columns.map((column) => (
+                <th
+                  key={column.key}
+                  style={{ width: `${column.width ?? Math.floor(100 / layout.columns.length)}%` }}
+                  className="border-b border-r border-border px-2.5 py-2 text-center font-semibold text-text last:border-r-0"
+                >
+                  {column.label}
+                </th>
+              ))}
+              {allowRowManagement && <th className="border-b border-border w-9" />}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={row.id ?? `${row.code}-${index}`} className="hover:bg-surface-hover/40">
+                {layout.columns.map((column) => {
+                  const value = String((row as any)[column.key] ?? "");
+                  const isResult = column.key === "result";
+                  const editable = isResult || allowRowManagement;
+                  return (
+                    <td key={column.key} className="border-b border-r border-border p-0 last:border-r-0">
+                      {editable ? (
+                        <input
+                          value={value}
+                          onChange={(e) => onChange(index, { [column.key]: e.target.value })}
+                          className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs text-text outline-none focus:bg-primary-50/40 ${isResult ? "font-semibold text-primary" : ""}`}
+                          placeholder={isResult ? "Natijani kiriting" : ""}
+                        />
+                      ) : (
+                        <div className="min-h-10 px-2.5 py-2 text-xs text-text">{value || "—"}</div>
+                      )}
+                    </td>
+                  );
+                })}
+                {allowRowManagement && (
+                  <td className="border-b border-border p-0 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onRemoveRow?.(index)}
+                      disabled={rows.length <= 1}
+                      className="w-8 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                      aria-label={t("lab.removeRow")}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {allowRowManagement && (
+        <button
+          type="button"
+          onClick={onAddRow}
+          className="flex items-center gap-1.5 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {t("lab.addRow")}
+        </button>
+      )}
     </div>
   );
 }
@@ -150,10 +178,17 @@ export default function LabOrderResultsPage() {
   const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<"draft" | "submit" | null>(null);
 
+  // Buyurtma birinchi marta yuklanganda va yangi xizmat qo'shilganda
+  // (item soni o'zgarganda) qatorlarni sinxronlaymiz.
   const itemIdsKey = items.map((i) => i.id).join(",");
-
+  // Bu effekt ataylab qoldirilgan (lint "set-state-in-effect"ni ogohlantiradi):
+  // `order.items` tashqi manba (server) dan keladi, lekin foydalanuvchi hali
+  // saqlanmagan qatorlarni tahrirlashi mumkin. "key" orqali qayta mount qilish
+  // yechimi sodda bo'lardi, lekin yangi xizmat qo'shilganda boshqa
+  // item'lardagi saqlanmagan (draft) yozuvlarni yo'qotib qo'yardi.
   useEffect(() => {
     if (!order) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRowsByItem((prev) => {
       const next: Record<string, LabResultRow[]> = { ...prev };
       for (const item of items) {
@@ -166,6 +201,7 @@ export default function LabOrderResultsPage() {
       const firstIncomplete = items.find((item) => !rowsComplete(rowsByItem[item.id] ?? initialRowsFor(item)));
       return (firstIncomplete ?? items[0])?.id ?? null;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemIdsKey, order]);
 
   const updateRow = (itemId: string, index: number, patch: Partial<LabResultRow>) => {
@@ -173,6 +209,14 @@ export default function LabOrderResultsPage() {
       ...prev,
       [itemId]: prev[itemId].map((r, i) => (i === index ? { ...r, ...patch } : r)),
     }));
+  };
+
+  const addRow = (itemId: string) => {
+    setRowsByItem((prev) => ({ ...prev, [itemId]: [...(prev[itemId] ?? []), emptyRow()] }));
+  };
+
+  const removeRow = (itemId: string, index: number) => {
+    setRowsByItem((prev) => ({ ...prev, [itemId]: prev[itemId].filter((_, i) => i !== index) }));
   };
 
   const allRows = items.map((i) => rowsByItem[i.id] ?? []);
@@ -198,6 +242,9 @@ export default function LabOrderResultsPage() {
       },
       {
         onSettled: () => setPendingAction(null),
+        // "Yakunlab yuborish" faqat BIR MARTA ishlashi kerak: muvaffaqiyatli
+        // yuborilgach, ro'yxatga qaytaramiz — shu bilan tugma qayta-qayta
+        // bosilib, takroriy so'rov yuborilishining oldi olinadi.
         onSuccess: () => {
           if (submit) router.push("/lab");
         },
@@ -252,6 +299,7 @@ export default function LabOrderResultsPage() {
             const rows = rowsByItem[item.id] ?? [];
             const complete = rowsComplete(rows);
             const isOpenNow = openItemId === item.id;
+            const allowRowManagement = !item.service.defaultRows?.length;
 
             return (
               <div key={item.id} className="border border-border rounded-xl overflow-hidden bg-surface">
@@ -287,7 +335,9 @@ export default function LabOrderResultsPage() {
                       rows={rows}
                       layout={getLayout(item)}
                       onChange={(index, patch) => updateRow(item.id, index, patch)}
-                      allowRowManagement={!item.service.defaultRows?.length}
+                      allowRowManagement={allowRowManagement}
+                      onAddRow={() => addRow(item.id)}
+                      onRemoveRow={(index) => removeRow(item.id, index)}
                     />
 
                     <ItemFilesAndNote
@@ -312,6 +362,9 @@ export default function LabOrderResultsPage() {
         </div>
       </PageContent>
 
+      {/* Pastda yopishqoq amal paneli — sahifa uzun bo'lsa ham "Saqlash"/"Yuborish" doim ko'rinib turadi.
+          `sticky` ishlatilgan (fixed emas) — shunda sidebar/topbar kengligini qo'lda hisoblash shart
+          emas, panel avtomatik ravishda asosiy kontent ustunining o'zida joylashadi. */}
       <div className="sticky bottom-0 mt-6 bg-surface border-t border-border px-4 sm:px-6 py-3 flex items-center justify-between gap-3 z-10">
         <p className="text-xs text-text-muted hidden sm:flex items-center gap-1.5">
           <span className="font-semibold text-text tabular-nums">
