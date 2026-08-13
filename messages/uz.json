@@ -184,7 +184,10 @@
     "UNPAID": "To'lanmagan",
     "PENDING": "Kutilmoqda",
     "CASH": "Naqd",
-    "CREDIT_CARD": "Kredit karta"
+    "CREDIT_CARD": "Kredit karta",
+    "searchSource": "Manba qidirish yoki qo'shish...",
+    "searchingSource": "Qidirilmoqda...",
+    "addSource": "Manba qo'shish"
   },
   "employees": {
     "title": "Xodimlar",
@@ -671,6 +674,7 @@
     "docTypeResidencePermit": "Yashash ruxsatnomasi",
     "bloodType": "Qon guruhi",
     "selectBloodType": "Qon guruhini tanlang...",
+    "source": "Bemor qayerdan keldi",
     "select": "Tanlang...",
     "doctor": "Shifokor / Tayinlov",
     "note": "Izoh",

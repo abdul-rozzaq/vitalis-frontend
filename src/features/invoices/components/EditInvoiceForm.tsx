@@ -1,8 +1,8 @@
-import { Patient } from "@/features/patients/types";
 import { Invoice, SOURCE_LABELS } from "@/features/invoices/types";
-import { CheckCircle2, Plus, Trash2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Patient } from "@/features/patients/types";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export interface DraftItem {
   description: string;
@@ -47,7 +47,7 @@ export function EditInvoiceForm({ invoice, patients, onSubmit, onCancel, isLoadi
   const filteredPatients = useMemo(() => {
     if (!patientSearch.trim()) return patients.slice(0, 20);
     const q = patientSearch.toLowerCase();
-    return patients.filter((p) => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || p.phone_number.includes(q)).slice(0, 20);
+    return patients.filter((p) => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || (p.phone_number?.includes(q) ?? false)).slice(0, 20);
   }, [patients, patientSearch]);
 
   const addItem = () => setItems((prev) => [...prev, { ...EMPTY_ITEM }]);
@@ -116,7 +116,7 @@ export function EditInvoiceForm({ invoice, patients, onSubmit, onCancel, isLoadi
                 <span>
                   {p.first_name} {p.last_name}
                 </span>
-                <span className="text-xs text-text-muted">{p.phone_number}</span>
+                <span className="text-xs text-text-muted">{p.phone_number || "—"}</span>
               </button>
             ))}
           </div>
