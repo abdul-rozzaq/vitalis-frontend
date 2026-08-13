@@ -7,14 +7,20 @@ export type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT"
 
 export type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_POSITIVE" | "B_NEGATIVE" | "AB_POSITIVE" | "AB_NEGATIVE";
 
+export interface PatientSource {
+  id: string;
+  name: string;
+}
+
 export interface Patient {
   id: string;
   first_name: string;
   last_name: string;
-  phone_number: string;
+  phone_number?: string | null;
   gender: "male" | "female";
   birth_date: string | null;
   address?: string;
+  source?: PatientSource | null;
   document_type?: DocumentType | null;
   document_series?: string | null;
   document_number?: string | null;
@@ -87,10 +93,11 @@ export interface AppointmentFormPayload {
 export type NewPatientPayload = {
   first_name: string;
   last_name: string;
-  phone_number: string;
+  phone_number?: string | null;
   gender: "male" | "female";
   birth_date: string;
   address?: string;
+  sourceId?: string | null;
   document_type?: "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT" | null;
   document_series?: string | null;
   document_number?: string | null;

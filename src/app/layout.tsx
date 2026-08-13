@@ -56,7 +56,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="font-sans" suppressHydrationWarning>
-        <NextTopLoader color="var(--color-primary-500)" height={2} />
+        <NextTopLoader
+          color="var(--color-primary-500)"
+          height={2}
+        />
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <AppLayout>{children}</AppLayout>

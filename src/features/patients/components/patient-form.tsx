@@ -5,12 +5,13 @@ import { FormButtons } from "@/components/ui/form-buttons";
 import { api } from "@/shared/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, CreditCard, Droplet, Heart, MapPin, Phone, User } from "lucide-react";
+import { Calendar, CreditCard, Droplet, Heart, MapPin, Navigation, Phone, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
 import * as z from "zod";
+import { PatientSourceCombobox } from "./patient-source-combobox";
 
 type DocumentType = "PASSPORT" | "BIRTH_CERTIFICATE" | "FOREIGN_PASSPORT" | "RESIDENCE_PERMIT";
 type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_POSITIVE" | "B_NEGATIVE" | "AB_POSITIVE" | "AB_NEGATIVE";
@@ -18,10 +19,12 @@ type BloodType = "O_POSITIVE" | "O_NEGATIVE" | "A_POSITIVE" | "A_NEGATIVE" | "B_
 type PatientFormValues = {
   first_name: string;
   last_name: string;
-  phone_number: string;
+  phone_number?: string | null;
   gender: "male" | "female";
   birth_date: string;
   address?: string;
+  sourceId?: string | null;
+  sourceName?: string | null;
   blood_type?: BloodType | null;
   document_type?: DocumentType | null;
   document_series?: string | null;
@@ -31,7 +34,10 @@ type PatientFormValues = {
 };
 
 interface PatientFormProps {
-  initialData?: Partial<PatientFormValues> & { district?: { id: string; regionId: string } | null };
+  initialData?: Partial<PatientFormValues> & {
+    district?: { id: string; regionId: string } | null;
+    source?: { id: string; name: string } | null;
+  };
   onSubmit: (data: PatientFormValues) => void;
   onCancel: () => void;
   isPending?: boolean;
@@ -55,14 +61,18 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
     phone_number: z
       .string()
-      .min(1, t("forms.phoneRequired"))
-      .regex(/^\+998 \(\d{2}\) \d{3}-\d{2}-\d{2}$/, t("forms.phoneInvalidUzbekistan")),
+      .regex(/^\+998 \(\d{2}\) \d{3}-\d{2}-\d{2}$/, t("forms.phoneInvalidUzbekistan"))
+      .optional()
+      .or(z.literal("+998 (  )    -  -  "))
+      .or(z.literal("")),
     gender: z.enum(["male", "female"]),
     birth_date: z
       .string()
       .min(1, t("forms.birthDateRequired"))
       .transform((val) => new Date(val).toISOString()),
     address: z.string().optional().or(z.literal("")),
+    sourceId: z.string().uuid().nullable().optional().or(z.literal("")),
+    sourceName: z.string().nullable().optional().or(z.literal("")),
     blood_type: z
       .enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"])
       .nullable()
@@ -89,6 +99,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     handleSubmit,
     setValue,
     control,
+    watch,
     formState: { errors },
   } = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema) as any,
@@ -97,6 +108,9 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       ...initialData,
     },
   });
+
+  const watchSourceId = watch("sourceId");
+  const watchSourceName = watch("sourceName");
 
   const { data: regions = [] } = useQuery<{ id: string; name: string }[]>({
     queryKey: ["regions"],
@@ -138,11 +152,21 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     }
   }, [initialData?.birth_date, setValue]);
 
+  useEffect(() => {
+    if (initialData?.source) {
+      setValue("sourceId", initialData.source.id);
+      setValue("sourceName", initialData.source.name);
+    }
+  }, [initialData?.source, setValue]);
+
   const handleFormSubmit = (data: PatientFormValues) => {
-    const cleanedPhone = data.phone_number.replace(/\s|\(|\)|-/g, "");
+    const cleanedPhone = (data.phone_number ?? "").replace(/\s|\(|\)|-|_/g, "");
+    const isPhoneEmpty = !cleanedPhone || cleanedPhone === "+998";
+    const { sourceName, ...rest } = data;
     onSubmit({
-      ...data,
-      phone_number: cleanedPhone,
+      ...rest,
+      phone_number: isPhoneEmpty ? null : cleanedPhone,
+      sourceId: data.sourceId || null,
       blood_type: (data.blood_type as string) === "" ? null : data.blood_type,
       document_type: (data.document_type as string) === "" ? null : data.document_type,
       document_series: data.document_series || null,
@@ -197,6 +221,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
+          <span className="text-xs text-secondary font-normal">({t("forms.optional")})</span>
         </label>
         <Controller
           control={control}
@@ -336,6 +361,25 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
           rows={3}
           className={cls(false, "resize-none")}
         />
+      </div>
+
+      {/* Bemor qayerdan kelgani — optional */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Navigation className="w-4 h-4 text-primary-500" />
+          {t("forms.source")}
+          <span className="text-xs text-secondary font-normal">({t("forms.optional")})</span>
+        </label>
+        <PatientSourceCombobox
+          value={watchSourceId}
+          displayName={watchSourceName}
+          onChange={(source) => {
+            setValue("sourceId", source?.id ?? null, { shouldDirty: true });
+            setValue("sourceName", source?.name ?? null, { shouldDirty: true });
+          }}
+          disabled={isPending}
+        />
+        {errMsg(errors.sourceId?.message as string)}
       </div>
 
       {/* Hujjat turi — optional */}
