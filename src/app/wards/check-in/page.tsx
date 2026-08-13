@@ -20,6 +20,8 @@ export default function WardCheckInPage() {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [doctorId, setDoctorId] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
@@ -38,6 +40,11 @@ export default function WardCheckInPage() {
     queryFn: () =>
       api.get("/patients", { params: { excludeOccupied: "true" } }).then((r) => r.data),
     staleTime: 0,
+  });
+
+  const { data: doctors = [] } = useQuery({
+    queryKey: ["ward-doctors"],
+    queryFn: () => api.get("/wards/doctors").then((r) => r.data),
   });
 
   const { data: allRooms = [] } = useQuery({
@@ -64,6 +71,11 @@ export default function WardCheckInPage() {
     value: p.id,
   }));
 
+  const doctorOptions = doctors.map((d: any) => ({
+    label: `${d.first_name} ${d.last_name}`,
+    value: d.id,
+  }));
+
   const roomOptions = rooms.map((r: any) => ({
     label: `${r.name}${r.department ? ` (${r.department.name})` : ""}${r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}${r.isFull ? ` ⛔ ${t("wards.full")}` : ""}`,
     value: r.id,
@@ -75,6 +87,8 @@ export default function WardCheckInPage() {
       api.post("/wards/check-in", {
         patientId,
         roomId,
+        doctorId: doctorId || undefined,
+        cardNumber: cardNumber ? Number(cardNumber) : undefined,
         checkIn: checkIn || undefined,
         expectedOut: expectedOut || undefined,
         note: note || undefined,
@@ -173,6 +187,33 @@ export default function WardCheckInPage() {
                   {rooms.length === 0 && (
                     <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>
                   )}
+                </div>
+
+                {/* Shifokor */}
+                <div>
+                  <label className="text-sm font-medium text-text mb-1 block">{t("wards.doctor")}</label>
+                  <Combobox
+                    options={doctorOptions}
+                    value={doctorId}
+                    onChange={(val) => setDoctorId(val as string)}
+                    placeholder={t("wards.selectDoctor")}
+                    searchPlaceholder={t("common.search")}
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Tibbiy karta raqami */}
+                <div>
+                  <label className="text-sm font-medium text-text mb-1 block">{t("wards.cardNumber")}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Masalan: 1024"
+                    className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  />
                 </div>
               </div>
 

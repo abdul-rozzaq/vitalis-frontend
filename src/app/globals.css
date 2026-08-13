@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Font family variables (fonts are self-hosted via @fontsource, see layout.tsx) */
+.font-vars {
+  --font-manrope: "Manrope", sans-serif;
+  --font-dm-mono: "DM Mono", monospace;
+}
+
 /* ─── Static tokens: fixed brand shades & radius ─────────────────────────────
    These never change between light and dark mode.
    Enterprise Healthcare CRM Design System

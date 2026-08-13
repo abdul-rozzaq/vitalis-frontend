@@ -82,7 +82,7 @@ interface Operation {
   id: string;
   patientId: string;
   status: string;
-  scheduledAt: string;
+  scheduledAt?: string;
   note?: string;
   totalPrice: string;
   contractNumber?: string;
@@ -186,11 +186,11 @@ export default function EditOperationPage() {
   // ── Initialize form ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (operation && !initialized) {
-      setOperationTypeId(operation.operationType.id);
+      setOperationTypeId(operation.operationType?.id ?? "");
       setRoomId(operation.room?.id ?? "");
       setDepartmentId(operation.department?.id ?? "");
       setContractNumber(operation.contractNumber ?? "");
-      setScheduledAt(new Date(operation.scheduledAt).toISOString().slice(0, 16));
+      setScheduledAt(operation.scheduledAt ? new Date(operation.scheduledAt).toISOString().slice(0, 16) : "");
       setNote(operation.note ?? "");
       setSurgeons(
         operation.surgeons.map((s) => ({
@@ -361,7 +361,6 @@ export default function EditOperationPage() {
     const e: Record<string, string> = {};
     if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
     if (!departmentId) e.departmentId = "Bo'lim tanlanmadi";
-    if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
     if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
     if (surgeons.some((s) => !s.surgeonId)) e.surgeons = "Barcha jarrohlar tanlanishi kerak";
