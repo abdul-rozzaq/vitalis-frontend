@@ -157,11 +157,9 @@ export default function NewOperationPage() {
   const [roomId, setRoomId] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [contractNumber, setContractNumber] = useState("");
-  const [scheduledAt, setScheduledAt] = useState(nowLocal());
+  const [scheduledAt, setScheduledAt] = useState("");
   const [note, setNote] = useState("");
-  const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([
-    { surgeonId: "", role: "LEAD" },
-  ]);
+  const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>([]);
   const [items, setItems] = useState<OperationItemInput[]>([]);
   // Operatsiyaning o'zi uchun tahrirlanadigan bazaviy narx.
   // Operatsiya turi tanlanganda shu turning basePrice'idan default sifatida to'ldiriladi,
@@ -427,13 +425,7 @@ export default function NewOperationPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!patientId) e.patientId = "Bemor tanlanmadi";
-    if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
-    if (!caseId) e.caseId = "Holat tanlanmadi";
-    if (!departmentId) e.departmentId = "Bo'lim tanlanmadi";
-    if (!scheduledAt) e.scheduledAt = "Sana va vaqt kiritilmadi";
-    if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
-    if (!surgeons.some((s) => s.role === "LEAD")) e.surgeons = "Kamida 1 ta LEAD jarroh bo'lishi kerak";
-    if (surgeons.some((s) => !s.surgeonId)) e.surgeons = "Barcha jarrohlar tanlanishi kerak";
+    if (surgeons.some((s) => !s.surgeonId)) e.surgeons = "Tanlangan jarrohlar to'liq bo'lishi kerak";
     if (basePrice < 0) e.basePrice = "Operatsiya narxi manfiy bo'lishi mumkin emas";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -444,11 +436,11 @@ export default function NewOperationPage() {
     const labServiceIds = labIds.flatMap((labId) => labServiceIdsByLab[labId] ?? []);
     createMutation.mutate({
       patientId,
-      operationTypeId,
+      ...(operationTypeId ? { operationTypeId } : {}),
       caseId: caseId || undefined,
       roomId: roomId || undefined,
-      departmentId,
-      scheduledAt: new Date(scheduledAt).toISOString(),
+      departmentId: departmentId || undefined,
+      ...(scheduledAt ? { scheduledAt: new Date(scheduledAt).toISOString() } : {}),
       note: note || undefined,
       contractNumber: contractNumber || undefined,
       basePrice,
@@ -491,7 +483,7 @@ export default function NewOperationPage() {
                 <SectionTitle icon={Scissors} title="Operatsiya turi" />
 
                 <div className="mb-4">
-                  <FieldLabel required>Bo&apos;lim</FieldLabel>
+                  <FieldLabel>Bo&apos;lim</FieldLabel>
                   <Combobox
                     options={departmentOptions}
                     value={departmentId}
@@ -503,18 +495,14 @@ export default function NewOperationPage() {
                   <ErrorMsg msg={errors.departmentId} />
                 </div>
 
-                <FieldLabel required>Operatsiya turi</FieldLabel>
+                <FieldLabel>Operatsiya turi</FieldLabel>
                 <Combobox
                   options={opTypeOptions}
                   value={operationTypeId}
                   onChange={setOperationTypeId}
-                  placeholder={
-                    !departmentId
-                      ? "Avval bo'limni tanlang"
-                      : t("operationForm.selectOperationType")
-                  }
+                  placeholder={t("operationForm.selectOperationType")}
                   searchPlaceholder="Operatsiya turini qidiring..."
-                  disabled={!departmentId}
+                  disabled={false}
                   error={!!errors.operationTypeId}
                 />
                 <ErrorMsg msg={errors.operationTypeId} />
@@ -574,7 +562,7 @@ export default function NewOperationPage() {
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <FieldLabel required>Holat (Case)</FieldLabel>
+                    <FieldLabel>Holat (Case)</FieldLabel>
                     {patientId && (
                       <button
                         type="button"
@@ -631,7 +619,7 @@ export default function NewOperationPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel required>Sana va vaqt</FieldLabel>
+                  <FieldLabel>Sana va vaqt</FieldLabel>
                   <input
                     type="datetime-local"
                     value={scheduledAt}

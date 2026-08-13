@@ -24,13 +24,13 @@ export interface OperationItemInput {
 
 export interface OperationFormValues {
   patientId: string;
-  operationTypeId: string;
+  operationTypeId?: string;
   caseId?: string;
   roomId?: string;
-  scheduledAt: string;
+  scheduledAt?: string;
   note?: string;
-  surgeons: OperationSurgeonInput[];
-  items: OperationItemInput[];
+  surgeons?: OperationSurgeonInput[];
+  items?: OperationItemInput[];
 }
 
 interface OperationTypeItem {
@@ -113,11 +113,11 @@ export function OperationForm({
   const [scheduledAt, setScheduledAt] = useState(
     initialData?.scheduledAt
       ? new Date(initialData.scheduledAt).toISOString().slice(0, 16)
-      : nowLocal()
+      : ""
   );
   const [note, setNote] = useState(initialData?.note ?? "");
   const [surgeons, setSurgeons] = useState<OperationSurgeonInput[]>(
-    initialData?.surgeons ?? [{ surgeonId: "", role: "LEAD" }]
+    initialData?.surgeons ?? []
   );
   const [items, setItems] = useState<OperationItemInput[]>(initialData?.items ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -256,16 +256,8 @@ export function OperationForm({
     const newErrors: Record<string, string> = {};
     if (!patientId)
       newErrors.patientId = t("operationForm.validation.patientRequired");
-    if (!operationTypeId)
-      newErrors.operationTypeId = t("operationForm.validation.operationTypeRequired");
-    if (!caseId && !isEditing)
-      newErrors.caseId = t("operationForm.validation.caseRequired");
-    if (!scheduledAt)
-      newErrors.scheduledAt = t("operationForm.validation.scheduledAtRequired");
-    if (surgeons.length === 0)
-      newErrors.surgeons = t("operationForm.validation.surgeonRequired");
-    if (!surgeons.some((s) => s.role === "LEAD"))
-      newErrors.surgeons = t("operationForm.validation.leadRequired");
+    // operationTypeId is now optional
+    // surgeons are now optional, but if provided, must have LEAD
     if (surgeons.some((s) => !s.surgeonId))
       newErrors.surgeons = t("operationForm.validation.allSurgeonsRequired");
 
@@ -280,13 +272,13 @@ export function OperationForm({
     if (!validate()) return;
     onSubmit({
       patientId,
-      operationTypeId,
+      ...(operationTypeId ? { operationTypeId } : {}),
       ...(caseId ? { caseId } : {}),
       roomId: roomId || undefined,
-      scheduledAt: new Date(scheduledAt).toISOString(),
+      ...(scheduledAt ? { scheduledAt: new Date(scheduledAt).toISOString() } : {}),
       note: note || undefined,
-      surgeons,
-      items: items.filter((i) => i.operationTypeItemId || i.name),
+      ...(surgeons.length > 0 ? { surgeons } : {}),
+      ...(items.length > 0 ? { items: items.filter((i) => i.operationTypeItemId || i.name) } : {}),
     });
   };
 
@@ -330,7 +322,7 @@ export function OperationForm({
 
       {/* ── Bo'lim ── */}
       <div>
-        <label className={labelClass}>{t("operationForm.department")} *</label>
+        <label className={labelClass}>{t("operationForm.department")}</label>
         <select
           value={departmentId}
           onChange={(e) => handleDepartmentChange(e.target.value)}
@@ -347,7 +339,7 @@ export function OperationForm({
 
       {/* ── Operatsiya turi ── */}
       <div>
-        <label className={labelClass}>{t("operationForm.operationType")} *</label>
+        <label className={labelClass}>{t("operationForm.operationType")}</label>
         <select
           value={operationTypeId}
           onChange={(e) => setOperationTypeId(e.target.value)}
@@ -372,7 +364,7 @@ export function OperationForm({
       {!propCaseId && !isEditing && (
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className={labelClass + " mb-0"}>{t("operationForm.case")} *</label>
+            <label className={labelClass + " mb-0"}>{t("operationForm.case")}</label>
             {patientId && (
               <button
                 type="button"
@@ -434,7 +426,7 @@ export function OperationForm({
       {/* ── Sana va Xona ── */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>{t("operationForm.dateTime")} *</label>
+          <label className={labelClass}>{t("operationForm.dateTime")}</label>
           <input
             type="datetime-local"
             value={scheduledAt}
@@ -463,7 +455,7 @@ export function OperationForm({
       {/* ── Jarrohlar ── */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className={labelClass + " mb-0"}>{t("operationForm.surgeons")} *</label>
+          <label className={labelClass + " mb-0"}>{t("operationForm.surgeons")}</label>
           {surgeons.length < 2 && (
             <button
               type="button"

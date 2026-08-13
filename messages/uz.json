@@ -964,7 +964,10 @@
     "prepayment": "Oldindan to'lov",
     "prepaymentAmount": "To'lov summasi",
     "checkInDesc": "Bemorlarni palataga qabul qilish",
-    "bonusForCompanions": "Sheriklar uchun ham hisoblansin"
+    "bonusForCompanions": "Sheriklar uchun ham hisoblansin",
+    "doctor": "Shifokor",
+    "selectDoctor": "Shifokorni tanlang",
+    "cardNumber": "Tibbiy karta raqami"
   },
   "operations": {
     "title": "Operatsiyalar",

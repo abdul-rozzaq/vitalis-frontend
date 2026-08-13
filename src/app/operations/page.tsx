@@ -3,10 +3,10 @@
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { DataTable } from "@/components/ui/data-table";
 import { api } from "@/shared/lib/api";
+import { formatAmount } from "@/shared/lib/formatters";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Clock, Edit, Loader2, Play, Plus, SlidersHorizontal, X, XCircle } from "lucide-react";
-import { formatAmount } from "@/shared/lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -25,10 +25,10 @@ interface Operation {
   id: string;
   patientId: string;
   status: OperationStatus;
-  scheduledAt: string;
+  scheduledAt?: string;
   totalPrice: string;
   patient: { id: string; first_name: string; last_name: string };
-  operationType: { id: string; name: string };
+  operationType?: { id: string; name: string } | null;
   room?: { id: string; name: string };
   surgeons: OperationSurgeon[];
 }
@@ -163,31 +163,48 @@ export default function OperationsPage() {
 
   const filtered = useMemo(() => {
     return operations.filter((op) => {
-      if (filters.status && op.status !== filters.status) return false;
+      if (filters.status && op.status !== filters.status) {
+        return false;
+      }
 
       if (filters.search) {
         const q = filters.search.toLowerCase();
-        const name = `${op.patient.first_name} ${op.patient.last_name}`.toLowerCase();
-        const type = op.operationType.name.toLowerCase();
-        if (!name.includes(q) && !type.includes(q)) return false;
+        const name =
+          `${op.patient.first_name} ${op.patient.last_name}`.toLowerCase();
+        const type = (
+          op.operationType?.name ?? "Operatsiya"
+        ).toLowerCase();
+
+        if (!name.includes(q) && !type.includes(q)) {
+          return false;
+        }
       }
 
-      const opDate = new Date(op.scheduledAt).setHours(0, 0, 0, 0);
+      const opDate = op.scheduledAt
+        ? new Date(op.scheduledAt).setHours(0, 0, 0, 0)
+        : null;
 
-      if (filters.dateFrom) {
-        const from = new Date(filters.dateFrom).setHours(0, 0, 0, 0);
-        if (opDate < from) return false;
-      }
+      if (opDate !== null) {
+        if (filters.dateFrom) {
+          const from = new Date(filters.dateFrom).setHours(0, 0, 0, 0);
 
-      if (filters.dateTo) {
-        const to = new Date(filters.dateTo).setHours(0, 0, 0, 0);
-        if (opDate > to) return false;
+          if (opDate < from) {
+            return false;
+          }
+        }
+
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo).setHours(0, 0, 0, 0);
+
+          if (opDate > to) {
+            return false;
+          }
+        }
       }
 
       return true;
     });
   }, [operations, filters]);
-
   // ── Columns ───────────────────────────────────────────────────────────────────
   const columns = useMemo<ColumnDef<Operation>[]>(
     () => [
@@ -208,20 +225,20 @@ export default function OperationsPage() {
       {
         id: "operationType",
         header: t("operations.operationType"),
-        cell: ({ row }) => <span className="text-text-muted text-sm">{row.original.operationType.name}</span>,
+        cell: ({ row }) => <span className="text-text-muted text-sm">{(row.original.operationType?.name ?? "Operatsiya")}</span>,
       },
       {
         accessorKey: "scheduledAt",
         header: t("operations.date"),
         cell: ({ row }) => (
           <span className="text-text-muted text-sm">
-            {new Date(row.original.scheduledAt).toLocaleString("uz-UZ", {
+            {row.original.scheduledAt ? new Date(row.original.scheduledAt).toLocaleString("uz-UZ", {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
               hour: "2-digit",
               minute: "2-digit",
-            })}
+            }) : "Belgilanmagan"}
           </span>
         ),
       },
@@ -333,7 +350,7 @@ export default function OperationsPage() {
           <DataTable
             columns={columns}
             data={filtered}
-            // onRowClick={(row) => router.push(`/operations/${row.id}`)}
+          // onRowClick={(row) => router.push(`/operations/${row.id}`)}
           />
         )}
       </PageContent>

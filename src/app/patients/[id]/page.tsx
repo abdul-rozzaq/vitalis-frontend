@@ -146,12 +146,12 @@ export default function PatientDetailPage() {
                     {new Date(patient.birth_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                   </div>
                 )}
-                {patient.phone_number && (
-                  <div className="flex items-center gap-2.5 text-sm text-secondary">
-                    <Phone className="w-4 h-4 text-text-muted shrink-0" />
-                    <span className="font-mono">{formatPhone(patient.phone_number)}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2.5 text-sm text-secondary">
+                  <Phone className="w-4 h-4 text-text-muted shrink-0" />
+                  <span className="font-mono">
+                    {patient.phone_number ? formatPhone(patient.phone_number) : "—"}
+                  </span>
+                </div>
                 {patient.district?.region?.name && (
                   <div className="flex items-start gap-2.5 text-sm text-secondary">
                     <MapPin className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
@@ -306,6 +306,16 @@ export default function PatientDetailPage() {
                           <p className="text-xs font-normal text-warning flex items-center gap-1 mt-0.5">
                             <Users className="w-3 h-3" />
                             {activeWard.companionsCount} {t("wards.companionsCount") || "ta sherik"}
+                          </p>
+                        )}
+                        {activeWard.doctor && (
+                          <p className="text-xs font-normal text-text-muted mt-0.5">
+                            {t("wards.doctor")}: {activeWard.doctor.first_name} {activeWard.doctor.last_name}
+                          </p>
+                        )}
+                        {activeWard.cardNumber && (
+                          <p className="text-xs font-normal text-text-muted mt-0.5">
+                            {t("wards.cardNumber")}: {activeWard.cardNumber}
                           </p>
                         )}
                       </div>

@@ -13,7 +13,9 @@ interface Ward {
   expectedOut: string | null;
   note: string | null;
   status: "OCCUPIED" | "VACATED";
-  companionsCount: number;                           // ← QO'SHILDI
+  companionsCount: number;
+  cardNumber?: number | null;
+  doctor?: { id: string; first_name: string; last_name: string } | null;
   patientPricePerDay?: number | null;
   companionPricePerDay?: number | null;
   patient: { id: string; first_name: string; last_name: string };
@@ -31,6 +33,8 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [doctorId, setDoctorId] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [expectedOut, setExpectedOut] = useState("");
   const [note, setNote] = useState("");
@@ -43,6 +47,12 @@ export function WardEditModal({ ward, onClose }: Props) {
   const { data: patients = [] } = useQuery({
     queryKey: ["patients"],
     queryFn: () => api.get("/patients").then((r) => r.data),
+    enabled: !!ward,
+  });
+
+  const { data: doctors = [] } = useQuery({
+    queryKey: ["ward-doctors"],
+    queryFn: () => api.get("/wards/doctors").then((r) => r.data),
     enabled: !!ward,
   });
 
@@ -63,6 +73,11 @@ export function WardEditModal({ ward, onClose }: Props) {
       : Math.max(0, (selectedRoom.freeSlots ?? selectedRoom.capacity ?? 0) - 1)
     : 0;
 
+  const doctorOptions = doctors.map((d: any) => ({
+    label: `${d.first_name} ${d.last_name}`,
+    value: d.id,
+  }));
+
   const patientOptions = patients.map((p: any) => ({
     label: `${p.first_name} ${p.last_name}`,
     value: p.id,
@@ -78,6 +93,8 @@ export function WardEditModal({ ward, onClose }: Props) {
     if (ward) {
       setPatientId(ward.patient.id);
       setRoomId(ward.room.id);
+      setDoctorId(ward.doctor?.id ?? "");
+      setCardNumber(ward.cardNumber?.toString() ?? "");
       setCheckIn(ward.checkIn.split("T")[0]);
       setExpectedOut(ward.expectedOut ? ward.expectedOut.split("T")[0] : "");
       setNote(ward.note ?? "");
@@ -98,6 +115,8 @@ export function WardEditModal({ ward, onClose }: Props) {
       api.patch(`/wards/${ward!.id}`, {
         patientId: patientId !== ward!.patient.id ? patientId : undefined,
         roomId: roomId !== ward!.room.id ? roomId : undefined,
+        doctorId: doctorId !== (ward!.doctor?.id ?? "") ? (doctorId || null) : undefined,
+        cardNumber: cardNumber !== (ward!.cardNumber?.toString() ?? "") ? (cardNumber ? Number(cardNumber) : null) : undefined,
         checkIn: checkIn !== ward!.checkIn.split("T")[0] ? checkIn : undefined,
         expectedOut: expectedOut || null,
         note: note || undefined,
@@ -158,6 +177,31 @@ export function WardEditModal({ ward, onClose }: Props) {
               placeholder={t("forms.select")}
               searchPlaceholder={t("common.search")}
               disabled={isPending}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">{t("wards.doctor")}</label>
+            <Combobox
+              options={doctorOptions}
+              value={doctorId}
+              onChange={(val) => setDoctorId(val as string)}
+              placeholder={t("wards.selectDoctor")}
+              searchPlaceholder={t("common.search")}
+              disabled={isPending}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">{t("wards.cardNumber")}</label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ""))}
+              placeholder="Masalan: 1024"
+              className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
           </div>
 

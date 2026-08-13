@@ -70,13 +70,13 @@ interface Operation {
   id: string;
   patientId: string;
   status: OperationStatus;
-  scheduledAt: string;
+  scheduledAt?: string;
   startedAt?: string;
   completedAt?: string;
   totalPrice: string;
   note?: string;
   patient: { id: string; first_name: string; last_name: string };
-  operationType: { id: string; name: string };
+  operationType?: { id: string; name: string } | null;
   room?: { id: string; name: string };
   department?: { id: string; name: string };
   surgeons: OperationSurgeon[];
@@ -432,7 +432,7 @@ export default function OperationDetailsPage() {
                     <Scissors className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-base font-semibold text-text">{op.operationType.name}</h2>
+                    <h2 className="text-base font-semibold text-text">{op.operationType?.name ?? "Operatsiya"}</h2>
                     <p className="text-sm text-text-muted mt-0.5">
                       {op.patient.first_name} {op.patient.last_name}
                       {op.room && <> · {op.room.name}</>}
@@ -447,7 +447,7 @@ export default function OperationDetailsPage() {
                 <div>
                   <p className="text-xs text-text-muted mb-1">Rejalashtirilgan</p>
                   <p className="text-sm font-medium text-text">
-                    {new Date(op.scheduledAt).toLocaleString("uz-UZ")}
+                    {op.scheduledAt ? new Date(op.scheduledAt).toLocaleString("uz-UZ") : "Belgilanmagan"}
                   </p>
                 </div>
                 {op.startedAt && (
@@ -578,7 +578,7 @@ export default function OperationDetailsPage() {
               <SectionLabel>Ma'lumotlar</SectionLabel>
               <InfoItem
                 label={t("operations.statusScheduled")}
-                value={new Date(op.scheduledAt).toLocaleDateString("uz-UZ")}
+                value={op.scheduledAt ? new Date(op.scheduledAt).toLocaleDateString("uz-UZ") : "Belgilanmagan"}
               />
               {op.startedAt && (
                 <InfoItem

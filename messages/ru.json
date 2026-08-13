@@ -964,7 +964,10 @@
     "prepayment": "Предоплата",
     "prepaymentAmount": "Сумма платежа",
     "checkInDesc": "Прием больных в палату",
-    "bonusForCompanions": "Также рассчитывайте на партнеров"
+    "bonusForCompanions": "Также рассчитывайте на партнеров",
+    "doctor": "Врач",
+    "selectDoctor": "Выберите врача",
+    "cardNumber": "Номер медицинской карты"
   },
   "operations": {
     "title": "Операции",

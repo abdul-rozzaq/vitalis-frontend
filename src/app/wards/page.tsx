@@ -23,6 +23,8 @@ interface Ward {
   status: "OCCUPIED" | "VACATED";
   note: string | null;
   companionsCount: number;
+  cardNumber: number | null;
+  doctor: { id: string; first_name: string; last_name: string } | null;
   patient: { id: string; first_name: string; last_name: string };
   room: {
     id: string;
@@ -164,6 +166,18 @@ export default function WardsPage() {
             {row.original.patient.first_name} {row.original.patient.last_name}
           </button>
         ),
+      },
+      {
+        id: "doctor",
+        header: t("wards.doctor"),
+        cell: ({ row }) => row.original.doctor ? (
+          <span className="text-sm text-secondary">{row.original.doctor.first_name} {row.original.doctor.last_name}</span>
+        ) : <span className="text-secondary text-sm">—</span>,
+      },
+      {
+        accessorKey: "cardNumber",
+        header: t("wards.cardNumber"),
+        cell: ({ row }) => row.original.cardNumber ? <span className="text-sm text-secondary">{row.original.cardNumber}</span> : <span className="text-secondary text-sm">—</span>,
       },
       {
         id: "room",

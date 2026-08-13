@@ -47,7 +47,7 @@ export function EditInvoiceForm({ invoice, patients, onSubmit, onCancel, isLoadi
   const filteredPatients = useMemo(() => {
     if (!patientSearch.trim()) return patients.slice(0, 20);
     const q = patientSearch.toLowerCase();
-    return patients.filter((p) => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || (p.phone_number?.includes(q) ?? false)).slice(0, 20);
+    return patients.filter((p) => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || (p.phone_number ?? "").includes(q)).slice(0, 20);
   }, [patients, patientSearch]);
 
   const addItem = () => setItems((prev) => [...prev, { ...EMPTY_ITEM }]);
