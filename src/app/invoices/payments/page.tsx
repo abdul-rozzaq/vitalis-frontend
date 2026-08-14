@@ -8,12 +8,13 @@ import { InvoicePayment, PAYMENT_METHOD_LABELS, PaymentMethod } from "@/features
 import { api } from "@/shared/lib/api";
 import { exportToExcel } from "@/shared/lib/export-excel";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
+import { printReceipt } from "@/shared/lib/receipt-printer";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, Edit, Loader2, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, Edit, Loader2, Printer, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 const INITIAL_FILTERS: PaymentFilters = {
   patientSearch: "",
@@ -30,6 +31,7 @@ export default function PaymentsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<PaymentFilters>(INITIAL_FILTERS);
   const [editingPayment, setEditingPayment] = useState<InvoicePayment | null>(null);
+  const [printingPaymentId, setPrintingPaymentId] = useState<string | null>(null);
 
   const { data: payments = [], isLoading, refetch } = useQuery<InvoicePayment[]>({
     queryKey: [
@@ -96,6 +98,27 @@ export default function PaymentsPage() {
 
     exportToExcel("payments", headers, rows, t("invoices.payments.title"));
   };
+
+  const handlePrintPayment = useCallback(async (payment: InvoicePayment) => {
+    setPrintingPaymentId(payment.id);
+    try {
+      const patient = payment.invoice?.patient;
+      const cashier = payment.createdBy;
+
+      await printReceipt({
+        payment,
+        patientName: patient ? `${patient.first_name} ${patient.last_name}` : "—",
+        invoiceNumber: payment.invoiceId.slice(0, 8).toUpperCase(),
+        paymentMethod: payment.paymentMethod,
+        cashierName: cashier ? `${cashier.first_name} ${cashier.last_name}` : undefined,
+        items: payment.invoice?.items ?? [],
+      });
+    } catch (error: any) {
+      alert(error?.message || "Chek chiqarishda xatolik yuz berdi");
+    } finally {
+      setPrintingPaymentId(null);
+    }
+  }, []);
 
   const handleFilterChange = (k: keyof PaymentFilters, v: string | string[]) => {
     setFilters((prev) => ({ ...prev, [k]: v }) as PaymentFilters);
@@ -215,17 +238,33 @@ export default function PaymentsPage() {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <button
-            onClick={() => setEditingPayment(row.original)}
-            className="text-text-muted hover:text-primary transition-colors cursor-pointer p-1.5 rounded-md hover:bg-primary-50"
-            title="Tahrirlash"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => handlePrintPayment(row.original)}
+              disabled={printingPaymentId === row.original.id}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium text-primary hover:bg-primary-50 border border-transparent hover:border-primary/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Ushbu to‘lov uchun chek chiqarish"
+            >
+              {printingPaymentId === row.original.id ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Printer className="w-3.5 h-3.5" />
+              )}
+              <span>Chek</span>
+            </button>
+            <button
+              onClick={() => setEditingPayment(row.original)}
+              className="text-text-muted hover:text-primary transition-colors cursor-pointer p-1.5 rounded-md hover:bg-primary-50"
+              title="Tahrirlash"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </div>
         ),
       },
     ],
-    [t]
+    [handlePrintPayment, printingPaymentId, t]
   );
 
   return (
