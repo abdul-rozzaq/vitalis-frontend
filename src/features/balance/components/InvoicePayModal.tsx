@@ -1,7 +1,8 @@
 "use client";
 
 import { Modal } from "@/components/design-system/Modal";
-import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
+import { Invoice, PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
+import { printReceipt } from "@/shared/lib/receipt-printer";
 import { api } from "@/shared/lib/api";
 import { formatCurrency } from "@/shared/lib/formatters";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -19,7 +20,7 @@ interface InvoicePayModalProps {
   remainingAmount: number;
   invoiceTotalAmount: number;
   paidAmount: number;
-  onSuccess: () => void;
+  onSuccess: (invoice?: Invoice) => void;
   onClose: () => void;
 }
 
@@ -42,7 +43,9 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
 
   // ─── Shared ──────────────────────────────────────────────────────────────────
   const [note, setNote] = useState("");
+  const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
   const [error, setError] = useState("");
+  const [printError, setPrintError] = useState("");
 
   const { data: balances, isLoading: loadingBalances } = useQuery<BalanceData>({
     queryKey: ["patient-balance", patientId],
@@ -53,11 +56,34 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
   const availableBonus = parseFloat(balances?.bonus ?? "0");
 
   // ─── Balance mode mutation ───────────────────────────────────────────────────
+  const handlePaymentSuccess = async (invoice: Invoice, method?: PaymentMethod) => {
+    setPrintError("");
+
+    if (printReceiptAfterPayment) {
+      const payment = invoice.payments?.[0];
+      if (payment) {
+        try {
+          await printReceipt({
+            payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
+            patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
+            invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
+            cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
+            items: invoice.items ?? [],
+          });
+        } catch (err: any) {
+          setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
+        }
+      }
+    }
+
+    onSuccess(invoice);
+    onClose();
+  };
+
   const balanceMutation = useMutation({
     mutationFn: (values: { cashAmount: string; bonusAmount: string; note?: string }) => api.post(`/invoices/${invoiceId}/pay`, values).then((r) => r.data),
-    onSuccess: () => {
-      onSuccess();
-      onClose();
+    onSuccess: async (invoice: Invoice) => {
+      await handlePaymentSuccess(invoice, undefined);
     },
     onError: (err: any) => setError(err?.response?.data?.message || "To'lov amalga oshmadi"),
   });
@@ -74,9 +100,8 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
           note,
         })
         .then((r) => r.data),
-    onSuccess: () => {
-      onSuccess();
-      onClose();
+    onSuccess: async (invoice: Invoice, variables) => {
+      await handlePaymentSuccess(invoice, variables.paymentMethod);
     },
     onError: (err: any) => setError(err?.response?.data?.message || "To'lov amalga oshmadi"),
   });
@@ -294,6 +319,22 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
             <div className="text-xs text-text-muted bg-surface-hover rounded-lg px-3 py-2">Tanlangan to'lov usuli orqali balans avtomatik to'ldiriladi va invoice dan yechiladi.</div>
           </>
         )}
+
+        {/* Receipt printing */}
+        <label className="flex items-start gap-3 rounded-lg border border-border bg-surface-hover px-3 py-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={printReceiptAfterPayment}
+            onChange={(e) => setPrintReceiptAfterPayment(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-primary"
+          />
+          <span>
+            <span className="block text-sm font-medium text-text">To'lovdan keyin chek chiqarish</span>
+            <span className="block text-xs text-text-muted mt-0.5">Belgilansa, avval QZ Tray/Xprinter ishlatiladi. QZ Tray bo'lmasa brauzerning print oynasi ochiladi.</span>
+          </span>
+        </label>
+
+        {printError && <p className="text-xs text-danger-600 font-medium">{printError}</p>}
 
         {/* Note — shared */}
         <div className="space-y-1.5">

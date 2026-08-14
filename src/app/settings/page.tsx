@@ -1,5 +1,6 @@
 "use client";
 
+import { PrinterSettingsCard } from "@/features/settings/components/PrinterSettingsCard";
 import { createPasswordSchema, createProfileSchema } from "@/features/settings/schemas";
 import { ChangePasswordPayload, PasswordFormValues, ProfileFormValues } from "@/features/settings/types";
 import { getApiErrorMessage, getInitialPhotoPreview } from "@/features/settings/utils";
@@ -309,6 +310,8 @@ export default function SettingsPage() {
           </div>
         </form>
       </motion.div>
+
+      <PrinterSettingsCard />
 
       {/* Account / Sign out Card */}
       <motion.div
