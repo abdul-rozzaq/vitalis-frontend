@@ -1276,7 +1276,12 @@
       "doctor": "Доктор",
       "doctorAll": "Все врачи",
       "amountMin": "Минимальная сумма",
-      "amountMax": "Максимальная сумма"
+      "amountMax": "Максимальная сумма",
+      "operationType": "Тип операции",
+      "operationTypeAll": "Все операции",
+      "operationDoctor": "Врач операции",
+      "operationDoctorAll": "Все врачи",
+      "operationDoctorNone": "Врачи операций не найдены"
     },
     "statusOptions": {
       "ALL": "Все",

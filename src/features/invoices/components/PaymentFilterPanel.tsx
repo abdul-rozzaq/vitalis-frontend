@@ -1,6 +1,8 @@
 "use client";
 
-import { Activity, Bed, FileEdit, FlaskConical, Scissors, SlidersHorizontal, Stethoscope, X } from "lucide-react";
+import { Activity, Bed, FileEdit, FlaskConical, Scissors, SlidersHorizontal, Stethoscope, User, X } from "lucide-react";
+import { api } from "@/shared/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { PAYMENT_METHOD_LABELS, PaymentMethod } from "../types";
@@ -13,6 +15,8 @@ export interface PaymentFilters {
   amountMax: string;
   invoiceSourceType: string[];
   paymentMethod: string[];
+  operationTypeId: string;
+  doctorId: string;
 }
 
 const SOURCE_TYPE_META: Record<string, { icon: typeof Bed; activeClass: string }> = {
@@ -33,13 +37,50 @@ interface PaymentFilterPanelProps {
   activeCount: number;
 }
 
+interface OperationTypeOption {
+  id: string;
+  name: string;
+}
+
+interface DoctorOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+}
+
 export function PaymentFilterPanel({ filters, onChange, onReset, activeCount }: PaymentFilterPanelProps) {
   const t = useTranslations("invoices");
+  const isOperationSelected = (filters.invoiceSourceType ?? []).includes("OPERATION");
+
+  const { data: operationTypes = [], isLoading: isLoadingOperationTypes } = useQuery<OperationTypeOption[]>({
+    queryKey: ["payment-operation-types"],
+    queryFn: () => api.get("/operation-types").then((r) => r.data),
+    enabled: isOperationSelected,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: doctors = [], isLoading: isLoadingDoctors } = useQuery<DoctorOption[]>({
+    queryKey: ["payment-operation-doctors", filters.operationTypeId],
+    queryFn: () => {
+      const params = filters.operationTypeId
+        ? `?operationTypeId=${encodeURIComponent(filters.operationTypeId)}`
+        : "";
+      return api.get(`/invoices/payments/operation-doctors${params}`).then((r) => r.data);
+    },
+    enabled: isOperationSelected,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const toggleSourceType = (value: string) => {
     const current = filters.invoiceSourceType ?? [];
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     onChange("invoiceSourceType", next);
+
+    if (value === "OPERATION" && current.includes(value)) {
+      onChange("operationTypeId", "");
+      onChange("doctorId", "");
+    }
   };
 
   const togglePaymentMethod = (value: string) => {
@@ -165,6 +206,62 @@ export function PaymentFilterPanel({ filters, onChange, onReset, activeCount }: 
             })}
           </div>
         </div>
+
+        {isOperationSelected && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            transition={{ duration: 0.15 }}
+            className="mt-4 pt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-3"
+          >
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-muted">
+                {t("fields.operationType")}
+              </label>
+              <select
+                value={filters.operationTypeId}
+                onChange={(e) => {
+                  onChange("operationTypeId", e.target.value);
+                  onChange("doctorId", "");
+                }}
+                disabled={isLoadingOperationTypes}
+                className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
+              >
+                <option value="">{t("fields.operationTypeAll")}</option>
+                {operationTypes.map((operationType) => (
+                  <option key={operationType.id} value={operationType.id}>
+                    {operationType.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-muted flex items-center gap-1.5">
+                <User className="w-3 h-3" />
+                {t("fields.operationDoctor")}
+              </label>
+              <select
+                value={filters.doctorId}
+                onChange={(e) => onChange("doctorId", e.target.value)}
+                disabled={isLoadingDoctors || doctors.length === 0}
+                className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
+              >
+                <option value="">{t("fields.operationDoctorAll")}</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.first_name} {doctor.last_name}
+                  </option>
+                ))}
+              </select>
+              {doctors.length === 0 && !isLoadingDoctors && (
+                <p className="text-[11px] text-text-muted">
+                  {t("fields.operationDoctorNone")}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

@@ -1276,7 +1276,12 @@
       "doctor": "Shifokor",
       "doctorAll": "Barcha shifokorlar",
       "amountMin": "Min miqdor",
-      "amountMax": "Maks miqdor"
+      "amountMax": "Maks miqdor",
+      "operationType": "Operatsiya turi",
+      "operationTypeAll": "Barcha operatsiyalar",
+      "operationDoctor": "Operatsiya shifokori",
+      "operationDoctorAll": "Barcha shifokorlar",
+      "operationDoctorNone": "Operatsiya shifokorlari topilmadi"
     },
     "statusOptions": {
       "ALL": "Barchasi",

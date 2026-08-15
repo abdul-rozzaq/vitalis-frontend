@@ -24,7 +24,7 @@ import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", amountMin: "", amountMax: "" };
+const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", operationTypeId: "", operationDoctorId: "", amountMin: "", amountMax: "" };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -47,6 +47,8 @@ export default function InvoicesPage() {
       filters.dateTo,
       filters.sourceType.join(","),
       filters.doctorId,
+      filters.operationTypeId,
+      filters.operationDoctorId,
       filters.patientSearch,
       filters.amountMin,
       filters.amountMax,
@@ -58,6 +60,8 @@ export default function InvoicesPage() {
       if (filters.dateTo) params.set("dateTo", filters.dateTo);
       if (filters.sourceType.length > 0) params.set("sourceType", filters.sourceType.join(","));
       if (filters.doctorId) params.set("doctorId", filters.doctorId);
+      if (filters.operationTypeId) params.set("operationTypeId", filters.operationTypeId);
+      if (filters.operationDoctorId) params.set("operationDoctorId", filters.operationDoctorId);
       if (filters.patientSearch) params.set("patientSearch", filters.patientSearch);
       if (filters.amountMin) params.set("amountMin", filters.amountMin);
       if (filters.amountMax) params.set("amountMax", filters.amountMax);
@@ -104,8 +108,12 @@ export default function InvoicesPage() {
 
   const handleFilterChange = (k: keyof Filters, v: string | string[]) => setFilters((prev) => ({ ...prev, [k]: v }) as Filters);
   const activeFilterCount = useMemo(() => {
-    const { sourceType, doctorId, ...rest } = filters;
-    return Object.values(rest).filter((v) => v !== "").length + (sourceType.length > 0 ? 1 : 0) + (doctorId ? 1 : 0);
+    const { sourceType, doctorId, operationTypeId, operationDoctorId, ...rest } = filters;
+    return Object.values(rest).filter((v) => v !== "").length
+      + (sourceType.length > 0 ? 1 : 0)
+      + (doctorId ? 1 : 0)
+      + (operationTypeId ? 1 : 0)
+      + (operationDoctorId ? 1 : 0);
   }, [filters]);
 
   const handleExport = () => {
