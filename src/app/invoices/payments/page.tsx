@@ -24,6 +24,8 @@ const INITIAL_FILTERS: PaymentFilters = {
   amountMax: "",
   invoiceSourceType: [],
   paymentMethod: [],
+  operationTypeId: "",
+  doctorId: "",
 };
 
 export default function PaymentsPage() {
@@ -43,6 +45,8 @@ export default function PaymentsPage() {
       filters.amountMax,
       filters.invoiceSourceType.join(","),
       filters.paymentMethod.join(","),
+      filters.operationTypeId,
+      filters.doctorId,
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -56,6 +60,12 @@ export default function PaymentsPage() {
       }
       if (filters.paymentMethod.length > 0) {
         params.set("paymentMethod", filters.paymentMethod.join(","));
+      }
+      if (filters.operationTypeId) {
+        params.set("operationTypeId", filters.operationTypeId);
+      }
+      if (filters.doctorId) {
+        params.set("doctorId", filters.doctorId);
       }
 
       const res = await api.get(`/invoices/payments?${params.toString()}`);
@@ -240,18 +250,12 @@ export default function PaymentsPage() {
         cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1">
             <button
-              type="button"
               onClick={() => handlePrintPayment(row.original)}
               disabled={printingPaymentId === row.original.id}
-              className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium text-primary hover:bg-primary-50 border border-transparent hover:border-primary/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Ushbu to‘lov uchun chek chiqarish"
+              className="text-text-muted hover:text-primary transition-colors cursor-pointer p-1.5 rounded-md hover:bg-primary-50 disabled:opacity-50"
+              title="Chek chiqarish"
             >
-              {printingPaymentId === row.original.id ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Printer className="w-3.5 h-3.5" />
-              )}
-              <span>Chek</span>
+              {printingPaymentId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
             </button>
             <button
               onClick={() => setEditingPayment(row.original)}
