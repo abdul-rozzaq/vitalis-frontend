@@ -1,5 +1,6 @@
 import { Providers } from "@/app/providers";
 import { AppLayout } from "@/components/layouts/app-layout";
+import { TopLoader } from "@/components/layouts/TopLoader";
 import "@fontsource/dm-mono/400.css";
 import "@fontsource/dm-mono/500.css";
 import "@fontsource/manrope/400.css";
@@ -10,7 +11,6 @@ import "@fontsource/manrope/800.css";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -62,10 +62,7 @@ export default async function RootLayout({
       </head>
 
       <body className="font-sans" suppressHydrationWarning>
-        <NextTopLoader
-          color="var(--color-primary-500)"
-          height={2}
-        />
+        <TopLoader />
 
         <NextIntlClientProvider messages={messages}>
           <Providers>

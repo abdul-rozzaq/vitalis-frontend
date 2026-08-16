@@ -860,6 +860,8 @@
     "freeOption": "To'lov qilmaydi",
     "paidHint": "Xizmat narxi bemorning umumiy hisobiga (invoice) qo'shiladi.",
     "freeHint": "Xizmat bepul deb belgilanadi, hisobga qo'shilmaydi.",
+    "totalAmount": "To'lov summasi",
+    "totalAmountHint": "Standart summa xizmatlar narxlari yig'indisidan hisoblangan ({nominal} so'm). Kerak bo'lsa (masalan chegirma uchun) o'zgartirishingiz mumkin.",
     "backToList": "Ro'yxatga qaytish",
     "attachFileButton": "Fayl biriktirish",
     "attachFileTargetLabel": "Qaysi tahlilga tegishli?",
