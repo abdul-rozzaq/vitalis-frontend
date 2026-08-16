@@ -133,6 +133,17 @@
     --info: #3b82f6;
     --info-50: #eff6ff;
     --info-100: #dbeafe;
+
+    /* Chart series (categorical, fixed hue order — see dataviz skill) */
+    --chart-appointment: #2a78d6;
+    --chart-lab: #eb6834;
+    --chart-operation: #1baf7a;
+    --chart-diagnostic: #eda100;
+    --chart-ward: #e87ba4;
+    --chart-procedure: #008300;
+    --chart-manual: #4a3aa7;
+    --chart-grid: #e4e8ef;
+    --chart-axis: #c3c2b7;
   }
 
   /* Global input/select/textarea styling */
@@ -193,6 +204,17 @@
     --info: #60a5fa;
     --info-50: #0f2347;
     --info-100: #1e3a5f;
+
+    /* Chart series (categorical, fixed hue order — dark-mode steps) */
+    --chart-appointment: #3987e5;
+    --chart-lab: #d95926;
+    --chart-operation: #199e70;
+    --chart-diagnostic: #c98500;
+    --chart-ward: #d55181;
+    --chart-procedure: #008300;
+    --chart-manual: #9085e9;
+    --chart-grid: #262d3a;
+    --chart-axis: #383835;
   }
 }
 
