@@ -115,7 +115,7 @@ export default function PaymentsPage() {
       const patient = payment.invoice?.patient;
       const cashier = payment.createdBy;
 
-      await printReceipt({
+      const via = await printReceipt({
         payment,
         patientName: patient ? `${patient.first_name} ${patient.last_name}` : "—",
         invoiceNumber: payment.invoiceId.slice(0, 8).toUpperCase(),
@@ -123,6 +123,9 @@ export default function PaymentsPage() {
         cashierName: cashier ? `${cashier.first_name} ${cashier.last_name}` : undefined,
         items: payment.invoice?.items ?? [],
       });
+      if (via === "browser") {
+        alert("QZ Tray ulanmagan — chek brauzer orqali chop etildi. Xprinterda qog'oz tiqilib qolishi mumkin, Sozlamalar > Chek printeri bo'limidan QZ Tray holatini tekshiring.");
+      }
     } catch (error: any) {
       alert(error?.message || "Chek chiqarishda xatolik yuz berdi");
     } finally {

@@ -165,6 +165,11 @@ export const WORKSPACES: Workspace[] = [
         href: "/invoices/payments",
         roles: ["ADMIN", "KASSIR", "HISOBCHI", "DIREKTOR"],
       },
+      {
+        labelKey: "nav.reports",
+        href: "/invoices/reports",
+        roles: ["ADMIN", "HISOBCHI", "DIREKTOR"],
+      },
     ],
   },
   {

@@ -12,6 +12,7 @@
     "wards": "Palatalar",
     "invoices": "Invoicelar",
     "payments": "To'lovlar",
+    "reports": "Hisobotlar",
     "shifts": "Smenalar",
     "duty": "Mening navbatim",
     "operations": "Operatsiyalar",
@@ -1299,6 +1300,7 @@
       "OPERATION": "Operatsiya",
       "DIAGNOSTIC_ORDER": "Diagnostika",
       "LAB_ORDER": "Laboratoriya",
+      "PROCEDURE_ORDER": "Protsedura",
       "MANUAL": "Qo'lda"
     },
     "summary": {
@@ -1346,6 +1348,48 @@
         "bonusPaid": "Bonus to'lovlar",
         "count": "To'lovlar soni"
       }
+    },
+    "reports": {
+      "title": "Hisobotlar",
+      "subtitle": "Davr va manba bo'yicha daromad tahlili",
+      "revenueNote": "Bu — tushum, sof foyda emas: xarajatlar hali ayirilmagan",
+      "period": {
+        "today": "Bugun",
+        "week": "Bu hafta",
+        "month": "Bu oy",
+        "lastMonth": "O'tgan oy",
+        "custom": "Maxsus oraliq"
+      },
+      "summary": {
+        "total": "Jami tushum",
+        "cash": "Naqd",
+        "bonus": "Bonus",
+        "count": "To'lovlar soni"
+      },
+      "trendTitle": "So'nggi 6 oy — daromad dinamikasi",
+      "bySourceTitle": "Manba bo'yicha taqsimot",
+      "detailTitle": "Manba bo'yicha batafsil",
+      "byMethodTitle": "To'lov turi bo'yicha taqsimot",
+      "byStaffTitle": "Xodim bo'yicha taqsimot",
+      "filterBySource": "Bo'limlar",
+      "filterAll": "Barchasi",
+      "itemBreakdownTitle": "Ichki taqsimot — xizmatlar bo'yicha",
+      "other": "Boshqalar",
+      "compareVsPrevious": "Oldingi davrga nisbatan",
+      "compareNew": "Yangi",
+      "allSourcesNote": "Barcha bo'limlar bo'yicha",
+      "table": {
+        "source": "Manba",
+        "cash": "Naqd",
+        "bonus": "Bonus",
+        "total": "Jami",
+        "share": "Ulush",
+        "count": "To'lovlar soni",
+        "staff": "Xodim",
+        "method": "To'lov turi",
+        "amount": "Summa"
+      },
+      "empty": "Tanlangan davrda to'lov topilmadi"
     }
   },
   "rooms": {

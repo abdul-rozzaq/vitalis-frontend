@@ -74,6 +74,25 @@ function getItems(data: ReceiptData): ReceiptItem[] {
   return data.items ?? data.payment.invoice?.items ?? [];
 }
 
+const ESC = "\x1B";
+const GS = "\x1D";
+
+// ESC/POS control sequences (kept named so the receipt body below reads like markup)
+const INIT = ESC + "@";
+const ALIGN_CENTER = ESC + "a" + "\x01";
+const ALIGN_LEFT = ESC + "a" + "\x00";
+const BOLD_ON = ESC + "E" + "\x01";
+const BOLD_OFF = ESC + "E" + "\x00";
+const SIZE_NORMAL = GS + "!" + "\x00"; // 1x width, 1x height
+const SIZE_WIDE = GS + "!" + "\x10"; // 2x width, 1x height
+const SIZE_TALL = GS + "!" + "\x01"; // 1x width, 2x height
+const SIZE_BIG = GS + "!" + "\x11"; // 2x width, 2x height
+const FEED_AND_CUT = "\n\n\n" + GS + "V" + "\x00";
+
+const LINE_WIDTH = 48;
+const DOUBLE_LINE = "=".repeat(LINE_WIDTH);
+const THIN_LINE = "-".repeat(LINE_WIDTH);
+
 function buildEscPosReceipt(data: ReceiptData): string {
   const payment = data.payment;
   const method = getPaymentMethod(data);
@@ -90,50 +109,54 @@ function buildEscPosReceipt(data: ReceiptData): string {
   const cash = Number(payment.cashAmount);
   const bonus = Number(payment.bonusAmount);
 
-  const ESC = "\x1B";
-  const GS = "\x1D";
   const lines: string[] = [
-    ESC + "@",
-    ESC + "a" + "\x01",
-    ESC + "E" + "\x01",
-    center(CLINIC_NAME),
-    ESC + "E" + "\x00",
-    center(CLINIC_SUBTITLE),
-    center("TO'LOV CHEKI"),
-    ESC + "a" + "\x00",
-    "-".repeat(48),
-    padLine("Bemor", data.patientName),
-    padLine("Sana", createdAt),
-    ...(data.invoiceNumber ? [padLine("Invoice", data.invoiceNumber)] : []),
-    padLine("To'lov turi", method),
-    "-".repeat(48),
+    INIT,
+    ALIGN_CENTER,
+    BOLD_ON + SIZE_WIDE,
+    CLINIC_NAME,
+    SIZE_NORMAL + BOLD_OFF,
+    CLINIC_SUBTITLE,
+    "",
+    BOLD_ON + SIZE_TALL,
+    "TO'LOV CHEKI",
+    SIZE_NORMAL + BOLD_OFF,
+    "To'lov tasdig'i",
+    ALIGN_LEFT,
+    DOUBLE_LINE,
+    padLine("Bemor", sanitizeReceiptText(data.patientName), LINE_WIDTH),
+    padLine("Sana", createdAt, LINE_WIDTH),
+    ...(data.invoiceNumber ? [padLine("Invoice", data.invoiceNumber, LINE_WIDTH)] : []),
+    padLine("To'lov turi", method, LINE_WIDTH),
+    DOUBLE_LINE,
   ];
 
   if (items.length > 0) {
-    lines.push("TO'LOV QILINGAN XIZMATLAR");
-    lines.push("-".repeat(48));
+    lines.push(ALIGN_CENTER + BOLD_ON + "TO'LOV QILINGAN XIZMATLAR" + BOLD_OFF + ALIGN_LEFT);
+    lines.push(THIN_LINE);
     items.forEach((item, index) => {
       const description = sanitizeReceiptText(item.description || "Xizmat");
       const quantity = Number(item.quantity || 1);
       const itemTotal = Number(item.totalPrice || Number(item.unitPrice || 0) * quantity);
-      lines.push(`${index + 1}. ${description}`.slice(0, 48));
-      lines.push(padLine(`   ${quantity} x ${money(item.unitPrice)}`, `${money(itemTotal)} UZS`));
+      lines.push(BOLD_ON + `${index + 1}. ${description}`.slice(0, LINE_WIDTH) + BOLD_OFF);
+      lines.push(padLine(`   ${quantity} x ${money(item.unitPrice)}`, `${money(itemTotal)} UZS`, LINE_WIDTH));
     });
-    lines.push("-".repeat(48));
+    lines.push(THIN_LINE);
   }
 
-  lines.push(padLine("Naqd", `${money(cash)} UZS`));
-  if (bonus > 0) lines.push(padLine("Bonus", `${money(bonus)} UZS`));
-  lines.push(ESC + "E" + "\x01");
-  lines.push(padLine("JAMI", `${money(total)} UZS`));
-  lines.push(ESC + "E" + "\x00");
-  lines.push("-".repeat(48));
-  if (data.cashierName) lines.push(padLine("Kassir", data.cashierName));
+  if (cash > 0) lines.push(padLine("Naqd", `${money(cash)} UZS`, LINE_WIDTH));
+  if (bonus > 0) lines.push(padLine("Bonus", `${money(bonus)} UZS`, LINE_WIDTH));
+  lines.push(THIN_LINE);
+  lines.push(BOLD_ON + SIZE_BIG);
+  lines.push(padLine("JAMI", `${money(total)} UZS`, 24));
+  lines.push(SIZE_NORMAL + BOLD_OFF);
+  lines.push(DOUBLE_LINE);
+  if (data.cashierName) lines.push(padLine("Kassir", sanitizeReceiptText(data.cashierName), LINE_WIDTH));
   lines.push("");
-  lines.push(center("To'lovingiz uchun rahmat!"));
-  lines.push(center("EuroMed Medical Clinic"));
-  lines.push("\n\n");
-  lines.push(GS + "V" + "\x00");
+  lines.push(ALIGN_CENTER);
+  lines.push(BOLD_ON + "To'lovingiz uchun rahmat!" + BOLD_OFF);
+  lines.push(CLINIC_NAME + " Medical Clinic");
+  lines.push(ALIGN_LEFT);
+  lines.push(FEED_AND_CUT);
 
   return lines.join("\n");
 }
@@ -170,8 +193,6 @@ export async function testReceiptPrinter(): Promise<void> {
   }
 
   const config = qz.configs.create(printer, { encoding: "CP437" });
-  const ESC = "\x1B";
-  const GS = "\x1D";
 
   await qz.print(config, [
     {
@@ -277,25 +298,26 @@ function buildBrowserReceiptHtml(data: ReceiptData): string {
   html, body { margin: 0; padding: 0; background: #fff; }
   body {
     width: 80mm;
-    padding: 4.5mm 4mm 5mm;
+    /* 4mm side padding keeps content within the printer's 72mm print head width */
+    padding: 3mm 4mm 4mm;
     font-family: Arial, Helvetica, sans-serif;
     color: #172033;
     font-size: 11px;
-    line-height: 1.35;
+    line-height: 1.3;
   }
   .header { text-align: center; }
   .logo {
-    width: 56mm;
-    max-height: 18mm;
+    width: 42mm;
+    max-height: 13mm;
     object-fit: contain;
     display: block;
-    margin: 0 auto 2mm;
+    margin: 0 auto 1.5mm;
   }
-  .clinic-name { font-size: 18px; font-weight: 800; letter-spacing: .4px; }
+  .clinic-name { font-size: 17px; font-weight: 800; letter-spacing: .4px; }
   .subtitle { font-size: 8px; letter-spacing: 2px; color: #687386; font-weight: 700; margin-top: 1px; }
-  .receipt-title { margin-top: 3.5mm; font-size: 15px; font-weight: 800; letter-spacing: .5px; }
+  .receipt-title { margin-top: 2.5mm; font-size: 14px; font-weight: 800; letter-spacing: .5px; }
   .receipt-subtitle { font-size: 8px; color: #7a8494; margin-top: 1px; }
-  .divider { border-top: 1px dashed #aeb7c5; margin: 3.5mm 0; }
+  .divider { border-top: 1px dashed #aeb7c5; margin: 2.5mm 0; }
   .info { display: grid; gap: 1.6mm; }
   .row { display: flex; justify-content: space-between; gap: 4mm; }
   .label { color: #718096; }
@@ -328,18 +350,18 @@ function buildBrowserReceiptHtml(data: ReceiptData): string {
   .empty { text-align: center; color: #8b95a3; padding: 3mm 0; }
   .amounts { display: grid; gap: 1.7mm; }
   .total-box {
-    margin-top: 2.5mm;
-    padding: 3mm;
+    margin-top: 2mm;
+    padding: 2.5mm;
     border: 1px solid #cbdcf4;
     background: #f4f8fe;
-    border-radius: 2.5mm;
+    border-radius: 2mm;
   }
   .total-row { display: flex; align-items: center; justify-content: space-between; gap: 4mm; }
   .total-label { font-size: 13px; font-weight: 800; }
   .total-value { font-size: 16px; font-weight: 900; color: #1763bd; white-space: nowrap; }
-  .thanks { text-align: center; margin-top: 4mm; font-weight: 800; font-size: 11px; }
+  .thanks { text-align: center; margin-top: 3mm; font-weight: 800; font-size: 11px; }
   .thanks-small { text-align: center; margin-top: 1mm; color: #768194; font-size: 8.5px; }
-  .footer { margin-top: 3mm; padding-top: 2.5mm; border-top: 1px solid #dfe4eb; text-align: center; color: #7a8494; font-size: 7.5px; }
+  .footer { margin-top: 2.5mm; padding-top: 2mm; border-top: 1px solid #dfe4eb; text-align: center; color: #7a8494; font-size: 7.5px; }
   .footer strong { color: #3e4b5e; }
 </style>
 </head>

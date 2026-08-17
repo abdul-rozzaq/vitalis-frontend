@@ -46,6 +46,7 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
   const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
   const [error, setError] = useState("");
   const [printError, setPrintError] = useState("");
+  const [printWarning, setPrintWarning] = useState("");
 
   const { data: balances, isLoading: loadingBalances } = useQuery<BalanceData>({
     queryKey: ["patient-balance", patientId],
@@ -58,26 +59,34 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
   // ─── Balance mode mutation ───────────────────────────────────────────────────
   const handlePaymentSuccess = async (invoice: Invoice, method?: PaymentMethod) => {
     setPrintError("");
+    setPrintWarning("");
+    let hadPrintIssue = false;
 
     if (printReceiptAfterPayment) {
       const payment = invoice.payments?.[0];
       if (payment) {
         try {
-          await printReceipt({
+          const via = await printReceipt({
             payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
             patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
             invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
             cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
             items: invoice.items ?? [],
           });
+          if (via === "browser") {
+            hadPrintIssue = true;
+            setPrintWarning("QZ Tray ulanmagan — chek brauzer orqali chop etildi. Xprinterda qog'oz tiqilib qolishi mumkin, Sozlamalar > Chek printeri bo'limidan QZ Tray holatini tekshiring.");
+          }
         } catch (err: any) {
+          hadPrintIssue = true;
           setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
         }
       }
     }
 
     onSuccess(invoice);
-    onClose();
+    // Keep the modal open when there was a print issue so the cashier actually sees the warning/error.
+    if (!hadPrintIssue) onClose();
   };
 
   const balanceMutation = useMutation({
@@ -335,6 +344,7 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
         </label>
 
         {printError && <p className="text-xs text-danger-600 font-medium">{printError}</p>}
+        {printWarning && <p className="text-xs text-warning-600 font-medium">{printWarning}</p>}
 
         {/* Note — shared */}
         <div className="space-y-1.5">
