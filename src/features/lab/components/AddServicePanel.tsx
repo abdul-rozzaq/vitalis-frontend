@@ -2,6 +2,7 @@
 
 import { Modal } from "@/components/design-system/Modal";
 import { Combobox } from "@/components/ui/combobox";
+import { formatAmount } from "@/shared/lib/formatters";
 import { Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -13,33 +14,55 @@ interface AddServicePanelProps {
   laboratory?: Laboratory;
 }
 
-// Natija kiritish sahifasidan buyurtmaga qo'shimcha xizmat qo'shish paneli.
-// Laboratoriyaning xizmatlari ro'yxatidan buyurtmaga hali qo'shilmaganlarini
-// tanlab, to'lovli yoki bepul ekanini belgilab qo'shadi.
+// Natija kiritish sahifasidan buyurtmaga qo'shimcha xizmat(lar) qo'shish
+// paneli. Laboratoriyaning xizmatlari ro'yxatidan buyurtmaga hali
+// qo'shilmaganlarini bir nechtasini birdan tanlab, to'lovli yoki bepul
+// ekanini belgilab qo'shadi. To'lovli bo'lsa, xizmatlar narxlari
+// yig'indisidan hisoblangan summa avtomatik ko'rsatiladi, lekin laborant
+// uni qo'lda o'zgartirishi mumkin (masalan chegirma berish uchun).
 export function AddServicePanel({ order, laboratory }: AddServicePanelProps) {
   const t = useTranslations();
   const orderActions = useOrderActions(order);
   const [isOpen, setIsOpen] = useState(false);
-  const [serviceId, setServiceId] = useState<string>("");
+  const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [isPaid, setIsPaid] = useState(true);
+  // null = foydalanuvchi hali summani qo'lda tahrirlamagan — bu holatda
+  // tanlangan xizmatlar narxlari yig'indisi avtomatik ko'rsatiladi.
+  const [amountOverride, setAmountOverride] = useState<string | null>(null);
 
   const availableServices = useMemo(() => {
     const existingIds = new Set(order.items.filter((i) => i.status !== "CANCELLED").map((i) => i.serviceId));
     return (laboratory?.services ?? []).filter((s) => !existingIds.has(s.id));
   }, [laboratory, order.items]);
 
-  const options = availableServices.map((s) => ({ value: s.id, label: s.name }));
+  const options = availableServices.map((s) => ({
+    value: s.id,
+    label: s.name,
+    sublabel: s.price != null ? `${formatAmount(s.price)} so'm` : undefined,
+  }));
+
+  const selectedServices = useMemo(
+    () => availableServices.filter((s) => serviceIds.includes(s.id)),
+    [availableServices, serviceIds],
+  );
+  const nominalTotal = useMemo(() => selectedServices.reduce((sum, s) => sum + (s.price ?? 0), 0), [selectedServices]);
+  const amount = amountOverride ?? (nominalTotal ? String(nominalTotal) : "");
 
   const close = () => {
     setIsOpen(false);
-    setServiceId("");
+    setServiceIds([]);
     setIsPaid(true);
+    setAmountOverride(null);
   };
 
   const handleSubmit = () => {
-    if (!serviceId) return;
+    if (serviceIds.length === 0) return;
     orderActions.addItem.mutate(
-      { serviceId, isPaid },
+      {
+        serviceIds,
+        isPaid,
+        totalPrice: isPaid && amount.trim() !== "" ? Number(amount) : undefined,
+      },
       { onSuccess: close },
     );
   };
@@ -62,14 +85,20 @@ export function AddServicePanel({ order, laboratory }: AddServicePanelProps) {
           ) : (
             <>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-text">{t("lab.service")}</label>
+                <label className="text-sm font-medium text-text">{t("lab.services")}</label>
                 <Combobox
+                  multiple
                   options={options}
-                  value={serviceId}
-                  onChange={setServiceId}
+                  value={serviceIds}
+                  onChange={setServiceIds}
                   placeholder={t("lab.selectServicePlaceholder")}
                   searchPlaceholder={t("lab.selectServicePlaceholder")}
                 />
+                {serviceIds.length > 0 && (
+                  <p className="text-xs text-primary">
+                    {serviceIds.length} {t("lab.servicesSelected")}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -97,6 +126,25 @@ export function AddServicePanel({ order, laboratory }: AddServicePanelProps) {
                   </button>
                 </div>
               </div>
+
+              {isPaid && serviceIds.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-text">{t("lab.totalAmount")}</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      value={amount}
+                      onChange={(e) => setAmountOverride(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-transparent px-3 py-2 pr-14 text-sm text-text outline-none focus:border-primary"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">so&apos;m</span>
+                  </div>
+                  <p className="text-[11px] text-text-muted">
+                    {t("lab.totalAmountHint", { nominal: formatAmount(nominalTotal) })}
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -113,7 +161,7 @@ export function AddServicePanel({ order, laboratory }: AddServicePanelProps) {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!serviceId || orderActions.addItem.isPending}
+              disabled={serviceIds.length === 0 || orderActions.addItem.isPending}
               className="flex items-center gap-1.5 text-sm font-medium bg-primary text-white rounded-lg px-3.5 py-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {orderActions.addItem.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

@@ -33,10 +33,12 @@ export function useOrderActions(order: LabOrder) {
     },
   });
 
-  // Natija kiritish sahifasidan buyurtmaga yangi xizmat qo'shish.
+  // Natija kiritish sahifasidan buyurtmaga bir nechta yangi xizmat qo'shish.
+  // `totalPrice` berilsa (masalan chegirma uchun), xizmatlar narxlari
+  // yig'indisi o'rniga shu summa hisobga (invoice) qo'shiladi.
   const addItem = useMutation({
-    mutationFn: ({ serviceId, isPaid }: { serviceId: string; isPaid: boolean }) =>
-      api.post(`/lab-orders/${order.id}/items`, { serviceId, isPaid }),
+    mutationFn: ({ serviceIds, isPaid, totalPrice }: { serviceIds: string[]; isPaid: boolean; totalPrice?: number }) =>
+      api.post(`/lab-orders/${order.id}/items`, { serviceIds, isPaid, totalPrice }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
       toast.success(t("lab.serviceAddedToast"));
