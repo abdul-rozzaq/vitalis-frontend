@@ -1,24 +1,64 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { RevenueBySourceRow, SOURCE_CHART_COLOR, SOURCE_ORDER } from "@/features/invoices/chart-colors";
-import { RevenueBySourceChart } from "@/features/invoices/components/RevenueBySourceChart";
+import { RevenueByMethodRow, RevenueByStaffRow, RevenueBySourceRow, SOURCE_CHART_COLOR, SOURCE_ORDER } from "@/features/invoices/chart-colors";
+import { RevenueDonutChart } from "@/features/invoices/components/RevenueDonutChart";
 import { RevenueItemBreakdownChart } from "@/features/invoices/components/RevenueItemBreakdownChart";
+import { RevenuePaymentMethodChart } from "@/features/invoices/components/RevenuePaymentMethodChart";
+import { RevenueStaffTable } from "@/features/invoices/components/RevenueStaffTable";
 import { MonthlyRevenuePoint, RevenueTrendChart } from "@/features/invoices/components/RevenueTrendChart";
 import { api } from "@/shared/lib/api";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, Coins, CreditCard, ListTree, Loader2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, ListTree, Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 
 type PeriodPreset = "today" | "week" | "month" | "lastMonth" | "custom";
+
+interface RevenueTotals {
+  cash: number;
+  bonus: number;
+  total: number;
+  paymentsCount: number;
+}
 
 interface RevenueReport {
   from: string;
   to: string;
-  totals: { cash: number; bonus: number; total: number; paymentsCount: number };
+  totals: RevenueTotals;
   bySource: RevenueBySourceRow[];
+  byPaymentMethod: RevenueByMethodRow[];
+  byStaff: RevenueByStaffRow[];
+}
+
+function pctChange(curr: number, prev: number): number | null {
+  if (prev === 0) return curr === 0 ? 0 : null; // null = "yangi", solishtirish uchun asos yo'q
+  return ((curr - prev) / prev) * 100;
+}
+
+function DeltaBadge({ curr, prev, newLabel }: { curr: number; prev: number; newLabel: string }) {
+  const pct = pctChange(curr, prev);
+  if (pct === null) {
+    if (curr === 0) return null;
+    return (
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary">
+        <TrendingUp className="w-3 h-3" />
+        {newLabel}
+      </span>
+    );
+  }
+  if (Math.abs(pct) < 0.05) return null;
+  const isUp = pct > 0;
+  const Icon = isUp ? TrendingUp : TrendingDown;
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${isUp ? "text-success-600" : "text-danger-600"}`}>
+      <Icon className="w-3 h-3" />
+      {isUp ? "+" : ""}
+      {pct.toFixed(1)}%
+    </span>
+  );
 }
 
 function startOfDay(d: Date): Date {
@@ -68,6 +108,23 @@ export default function RevenueReportsPage() {
   // ishlatamiz — mijoz Date()'iga bog'liq bo'lmaslik uchun.
   const resolvedRange = useMemo(() => (data ? { from: new Date(data.from), to: new Date(data.to) } : null), [data]);
 
+  // Solishtirish uchun — joriy davrdan oldingi, xuddi shu uzunlikdagi davr.
+  const { data: compareData } = useQuery<RevenueReport>({
+    queryKey: ["reports-revenue-compare", data?.from, data?.to],
+    queryFn: async () => {
+      const from = new Date(data!.from);
+      const to = new Date(data!.to);
+      const durationMs = to.getTime() - from.getTime();
+      const prevTo = new Date(from.getTime() - 1);
+      const prevFrom = new Date(prevTo.getTime() - durationMs);
+      const params = new URLSearchParams({ from: prevFrom.toISOString(), to: prevTo.toISOString() });
+      const res = await api.get(`/reports/revenue?${params.toString()}`);
+      return res.data;
+    },
+    enabled: !!data,
+    refetchOnWindowFocus: false,
+  });
+
   const { data: monthly = [], isLoading: isMonthlyLoading } = useQuery<MonthlyRevenuePoint[]>({
     queryKey: ["reports-revenue-monthly", 6],
     queryFn: async () => (await api.get("/reports/revenue/monthly?months=6")).data,
@@ -92,6 +149,18 @@ export default function RevenueReportsPage() {
     );
   }, [bySource, selectedSources, data?.totals]);
 
+  // Oldingi davr uchun xuddi shu bo'lim filtri bilan hisoblangan jami — solishtirish adolatli bo'lishi uchun.
+  const prevTotals = useMemo<RevenueTotals | null>(() => {
+    if (!compareData) return null;
+    if (selectedSources.length === 0) return compareData.totals;
+    return compareData.bySource
+      .filter((r) => selectedSources.includes(r.sourceType))
+      .reduce(
+        (acc, r) => ({ cash: acc.cash + r.cash, bonus: acc.bonus + r.bonus, total: acc.total + r.total, paymentsCount: acc.paymentsCount + r.count }),
+        { cash: 0, bonus: 0, total: 0, paymentsCount: 0 },
+      );
+  }, [compareData, selectedSources]);
+
   const maxTotal = Math.max(1, ...bySource.map((s) => s.total));
 
   const PERIODS: { key: PeriodPreset; label: string }[] = [
@@ -104,6 +173,40 @@ export default function RevenueReportsPage() {
 
   const sourceLabel = (value: string) => (t.has(`invoices.source.${value}`) ? t(`invoices.source.${value}`) : value);
 
+  const handleExport = () => {
+    if (!data) return;
+    const periodLabel = `${new Date(data.from).toLocaleDateString("uz-UZ")} — ${new Date(data.to).toLocaleDateString("uz-UZ")}`;
+    const methodLabel = (m: string) => (m === "BONUS" ? t("invoices.reports.summary.bonus") : t(`paymentMethods.${m}`));
+
+    const rows: (string | number)[][] = [
+      [t("invoices.reports.title")],
+      [periodLabel],
+      [],
+      [t("invoices.reports.summary.total"), fmt(totals.total)],
+      [t("invoices.reports.summary.cash"), fmt(totals.cash)],
+      [t("invoices.reports.summary.bonus"), fmt(totals.bonus)],
+      [t("invoices.reports.summary.count"), totals.paymentsCount],
+      [],
+      [t("invoices.reports.bySourceTitle")],
+      [t("invoices.reports.table.source"), t("invoices.reports.table.count"), t("invoices.reports.table.cash"), t("invoices.reports.table.bonus"), t("invoices.reports.table.total")],
+      ...bySource.map((r) => [sourceLabel(r.sourceType), r.count, fmt(r.cash), fmt(r.bonus), fmt(r.total)]),
+      [],
+      [t("invoices.reports.byMethodTitle")],
+      [t("invoices.reports.table.method"), t("invoices.reports.table.count"), t("invoices.reports.table.amount")],
+      ...(data.byPaymentMethod ?? []).map((r) => [methodLabel(r.method), r.count, fmt(r.amount)]),
+      [],
+      [t("invoices.reports.byStaffTitle")],
+      [t("invoices.reports.table.staff"), t("invoices.reports.table.count"), t("invoices.reports.table.total")],
+      ...(data.byStaff ?? []).map((r) => [r.staffName, r.count, fmt(r.total)]),
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, t("invoices.reports.title"));
+    XLSX.writeFile(workbook, `hisobot-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   const toggleSource = (key: string) => {
     setSelectedSources((prev) => (prev.includes(key) ? prev.filter((s) => s !== key) : [...prev, key]));
   };
@@ -114,39 +217,51 @@ export default function RevenueReportsPage() {
 
       <PageContent>
         {/* Period selector */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          {PERIODS.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setPreset(key)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                preset === key
-                  ? "bg-primary text-white border-primary shadow-sm"
-                  : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {PERIODS.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setPreset(key)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
+                  preset === key
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
 
-          {preset === "custom" && (
-            <div className="flex items-center gap-2 ml-1">
-              <input
-                type="date"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                className="bg-surface-hover border border-border rounded-full px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-              <span className="text-xs text-text-muted">{t("invoices.to")}</span>
-              <input
-                type="date"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-                className="bg-surface-hover border border-border rounded-full px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-            </div>
-          )}
+            {preset === "custom" && (
+              <div className="flex items-center gap-2 ml-1">
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="bg-surface-hover border border-border rounded-full px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+                <span className="text-xs text-text-muted">{t("invoices.to")}</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="bg-surface-hover border border-border rounded-full px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={!data}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-border bg-surface-hover text-text-muted hover:text-text hover:border-text-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {t("common.export")}
+          </button>
         </div>
 
         {/* Source (bo'lim) filter */}
@@ -191,11 +306,11 @@ export default function RevenueReportsPage() {
             {/* Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
               {[
-                { label: t("invoices.reports.summary.total"), value: `${fmt(totals.total)} UZS`, icon: CheckCircle2, color: "bg-success-50 text-success" },
-                { label: t("invoices.reports.summary.cash"), value: `${fmt(totals.cash)} UZS`, icon: CreditCard, color: "bg-primary-50 text-primary" },
-                { label: t("invoices.reports.summary.bonus"), value: `${fmt(totals.bonus)} UZS`, icon: Coins, color: "bg-warning-50 text-warning" },
-                { label: t("invoices.reports.summary.count"), value: String(totals.paymentsCount), icon: CalendarDays, color: "bg-info-50 text-info" },
-              ].map(({ label, value, icon: Icon, color }) => (
+                { label: t("invoices.reports.summary.total"), value: `${fmt(totals.total)} UZS`, curr: totals.total, prev: prevTotals?.total, icon: CheckCircle2, color: "bg-success-50 text-success" },
+                { label: t("invoices.reports.summary.cash"), value: `${fmt(totals.cash)} UZS`, curr: totals.cash, prev: prevTotals?.cash, icon: CreditCard, color: "bg-primary-50 text-primary" },
+                { label: t("invoices.reports.summary.bonus"), value: `${fmt(totals.bonus)} UZS`, curr: totals.bonus, prev: prevTotals?.bonus, icon: Coins, color: "bg-warning-50 text-warning" },
+                { label: t("invoices.reports.summary.count"), value: String(totals.paymentsCount), curr: totals.paymentsCount, prev: prevTotals?.paymentsCount, icon: CalendarDays, color: "bg-info-50 text-info" },
+              ].map(({ label, value, curr, prev, icon: Icon, color }) => (
                 <div
                   key={label}
                   className="bg-surface border border-border rounded-xl px-4 py-3.5 flex items-center gap-3 transition-shadow hover:shadow-sm"
@@ -205,13 +320,19 @@ export default function RevenueReportsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-text-muted font-medium">{label}</p>
-                    <p className="text-sm font-semibold text-text leading-tight mt-0.5">{value}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-sm font-semibold text-text leading-tight">{value}</p>
+                      {prev !== undefined && <DeltaBadge curr={curr} prev={prev} newLabel={t("invoices.reports.compareNew")} />}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <p className="text-xs text-text-muted italic mb-6">{t("invoices.reports.revenueNote")}</p>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 mb-6">
+              <p className="text-xs text-text-muted italic">{t("invoices.reports.revenueNote")}</p>
+              {prevTotals && <p className="text-[11px] text-text-muted">{t("invoices.reports.compareVsPrevious")}</p>}
+            </div>
 
             {/* Trend — last 6 months */}
             <div className="mb-4">
@@ -225,9 +346,9 @@ export default function RevenueReportsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              {/* By source — ranked bar chart */}
+              {/* By source — donut chart */}
               <div className="lg:col-span-2">
-                <RevenueBySourceChart rows={bySource} />
+                <RevenueDonutChart rows={bySource} />
               </div>
 
               {/* By source — exact figures table */}
@@ -281,6 +402,11 @@ export default function RevenueReportsPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+              <RevenuePaymentMethodChart rows={data?.byPaymentMethod ?? []} />
+              <RevenueStaffTable rows={data?.byStaff ?? []} />
             </div>
 
             {/* Bitta bo'lim tanlansa — o'sha bo'lim ichidagi xizmatlar bo'yicha taqsimot */}

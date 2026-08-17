@@ -1369,17 +1369,25 @@
       "trendTitle": "So'nggi 6 oy — daromad dinamikasi",
       "bySourceTitle": "Manba bo'yicha taqsimot",
       "detailTitle": "Manba bo'yicha batafsil",
+      "byMethodTitle": "To'lov turi bo'yicha taqsimot",
+      "byStaffTitle": "Xodim bo'yicha taqsimot",
       "filterBySource": "Bo'limlar",
       "filterAll": "Barchasi",
       "itemBreakdownTitle": "Ichki taqsimot — xizmatlar bo'yicha",
       "other": "Boshqalar",
+      "compareVsPrevious": "Oldingi davrga nisbatan",
+      "compareNew": "Yangi",
+      "allSourcesNote": "Barcha bo'limlar bo'yicha",
       "table": {
         "source": "Manba",
         "cash": "Naqd",
         "bonus": "Bonus",
         "total": "Jami",
         "share": "Ulush",
-        "count": "To'lovlar soni"
+        "count": "To'lovlar soni",
+        "staff": "Xodim",
+        "method": "To'lov turi",
+        "amount": "Summa"
       },
       "empty": "Tanlangan davrda to'lov topilmadi"
     }

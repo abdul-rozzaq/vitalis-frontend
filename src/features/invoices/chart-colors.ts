@@ -33,3 +33,33 @@ export interface RevenueBySourceRow {
   total: number;
   count: number;
 }
+
+export interface RevenueByMethodRow {
+  method: string;
+  amount: number;
+  count: number;
+}
+
+export interface RevenueByStaffRow {
+  staffId: string;
+  staffName: string;
+  cash: number;
+  bonus: number;
+  total: number;
+  count: number;
+}
+
+/**
+ * To'lov turi — alohida o'lchov (naqd/karta/o'tkazma/boshqa/bonus), shu
+ * sababli manba ranglaridan mustaqil, lekin bir xil validatsiyadan o'tgan
+ * --chart-* tokenlar to'plamidan qayta ishlatiladi.
+ */
+export const PAYMENT_METHOD_ORDER = ["CASH", "CARD", "TRANSFER", "OTHER", "BONUS"] as const;
+
+export const PAYMENT_METHOD_CHART_COLOR: Record<string, string> = {
+  CASH: "var(--chart-operation)",
+  CARD: "var(--chart-appointment)",
+  TRANSFER: "var(--chart-diagnostic)",
+  OTHER: "var(--chart-manual)",
+  BONUS: "var(--chart-ward)",
+};
