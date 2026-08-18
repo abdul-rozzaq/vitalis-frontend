@@ -84,7 +84,8 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
     // }
 
     onSuccess(invoice);
-    onClose();
+    // Keep the modal open when there was a print issue so the cashier actually sees the warning/error.
+    if (!hadPrintIssue) onClose();
   };
 
   const balanceMutation = useMutation({
