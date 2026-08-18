@@ -2,7 +2,8 @@
 
 import { Modal } from "@/components/design-system/Modal";
 import { Invoice, PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
-import { printReceipt } from "@/shared/lib/receipt-printer";
+// Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+// import { printReceipt } from "@/shared/lib/receipt-printer";
 import { api } from "@/shared/lib/api";
 import { formatCurrency } from "@/shared/lib/formatters";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -43,10 +44,11 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
 
   // ─── Shared ──────────────────────────────────────────────────────────────────
   const [note, setNote] = useState("");
-  const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
+  // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+  // const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
   const [error, setError] = useState("");
-  const [printError, setPrintError] = useState("");
-  const [printWarning, setPrintWarning] = useState("");
+  // const [printError, setPrintError] = useState("");
+  // const [printWarning, setPrintWarning] = useState("");
 
   const { data: balances, isLoading: loadingBalances } = useQuery<BalanceData>({
     queryKey: ["patient-balance", patientId],
@@ -57,36 +59,32 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
   const availableBonus = parseFloat(balances?.bonus ?? "0");
 
   // ─── Balance mode mutation ───────────────────────────────────────────────────
-  const handlePaymentSuccess = async (invoice: Invoice, method?: PaymentMethod) => {
-    setPrintError("");
-    setPrintWarning("");
-    let hadPrintIssue = false;
-
-    if (printReceiptAfterPayment) {
-      const payment = invoice.payments?.[0];
-      if (payment) {
-        try {
-          const via = await printReceipt({
-            payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
-            patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
-            invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
-            cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
-            items: invoice.items ?? [],
-          });
-          if (via === "browser") {
-            hadPrintIssue = true;
-            setPrintWarning("QZ Tray ulanmagan — chek brauzer orqali chop etildi. Xprinterda qog'oz tiqilib qolishi mumkin, Sozlamalar > Chek printeri bo'limidan QZ Tray holatini tekshiring.");
-          }
-        } catch (err: any) {
-          hadPrintIssue = true;
-          setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
-        }
-      }
-    }
+  const handlePaymentSuccess = async (invoice: Invoice, _method?: PaymentMethod) => {
+    // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+    // setPrintError("");
+    // setPrintWarning("");
+    // let hadPrintIssue = false;
+    //
+    // if (printReceiptAfterPayment) {
+    //   const payment = invoice.payments?.[0];
+    //   if (payment) {
+    //     try {
+    //       await printReceipt({
+    //         payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
+    //         patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
+    //         invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
+    //         cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
+    //         items: invoice.items ?? [],
+    //       });
+    //     } catch (err: any) {
+    //       hadPrintIssue = true;
+    //       setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
+    //     }
+    //   }
+    // }
 
     onSuccess(invoice);
-    // Keep the modal open when there was a print issue so the cashier actually sees the warning/error.
-    if (!hadPrintIssue) onClose();
+    onClose();
   };
 
   const balanceMutation = useMutation({
@@ -329,8 +327,8 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
           </>
         )}
 
-        {/* Receipt printing */}
-        <label className="flex items-start gap-3 rounded-lg border border-border bg-surface-hover px-3 py-3 cursor-pointer">
+        {/* Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli). */}
+        {/* <label className="flex items-start gap-3 rounded-lg border border-border bg-surface-hover px-3 py-3 cursor-pointer">
           <input
             type="checkbox"
             checked={printReceiptAfterPayment}
@@ -339,12 +337,12 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
           />
           <span>
             <span className="block text-sm font-medium text-text">To'lovdan keyin chek chiqarish</span>
-            <span className="block text-xs text-text-muted mt-0.5">Belgilansa, avval QZ Tray/Xprinter ishlatiladi. QZ Tray bo'lmasa brauzerning print oynasi ochiladi.</span>
+            <span className="block text-xs text-text-muted mt-0.5">Belgilansa, brauzerning print oynasi orqali chek chiqariladi.</span>
           </span>
         </label>
 
         {printError && <p className="text-xs text-danger-600 font-medium">{printError}</p>}
-        {printWarning && <p className="text-xs text-warning-600 font-medium">{printWarning}</p>}
+        {printWarning && <p className="text-xs text-warning-600 font-medium">{printWarning}</p>} */}
 
         {/* Note — shared */}
         <div className="space-y-1.5">
