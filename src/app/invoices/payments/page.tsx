@@ -8,13 +8,14 @@ import { InvoicePayment, PAYMENT_METHOD_LABELS, PaymentMethod } from "@/features
 import { api } from "@/shared/lib/api";
 import { exportToExcel } from "@/shared/lib/export-excel";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
-import { printReceipt } from "@/shared/lib/receipt-printer";
+// Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+// import { printReceipt } from "@/shared/lib/receipt-printer";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, Edit, Loader2, Printer, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, CheckCircle2, Coins, CreditCard, Download, Edit, Loader2, SlidersHorizontal } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const INITIAL_FILTERS: PaymentFilters = {
   patientSearch: "",
@@ -33,7 +34,8 @@ export default function PaymentsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState<PaymentFilters>(INITIAL_FILTERS);
   const [editingPayment, setEditingPayment] = useState<InvoicePayment | null>(null);
-  const [printingPaymentId, setPrintingPaymentId] = useState<string | null>(null);
+  // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+  // const [printingPaymentId, setPrintingPaymentId] = useState<string | null>(null);
 
   const { data: payments = [], isLoading, refetch } = useQuery<InvoicePayment[]>({
     queryKey: [
@@ -109,29 +111,27 @@ export default function PaymentsPage() {
     exportToExcel("payments", headers, rows, t("invoices.payments.title"));
   };
 
-  const handlePrintPayment = useCallback(async (payment: InvoicePayment) => {
-    setPrintingPaymentId(payment.id);
-    try {
-      const patient = payment.invoice?.patient;
-      const cashier = payment.createdBy;
-
-      const via = await printReceipt({
-        payment,
-        patientName: patient ? `${patient.first_name} ${patient.last_name}` : "—",
-        invoiceNumber: payment.invoiceId.slice(0, 8).toUpperCase(),
-        paymentMethod: payment.paymentMethod,
-        cashierName: cashier ? `${cashier.first_name} ${cashier.last_name}` : undefined,
-        items: payment.invoice?.items ?? [],
-      });
-      if (via === "browser") {
-        alert("QZ Tray ulanmagan — chek brauzer orqali chop etildi. Xprinterda qog'oz tiqilib qolishi mumkin, Sozlamalar > Chek printeri bo'limidan QZ Tray holatini tekshiring.");
-      }
-    } catch (error: any) {
-      alert(error?.message || "Chek chiqarishda xatolik yuz berdi");
-    } finally {
-      setPrintingPaymentId(null);
-    }
-  }, []);
+  // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
+  // const handlePrintPayment = useCallback(async (payment: InvoicePayment) => {
+  //   setPrintingPaymentId(payment.id);
+  //   try {
+  //     const patient = payment.invoice?.patient;
+  //     const cashier = payment.createdBy;
+  //
+  //     await printReceipt({
+  //       payment,
+  //       patientName: patient ? `${patient.first_name} ${patient.last_name}` : "—",
+  //       invoiceNumber: payment.invoiceId.slice(0, 8).toUpperCase(),
+  //       paymentMethod: payment.paymentMethod,
+  //       cashierName: cashier ? `${cashier.first_name} ${cashier.last_name}` : undefined,
+  //       items: payment.invoice?.items ?? [],
+  //     });
+  //   } catch (error: any) {
+  //     alert(error?.message || "Chek chiqarishda xatolik yuz berdi");
+  //   } finally {
+  //     setPrintingPaymentId(null);
+  //   }
+  // }, []);
 
   const handleFilterChange = (k: keyof PaymentFilters, v: string | string[]) => {
     setFilters((prev) => ({ ...prev, [k]: v }) as PaymentFilters);
@@ -252,14 +252,15 @@ export default function PaymentsPage() {
         header: "",
         cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1">
-            <button
+            {/* Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli). */}
+            {/* <button
               onClick={() => handlePrintPayment(row.original)}
               disabled={printingPaymentId === row.original.id}
               className="text-text-muted hover:text-primary transition-colors cursor-pointer p-1.5 rounded-md hover:bg-primary-50 disabled:opacity-50"
               title="Chek chiqarish"
             >
               {printingPaymentId === row.original.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-            </button>
+            </button> */}
             <button
               onClick={() => setEditingPayment(row.original)}
               className="text-text-muted hover:text-primary transition-colors cursor-pointer p-1.5 rounded-md hover:bg-primary-50"
@@ -271,7 +272,7 @@ export default function PaymentsPage() {
         ),
       },
     ],
-    [handlePrintPayment, printingPaymentId, t]
+    [t]
   );
 
   return (
