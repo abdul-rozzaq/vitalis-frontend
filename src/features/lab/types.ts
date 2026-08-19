@@ -113,6 +113,10 @@ export interface LabOrderItem {
   serviceId: string;
   // Xizmat pullik (invoice'ga qo'shilgan) yoki bepul ekanini bildiradi.
   isPaid: boolean;
+  // Ushbu xizmat allaqachon biror invoice'ga qo'shilganmi. Bemorni
+  // laboratoriyaga yuborishda invois kechiktirilgan bo'lsa (labarant o'zi
+  // narxni belgilab, invois yaratishi kutilsa) false bo'ladi.
+  invoiced: boolean;
   service: {
     id: string;
     name: string;

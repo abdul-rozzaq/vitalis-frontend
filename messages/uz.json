@@ -325,6 +325,11 @@
     "addReferral": "Bo'limga yo'naltirish",
     "requestLab": "Laboratoriya so'rovi",
     "discharge": "Bemorni chiqarish",
+    "labInvoiceTimingLabel": "Invois qachon yaratilsin?",
+    "labInvoiceNowOption": "Darhol yuborish",
+    "labInvoiceNowHint": "Invois hozir yaratiladi. Kerak bo'lsa narxni pastda o'zgartirishingiz mumkin.",
+    "labInvoiceDeferOption": "Labarant ko'rigidan keyin yuborish",
+    "labInvoiceDeferHint": "Invois hozir yaratilmaydi — labarant natijani ko'rib chiqib, narxni o'zi belgilab, invoisni keyin yaratadi.",
     "status": {
       "ACTIVE": "Faol",
       "COMPLETED": "Yakunlangan",
@@ -869,7 +874,11 @@
     "markDeliveredButton": "Bemorga topshirildi",
     "confirmDeliverTitle": "Topshirishni tasdiqlang",
     "confirmDeliverDescription": "Tayyor bo'lgan {count} ta xizmat natijasi bemorga topshirilgan deb belgilanadi. Bu amalni qaytarib bo'lmaydi.",
-    "orderDeliveredToast": "Bemorga topshirildi deb belgilandi"
+    "orderDeliveredToast": "Bemorga topshirildi deb belgilandi",
+    "pendingInvoiceBadge": "Invois kutilmoqda",
+    "createInvoiceButton": "Invois yaratish",
+    "createInvoiceHint": "Bemor yuborilganda invois kechiktirilgan edi. Narxni belgilab, hisobni hozir yarating.",
+    "createInvoiceToast": "Invois yaratildi"
   },
   "laboratories": {
     "title": "Laboratoriyalar",

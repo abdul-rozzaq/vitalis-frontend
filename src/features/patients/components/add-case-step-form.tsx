@@ -52,6 +52,12 @@ export function AddCaseStepForm({
   // LAB state — bir nechta laboratoriyaga bir vaqtda yuborish mumkin
   const [labDepartmentIds, setLabDepartmentIds] = useState<string[]>([]);
   const [serviceIdsByLab, setServiceIdsByLab] = useState<Record<string, string[]>>({});
+  // Invois qachon yaratilsin: "now" — hozir (narxni shu yerda belgilash mumkin),
+  // "defer" — labarant natijani ko'rib chiqqach o'zi narxni belgilab yaratadi.
+  const [labInvoiceTiming, setLabInvoiceTiming] = useState<"now" | "defer">("now");
+  // null = foydalanuvchi hali summani qo'lda tahrirlamagan — bu holatda
+  // tanlangan xizmatlar narxlari yig'indisi avtomatik ko'rsatiladi.
+  const [labAmountOverride, setLabAmountOverride] = useState<string | null>(null);
 
   // DIAGNOSTIC state
   const [diagnosticsId, setDiagnosticsId] = useState("");
@@ -114,6 +120,19 @@ export function AddCaseStepForm({
     refetchOnWindowFocus: false,
   });
 
+  // LAB — tanlangan barcha xizmatlar narxlari yig'indisi (barcha laboratoriyalar bo'yicha)
+  const labNominalTotal = useMemo(() => {
+    return labDepartmentIds.reduce((sum, labId) => {
+      const dept = labDepts.find((d) => d.id === labId);
+      const selectedIds = serviceIdsByLab[labId] ?? [];
+      const deptSum = (dept?.services ?? [])
+        .filter((s) => selectedIds.includes(s.id))
+        .reduce((s, svc) => s + (svc.price ?? 0), 0);
+      return sum + deptSum;
+    }, 0);
+  }, [labDepartmentIds, serviceIdsByLab, labDepts]);
+  const labAmount = labAmountOverride ?? (labNominalTotal ? String(labNominalTotal) : "");
+
   // Auto-fill price for PROCEDURE
   useEffect(() => {
     if (stepType === "PROCEDURE" && procedureId) {
@@ -130,6 +149,8 @@ export function AddCaseStepForm({
     setStepNote("");
     setLabDepartmentIds([]);
     setServiceIdsByLab({});
+    setLabInvoiceTiming("now");
+    setLabAmountOverride(null);
     setDiagnosticsId("");
     setSelectedDiagnosticServiceIds([]);
     setProcedureDepartmentId("");
@@ -158,6 +179,10 @@ export function AddCaseStepForm({
       // Backend ularni laboratoriyasi bo'yicha guruhlab, har biriga alohida buyurtma yaratadi.
       const allServiceIds = labDepartmentIds.flatMap((labId) => serviceIdsByLab[labId] ?? []);
       payload.serviceIds = allServiceIds;
+      payload.deferLabInvoice = labInvoiceTiming === "defer";
+      if (labInvoiceTiming === "now" && labAmount.trim() !== "") {
+        payload.labTotalPrice = Number(labAmount);
+      }
     } else if (stepType === "DIAGNOSTIC") {
       payload.diagnosticsId = diagnosticsId;
       payload.diagnosticServiceIds = selectedDiagnosticServiceIds;
@@ -199,6 +224,8 @@ export function AddCaseStepForm({
             setStepAssignmentId("");
             setLabDepartmentIds([]);
             setServiceIdsByLab({});
+            setLabInvoiceTiming("now");
+            setLabAmountOverride(null);
             setDiagnosticsId("");
             setSelectedDiagnosticServiceIds([]);
           }}
@@ -314,6 +341,51 @@ export function AddCaseStepForm({
               </div>
             );
           })}
+
+          {labDepartmentIds.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-text">{t("cases.labInvoiceTimingLabel")}</p>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLabInvoiceTiming("now")}
+                  className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                    labInvoiceTiming === "now" ? "border-primary bg-primary-50/40" : "border-border hover:bg-surface-hover"
+                  }`}
+                >
+                  <p className="text-xs font-semibold text-text">{t("cases.labInvoiceNowOption")}</p>
+                  <p className="text-[11px] text-text-muted mt-0.5">{t("cases.labInvoiceNowHint")}</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLabInvoiceTiming("defer")}
+                  className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                    labInvoiceTiming === "defer" ? "border-primary bg-primary-50/40" : "border-border hover:bg-surface-hover"
+                  }`}
+                >
+                  <p className="text-xs font-semibold text-text">{t("cases.labInvoiceDeferOption")}</p>
+                  <p className="text-[11px] text-text-muted mt-0.5">{t("cases.labInvoiceDeferHint")}</p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {labInvoiceTiming === "now" && labDepartmentIds.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text">{t("lab.totalAmount")}</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  value={labAmount}
+                  onChange={(e) => setLabAmountOverride(e.target.value)}
+                  className={`${inputCls} pr-14`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">so&apos;m</span>
+              </div>
+              <p className="text-[11px] text-text-muted">{t("lab.totalAmountHint", { nominal: labNominalTotal.toLocaleString() })}</p>
+            </div>
+          )}
         </>
       )}
 
