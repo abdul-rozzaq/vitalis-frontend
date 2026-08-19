@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL, ORDER_STATUS_DOT, ORDER_STATUS_LABELS, ORDER_STATUS_PILL } from "../constants/status-colors";
 import { LabItemStatus, LabOrder } from "../types";
+import { CreateInvoicePanel } from "./CreateInvoicePanel";
 import { DownloadResultButtons } from "./DownloadResultButtons";
 import { ItemFilesAndNote } from "./ItemFilesAndNote";
 
@@ -43,6 +44,11 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
   // Hozir kimdir natija kiritayotgan (qoralama saqlangan, lekin hali
   // yakunlanmagan) buyurtmalarni bir qarashda ajratib ko'rsatish uchun.
   const isBeingEntered = order.items.some((i) => i.resultTable && (i.status === "PENDING" || i.status === "IN_PROGRESS"));
+
+  // Yuborishda invois kechiktirilgan bo'lsa (deferLabInvoice), labarant
+  // narxni belgilab invoisni o'zi yaratmaguncha shu xizmatlar invoiced=false
+  // bo'lib qoladi.
+  const hasPendingInvoice = order.items.some((i) => !i.invoiced && i.status !== "CANCELLED");
 
   // Faqat "Tayyor" holatidagi xizmatlar bor bo'lsagina bitta aniq amal
   // ko'rinadi: "Bemorga topshirildi" deb belgilash.
@@ -109,6 +115,11 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
               {t("lab.beingEnteredBadge")}
             </span>
           )}
+          {hasPendingInvoice && (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-warning-50 text-warning border border-warning/30">
+              {t("lab.pendingInvoiceBadge")}
+            </span>
+          )}
           <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_PILL[order.status]}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${ORDER_STATUS_DOT[order.status]}`} />
             {ORDER_STATUS_LABELS[order.status]}
@@ -141,6 +152,7 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
               <ClipboardList className="w-3.5 h-3.5" />
               {t("lab.combinedResultsButton")}
             </Link>
+            {hasPendingInvoice && <CreateInvoicePanel order={order} />}
             {canMarkDelivered && (
               <button
                 onClick={() => orderActions.setConfirmAdvanceOpen(true)}

@@ -45,6 +45,19 @@ export function useOrderActions(order: LabOrder) {
     },
   });
 
+  // Yuborishda invois kechiktirilgan bo'lsa (deferLabInvoice=true), labarant
+  // shu amal orqali hali hisoblanmagan (invoiced=false) xizmatlar uchun
+  // invoisni o'zi yaratadi. `totalPrice` berilsa (masalan chegirma uchun),
+  // xizmatlar narxlari yig'indisi o'rniga shu summa hisobga qo'shiladi.
+  const createInvoice = useMutation({
+    mutationFn: ({ totalPrice }: { totalPrice?: number }) =>
+      api.post(`/lab-orders/${order.id}/create-invoice`, { totalPrice }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      toast.success(t("lab.createInvoiceToast"));
+    },
+  });
+
   const handleDownloadOrder = async (format: "pdf" | "docx") => {
     const key = `order-${format}`;
     setDownloadingOrderKey(key);
@@ -71,6 +84,7 @@ export function useOrderActions(order: LabOrder) {
     handleDownloadOrder,
     deliverOrder,
     addItem,
+    createInvoice,
     confirmAdvanceOpen,
     setConfirmAdvanceOpen,
   };

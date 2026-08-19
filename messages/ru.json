@@ -325,6 +325,11 @@
     "addReferral": "Перейти в раздел",
     "requestLab": "Запрос на лабораторию",
     "discharge": "Выписка пациентов",
+    "labInvoiceTimingLabel": "Когда создать счёт?",
+    "labInvoiceNowOption": "Отправить сразу",
+    "labInvoiceNowHint": "Счёт будет создан сейчас. При необходимости сумму можно изменить ниже.",
+    "labInvoiceDeferOption": "Отправить после осмотра лаборанта",
+    "labInvoiceDeferHint": "Счёт сейчас не создаётся — лаборант после осмотра результата сам укажет сумму и создаст счёт.",
     "status": {
       "ACTIVE": "Активный",
       "COMPLETED": "Завершено",
@@ -869,7 +874,11 @@
     "markDeliveredButton": "Выдано пациенту",
     "confirmDeliverTitle": "Подтвердите выдачу",
     "confirmDeliverDescription": "{count} готовых результатов будут отмечены как выданные пациенту. Это действие невозможно отменить.",
-    "orderDeliveredToast": "Отмечено как выдано пациенту"
+    "orderDeliveredToast": "Отмечено как выдано пациенту",
+    "pendingInvoiceBadge": "Ожидает счёта",
+    "createInvoiceButton": "Создать счёт",
+    "createInvoiceHint": "При отправке пациента счёт был отложен. Укажите сумму и создайте счёт сейчас.",
+    "createInvoiceToast": "Счёт создан"
   },
   "laboratories": {
     "title": "Лаборатории",

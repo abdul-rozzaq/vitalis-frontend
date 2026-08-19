@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ItemFilesAndNote } from "@/features/lab/components/ItemFilesAndNote";
 import { AddServicePanel } from "@/features/lab/components/AddServicePanel";
 import { AddFilePanel } from "@/features/lab/components/AddFilePanel";
+import { CreateInvoicePanel } from "@/features/lab/components/CreateInvoicePanel";
 
 const emptyRow = (): LabResultRow => ({ code: "", indicator: "", result: "", norm: "", unit: "" });
 
@@ -353,9 +354,10 @@ export default function LabOrderResultsPage() {
             );
           })}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <AddServicePanel order={order} laboratory={laboratory} />
             <AddFilePanel order={order} items={items} />
+            <CreateInvoicePanel order={order} />
           </div>
 
           <p className="text-xs text-text-muted">{t("lab.emptyResultHint")}</p>
