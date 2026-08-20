@@ -11,3 +11,4 @@ README.md
 Dockerfile
 .dockerignore
 docker-compose*.yml
+src/server/qz-keys/private-key.pem

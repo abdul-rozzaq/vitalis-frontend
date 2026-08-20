@@ -280,10 +280,26 @@ async function getQz(): Promise<any> {
     qzModule = await import("qz-tray");
   }
   if (!qzConfigured) {
-    // Imzosiz (unsigned) rejim - QZ Tray brauzerda "Allow" tasdig'ini so'raydi.
-    // Foydalanuvchi "Remember this decision" ni belgilasa, keyingi safar so'ramaydi.
-    qzModule.security.setCertificatePromise((resolve: (v: string) => void) => resolve(""));
-    qzModule.security.setSignaturePromise(() => (resolve: (v: string) => void) => resolve(""));
+    qzModule.security.setSignatureAlgorithm("SHA512");
+
+    qzModule.security.setCertificatePromise((resolve: (v: string) => void, reject: (e: any) => void) => {
+      fetch("/qz-certificate.txt")
+        .then((res) => res.text())
+        .then(resolve)
+        .catch(reject);
+    });
+
+    qzModule.security.setSignaturePromise((toSign: string) => (resolve: (v: string) => void, reject: (e: any) => void) => {
+      fetch("/api/print/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request: toSign }),
+      })
+        .then((res) => res.json())
+        .then((data) => resolve(data.signature))
+        .catch(reject);
+    });
+
     qzConfigured = true;
   }
   return qzModule;
