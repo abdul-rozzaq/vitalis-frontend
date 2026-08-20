@@ -111,6 +111,7 @@ export default function PaymentsPage() {
 
   const handlePrintPayment = useCallback(async (payment: InvoicePayment) => {
     setPrintingPaymentId(payment.id);
+    
     try {
       const patient = payment.invoice?.patient;
       const cashier = payment.createdBy;

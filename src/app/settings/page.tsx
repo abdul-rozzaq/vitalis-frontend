@@ -1,7 +1,6 @@
 "use client";
 
-// QZ Tray / Xprinter hozircha o'chirilgan (printer xatolik beryapti).
-// import { PrinterSettingsCard } from "@/features/settings/components/PrinterSettingsCard";
+import { PrinterSettingsCard } from "@/features/settings/components/PrinterSettingsCard";
 import { createPasswordSchema, createProfileSchema } from "@/features/settings/schemas";
 import { ChangePasswordPayload, PasswordFormValues, ProfileFormValues } from "@/features/settings/types";
 import { getApiErrorMessage, getInitialPhotoPreview } from "@/features/settings/utils";
@@ -312,8 +311,9 @@ export default function SettingsPage() {
         </form>
       </motion.div>
 
-      {/* QZ Tray / Xprinter hozircha o'chirilgan (printer xatolik beryapti). */}
-      {/* <PrinterSettingsCard /> */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <PrinterSettingsCard />
+      </motion.div>
 
       {/* Account / Sign out Card */}
       <motion.div
