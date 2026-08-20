@@ -2,8 +2,7 @@
 
 import { Modal } from "@/components/design-system/Modal";
 import { Invoice, PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
-// Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
-// import { printReceipt } from "@/shared/lib/receipt-printer";
+import { printReceipt } from "@/shared/lib/receipt-printer";
 import { api } from "@/shared/lib/api";
 import { formatCurrency } from "@/shared/lib/formatters";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -44,11 +43,9 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
 
   // ─── Shared ──────────────────────────────────────────────────────────────────
   const [note, setNote] = useState("");
-  // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
-  // const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
+  const [printReceiptAfterPayment, setPrintReceiptAfterPayment] = useState(true);
   const [error, setError] = useState("");
-  // const [printError, setPrintError] = useState("");
-  // const [printWarning, setPrintWarning] = useState("");
+  const [printError, setPrintError] = useState("");
 
   const { data: balances, isLoading: loadingBalances } = useQuery<BalanceData>({
     queryKey: ["patient-balance", patientId],
@@ -59,29 +56,25 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
   const availableBonus = parseFloat(balances?.bonus ?? "0");
 
   // ─── Balance mode mutation ───────────────────────────────────────────────────
-  const handlePaymentSuccess = async (invoice: Invoice, _method?: PaymentMethod) => {
-    // Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli).
-    // setPrintError("");
-    // setPrintWarning("");
-    // let hadPrintIssue = false;
-    //
-    // if (printReceiptAfterPayment) {
-    //   const payment = invoice.payments?.[0];
-    //   if (payment) {
-    //     try {
-    //       await printReceipt({
-    //         payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
-    //         patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
-    //         invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
-    //         cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
-    //         items: invoice.items ?? [],
-    //       });
-    //     } catch (err: any) {
-    //       hadPrintIssue = true;
-    //       setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
-    //     }
-    //   }
-    // }
+  const handlePaymentSuccess = async (invoice: Invoice, method?: PaymentMethod) => {
+    setPrintError("");
+
+    if (printReceiptAfterPayment) {
+      const payment = invoice.payments?.[0];
+      if (payment) {
+        try {
+          await printReceipt({
+            payment: { ...payment, paymentMethod: method ?? payment.paymentMethod },
+            patientName: invoice.patient ? `${invoice.patient.first_name} ${invoice.patient.last_name}` : "—",
+            invoiceNumber: invoice.id.slice(0, 8).toUpperCase(),
+            cashierName: payment.createdBy ? `${payment.createdBy.first_name} ${payment.createdBy.last_name}` : undefined,
+            items: invoice.items ?? [],
+          });
+        } catch (err: any) {
+          setPrintError(err?.message || "Chek chiqarishda xatolik yuz berdi");
+        }
+      }
+    }
 
     onSuccess(invoice);
     onClose();
@@ -327,8 +320,7 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
           </>
         )}
 
-        {/* Chek chiqarish hozircha butunlay o'chirilgan (printer bilan bog'liq muammolar tufayli). */}
-        {/* <label className="flex items-start gap-3 rounded-lg border border-border bg-surface-hover px-3 py-3 cursor-pointer">
+        <label className="flex items-start gap-3 rounded-lg border border-border bg-surface-hover px-3 py-3 cursor-pointer">
           <input
             type="checkbox"
             checked={printReceiptAfterPayment}
@@ -342,7 +334,6 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
         </label>
 
         {printError && <p className="text-xs text-danger-600 font-medium">{printError}</p>}
-        {printWarning && <p className="text-xs text-warning-600 font-medium">{printWarning}</p>} */}
 
         {/* Note — shared */}
         <div className="space-y-1.5">
