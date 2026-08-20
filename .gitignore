@@ -41,3 +41,6 @@ next-env.d.ts
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs
 node_modules
+
+# QZ Tray signing key (secret)
+src/server/qz-keys/private-key.pem
