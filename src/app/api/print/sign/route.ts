@@ -11,8 +11,6 @@ function loadPrivateKey(): string {
   return readFileSync(path, "utf8");
 }
 
-const PRIVATE_KEY = loadPrivateKey();
-
 export async function POST(req: Request) {
   const { request } = await req.json();
 
@@ -20,5 +18,5 @@ export async function POST(req: Request) {
   signer.update(request ?? "");
   signer.end();
 
-  return NextResponse.json({ signature: signer.sign(PRIVATE_KEY, "base64") });
+  return NextResponse.json({ signature: signer.sign(loadPrivateKey(), "base64") });
 }
