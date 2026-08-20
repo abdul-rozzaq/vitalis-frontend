@@ -172,6 +172,7 @@ function buildBrowserReceiptHtml(data: ReceiptData): string {
   .thanks-small { text-align: center; margin-top: 1mm; color: #768194; font-size: 8.5px; }
   .footer { margin-top: 2.5mm; padding-top: 2mm; border-top: 1px solid #dfe4eb; text-align: center; color: #7a8494; font-size: 7.5px; }
   .footer strong { color: #3e4b5e; }
+  .tear-spacer { height: 18mm; }
 </style>
 </head>
 <body>
@@ -221,6 +222,8 @@ function buildBrowserReceiptHtml(data: ReceiptData): string {
     <div><strong>EuroMed Medical Clinic</strong></div>
     <div>Ushbu chek to'lov tasdig'i sifatida berildi.</div>
   </div>
+
+  <div class="tear-spacer"></div>
 
   <script>
     window.onload = function () {
