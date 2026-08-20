@@ -21,6 +21,7 @@ export interface ReceiptData {
 const CLINIC_NAME = "EuroMed";
 const CLINIC_SUBTITLE = "MEDICAL CLINIC";
 const LOGO_PATH = "/logo.png";
+const PRINTER_STORAGE_KEY = "vitalis:receipt-printer";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   CASH: "Naqd",
@@ -60,9 +61,9 @@ function escapeHtml(value: string): string {
   })[char] as string);
 }
 
-// Brauzer orqali chek chop etish uchun HTML - Xprinter XP-A260M (80mm rulon,
-// bosib chiqarish kengligi ~72mm) uchun moslashtirilgan.
-function buildBrowserReceiptHtml(data: ReceiptData): string {
+// Xprinter XP-A260M (80mm rulon, bosib chiqarish kengligi ~72mm) uchun
+// moslashtirilgan chek HTML - QZ Tray orqali ham, brauzer print orqali ham ishlatiladi.
+function buildReceiptHtml(data: ReceiptData): string {
   const payment = data.payment;
   const method = getPaymentMethod(data);
   const items = getItems(data);
@@ -224,15 +225,20 @@ function buildBrowserReceiptHtml(data: ReceiptData): string {
   </div>
 
   <div class="tear-spacer"></div>
+</body>
+</html>`;
+}
 
-  <script>
+function buildBrowserReceiptHtml(data: ReceiptData): string {
+  return buildReceiptHtml(data).replace(
+    "</body>",
+    `<script>
     window.onload = function () {
       window.print();
       setTimeout(function () { window.close(); }, 700);
     };
-  </script>
-</body>
-</html>`;
+  </script></body>`
+  );
 }
 
 function printWithBrowser(data: ReceiptData): void {
@@ -264,6 +270,113 @@ function printWithBrowser(data: ReceiptData): void {
   iframe.srcdoc = buildBrowserReceiptHtml(data);
 }
 
+// ---- QZ Tray integratsiyasi ----
+
+let qzModule: any = null;
+let qzConfigured = false;
+
+async function getQz(): Promise<any> {
+  if (!qzModule) {
+    qzModule = await import("qz-tray");
+  }
+  if (!qzConfigured) {
+    // Imzosiz (unsigned) rejim - QZ Tray brauzerda "Allow" tasdig'ini so'raydi.
+    // Foydalanuvchi "Remember this decision" ni belgilasa, keyingi safar so'ramaydi.
+    qzModule.security.setCertificatePromise((resolve: (v: string) => void) => resolve(""));
+    qzModule.security.setSignaturePromise(() => (resolve: (v: string) => void) => resolve(""));
+    qzConfigured = true;
+  }
+  return qzModule;
+}
+
+export async function isQzTrayAvailable(): Promise<boolean> {
+  try {
+    const qz = await getQz();
+    if (qz.websocket.isActive()) return true;
+    await qz.websocket.connect();
+    return qz.websocket.isActive();
+  } catch {
+    return false;
+  }
+}
+
+export async function getReceiptPrinters(): Promise<string[]> {
+  const qz = await getQz();
+  if (!qz.websocket.isActive()) {
+    await qz.websocket.connect();
+  }
+  const printers = await qz.printers.find();
+  return Array.isArray(printers) ? printers : [printers].filter(Boolean);
+}
+
+export function getConfiguredReceiptPrinter(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(PRINTER_STORAGE_KEY) || "";
+}
+
+export function setConfiguredReceiptPrinter(printer: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PRINTER_STORAGE_KEY, printer);
+}
+
+async function printWithQz(data: ReceiptData): Promise<void> {
+  const qz = await getQz();
+  if (!qz.websocket.isActive()) {
+    await qz.websocket.connect();
+  }
+
+  const printerName = getConfiguredReceiptPrinter();
+  if (!printerName) {
+    throw new Error("Xprinter tanlanmagan. Sozlamalar bo'limida printerni tanlang.");
+  }
+
+  const config = qz.configs.create(printerName);
+  await qz.print(config, [
+    {
+      type: "pixel",
+      format: "html",
+      flavor: "plain",
+      data: buildReceiptHtml(data),
+    },
+  ]);
+}
+
+export async function testReceiptPrinter(): Promise<void> {
+  const printerName = getConfiguredReceiptPrinter();
+  if (!printerName) {
+    throw new Error("Xprinter tanlanmagan. Avval printerni tanlang.");
+  }
+
+  const qz = await getQz();
+  if (!qz.websocket.isActive()) {
+    await qz.websocket.connect();
+  }
+
+  const config = qz.configs.create(printerName);
+  await qz.print(config, [
+    {
+      type: "pixel",
+      format: "html",
+      flavor: "plain",
+      data: `<!doctype html><html><body style="width:80mm;font-family:Arial;padding:4mm;">
+        <h3>EuroMed - Test chek</h3>
+        <p>Printer: ${escapeHtml(printerName)}</p>
+        <p>Sana: ${escapeHtml(new Date().toLocaleString("uz-UZ"))}</p>
+      </body></html>`,
+    },
+  ]);
+}
+
 export async function printReceipt(data: ReceiptData): Promise<void> {
-  printWithBrowser(data);
+  const printerName = getConfiguredReceiptPrinter();
+  if (!printerName) {
+    printWithBrowser(data);
+    return;
+  }
+
+  try {
+    await printWithQz(data);
+  } catch {
+    printWithBrowser(data);
+  }
 }
