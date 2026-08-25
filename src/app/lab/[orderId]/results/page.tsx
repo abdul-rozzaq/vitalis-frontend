@@ -1,6 +1,10 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
+import { AddFilePanel } from "@/features/lab/components/AddFilePanel";
+import { AddServicePanel } from "@/features/lab/components/AddServicePanel";
+import { CreateInvoicePanel } from "@/features/lab/components/CreateInvoicePanel";
+import { ItemFilesAndNote } from "@/features/lab/components/ItemFilesAndNote";
 import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL } from "@/features/lab/constants/status-colors";
 import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
@@ -12,10 +16,6 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ItemFilesAndNote } from "@/features/lab/components/ItemFilesAndNote";
-import { AddServicePanel } from "@/features/lab/components/AddServicePanel";
-import { AddFilePanel } from "@/features/lab/components/AddFilePanel";
-import { CreateInvoicePanel } from "@/features/lab/components/CreateInvoicePanel";
 
 const emptyRow = (): LabResultRow => ({ code: "", indicator: "", result: "", norm: "", unit: "" });
 
@@ -30,27 +30,36 @@ function initialRowsFor(item: LabOrderItem): LabResultRow[] {
   const template = item.service.defaultRows ?? [];
   const saved = item.resultTable?.rows ?? [];
 
-  // Template mavjud bo'lsa, natija jadvali template bilan DOIM bir xil uzunlikda bo'ladi.
-  // Eski DB'da 1 ta row qolgan bo'lsa ham, qolgan template qatorlari tiklanadi.
-  if (template.length) {
-    return template.map((tpl, index) => {
-      const existing =
-        saved.find((r) => tpl.code && r.code && tpl.code === r.code) ??
-        saved.find((r) => r.indicator === tpl.indicator) ??
-        saved[index];
+  // Avval saqlangan natija bormi — shu ustuvor. Laborant oldinroq keraksiz
+  // qatorni o'chirib saqlagan bo'lishi mumkin; bunday holda sahifa qayta
+  // ochilganda o'sha qator template'dan qayta tiklanmasligi kerak.
+  if (saved.length) {
+    return saved.map((r) => {
+      const tpl = template.find((t) => t.code && r.code && t.code === r.code) ?? template.find((t) => t.indicator === r.indicator);
       return {
-        id: existing?.id,
-        code: tpl.code ?? "",
-        indicator: tpl.indicator,
-        result: existing?.result && existing.result !== "-" ? existing.result : "",
-        norm: tpl.norm ?? "",
-        unit: tpl.unit ?? "",
-        sortOrder: index,
+        id: r.id,
+        code: tpl?.code ?? r.code ?? "",
+        indicator: tpl?.indicator ?? r.indicator,
+        result: r.result && r.result !== "-" ? r.result : "",
+        norm: tpl?.norm ?? r.norm ?? "",
+        unit: tpl?.unit ?? r.unit ?? "",
+        sortOrder: r.sortOrder,
       };
     });
   }
 
-  if (saved.length) return saved.map((r) => ({ ...r }));
+  // Hali hech narsa saqlanmagan — boshlang'ich holatda to'liq shablon ko'rsatiladi.
+  if (template.length) {
+    return template.map((tpl, index) => ({
+      code: tpl.code ?? "",
+      indicator: tpl.indicator,
+      result: "",
+      norm: tpl.norm ?? "",
+      unit: tpl.unit ?? "",
+      sortOrder: index,
+    }));
+  }
+
   return [emptyRow()];
 }
 
@@ -61,8 +70,10 @@ function rowsComplete(rows: LabResultRow[]): boolean {
 // Natija jadvali muharriri. Xizmatda oldindan belgilangan shablon (defaultRows)
 // bo'lsa — ustunlar (kod/ko'rsatkich/me'yor/birlik) o'zgarmas bo'ladi, laborant
 // faqat "Natija" ustunini to'ldiradi. Shablon bo'lmagan xizmatlar uchun esa
-// (`allowRowManagement`) barcha ustunlar erkin tahrirlanadi va qator
-// qo'shish/o'chirish imkoniyati chiqadi — ozod (ad hoc) tahlil jadvali.
+// (`allowRowManagement`) barcha ustunlar erkin tahrirlanadi va yangi qator
+// qo'shish ham mumkin — ozod (ad hoc) tahlil jadvali. Qator o'chirish esa
+// har doim (shablon bo'lsa ham) ochiq — laborant kerak bo'lmagan ko'rsatkich
+// qatorini shu itemdan olib tashlashi mumkin bo'lishi kerak.
 function ResultTableEditor({
   rows,
   layout,
@@ -95,7 +106,7 @@ function ResultTableEditor({
                   {column.label}
                 </th>
               ))}
-              {allowRowManagement && <th className="border-b border-border w-9" />}
+              <th className="border-b border-border w-9" />
             </tr>
           </thead>
           <tbody>
@@ -120,19 +131,17 @@ function ResultTableEditor({
                     </td>
                   );
                 })}
-                {allowRowManagement && (
-                  <td className="border-b border-border p-0 text-center">
-                    <button
-                      type="button"
-                      onClick={() => onRemoveRow?.(index)}
-                      disabled={rows.length <= 1}
-                      className="w-8 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
-                      aria-label={t("lab.removeRow")}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                )}
+                <td className="border-b border-border p-0 text-center">
+                  <button
+                    type="button"
+                    onClick={() => onRemoveRow?.(index)}
+                    disabled={rows.length <= 1}
+                    className="w-8 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                    aria-label={t("lab.removeRow")}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
