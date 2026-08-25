@@ -19,6 +19,7 @@ import {
   useLinkEmployee,
   useUnresolved,
 } from "../hooks/use-attendance";
+import { ImagePreviewModal } from "./image-preview-modal";
 import {
   NoShiftGroup,
   StaffRef,
@@ -48,7 +49,8 @@ const ExceptionCard: React.FC<{
   problem: string;
   tone: "danger" | "warning";
   children: React.ReactNode;
-}> = ({ picture, icon, time, title, count, problem, tone, children }) => (
+  onPictureClick?: (src: string) => void;
+}> = ({ picture, icon, time, title, count, problem, tone, children, onPictureClick }) => (
   <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3">
     <div className="flex gap-3">
       {picture ? (
@@ -56,8 +58,15 @@ const ExceptionCard: React.FC<{
         <img
           src={picture}
           alt=""
-          className="w-12 h-12 rounded-lg object-cover border border-border shrink-0"
-          title="Terminaldagi yuz rasmi"
+          className={`w-12 h-12 rounded-lg object-cover border border-border shrink-0 ${
+            onPictureClick ? "cursor-pointer hover:opacity-90 hover:scale-105 transition-all" : ""
+          }`}
+          title={
+            onPictureClick
+              ? "Terminaldagi yuz rasmi — kattalashtirish uchun bosing"
+              : "Terminaldagi yuz rasmi"
+          }
+          onClick={() => picture && onPictureClick?.(picture)}
         />
       ) : (
         <div
@@ -94,10 +103,11 @@ const ExceptionCard: React.FC<{
 
 // ─── Bog'lanmagan terminal ID ────────────────────────────────────────────────
 
-const UnknownEmployeeCard: React.FC<{ group: UnknownEmployeeGroup; staff: StaffRef[] }> = ({
-  group,
-  staff,
-}) => {
+const UnknownEmployeeCard: React.FC<{
+  group: UnknownEmployeeGroup;
+  staff: StaffRef[];
+  onPictureClick?: (src: string) => void;
+}> = ({ group, staff, onPictureClick }) => {
   const [userId, setUserId] = useState("");
   const link = useLinkEmployee();
 
@@ -131,6 +141,7 @@ const UnknownEmployeeCard: React.FC<{ group: UnknownEmployeeGroup; staff: StaffR
       count={group.count}
       problem="Bu ID hech qaysi xodimga bog'lanmagan"
       tone="danger"
+      onPictureClick={onPictureClick}
     >
       <select
         value={userId}
@@ -165,7 +176,10 @@ const UnknownEmployeeCard: React.FC<{ group: UnknownEmployeeGroup; staff: StaffR
 
 // ─── Smenasi topilmagan skanlar ──────────────────────────────────────────────
 
-const NoShiftCard: React.FC<{ group: NoShiftGroup }> = ({ group }) => {
+const NoShiftCard: React.FC<{
+  group: NoShiftGroup;
+  onPictureClick?: (src: string) => void;
+}> = ({ group, onPictureClick }) => {
   const assign = useAssignEventToShift();
   const suggested = group.suggestedShift;
 
@@ -198,6 +212,7 @@ const NoShiftCard: React.FC<{ group: NoShiftGroup }> = ({ group }) => {
       count={group.count}
       problem="Bu vaqtda smenasi yo'q"
       tone="warning"
+      onPictureClick={onPictureClick}
     >
       {suggested ? (
         <>
@@ -340,6 +355,7 @@ const Section: React.FC<{ title: string; count: number; children: React.ReactNod
 
 export const UnresolvedQueue: React.FC = () => {
   const { data, isLoading } = useUnresolved();
+  const [selectedPicture, setSelectedPicture] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -383,13 +399,22 @@ export const UnresolvedQueue: React.FC = () => {
         <>
           <Section title="Bog'lanmagan terminal ID" count={data.totals.unknownEmployees}>
             {data.unknownEmployees.map((group) => (
-              <UnknownEmployeeCard key={group.key} group={group} staff={data.unlinkedStaff} />
+              <UnknownEmployeeCard
+                key={group.key}
+                group={group}
+                staff={data.unlinkedStaff}
+                onPictureClick={setSelectedPicture}
+              />
             ))}
           </Section>
 
           <Section title="Smenasi topilmagan skanlar" count={data.totals.noShift}>
             {data.noShift.map((group) => (
-              <NoShiftCard key={group.key} group={group} />
+              <NoShiftCard
+                key={group.key}
+                group={group}
+                onPictureClick={setSelectedPicture}
+              />
             ))}
           </Section>
 
@@ -400,6 +425,11 @@ export const UnresolvedQueue: React.FC = () => {
           </Section>
         </>
       )}
+
+      <ImagePreviewModal
+        src={selectedPicture}
+        onClose={() => setSelectedPicture(null)}
+      />
     </div>
   );
 };

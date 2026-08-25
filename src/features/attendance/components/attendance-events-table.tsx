@@ -3,10 +3,10 @@
 import { AttendanceEvent, AttendanceEventStatus } from "../lib/attendance-api";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
-import { ChevronDown, ChevronUp, Image as ImageIcon, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
 import { useState, Fragment } from "react";
 import Image from "next/image";
-import { createPortal } from "react-dom";
+import { ImagePreviewModal } from "./image-preview-modal";
 
 interface AttendanceEventsTableProps {
   events: AttendanceEvent[];
@@ -150,32 +150,10 @@ export function AttendanceEventsTable({ events }: AttendanceEventsTableProps) {
         </tbody>
       </table>
 
-      {selectedPicture && typeof document !== "undefined" && createPortal(
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8 animate-in fade-in duration-200"
-          onClick={() => setSelectedPicture(null)}
-        >
-          <button 
-            className="absolute top-4 right-4 sm:top-8 sm:right-8 z-10 p-2.5 bg-white/10 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-md"
-            onClick={() => setSelectedPicture(null)}
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div 
-            className="relative w-full max-w-3xl h-full max-h-[85vh] rounded-xl overflow-hidden shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Image
-              src={selectedPicture}
-              alt="Hodim rasmi"
-              fill
-              className="object-contain"
-              unoptimized
-            />
-          </div>
-        </div>,
-        document.body
-      )}
+      <ImagePreviewModal
+        src={selectedPicture}
+        onClose={() => setSelectedPicture(null)}
+      />
     </div>
   );
 }
