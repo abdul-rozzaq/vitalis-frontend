@@ -85,7 +85,7 @@ export const useStaffMembers = () =>
     queryKey: ["staffMembers"],
     queryFn: async () => {
       const { data } = await api.get<StaffMember[]>("/users");
-      return data.filter((u) => u.role === "DOCTOR" || u.role === "HAMSHIRA");
+      return data;
     },
   });
 

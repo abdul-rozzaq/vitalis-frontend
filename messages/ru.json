@@ -205,7 +205,10 @@
     "editDesc": "Изменить существующую информацию о сотруднике.",
     "backToEmployees": "Вернуться к персоналу",
     "deleteConfirm": "Вы хотите удалить этого сотрудника?",
-    "deleteEmployee": "Удалить сотрудника"
+    "deleteEmployee": "Удалить сотрудника",
+    "notFound": "Сотрудник не найден",
+    "assignments": "Назначенные отделения/кабинеты",
+    "attendanceHistory": "История посещаемости"
   },
   "departments": {
     "title": "Отделы",
@@ -495,6 +498,7 @@
     "assignmentDetail": "Подробности встречи",
     "backToAssignments": "Вернуться к встречам",
     "weeklySchedule": "Еженедельный график",
+    "everyDay": "Каждый день",
     "notFound": "Встречи не найдены.",
     "createdAt": "Создано",
     "colOccupancy": "Вакансии",

@@ -6,7 +6,14 @@ import { Sheet } from "@/components/ui/sheet";
 import { AssignStaffPanel } from "@/features/shifts/components/assign-staff-panel";
 import { ShiftForm } from "@/features/shifts/components/shift-form";
 import type { BoardRoom, CreateShiftPayload, Shift } from "@/shared/lib/shifts-api";
-import { fmtShiftDay, fmtShiftRange, SHIFT_STATUS_LABEL, SHIFT_STATUS_STYLE, shiftsApi } from "@/shared/lib/shifts-api";
+import {
+  fmtShiftDay,
+  fmtShiftRange,
+  SHIFT_ROLE_LABEL,
+  SHIFT_STATUS_LABEL,
+  SHIFT_STATUS_STYLE,
+  shiftsApi,
+} from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, Edit2, Loader2, Trash2, Users } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -155,33 +162,54 @@ export default function ShiftDetailsPage() {
 
 function ReadOnlyStaff({ shift }: { shift: Shift }) {
   const doctors = shift.staff.filter((s) => s.role === "DOCTOR");
-  const nurses = shift.staff.filter((s) => s.role === "NURSE");
+  const nurses = shift.staff.filter((s) => s.role === "HAMSHIRA");
+  const others = shift.staff.filter((s) => s.role !== "DOCTOR" && s.role !== "HAMSHIRA");
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {[
-        { title: "Shifokorlar", list: doctors, req: shift.staffing.requiredDoctors },
-        { title: "Hamshiralar", list: nurses, req: shift.staffing.requiredNurses },
-      ].map((col) => (
-        <div key={col.title} className="border border-border rounded-xl bg-surface p-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { title: "Shifokorlar", list: doctors, req: shift.staffing.requiredDoctors },
+          { title: "Hamshiralar", list: nurses, req: shift.staffing.requiredNurses },
+        ].map((col) => (
+          <div key={col.title} className="border border-border rounded-xl bg-surface p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-text">{col.title}</span>
+              <span className="text-xs text-text-muted">
+                {col.list.length}/{col.req}
+              </span>
+            </div>
+            <div className="space-y-1">
+              {col.list.length === 0 ? (
+                <p className="text-xs text-text-muted">Biriktirilmagan</p>
+              ) : (
+                col.list.map((s) => (
+                  <p key={s.userId} className="text-sm text-text">
+                    {s.user.first_name} {s.user.last_name}
+                  </p>
+                ))
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {others.length > 0 && (
+        <div className="border border-border rounded-xl bg-surface p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-text">{col.title}</span>
-            <span className="text-xs text-text-muted">
-              {col.list.length}/{col.req}
-            </span>
+            <span className="text-sm font-semibold text-text">Boshqa xodimlar</span>
+            <span className="text-xs text-text-muted">{others.length}</span>
           </div>
           <div className="space-y-1">
-            {col.list.length === 0 ? (
-              <p className="text-xs text-text-muted">Biriktirilmagan</p>
-            ) : (
-              col.list.map((s) => (
-                <p key={s.userId} className="text-sm text-text">
-                  {s.user.first_name} {s.user.last_name}
-                </p>
-              ))
-            )}
+            {others.map((s) => (
+              <p key={s.userId} className="text-sm text-text">
+                {s.user.first_name} {s.user.last_name}
+                <span className="ml-2 text-xs text-text-muted">{SHIFT_ROLE_LABEL[s.role]}</span>
+              </p>
+            ))}
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }

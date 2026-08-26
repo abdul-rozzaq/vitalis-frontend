@@ -205,7 +205,10 @@
     "editDesc": "Mavjud xodim ma'lumotlarini o'zgartirish.",
     "backToEmployees": "Xodimlarga qaytish",
     "deleteConfirm": "Ushbu xodimni o'chirishni xohlaysizmi?",
-    "deleteEmployee": "Xodimni o'chirish"
+    "deleteEmployee": "Xodimni o'chirish",
+    "notFound": "Xodim topilmadi",
+    "assignments": "Biriktirilgan bo'lim/xonalar",
+    "attendanceHistory": "Davomat tarixi"
   },
   "departments": {
     "title": "Bo'limlar",
@@ -495,6 +498,7 @@
     "assignmentDetail": "Tayinlash tafsilotlari",
     "backToAssignments": "Tayinlashlarga qaytish",
     "weeklySchedule": "Haftalik jadval",
+    "everyDay": "Har kuni",
     "notFound": "Tayinlash topilmadi.",
     "createdAt": "Yaratilgan",
     "colOccupancy": "Band o'rinlar",

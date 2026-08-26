@@ -1,13 +1,8 @@
 "use client";
 
 import { Modal } from "@/components/design-system/Modal";
-import {
-  BulkAssignResult,
-  isUnderstaffed,
-  Shift,
-  SHIFT_ROLE_BY_USER_ROLE,
-  ShiftStaffRole,
-} from "@/shared/lib/shifts-api";
+import { BulkAssignResult, isUnderstaffed, Shift, ShiftStaffRole } from "@/shared/lib/shifts-api";
+import { ROLE_STYLES } from "@/shared/lib/status-styles";
 import { format } from "date-fns";
 import { AlertTriangle, CheckCircle2, Loader2, UserPlus, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
@@ -162,25 +157,26 @@ export const BulkAssignModal: React.FC<BulkAssignModalProps> = ({ isOpen, onClos
   const staffPayload = useMemo(
     () =>
       userIds
-        .map((id) => {
-          const member = staffMembers.find((m) => m.id === id);
-          const role = member ? SHIFT_ROLE_BY_USER_ROLE[member.role] : undefined;
-          return role ? { userId: id, role } : null;
-        })
-        .filter((x): x is { userId: string; role: ShiftStaffRole } => x !== null),
+        .map((id) => staffMembers.find((m) => m.id === id))
+        .filter((m): m is StaffMember => !!m)
+        .map((m) => ({ userId: m.id, role: m.role as ShiftStaffRole })),
     [userIds, staffMembers],
   );
 
   const staffGroups = useMemo(() => {
-    const groups: { role: ShiftStaffRole; title: string; members: StaffMember[] }[] = [
-      { role: "DOCTOR", title: "Shifokorlar", members: [] },
-      { role: "NURSE", title: "Hamshiralar", members: [] },
-    ];
+    const byRole = new Map<string, StaffMember[]>();
     for (const m of staffMembers) {
-      const role = SHIFT_ROLE_BY_USER_ROLE[m.role];
-      groups.find((g) => g.role === role)?.members.push(m);
+      const list = byRole.get(m.role) ?? [];
+      list.push(m);
+      byRole.set(m.role, list);
     }
-    return groups.filter((g) => g.members.length > 0);
+    return Object.keys(ROLE_STYLES)
+      .filter((role) => byRole.has(role))
+      .map((role) => ({
+        role: role as ShiftStaffRole,
+        title: ROLE_STYLES[role].label,
+        members: byRole.get(role)!,
+      }));
   }, [staffMembers]);
 
   const toggleUser = (id: string) => {
