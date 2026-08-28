@@ -82,11 +82,9 @@ export default function EmployeesPage() {
                     .slice(0, 2)
                 )}
               </div>
-              {/* <Can roles={["ADMIN"]}> */}
-              <Link href={`/employees/${info.row.original.id}/edit`} className="font-medium text-text hover:text-primary transition-colors">
+              <Link href={`/employees/${info.row.original.id}`} className="font-medium text-text hover:text-primary transition-colors">
                 {name}
               </Link>
-              {/* </Can> */}
             </div>
           );
         },

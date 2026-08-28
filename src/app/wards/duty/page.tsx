@@ -160,7 +160,7 @@ function ActiveDutyCard({ shift }: { shift: Shift }) {
         <span>
           Hamshiralar:{" "}
           <span className="text-text">
-            {shift.staff.filter((s) => s.role === "NURSE").map((s) => `${s.user.first_name} ${s.user.last_name}`).join(", ") || "—"}
+            {shift.staff.filter((s) => s.role === "HAMSHIRA").map((s) => `${s.user.first_name} ${s.user.last_name}`).join(", ") || "—"}
           </span>
         </span>
       </div>

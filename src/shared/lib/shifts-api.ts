@@ -1,10 +1,13 @@
 import { api } from "@/shared/lib/api";
+import { ROLE_STYLES } from "@/shared/lib/status-styles";
+import type { UserRole } from "@/shared/types/user";
 import { differenceInCalendarDays, format } from "date-fns";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ShiftStatus = "SCHEDULED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-export type ShiftStaffRole = "DOCTOR" | "NURSE";
+/** Smenaga biriktirilgan xodimning roli — har doim `user.role` bilan bir xil. */
+export type ShiftStaffRole = UserRole;
 export type PatientCondition = "STABLE" | "IMPROVING" | "WORSENING" | "CRITICAL";
 
 export interface StaffRef {
@@ -365,25 +368,10 @@ export function fmtClock(iso: string | null): string {
   return iso ? format(new Date(iso), "HH:mm") : "";
 }
 
-/**
- * Foydalanuvchi roli (`UserRole`) ↔ smena roli (`ShiftStaffRole`) moslashuvi.
- * Ular ataylab har xil: tizimda rol `HAMSHIRA`, smenada esa `NURSE`.
- */
-export const SHIFT_ROLE_BY_USER_ROLE: Record<string, ShiftStaffRole> = {
-  DOCTOR: "DOCTOR",
-  HAMSHIRA: "NURSE",
-};
-
-/** Berilgan smena roli uchun mos foydalanuvchi roli. */
-export const USER_ROLE_BY_SHIFT_ROLE: Record<ShiftStaffRole, string> = {
-  DOCTOR: "DOCTOR",
-  NURSE: "HAMSHIRA",
-};
-
-export const SHIFT_ROLE_LABEL: Record<ShiftStaffRole, string> = {
-  DOCTOR: "Shifokor",
-  NURSE: "Hamshira",
-};
+/** Smena roli uchun ko'rsatiladigan nom — `user.role` bilan bir xil qiymatlar. */
+export const SHIFT_ROLE_LABEL: Record<ShiftStaffRole, string> = Object.fromEntries(
+  Object.entries(ROLE_STYLES).map(([role, style]) => [role, style.label]),
+) as Record<ShiftStaffRole, string>;
 
 /** 1=Dushanba .. 7=Yakshanba */
 export const WEEKDAY_LABELS = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"] as const;
