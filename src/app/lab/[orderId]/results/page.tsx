@@ -15,7 +15,7 @@ import { ArrowLeft, CheckCircle2, ChevronDown, FileClock, Loader2, Plus, Send, T
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const emptyRow = (): LabResultRow => ({ code: "", indicator: "", result: "", norm: "", unit: "" });
 
@@ -91,6 +91,28 @@ function ResultTableEditor({
 }) {
   const t = useTranslations();
 
+  // "Natija" ustunidagi inputlarga ref — Enter bosilganda navbatdagi qatorga
+  // o'tish (yoki oxirgi qatorda yangi qator ochib, unga fokus qilish) uchun.
+  const resultRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const focusLastOnGrowRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusLastOnGrowRef.current) return;
+    focusLastOnGrowRef.current = false;
+    resultRefs.current[rows.length - 1]?.focus();
+  }, [rows.length]);
+
+  const handleResultKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (index < rows.length - 1) {
+      resultRefs.current[index + 1]?.focus();
+    } else if (onAddRow) {
+      focusLastOnGrowRef.current = true;
+      onAddRow();
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="overflow-x-auto rounded-lg border border-border">
@@ -101,7 +123,9 @@ function ResultTableEditor({
                 <th
                   key={column.key}
                   style={{ width: `${column.width ?? Math.floor(100 / layout.columns.length)}%` }}
-                  className="border-b border-r border-border px-2.5 py-2 text-center font-semibold text-text last:border-r-0"
+                  className={`border-r border-border px-2.5 py-2 text-center font-semibold last:border-r-0 ${
+                    column.key === "result" ? "border-b-2 border-b-primary text-primary" : "border-b border-b-border text-text"
+                  }`}
                 >
                   {column.label}
                 </th>
@@ -115,14 +139,24 @@ function ResultTableEditor({
                 {layout.columns.map((column) => {
                   const value = String((row as any)[column.key] ?? "");
                   const isResult = column.key === "result";
-                  const editable = isResult || allowRowManagement;
+                  // Shablonli (statik) xizmatlarda odatda faqat Natija tahrirlanadi. Ammo
+                  // Enter/"+" orqali oxiriga qo'shilgan yangi qator hali hech qanday
+                  // ko'rsatkichga bog'lanmagan (code va indicator bo'sh) — shu holatda uni
+                  // to'liq tahrirlanadigan qilamiz, aks holda ko'rsatkich nomini kiritish
+                  // imkonsiz bo'lib, qator hech qachon to'ldirilmagan holda qolib ketardi.
+                  const isBlankManualRow = !row.code && !row.indicator;
+                  const editable = isResult || allowRowManagement || isBlankManualRow;
                   return (
                     <td key={column.key} className="border-b border-r border-border p-0 last:border-r-0">
                       {editable ? (
                         <input
+                          ref={isResult ? (el) => { resultRefs.current[index] = el; } : undefined}
                           value={value}
                           onChange={(e) => onChange(index, { [column.key]: e.target.value })}
-                          className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs text-text outline-none focus:bg-primary-50/40 ${isResult ? "font-semibold text-primary" : ""}`}
+                          onKeyDown={isResult ? (e) => handleResultKeyDown(index, e) : undefined}
+                          className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs outline-none focus:bg-primary-50/40 ${
+                            isResult ? "font-semibold text-primary" : "text-text"
+                          }`}
                           placeholder={isResult ? "Natijani kiriting" : ""}
                         />
                       ) : (
@@ -148,7 +182,7 @@ function ResultTableEditor({
         </table>
       </div>
 
-      {allowRowManagement && (
+      {onAddRow && (
         <button
           type="button"
           onClick={onAddRow}
