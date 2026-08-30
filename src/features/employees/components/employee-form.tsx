@@ -4,7 +4,7 @@ import { FormButtons } from "@/components/ui/form-buttons";
 import { FormError } from "@/components/ui/form-error";
 import usePhoneFormatter from "@/components/ui/use-phone-formatter";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Phone, Shield, Upload, User, X } from "lucide-react";
+import { Calendar, Clock, Phone, Shield, Upload, User, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -21,6 +21,7 @@ type EmployeeFormValues = {
   birthday: string;
   photo?: string;
   employeeNo?: string | null;
+  workType: "SMENA" | "FIXED";
 };
 
 export type EmployeeSubmitData = Omit<EmployeeFormValues, "confirm_password"> & { photoFile?: File };
@@ -66,6 +67,7 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
       birthday: z.string().min(1, t("forms.birthdayRequired")),
       photo: z.string().max(500).optional(),
       employeeNo: z.string().max(50).optional(),
+      workType: z.enum(["SMENA", "FIXED"]),
     })
     .refine(
       (data) => {
@@ -81,10 +83,11 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema) as any,
-    defaultValues: initialData || {},
+    defaultValues: { workType: "SMENA", ...initialData },
   });
 
   const isEditing = !!initialData;
@@ -286,6 +289,43 @@ export function EmployeeForm({ initialData, onSubmit, onCancel, isPending }: Emp
           ))}
         </select>
         <FormError message={errors.role?.message} />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-text flex items-center gap-2">
+          <Clock className="w-4 h-4 text-primary-500" />
+          Ish rejimi
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label
+            className={`flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+              watch("workType") === "SMENA" ? "border-accent bg-accent/5" : "border-border hover:bg-surface-hover"
+            }`}
+          >
+            <input {...register("workType")} type="radio" value="SMENA" className="mt-0.5 accent-primary-600 cursor-pointer" />
+            <span>
+              <span className="block font-medium text-text">Smenada</span>
+              <span className="block text-xs text-secondary">Navbat bo&apos;yicha, smenaga qo&apos;lda biriktiriladi</span>
+            </span>
+          </label>
+          <label
+            className={`flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+              watch("workType") === "FIXED" ? "border-accent bg-accent/5" : "border-border hover:bg-surface-hover"
+            }`}
+          >
+            <input {...register("workType")} type="radio" value="FIXED" className="mt-0.5 accent-primary-600 cursor-pointer" />
+            <span>
+              <span className="block font-medium text-text">Aniq ish vaqti</span>
+              <span className="block text-xs text-secondary">Har kuni bir xil soatlarda (masalan 09:00–18:00)</span>
+            </span>
+          </label>
+        </div>
+        {watch("workType") === "FIXED" && (
+          <p className="text-xs text-text-muted">
+            Saqlagandan so&apos;ng, xodim sahifasida ish vaqti (bo&apos;lim, soat, kunlar) belgilanadi.
+          </p>
+        )}
+        <FormError message={errors.workType?.message} />
       </div>
 
       <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import formatPhone from "@/components/ui/format-phone";
 import { AttendanceTable } from "@/features/attendance/components/attendance-table";
 import { attendanceApi, AttendanceRecord } from "@/features/attendance/lib/attendance-api";
 import { Assignment, Schedule } from "@/features/assignments/types";
+import { FixedSchedulePanel } from "@/features/employees/components/fixed-schedule-panel";
 import { api } from "@/shared/lib/api";
 import { ROLE_STYLES } from "@/shared/lib/status-styles";
 import { User } from "@/shared/types/user";
@@ -187,7 +188,16 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-text leading-tight">{fullName}</h1>
-                  <span className={`inline-flex items-center px-2 py-0.5 mt-1.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>{roleStyle.label}</span>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap justify-center">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>{roleStyle.label}</span>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        employee.workType === "FIXED" ? "bg-violet-50 text-violet-700" : "bg-blue-50 text-blue-700"
+                      }`}
+                    >
+                      {employee.workType === "FIXED" ? "Aniq ish vaqti" : "Smenada"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -228,6 +238,8 @@ export default function EmployeeDetailPage() {
 
           {/* ── RIGHT PANEL ── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-4">
+            {employee.workType === "FIXED" && <FixedSchedulePanel userId={employee.id} />}
+
             {/* Assignments */}
             <div className="bg-surface border border-border rounded-xl p-5">
               <div className="flex items-center gap-2 mb-4">
