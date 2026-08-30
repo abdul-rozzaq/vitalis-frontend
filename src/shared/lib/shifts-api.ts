@@ -218,6 +218,29 @@ export interface BulkAssignResult {
   dryRun: boolean;
 }
 
+// ─── Aniq ish vaqtli xodimlar (Fixed schedules) ───────────────────────────────
+
+export interface FixedWorkSchedule {
+  id: string;
+  userId: string;
+  departmentId: string;
+  /** "HH:mm" — klinika vaqti */
+  startTime: string;
+  endTime: string;
+  /** [1=Dushanba .. 7=Yakshanba]. Bo'sh = har kuni. */
+  daysOfWeek: number[];
+  isActive: boolean;
+  department: DepartmentRef;
+}
+
+export interface UpsertFixedSchedulePayload {
+  departmentId: string;
+  startTime: string;
+  endTime: string;
+  daysOfWeek?: number[];
+  isActive?: boolean;
+}
+
 // ─── API helpers ─────────────────────────────────────────────────────────────
 
 export const shiftsApi = {
@@ -257,6 +280,13 @@ export const shiftsApi = {
   // Obhod (ward-rounds)
   roundsByShift: (shiftId: string) => api.get<WardRoundRef[]>("/ward-rounds", { params: { shiftId } }).then((r) => r.data),
   createRound: (shiftId: string) => api.post<WardRoundRef>("/ward-rounds", { shiftId }).then((r) => r.data),
+
+  // Aniq ish vaqtli xodimlar
+  fixedSchedules: () => api.get<FixedWorkSchedule[]>("/fixed-schedules").then((r) => r.data),
+  fixedSchedule: (userId: string) => api.get<FixedWorkSchedule | null>(`/fixed-schedules/${userId}`).then((r) => r.data),
+  upsertFixedSchedule: (userId: string, data: UpsertFixedSchedulePayload) =>
+    api.put<FixedWorkSchedule>(`/fixed-schedules/${userId}`, data).then((r) => r.data),
+  removeFixedSchedule: (userId: string) => api.delete(`/fixed-schedules/${userId}`).then((r) => r.data),
 
   // Bemor joylashtirish (wards) — mavjud endpointlar
   roomPatients: (roomId: string) => api.get<BoardPatient[]>(`/wards/room/${roomId}`).then((r) => r.data),
