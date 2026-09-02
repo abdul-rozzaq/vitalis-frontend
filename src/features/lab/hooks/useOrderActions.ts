@@ -11,6 +11,16 @@ export function useOrderActions(order: LabOrder) {
   const [combinedModalOpen, setCombinedModalOpen] = useState(false);
   const [downloadingOrderKey, setDownloadingOrderKey] = useState<string | null>(null);
   const [confirmAdvanceOpen, setConfirmAdvanceOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  const deleteOrder = useMutation({
+    mutationFn: () => api.delete(`/lab-orders/${order.id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      setConfirmDeleteOpen(false);
+      toast.success(t("lab.orderDeletedToast"));
+    },
+  });
 
   const saveResultTables = useMutation({
     mutationFn: ({ items, submit }: { items: { itemId: string; rows: LabResultRow[] }[]; submit: boolean }) =>
@@ -87,5 +97,8 @@ export function useOrderActions(order: LabOrder) {
     createInvoice,
     confirmAdvanceOpen,
     setConfirmAdvanceOpen,
+    confirmDeleteOpen,
+    setConfirmDeleteOpen,
+    deleteOrder,
   };
 }

@@ -878,7 +878,15 @@
     "pendingInvoiceBadge": "Invois kutilmoqda",
     "createInvoiceButton": "Invois yaratish",
     "createInvoiceHint": "Bemor yuborilganda invois kechiktirilgan edi. Narxni belgilab, hisobni hozir yarating.",
-    "createInvoiceToast": "Invois yaratildi"
+    "createInvoiceToast": "Invois yaratildi",
+    "deleteOrder": "Buyurtmani o'chirish",
+    "confirmDeleteTitle": "Buyurtmani o'chirish",
+    "confirmDeleteDescription": "Ushbu laboratoriya buyurtmasini ({patient}) butunlay o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+    "orderDeletedToast": "Laboratoriya buyurtmasi o'chirildi",
+    "deleteItem": "Xizmatni o'chirish",
+    "confirmDeleteItemTitle": "Xizmatni o'chirish",
+    "confirmDeleteItemDescription": "\"{service}\" xizmatini ushbu buyurtmadan o'chirishni xohlaysizmi?",
+    "itemDeletedToast": "Xizmat o'chirildi"
   },
   "laboratories": {
     "title": "Laboratoriyalar",
@@ -1172,7 +1180,15 @@
       "CANCELLED": "Bekor qilindi"
     },
     "center": "Diagnostika markazi",
-    "serviceExample": "masalan: Qorin bo'shlig'i UZI"
+    "serviceExample": "masalan: Qorin bo'shlig'i UZI",
+    "deleteOrder": "Buyurtmani o'chirish",
+    "confirmDeleteTitle": "Buyurtmani o'chirish",
+    "confirmDeleteDescription": "Ushbu diagnostika buyurtmasini ({patient}) butunlay o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.",
+    "orderDeletedToast": "Diagnostika buyurtmasi o'chirildi",
+    "deleteItem": "Xizmatni o'chirish",
+    "confirmDeleteItemTitle": "Xizmatni o'chirish",
+    "confirmDeleteItemDescription": "«{service}» xizmatini ushbu buyurtmadan o'chirishni xohlaysizmi?",
+    "itemDeletedToast": "Xizmat o'chirildi"
   },
   "ward": {
     "currency": "so'm",

@@ -1,6 +1,6 @@
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { initialsOf } from "@/shared/lib/helpers";
-import { ChevronDown, ChevronUp, Loader2, Package, Pencil, Upload } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Package, Pencil, Trash2, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ITEM_STATUS_DOT, ITEM_STATUS_PILL, NEXT_STATUS, NEXT_STEP_BUTTON_CLASS, ORDER_STATUS_DOT, ORDER_STATUS_PILL } from "../constants/status-styles";
@@ -54,6 +54,18 @@ export function DiagnosticOrderCard({ order, forceExpanded }: { order: Diagnosti
             <span className={`w-1.5 h-1.5 rounded-full ${ORDER_STATUS_DOT[order.status]}`} />
             {t(`diagnostics.orderStatus.${order.status}`)}
           </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.setConfirmDeleteOpen(true);
+            }}
+            disabled={actions.deleteOrder.isPending}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-danger-50 hover:text-danger hover:border-danger/30 transition-all cursor-pointer"
+            title={t("diagnostics.deleteOrder")}
+          >
+            {actions.deleteOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          </button>
           <button
             onClick={() => setExpanded((v) => !v)}
             className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-hover hover:border-border-strong transition-all"
@@ -123,6 +135,15 @@ export function DiagnosticOrderCard({ order, forceExpanded }: { order: Diagnosti
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
+                      <button
+                        onClick={() => actions.setPendingDeleteItem({ id: item.id, name: item.service.name })}
+                        disabled={actions.deleteItem.isPending}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-danger-50 hover:text-danger hover:border-danger/30 transition-all cursor-pointer"
+                        title={t("diagnostics.deleteItem")}
+                        aria-label={t("diagnostics.deleteItem")}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     <NextStepButton item={item} isSaving={actions.updateItem.isPending} onClick={() => actions.requestAdvance(item)} size="sm" />
                   </div>
@@ -145,6 +166,34 @@ export function DiagnosticOrderCard({ order, forceExpanded }: { order: Diagnosti
           isLoading={actions.updateItem.isPending}
           onConfirm={actions.confirmAdvance}
           onCancel={actions.cancelAdvance}
+        />
+      )}
+
+      {actions.confirmDeleteOpen && (
+        <ConfirmDialog
+          title={t("diagnostics.confirmDeleteTitle")}
+          description={t("diagnostics.confirmDeleteDescription", {
+            patient: `${order.patient.first_name} ${order.patient.last_name}`,
+          })}
+          confirmLabel={t("common.delete")}
+          confirmClassName="bg-danger hover:bg-danger/90 text-white"
+          isLoading={actions.deleteOrder.isPending}
+          onConfirm={() => actions.deleteOrder.mutate()}
+          onCancel={() => actions.setConfirmDeleteOpen(false)}
+        />
+      )}
+
+      {actions.pendingDeleteItem && (
+        <ConfirmDialog
+          title={t("diagnostics.confirmDeleteItemTitle")}
+          description={t("diagnostics.confirmDeleteItemDescription", {
+            service: actions.pendingDeleteItem.name,
+          })}
+          confirmLabel={t("common.delete")}
+          confirmClassName="bg-danger hover:bg-danger/90 text-white"
+          isLoading={actions.deleteItem.isPending}
+          onConfirm={() => actions.deleteItem.mutate(actions.pendingDeleteItem!.id)}
+          onCancel={() => actions.setPendingDeleteItem(null)}
         />
       )}
     </div>
