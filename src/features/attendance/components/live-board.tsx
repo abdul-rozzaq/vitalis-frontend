@@ -11,7 +11,8 @@ import {
   SHIFT_ROLE_LABEL,
 } from "@/shared/lib/shifts-api";
 import { AlertTriangle, Clock, LogIn, UserX } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { ImagePreviewModal } from "./image-preview-modal";
 
 /**
  * Bir xodimning ayni damdagi holati — reja (`staff`) va haqiqat (`record`)
@@ -45,7 +46,10 @@ const STATE_STYLE: Record<LiveState, { dot: string; text: string; label: string 
 
 // ─── Xodim qatori ────────────────────────────────────────────────────────────
 
-const StaffRow: React.FC<{ row: LiveStaffRow }> = ({ row }) => {
+const StaffRow: React.FC<{ row: LiveStaffRow; onPictureClick?: (src: string) => void }> = ({
+  row,
+  onPictureClick,
+}) => {
   const { member, record, state } = row;
   const style = STATE_STYLE[state];
   const isLate = (record?.lateMinutes ?? 0) > 0;
@@ -59,8 +63,13 @@ const StaffRow: React.FC<{ row: LiveStaffRow }> = ({ row }) => {
           alt=""
           className={`w-10 h-10 rounded-full object-cover border-2 shrink-0 ${
             state === "absent" ? "border-danger" : isLate ? "border-warning" : "border-success"
-          }`}
-          title="Kirish skanidagi yuz rasmi"
+          } ${onPictureClick ? "cursor-pointer hover:opacity-90 hover:scale-105 transition-all" : ""}`}
+          title={
+            onPictureClick
+              ? "Kirish skanidagi yuz rasmi — kattalashtirish uchun bosing"
+              : "Kirish skanidagi yuz rasmi"
+          }
+          onClick={() => record.checkInPicture && onPictureClick?.(record.checkInPicture)}
         />
       ) : (
         <div
@@ -106,7 +115,10 @@ const StaffRow: React.FC<{ row: LiveStaffRow }> = ({ row }) => {
 
 // ─── Smena kartasi ───────────────────────────────────────────────────────────
 
-const ShiftGroup: React.FC<{ shift: Shift }> = ({ shift }) => {
+const ShiftGroup: React.FC<{ shift: Shift; onPictureClick?: (src: string) => void }> = ({
+  shift,
+  onPictureClick,
+}) => {
   const byUser = useMemo(
     () => new Map(shift.attendanceRecords.map((r) => [r.userId, r])),
     [shift.attendanceRecords],
@@ -158,7 +170,9 @@ const ShiftGroup: React.FC<{ shift: Shift }> = ({ shift }) => {
 
       <div className="p-1.5">
         {rows.length > 0 ? (
-          rows.map((row) => <StaffRow key={row.member.userId} row={row} />)
+          rows.map((row) => (
+            <StaffRow key={row.member.userId} row={row} onPictureClick={onPictureClick} />
+          ))
         ) : (
           <p className="px-3 py-4 text-sm text-text-muted italic text-center">
             Xodim biriktirilmagan
@@ -177,6 +191,8 @@ interface LiveBoardProps {
 }
 
 export const LiveBoard: React.FC<LiveBoardProps> = ({ shifts, isLoading }) => {
+  const [selectedPicture, setSelectedPicture] = useState<string | null>(null);
+
   /*
     Tartib: avval davom etayotgan smenalar, keyin bugun tugaganlar, oxirida
     hali boshlanmaganlar. Diqqat talab qiladigan narsa doim tepada bo'ladi.
@@ -246,9 +262,18 @@ export const LiveBoard: React.FC<LiveBoardProps> = ({ shifts, isLoading }) => {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {ordered.map((shift) => (
-          <ShiftGroup key={shift.id} shift={shift} />
+          <ShiftGroup
+            key={shift.id}
+            shift={shift}
+            onPictureClick={setSelectedPicture}
+          />
         ))}
       </div>
+
+      <ImagePreviewModal
+        src={selectedPicture}
+        onClose={() => setSelectedPicture(null)}
+      />
     </div>
   );
 };

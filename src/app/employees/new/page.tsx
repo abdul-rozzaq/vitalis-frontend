@@ -15,7 +15,14 @@ export default function NewEmployeePage() {
 
   const { mutateAsync: addEmployee, isPending } = useMutation({
     mutationFn: (data: any) => api.post("/users", data),
-    onSuccess: () => router.push("/employees"),
+    onSuccess: (res) => {
+      // Aniq ish vaqtli xodim uchun darhol ish vaqtini belgilash sahifasiga o'tkaziladi.
+      if (res.data?.workType === "FIXED") {
+        router.push(`/employees/${res.data.id}`);
+      } else {
+        router.push("/employees");
+      }
+    },
   });
 
   const handleSubmit = async (data: EmployeeSubmitData) => {

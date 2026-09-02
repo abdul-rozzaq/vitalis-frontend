@@ -71,7 +71,13 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
       .min(1, t("forms.birthDateRequired"))
       .transform((val) => new Date(val).toISOString()),
     address: z.string().optional().or(z.literal("")),
-    sourceId: z.string().uuid().nullable().optional().or(z.literal("")),
+    sourceId: z
+      .string()
+      .uuid()
+      .nullable()
+      .optional()
+      .or(z.literal(""))
+      .refine((val) => !!val, { message: t("forms.sourceRequired") }),
     sourceName: z.string().nullable().optional().or(z.literal("")),
     blood_type: z
       .enum(["O_POSITIVE", "O_NEGATIVE", "A_POSITIVE", "A_NEGATIVE", "B_POSITIVE", "B_NEGATIVE", "AB_POSITIVE", "AB_NEGATIVE"])
@@ -363,12 +369,12 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         />
       </div>
 
-      {/* Bemor qayerdan kelgani — optional */}
+      {/* Bemor qayerdan kelgani — required */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Navigation className="w-4 h-4 text-primary-500" />
           {t("forms.source")}
-          <span className="text-xs text-secondary font-normal">({t("forms.optional")})</span>
+          <span className="text-red-500">*</span>
         </label>
         <PatientSourceCombobox
           value={watchSourceId}
