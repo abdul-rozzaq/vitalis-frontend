@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 import { ORDER_STATUS_TABS, ORDER_STATUS_LABELS } from "@/features/lab/constants/status-colors";
 
 import { StatsBar } from "@/features/lab/components/StatsBar";
-import { LabOrderCard } from "@/features/lab/components/LabOrderCard";
+import { PatientLabGroup } from "@/features/lab/components/PatientLabGroup";
 
 type SortMode = "oldest" | "newest";
 
@@ -68,6 +68,20 @@ export default function LabPage() {
       return sortMode === "oldest" ? diff : -diff;
     });
   }, [orders, search, statusFilter, sortMode]);
+
+  // Bitta bemorning barcha buyurtmalarini (turli laboratoriyalardan bo'lsa
+  // ham) birga guruhlaymiz — shu bemor ro'yxatda ikki marta chiqmasligi
+  // uchun. Map kalitlar birinchi uchragan tartibda saqlanadi, shuning uchun
+  // yuqoridagi barqaror sort tartibi buziladi.
+  const groupedOrders = useMemo(() => {
+    const map = new Map<string, LabOrder[]>();
+    for (const order of visible) {
+      const list = map.get(order.patientId);
+      if (list) list.push(order);
+      else map.set(order.patientId, [order]);
+    }
+    return Array.from(map.values());
+  }, [visible]);
 
   const isEmpty = !isLoading && visible.length === 0;
 
@@ -140,8 +154,8 @@ export default function LabPage() {
               </div>
             </div>
 
-            {visible.map((order) => (
-              <LabOrderCard key={order.id} order={order} />
+            {groupedOrders.map((orders) => (
+              <PatientLabGroup key={orders[0].patientId} orders={orders} />
             ))}
           </div>
         )}

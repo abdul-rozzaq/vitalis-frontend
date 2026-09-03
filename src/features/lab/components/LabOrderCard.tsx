@@ -2,7 +2,7 @@ import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
-import { ChevronDown, ChevronUp, ClipboardList, Clock, Loader2, PackageCheck, PenLine, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, Clock, FlaskConical, Loader2, PackageCheck, PenLine, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -14,6 +14,9 @@ import { ItemFilesAndNote } from "./ItemFilesAndNote";
 
 interface LabOrderCardProps {
   order: LabOrder;
+  // PatientLabGroup ichida ko'rsatilganda bemor ismi/telefoni guruh
+  // headerida bir marta chiqadi — shu yerda takrorlanmasligi uchun.
+  hidePatientInfo?: boolean;
 }
 
 /**
@@ -26,7 +29,7 @@ interface LabOrderCardProps {
  * ko'rinadi. Bu chalkashlikni oldini oladi: laborant har doim nima
  * bosishini aniq biladi.
  */
-export function LabOrderCard({ order }: LabOrderCardProps) {
+export function LabOrderCard({ order, hidePatientInfo = false }: LabOrderCardProps) {
   const t = useTranslations();
   const [expanded, setExpanded] = useState(false);
   const actions = useItemActions(order);
@@ -63,30 +66,47 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
   };
 
   return (
-    <div className="bg-surface border border-border rounded-xl overflow-hidden transition-colors hover:border-border-strong">
+    <div className={hidePatientInfo ? "bg-surface" : "bg-surface border border-border rounded-xl overflow-hidden transition-colors hover:border-border-strong"}>
       {/* HEADER */}
       <div
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 text-left cursor-pointer select-none"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="relative w-11 h-11 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">
-            {initials}
-            {activeCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-white text-[10px] font-bold flex items-center justify-center border-2 border-surface">
-                {activeCount}
-              </span>
-            )}
-          </div>
+          {hidePatientInfo ? (
+            <div className="relative w-9 h-9 rounded-lg bg-surface-hover border border-border flex items-center justify-center text-primary shrink-0">
+              <FlaskConical className="w-4 h-4" />
+              {activeCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-white text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+                  {activeCount}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="relative w-11 h-11 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">
+              {initials}
+              {activeCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-warning text-white text-[10px] font-bold flex items-center justify-center border-2 border-surface">
+                  {activeCount}
+                </span>
+              )}
+            </div>
+          )}
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-text truncate">
-              {order.patient.first_name} {order.patient.last_name}
-            </p>
-            <p className="text-xs text-text-muted truncate mt-0.5">
-              {order.laboratory.name}
-              <span className="mx-2 opacity-40">·</span>
-              {order.patient.phone_number}
-            </p>
+            {hidePatientInfo ? (
+              <p className="text-sm font-semibold text-text truncate">{order.laboratory.name}</p>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-text truncate">
+                  {order.patient.first_name} {order.patient.last_name}
+                </p>
+                <p className="text-xs text-text-muted truncate mt-0.5">
+                  {order.laboratory.name}
+                  <span className="mx-2 opacity-40">·</span>
+                  {order.patient.phone_number}
+                </p>
+              </>
+            )}
             {order.items.length > 1 && (
               <p className="text-[11px] text-text-muted mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                 <span className="font-medium text-success tabular-nums">
