@@ -821,6 +821,7 @@
     "combinedResultsHint": "Введите результаты всех услуг заказа на одном экране.",
     "combinedResultsButton": "Ввести общий результат",
     "combinedDownload": "Общий документ",
+    "multipleOrders": "Лабораторных заказов: {count}",
     "orderStatus": {
       "PENDING": "Ожидание",
       "IN_PROGRESS": "Jarayonda",

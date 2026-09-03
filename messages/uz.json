@@ -821,6 +821,7 @@
     "combinedResultsHint": "Buyurtmadagi barcha xizmatlarning natijasini bitta ekranda kiriting.",
     "combinedResultsButton": "Umumiy natija kiritish",
     "combinedDownload": "Umumiy hujjat",
+    "multipleOrders": "{count} ta laboratoriya buyurtmasi",
     "orderStatus": {
       "PENDING": "Kutilmoqda",
       "IN_PROGRESS": "Jarayonda",
