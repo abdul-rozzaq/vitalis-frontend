@@ -128,3 +128,6 @@ src/lib/
 - `tsconfig.json` references `src/middleware.ts` which does not exist.
 - Some source files have garbled comment characters due to encoding issues; functionality is unaffected.
 - Build output is `standalone` mode (`next.config.ts`).
+
+
+do not add noreply@anthropic.com to commit messages. commit from user email
