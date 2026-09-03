@@ -1,6 +1,6 @@
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { initialsOf } from "@/shared/lib/helpers";
-import { Loader2, Pencil, Upload } from "lucide-react";
+import { Loader2, Pencil, Trash2, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ITEM_STATUS_DOT, ITEM_STATUS_PILL, NEXT_STATUS, NEXT_STEP_BUTTON_CLASS } from "../constants/status-styles";
 import { useItemActions } from "../hooks/useItemActions";
@@ -77,6 +77,16 @@ export function TaskRow({ order, item }: { order: DiagnosticOrder; item: Diagnos
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>
+              <button
+                type="button"
+                onClick={() => actions.setConfirmDeleteOpen(true)}
+                disabled={actions.deleteOrder.isPending}
+                className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-danger-50 hover:text-danger hover:border-danger/30 transition-all cursor-pointer"
+                title={t("diagnostics.deleteOrder")}
+                aria-label={t("diagnostics.deleteOrder")}
+              >
+                {actions.deleteOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              </button>
             </div>
             <NextStepButton item={item} isSaving={actions.updateItem.isPending} onClick={() => actions.requestAdvance(item)} size="sm" />
           </div>
@@ -95,6 +105,20 @@ export function TaskRow({ order, item }: { order: DiagnosticOrder; item: Diagnos
           isLoading={actions.updateItem.isPending}
           onConfirm={actions.confirmAdvance}
           onCancel={actions.cancelAdvance}
+        />
+      )}
+
+      {actions.confirmDeleteOpen && (
+        <ConfirmDialog
+          title={t("diagnostics.confirmDeleteTitle")}
+          description={t("diagnostics.confirmDeleteDescription", {
+            patient: `${order.patient.first_name} ${order.patient.last_name}`,
+          })}
+          confirmLabel={t("common.delete")}
+          confirmClassName="bg-danger hover:bg-danger/90 text-white"
+          isLoading={actions.deleteOrder.isPending}
+          onConfirm={() => actions.deleteOrder.mutate()}
+          onCancel={() => actions.setConfirmDeleteOpen(false)}
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
 import { formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
-import { ChevronDown, ChevronUp, ClipboardList, Clock, Loader2, PackageCheck, PenLine } from "lucide-react";
+import { ChevronDown, ChevronUp, ClipboardList, Clock, Loader2, PackageCheck, PenLine, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -65,10 +65,9 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden transition-colors hover:border-border-strong">
       {/* HEADER */}
-      <button
-        type="button"
+      <div
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 text-left"
+        className="w-full flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 text-left cursor-pointer select-none"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="relative w-11 h-11 rounded-full bg-primary-50 border border-primary-200 flex items-center justify-center text-xs font-bold text-primary shrink-0 tracking-wider select-none">
@@ -124,11 +123,23 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
             <span className={`w-1.5 h-1.5 rounded-full ${ORDER_STATUS_DOT[order.status]}`} />
             {ORDER_STATUS_LABELS[order.status]}
           </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              orderActions.setConfirmDeleteOpen(true);
+            }}
+            disabled={orderActions.deleteOrder.isPending}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-danger-50 hover:text-danger hover:border-danger/30 transition-all cursor-pointer"
+            title={t("lab.deleteOrder")}
+          >
+            {orderActions.deleteOrder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          </button>
           <span className="w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-muted">
             {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </span>
         </div>
-      </button>
+      </div>
 
       {/* UMUMIY AMALLAR — jami ikkita tugma: "Natija kiritish" (doim ko'rinadi)
           va "Bemorga topshirildi" (faqat natija tayyor bo'lganda). */}
@@ -176,22 +187,35 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
 
             return (
               <div key={item.id} className={`px-4 sm:px-5 py-3.5 ${ITEM_ROW_ACCENT[item.status]}`}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-text">{item.service.name}</p>
-                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
-                    {ITEM_STATUS_LABELS[item.status]}
-                  </span>
-                  {!item.isPaid && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-hover text-text-muted border border-border">
-                      {t("lab.freeBadge")}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-text">{item.service.name}</p>
+                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
+                      {ITEM_STATUS_LABELS[item.status]}
                     </span>
-                  )}
-                  {isDraftInProgress && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary-50 text-primary border border-primary/20">
-                      <PenLine className="w-3 h-3" />
-                      {t("lab.draftBadge")}
-                    </span>
+                    {!item.isPaid && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-hover text-text-muted border border-border">
+                        {t("lab.freeBadge")}
+                      </span>
+                    )}
+                    {isDraftInProgress && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary-50 text-primary border border-primary/20">
+                        <PenLine className="w-3 h-3" />
+                        {t("lab.draftBadge")}
+                      </span>
+                    )}
+                  </div>
+                  {canAct && (
+                    <button
+                      type="button"
+                      onClick={() => actions.setPendingDeleteItem({ id: item.id, name: item.service.name })}
+                      disabled={actions.deleteItem.isPending}
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-text-muted hover:text-danger hover:bg-danger-50 transition-colors cursor-pointer"
+                      title={t("lab.deleteItem")}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
 
@@ -220,6 +244,34 @@ export function LabOrderCard({ order }: LabOrderCardProps) {
           isLoading={orderActions.deliverOrder.isPending}
           onConfirm={() => orderActions.deliverOrder.mutate()}
           onCancel={() => orderActions.setConfirmAdvanceOpen(false)}
+        />
+      )}
+
+      {orderActions.confirmDeleteOpen && (
+        <ConfirmDialog
+          title={t("lab.confirmDeleteTitle")}
+          description={t("lab.confirmDeleteDescription", {
+            patient: `${order.patient.first_name} ${order.patient.last_name}`,
+          })}
+          confirmLabel={t("common.delete")}
+          confirmClassName="bg-danger hover:bg-danger/90 text-white"
+          isLoading={orderActions.deleteOrder.isPending}
+          onConfirm={() => orderActions.deleteOrder.mutate()}
+          onCancel={() => orderActions.setConfirmDeleteOpen(false)}
+        />
+      )}
+
+      {actions.pendingDeleteItem && (
+        <ConfirmDialog
+          title={t("lab.confirmDeleteItemTitle")}
+          description={t("lab.confirmDeleteItemDescription", {
+            service: actions.pendingDeleteItem.name,
+          })}
+          confirmLabel={t("common.delete")}
+          confirmClassName="bg-danger hover:bg-danger/90 text-white"
+          isLoading={actions.deleteItem.isPending}
+          onConfirm={() => actions.deleteItem.mutate(actions.pendingDeleteItem!.id)}
+          onCancel={() => actions.setPendingDeleteItem(null)}
         />
       )}
     </div>

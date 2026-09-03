@@ -883,7 +883,15 @@
     "pendingInvoiceBadge": "Ожидает счёта",
     "createInvoiceButton": "Создать счёт",
     "createInvoiceHint": "При отправке пациента счёт был отложен. Укажите сумму и создайте счёт сейчас.",
-    "createInvoiceToast": "Счёт создан"
+    "createInvoiceToast": "Счёт создан",
+    "deleteOrder": "Удалить заказ",
+    "confirmDeleteTitle": "Удаление заказа",
+    "confirmDeleteDescription": "Вы действительно хотите удалить этот лабораторный заказ ({patient})? Это действие нельзя отменить.",
+    "orderDeletedToast": "Лабораторный заказ удален",
+    "deleteItem": "Удалить услугу",
+    "confirmDeleteItemTitle": "Удаление услуги",
+    "confirmDeleteItemDescription": "Вы действительно хотите удалить услугу \"{service}\" из этого заказа?",
+    "itemDeletedToast": "Услуга удалена"
   },
   "laboratories": {
     "title": "Лаборатории",
@@ -1177,7 +1185,15 @@
       "CANCELLED": "Отменено"
     },
     "center": "Диагностический центр",
-    "serviceExample": "например: УЗИ брюшной полости"
+    "serviceExample": "например: УЗИ брюшной полости",
+    "deleteOrder": "Удалить заказ",
+    "confirmDeleteTitle": "Удаление заказа",
+    "confirmDeleteDescription": "Вы действительно хотите удалить этот диагностический заказ ({patient})? Это действие нельзя отменить.",
+    "orderDeletedToast": "Диагностический заказ удален",
+    "deleteItem": "Удалить услугу",
+    "confirmDeleteItemTitle": "Удаление услуги",
+    "confirmDeleteItemDescription": "Вы действительно хотите удалить услугу \"{service}\" из этого заказа?",
+    "itemDeletedToast": "Услуга удалена"
   },
   "ward": {
     "currency": "сум",
