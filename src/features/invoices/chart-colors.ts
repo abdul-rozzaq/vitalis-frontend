@@ -49,6 +49,15 @@ export interface RevenueByStaffRow {
   count: number;
 }
 
+export interface RevenueByDepartmentRow {
+  departmentId: string | null;
+  departmentName: string;
+  cash: number;
+  bonus: number;
+  total: number;
+  count: number;
+}
+
 /**
  * To'lov turi — alohida o'lchov (naqd/karta/o'tkazma/boshqa/bonus), shu
  * sababli manba ranglaridan mustaqil, lekin bir xil validatsiyadan o'tgan

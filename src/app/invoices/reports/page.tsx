@@ -1,7 +1,8 @@
 "use client";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
-import { RevenueByMethodRow, RevenueByStaffRow, RevenueBySourceRow, SOURCE_CHART_COLOR, SOURCE_ORDER } from "@/features/invoices/chart-colors";
+import { RevenueByDepartmentRow, RevenueByMethodRow, RevenueByStaffRow, RevenueBySourceRow, SOURCE_CHART_COLOR, SOURCE_ORDER } from "@/features/invoices/chart-colors";
+import { RevenueDepartmentTable } from "@/features/invoices/components/RevenueDepartmentTable";
 import { RevenueDonutChart } from "@/features/invoices/components/RevenueDonutChart";
 import { RevenueItemBreakdownChart } from "@/features/invoices/components/RevenueItemBreakdownChart";
 import { RevenuePaymentMethodChart } from "@/features/invoices/components/RevenuePaymentMethodChart";
@@ -31,6 +32,7 @@ interface RevenueReport {
   bySource: RevenueBySourceRow[];
   byPaymentMethod: RevenueByMethodRow[];
   byStaff: RevenueByStaffRow[];
+  byDepartment: RevenueByDepartmentRow[];
 }
 
 function pctChange(curr: number, prev: number): number | null {
@@ -198,6 +200,10 @@ export default function RevenueReportsPage() {
       [t("invoices.reports.byStaffTitle")],
       [t("invoices.reports.table.staff"), t("invoices.reports.table.count"), t("invoices.reports.table.total")],
       ...(data.byStaff ?? []).map((r) => [r.staffName, r.count, fmt(r.total)]),
+      [],
+      [t("invoices.reports.byDepartmentTitle")],
+      [t("invoices.reports.table.department"), t("invoices.reports.table.count"), t("invoices.reports.table.total")],
+      ...(data.byDepartment ?? []).map((r) => [r.departmentName, r.count, fmt(r.total)]),
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
@@ -407,6 +413,10 @@ export default function RevenueReportsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
               <RevenuePaymentMethodChart rows={data?.byPaymentMethod ?? []} />
               <RevenueStaffTable rows={data?.byStaff ?? []} />
+            </div>
+
+            <div className="mt-4">
+              <RevenueDepartmentTable rows={data?.byDepartment ?? []} />
             </div>
 
             {/* Bitta bo'lim tanlansa — o'sha bo'lim ichidagi xizmatlar bo'yicha taqsimot */}

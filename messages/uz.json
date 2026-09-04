@@ -993,7 +993,9 @@
     "bonusForCompanions": "Sheriklar uchun ham hisoblansin",
     "doctor": "Shifokor",
     "selectDoctor": "Shifokorni tanlang",
-    "cardNumber": "Tibbiy karta raqami"
+    "cardNumber": "Tibbiy karta raqami",
+    "department": "Bo'lim",
+    "departmentHint": "Standart holatda xonaning bo'limi tanlanadi. Bo'lim xonalari to'lib qolganda, boshqa bo'lim xonasiga yotqizib, shu yerda bemor tegishli bo'limni tanlang."
   },
   "operations": {
     "title": "Operatsiyalar",
@@ -1402,6 +1404,8 @@
       "detailTitle": "Manba bo'yicha batafsil",
       "byMethodTitle": "To'lov turi bo'yicha taqsimot",
       "byStaffTitle": "Xodim bo'yicha taqsimot",
+      "byDepartmentTitle": "Bo'lim bo'yicha daromad",
+      "byDepartmentNote": "Har bir to'lov qaysi bo'limga tegishli xizmat (yotqizish, qabul, operatsiya, protsedura) uchun qilinganiga qarab shu bo'lim daromadiga yoziladi. Laboratoriya va diagnostika bo'lim emas, alohida bo'linma bo'lgani uchun \"Boshqa\"ga tushadi.",
       "filterBySource": "Bo'limlar",
       "filterAll": "Barchasi",
       "itemBreakdownTitle": "Ichki taqsimot — xizmatlar bo'yicha",
@@ -1417,6 +1421,7 @@
         "share": "Ulush",
         "count": "To'lovlar soni",
         "staff": "Xodim",
+        "department": "Bo'lim",
         "method": "To'lov turi",
         "amount": "Summa"
       },
