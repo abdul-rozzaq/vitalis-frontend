@@ -19,7 +19,8 @@ interface Ward {
   patientPricePerDay?: number | null;
   companionPricePerDay?: number | null;
   patient: { id: string; first_name: string; last_name: string };
-  room: { id: string; name: string };
+  department?: { id: string; name: string } | null;
+  room: { id: string; name: string; department?: { id: string; name: string } | null };
 }
 
 interface Props {
@@ -33,6 +34,7 @@ export function WardEditModal({ ward, onClose }: Props) {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [checkIn, setCheckIn] = useState("");
@@ -62,6 +64,12 @@ export function WardEditModal({ ward, onClose }: Props) {
     enabled: !!ward,
   });
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+    enabled: !!ward,
+  });
+
   const wardRooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
   // Tanlangan xona bo'sh o'rinlari
@@ -83,6 +91,11 @@ export function WardEditModal({ ward, onClose }: Props) {
     value: p.id,
   }));
 
+  const departmentOptions = departments.map((d: any) => ({
+    label: d.name,
+    value: d.id,
+  }));
+
   const roomOptions = wardRooms.map((r: any) => ({
     label: `${r.name}${r.department ? ` (${r.department.name})` : ""}${r.capacity ? ` — ${r.occupiedCount ?? 0}/${r.capacity}` : ""}${r.isFull && r.id !== ward?.room.id ? ` ⛔ ${t("wards.full")}` : ""}`,
     value: r.id,
@@ -93,6 +106,7 @@ export function WardEditModal({ ward, onClose }: Props) {
     if (ward) {
       setPatientId(ward.patient.id);
       setRoomId(ward.room.id);
+      setDepartmentId(ward.department?.id ?? ward.room.department?.id ?? "");
       setDoctorId(ward.doctor?.id ?? "");
       setCardNumber(ward.cardNumber?.toString() ?? "");
       setCheckIn(ward.checkIn.split("T")[0]);
@@ -104,10 +118,12 @@ export function WardEditModal({ ward, onClose }: Props) {
     }
   }, [ward]);
 
-  // Xona o'zgarganda sherik sonini reset
+  // Xona o'zgarganda sherik sonini reset va bo'limni yangi xonaga moslashtirish
   const handleRoomChange = (val: string) => {
     setRoomId(val);
     setCompanionsCount(0);
+    const room = wardRooms.find((r: any) => r.id === val);
+    setDepartmentId(room?.department?.id ?? "");
   };
 
   const { mutate, isPending } = useMutation({
@@ -115,6 +131,7 @@ export function WardEditModal({ ward, onClose }: Props) {
       api.patch(`/wards/${ward!.id}`, {
         patientId: patientId !== ward!.patient.id ? patientId : undefined,
         roomId: roomId !== ward!.room.id ? roomId : undefined,
+        departmentId: departmentId !== (ward!.department?.id ?? ward!.room.department?.id ?? "") ? (departmentId || null) : undefined,
         doctorId: doctorId !== (ward!.doctor?.id ?? "") ? (doctorId || null) : undefined,
         cardNumber: cardNumber !== (ward!.cardNumber?.toString() ?? "") ? (cardNumber ? Number(cardNumber) : null) : undefined,
         checkIn: checkIn !== ward!.checkIn.split("T")[0] ? checkIn : undefined,
@@ -178,6 +195,22 @@ export function WardEditModal({ ward, onClose }: Props) {
               searchPlaceholder={t("common.search")}
               disabled={isPending}
             />
+          </div>
+
+          {/* Bo'lim */}
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">
+              {t("wards.department")}
+            </label>
+            <Combobox
+              options={departmentOptions}
+              value={departmentId}
+              onChange={(val) => setDepartmentId(val as string)}
+              placeholder={t("forms.select")}
+              searchPlaceholder={t("common.search")}
+              disabled={isPending}
+            />
+            <p className="text-xs text-secondary mt-1">{t("wards.departmentHint")}</p>
           </div>
 
           <div>
