@@ -34,6 +34,7 @@ export const BIOCHEMISTRY_RESULT_LAYOUT: LabResultLayout = {
 export interface LabDefaultRow {
   code?: string | null;
   indicator: string;
+  result?: string | null;
   norm?: string | null;
   unit?: string | null;
   sortOrder?: number;
@@ -142,7 +143,7 @@ export interface LabOrder {
   laboratoryId: string;
   laboratory: { id: string; name: string };
   patientId: string;
-  patient: { id: string; first_name: string; last_name: string; phone_number: string };
+  patient: { id: string; first_name: string; last_name: string; phone_number: string; birth_date: string };
   caseStep: { id: string; caseId: string; status: string };
   items: LabOrderItem[];
   createdAt: string;

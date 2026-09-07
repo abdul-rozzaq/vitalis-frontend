@@ -2,9 +2,10 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
+import { Combobox } from "@/components/ui/combobox";
 import { EnterpriseDataTable } from "@/components/ui/enterprise-data-table";
 import formatPhone from "@/components/ui/format-phone";
-import { Patient } from "@/features/patients/types";
+import { Patient, PatientSource } from "@/features/patients/types";
 import { api } from "@/shared/lib/api";
 import { exportToExcel } from "@/shared/lib/export-excel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,10 +20,25 @@ export default function PatientsPage() {
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedPatients, setSelectedPatients] = useState<Patient[]>([]);
+  const [sourceFilter, setSourceFilter] = useState<string>("");
+
+  const { data: sources = [] } = useQuery<PatientSource[]>({
+    queryKey: ["patient-sources"],
+    queryFn: () => api.get("/patient-sources").then((res) => res.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const sourceOptions = useMemo(
+    () => sources.map((s) => ({ value: s.id, label: s.name })),
+    [sources],
+  );
 
   const { data: patientsData = [], isLoading: isLoadingPatients } = useQuery({
-    queryKey: ["patients"],
-    queryFn: () => api.get("/patients").then((res) => res.data),
+    queryKey: ["patients", sourceFilter],
+    queryFn: () =>
+      api
+        .get("/patients", { params: sourceFilter ? { sourceId: sourceFilter } : undefined })
+        .then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
@@ -43,6 +59,7 @@ export default function PatientsPage() {
       t("patients.colBirthDate"),
       t("patients.colRegisteredAt"),
       t("patients.colPhone"),
+      t("patients.colSource"),
     ];
     const rows = patientsData.map((p: Patient) => [
       p.id,
@@ -52,6 +69,7 @@ export default function PatientsPage() {
       p.birth_date ? new Date(p.birth_date).toLocaleDateString() : "",
       p.createdAt ? `${new Date(p.createdAt).toLocaleDateString()} ${new Date(p.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : "",
       p.phone_number ?? "",
+      p.source?.name ?? "",
     ]);
     exportToExcel("patients", headers, rows, t("patients.title"));
   };
@@ -130,6 +148,16 @@ export default function PatientsPage() {
         cell: (info: any) => <span className="text-text-muted font-mono text-xs">{formatPhone(info.getValue() as string)}</span>,
       },
       {
+        id: "source",
+        accessorFn: (row: Patient) => row.source?.name,
+        header: t("patients.colSource"),
+        cell: ({ row }) => (
+          <span className="text-text-muted text-sm">
+            {row.original.source?.name || t("common.na")}
+          </span>
+        ),
+      },
+      {
         id: "actions",
         header: () => <span className="text-right">{t("common.actions")}</span>,
         cell: ({ row }) => (
@@ -166,6 +194,14 @@ export default function PatientsPage() {
         subtitle={t("patients.description")}
         actions={
           <div className="flex gap-2">
+            <Combobox
+              options={sourceOptions}
+              value={sourceFilter}
+              onChange={setSourceFilter}
+              placeholder={t("patients.filterAllSources")}
+              searchPlaceholder={t("patients.searchSource")}
+              className="w-52"
+            />
             <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-text-muted hover:text-text hover:bg-surface-hover transition-colors text-sm font-medium">
               <Download className="w-4 h-4" />
               <span>Export</span>

@@ -27,6 +27,19 @@ export function initialsOf(firstName: string, lastName: string): string {
   return (firstName[0] ?? "") + (lastName[0] ?? "");
 }
 
+// ─── Age ──────────────────────────────────────────────────────────────────────
+
+export function calculateAge(birthDate: string): number {
+  const birth = new Date(birthDate);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const hasHadBirthdayThisYear =
+    now.getMonth() > birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+  if (!hasHadBirthdayThisYear) age--;
+  return age;
+}
+
 // ─── Order status derivation ──────────────────────────────────────────────────
 
 type OrderStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";

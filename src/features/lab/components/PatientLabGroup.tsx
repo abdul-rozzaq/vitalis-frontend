@@ -1,6 +1,7 @@
-import { initialsOf } from "@/shared/lib/helpers";
+import { calculateAge, initialsOf } from "@/shared/lib/helpers";
 import { useTranslations } from "next-intl";
 import { LabOrder } from "../types";
+import { AddLabOrderButton } from "./AddLabOrderButton";
 import { LabOrderCard } from "./LabOrderCard";
 
 interface PatientLabGroupProps {
@@ -23,6 +24,7 @@ export function PatientLabGroup({ orders }: PatientLabGroupProps) {
   const patient = orders[0].patient;
   const initials = initialsOf(patient.first_name, patient.last_name);
   const totalActive = orders.reduce((sum, o) => sum + o.items.filter((i) => i.status === "PENDING" || i.status === "IN_PROGRESS").length, 0);
+  const existingServiceIds = orders.flatMap((o) => o.items.filter((i) => i.status !== "CANCELLED").map((i) => i.serviceId));
 
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden transition-colors hover:border-border-strong">
@@ -35,9 +37,14 @@ export function PatientLabGroup({ orders }: PatientLabGroupProps) {
             </span>
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-text truncate">
             {patient.first_name} {patient.last_name}
+            {patient.birth_date && (
+              <span className="ml-1.5 font-normal text-text-muted">
+                · {t("lab.ageYears", { age: calculateAge(patient.birth_date) })}
+              </span>
+            )}
           </p>
           <p className="text-xs text-text-muted truncate mt-0.5">
             {patient.phone_number}
@@ -45,6 +52,7 @@ export function PatientLabGroup({ orders }: PatientLabGroupProps) {
             {t("lab.multipleOrders", { count: orders.length })}
           </p>
         </div>
+        <AddLabOrderButton patientId={patient.id} existingServiceIds={existingServiceIds} withLabel />
       </div>
 
       <div className="divide-y divide-border">

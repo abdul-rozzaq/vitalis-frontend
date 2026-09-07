@@ -1,13 +1,14 @@
 import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
-import { formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
+import { calculateAge, formatClockTime, initialsOf, timeAgoUz } from "@/shared/lib/helpers";
 import { ChevronDown, ChevronUp, ClipboardList, Clock, FlaskConical, Loader2, PackageCheck, PenLine, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { ITEM_STATUS_DOT, ITEM_STATUS_LABELS, ITEM_STATUS_PILL, ORDER_STATUS_DOT, ORDER_STATUS_LABELS, ORDER_STATUS_PILL } from "../constants/status-colors";
 import { LabItemStatus, LabOrder } from "../types";
+import { AddLabOrderButton } from "./AddLabOrderButton";
 import { CreateInvoicePanel } from "./CreateInvoicePanel";
 import { DownloadResultButtons } from "./DownloadResultButtons";
 import { ItemFilesAndNote } from "./ItemFilesAndNote";
@@ -99,6 +100,11 @@ export function LabOrderCard({ order, hidePatientInfo = false }: LabOrderCardPro
               <>
                 <p className="text-sm font-semibold text-text truncate">
                   {order.patient.first_name} {order.patient.last_name}
+                  {order.patient.birth_date && (
+                    <span className="ml-1.5 font-normal text-text-muted">
+                      · {t("lab.ageYears", { age: calculateAge(order.patient.birth_date) })}
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-text-muted truncate mt-0.5">
                   {order.laboratory.name}
@@ -125,6 +131,12 @@ export function LabOrderCard({ order, hidePatientInfo = false }: LabOrderCardPro
           </div>
         </div>
         <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+          {!hidePatientInfo && (
+            <AddLabOrderButton
+              patientId={order.patientId}
+              existingServiceIds={order.items.filter((i) => i.status !== "CANCELLED").map((i) => i.serviceId)}
+            />
+          )}
           {isBeingEntered && (
             <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary-50 text-primary border border-primary/20">
               <span className="relative flex w-1.5 h-1.5">

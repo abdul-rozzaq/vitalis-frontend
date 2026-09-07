@@ -1,7 +1,7 @@
 "use client";
 
-import formatPhone from "@/components/ui/format-phone";
 import { FormButtons } from "@/components/ui/form-buttons";
+import formatPhone from "@/components/ui/format-phone";
 import { api } from "@/shared/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -61,10 +61,8 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
     last_name: z.string().min(2, t("forms.lastNameTooShort")),
     phone_number: z
       .string()
-      .regex(/^\+998 \(\d{2}\) \d{3}-\d{2}-\d{2}$/, t("forms.phoneInvalidUzbekistan"))
-      .optional()
-      .or(z.literal("+998 (  )    -  -  "))
-      .or(z.literal("")),
+      .min(1, t("forms.phoneRequired"))
+      .regex(/^\+998 \(\d{2}\) \d{3}-\d{2}-\d{2}$/, t("forms.phoneInvalidUzbekistan")),
     gender: z.enum(["male", "female"]),
     birth_date: z
       .string()
@@ -153,7 +151,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
   useEffect(() => {
     if (initialData?.birth_date) {
       const date = new Date(initialData.birth_date);
-      const formattedDate = date.toISOString().split('T')[0]; 
+      const formattedDate = date.toISOString().split('T')[0];
       setValue("birth_date", formattedDate);
     }
   }, [initialData?.birth_date, setValue]);
@@ -227,7 +225,7 @@ export function PatientForm({ initialData, onSubmit, onCancel, isPending }: Pati
         <label className="text-sm font-medium text-text flex items-center gap-2">
           <Phone className="w-4 h-4 text-primary-500" />
           {t("forms.phone")}
-          <span className="text-xs text-secondary font-normal">({t("forms.optional")})</span>
+          <span className="text-red-500">*</span>
         </label>
         <Controller
           control={control}
