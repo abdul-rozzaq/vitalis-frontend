@@ -48,6 +48,7 @@ const SOURCE_LABELS: Record<string, string> = {
   APPOINTMENT: "Qabul",
   LAB_ORDER: "Laboratoriya",
   MANUAL: "Qo'lda",
+  CASE: "Umumiy hisob",
 };
 
 function StatusBadge({ status }: { status: InvoiceStatus }) {

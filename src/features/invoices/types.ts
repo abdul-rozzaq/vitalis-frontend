@@ -18,6 +18,7 @@ export interface InvoiceItem {
   unitPrice: string;
   totalPrice: string;
   sourceType: string;
+  createdAt: string;
 }
 export interface InvoicePayment {
   id: string;
@@ -56,4 +57,5 @@ export const SOURCE_LABELS: Record<string, string> = {
   APPOINTMENT: "Qabul",
   LAB_ORDER: "Laboratoriya",
   MANUAL: "Qo'lda",
+  CASE: "Umumiy hisob",
 };

@@ -34,6 +34,27 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
   const [isBonusForCompanions, setIsBonusForCompanions] = useState(false);
   const [prepaymentAmount, setPrepaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
+  const [caseId, setCaseId] = useState("");
+
+  const { data: patientCases = [] } = useQuery<any[]>({
+    queryKey: ["patient-cases", patientId],
+    queryFn: () => api.get(`/patients/${patientId}/cases`).then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+  const activeCases = useMemo(() => patientCases.filter((c: any) => c.status === "ACTIVE"), [patientCases]);
+
+  // Xodim hali qo'lda tanlamagan bo'lsa, bemorning faol ishlaridan eng
+  // so'nggisi standart sifatida ishlatiladi (state'ga yozilmaydi — shunchaki
+  // hisoblanadi).
+  const effectiveCaseId = caseId || activeCases[0]?.id || "";
+
+  const caseOptions = [
+    { label: t("wards.caseAuto"), value: "" },
+    ...activeCases.map((c: any) => ({
+      label: `${c.chiefComplaint || t("cases.newCase")}${c.billingMode === "MASTER" ? ` · ${t("cases.masterBadge")}` : ""}`,
+      value: c.id,
+    })),
+  ];
 
   const { data: allRooms = [] } = useQuery<any[]>({
     queryKey: ["rooms"],
@@ -122,6 +143,7 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
       api.post("/wards/check-in", {
         patientId,
         roomId,
+        caseId: effectiveCaseId || undefined,
         departmentId: departmentId || undefined,
         doctorId: doctorId || undefined,
         cardNumber: cardNumber ? Number(cardNumber) : undefined,
@@ -159,6 +181,12 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
             <label className="text-sm font-medium text-text mb-1 block">{t("wards.department")} *</label>
             <Combobox options={departmentOptions} value={departmentId} onChange={(v) => handleDepartmentChange(v as string)} placeholder={t("forms.select")} searchPlaceholder={t("common.search")} disabled={isPending || !roomId} />
             <p className="text-xs text-secondary mt-1">{t("wards.departmentHint")}</p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">{t("wards.caseLabel")}</label>
+            <Combobox options={caseOptions} value={effectiveCaseId} onChange={(v) => setCaseId(v as string)} placeholder={t("forms.select")} searchPlaceholder={t("common.search")} disabled={isPending} />
+            <p className="text-xs text-secondary mt-1">{t("wards.caseHint")}</p>
           </div>
 
           <div>

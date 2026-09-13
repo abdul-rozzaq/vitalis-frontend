@@ -11,6 +11,7 @@
     "signOut": "Chiqish",
     "wards": "Palatalar",
     "invoices": "Invoicelar",
+    "journals": "To'lov jurnali",
     "payments": "To'lovlar",
     "reports": "Hisobotlar",
     "shifts": "Smenalar",
@@ -325,6 +326,14 @@
     "closeCase": "Ishni yopish",
     "complete": "Yakunlash",
     "cancel": "Bekor qilish",
+    "convertToMaster": "Jurnal boshlash",
+    "convertToMasterConfirm": "Bu ish uchun jurnal boshlanadi. Bundan keyingi barcha xizmatlar (lab, palata, operatsiya, protsedura) shu bitta jurnalga yozilib boradi. Bu amalni keyin bekor qilib bo'lmaydi.",
+    "masterBadge": "Jurnalda",
+    "billingModeLabel": "To'lov turi",
+    "billingPerService": "Oddiy hisob",
+    "billingPerServiceHint": "Har bir xizmat alohida hisoblanadi",
+    "billingMaster": "Jurnal",
+    "billingMasterHint": "Barcha xizmatlar bitta umumiy hisobga yig'iladi",
     "doctorPanel": "Shifokor amallar",
     "markDone": "Bajarildi deb belgilash",
     "addReferral": "Bo'limga yo'naltirish",
@@ -356,6 +365,42 @@
       "DONE": "Bajarildi",
       "CANCELLED": "Bekor qilingan"
     }
+  },
+  "journal": {
+    "title": "Bemor jurnali",
+    "subtitle": "Bemorning barcha xizmatlari va to'lovlari bitta joyda",
+    "cardTitleOpen": "Bemor jurnali ochiq",
+    "cardTitleClosed": "Bemor jurnali",
+    "cardNotStarted": "Hali boshlanmagan — xizmatlar alohida-alohida hisoblanadi",
+    "entryCount": "{count} ta yozuv",
+    "previousEntries": "{count} ta oldingi yozuv",
+    "noJournalAtAll": "Bu bemor uchun hali jurnal ochilmagan va faol ish (case) ham yo'q.",
+    "backToPatient": "Bemor sahifasiga qaytish",
+    "notStartedFor": "\"{name}\" uchun jurnal hali boshlanmagan",
+    "notStartedHint": "Boshlangandan so'ng shu ishga tegishli barcha xizmatlar (lab, palata, operatsiya, protsedura) shu yerga yig'iladi.",
+    "previousJournals": "Oldingi jurnallar",
+    "emptyTimeline": "Jurnalda hali yozuv yo'q",
+    "total": "Jami",
+    "paid": "To'langan",
+    "remaining": "Qoldiq",
+    "pay": "To'lash",
+    "issueInvoice": "Invois yaratish",
+    "print": "Chop etish",
+    "dischargeConfirm": "Bemorni chiqarishni tasdiqlaysizmi? Hamyonda yetarli mablag' bo'lsa qoldiq avtomatik yopiladi."
+  },
+  "journals": {
+    "subtitle": "Hozir ochiq (yoki yopilgan) jurnali bor barcha bemorlar",
+    "empty": "Hozircha jurnali bor bemor yo'q",
+    "filterActive": "Faol",
+    "filterClosed": "Yopilgan",
+    "filterAll": "Hammasi",
+    "colPatient": "Bemor",
+    "colCase": "Ish",
+    "colOpened": "Ochilgan",
+    "colTotal": "Jami",
+    "colPaid": "To'langan",
+    "colRemaining": "Qoldiq",
+    "colStatus": "Holat"
   },
   "appointments": {
     "title": "Uchrashuvlar",
@@ -1007,7 +1052,10 @@
     "selectDoctor": "Shifokorni tanlang",
     "cardNumber": "Tibbiy karta raqami",
     "department": "Bo'lim",
-    "departmentHint": "Standart holatda xonaning bo'limi tanlanadi. Bo'lim xonalari to'lib qolganda, boshqa bo'lim xonasiga yotqizib, shu yerda bemor tegishli bo'limni tanlang."
+    "departmentHint": "Standart holatda xonaning bo'limi tanlanadi. Bo'lim xonalari to'lib qolganda, boshqa bo'lim xonasiga yotqizib, shu yerda bemor tegishli bo'limni tanlang.",
+    "caseLabel": "Qaysi ishga tegishli",
+    "caseHint": "Agar tanlangan ish jurnal rejimida bo'lsa, palata narxi ham o'sha jurnalga yoziladi.",
+    "caseAuto": "Avtomatik (yangi ish ochiladi)"
   },
   "operations": {
     "title": "Operatsiyalar",
@@ -1346,7 +1394,8 @@
       "DIAGNOSTIC_ORDER": "Diagnostika",
       "LAB_ORDER": "Laboratoriya",
       "PROCEDURE_ORDER": "Protsedura",
-      "MANUAL": "Qo'lda"
+      "MANUAL": "Qo'lda",
+      "CASE": "Umumiy hisob"
     },
     "summary": {
       "totalRevenue": "Jami to'lovlar",

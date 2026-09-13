@@ -63,10 +63,13 @@ export interface CaseStep {
   procedureOrder?: any | null; // ProcedureOrder
 }
 
+export type CaseBillingMode = "PER_SERVICE" | "MASTER";
+
 export interface PatientCase {
   id: string;
   patientId: string;
   status: CaseStatus;
+  billingMode: CaseBillingMode;
   chiefComplaint?: string | null;
   openedAt: string;
   closedAt?: string | null;

@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { PatientBalanceCard } from "@/features/balance/components/PatientBalanceCard";
 import { PatientInvoiceList } from "@/features/balance/components/PatientInvoiceList";
 import { PatientTransactionHistory } from "@/features/balance/components/PatientTransactionHistory";
+import { JournalCard } from "@/features/journal/components/JournalCard";
 import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
 import { CaseCard } from "@/features/patients/components/CaseCard";
 import { EditPatientSheetForm } from "@/features/patients/components/EditPatientSheetForm";
@@ -71,6 +72,13 @@ export default function PatientDetailPage() {
     mutationFn: ({ caseId, status }: { caseId: string; status: "COMPLETED" | "CANCELLED" }) => api.patch(`/cases/${caseId}/close`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] }),
   });
+
+  // Hamshira faqat protsedura (ukol) qo'sha oladi — boshqa qadam turlarini
+  // backend ham rad etadi (qarang: CasesService.addStep).
+  const isNurse = typeof user?.role === "string" && user.role.toUpperCase() === "HAMSHIRA";
+  const addStepAvailableTypes = isNurse
+    ? (["PROCEDURE"] as const)
+    : (["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"] as const);
 
   const { data: casesData = [], isLoading: isTimelineLoading } = useQuery<PatientCase[]>({
     queryKey: ["patient-cases", id],
@@ -358,6 +366,8 @@ export default function PatientDetailPage() {
 
           {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="flex-1 min-w-0 space-y-4">
+            <JournalCard patientId={id} />
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
                 <button
@@ -443,6 +453,10 @@ export default function PatientDetailPage() {
           patientId={id}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
+            // Jurnal rejimida yaratilgan bo'lsa, bitta amalda yangi Master
+            // Invoice ham tug'iladi — JournalCard shuni darhol ko'rsata olishi
+            // uchun bu keshni ham yangilaymiz.
+            queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", id] });
             setSheetMode(null);
           }}
           onCancel={() => setSheetMode(null)}
@@ -481,7 +495,7 @@ export default function PatientDetailPage() {
       <AddCaseStepForm
         isOpen={addStepCaseId !== null}
         caseId={addStepCaseId ?? ""}
-        availableStepTypes={["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
+        availableStepTypes={[...addStepAvailableTypes]}
         onClose={() => setAddStepCaseId(null)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
