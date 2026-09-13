@@ -10,8 +10,9 @@ import { useItemActions } from "@/features/lab/hooks/useItemActions";
 import { useOrderActions } from "@/features/lab/hooks/useOrderActions";
 import { BIOCHEMISTRY_RESULT_LAYOUT, CBC_RESULT_LAYOUT, Laboratory, LabOrder, LabOrderItem, LabResultLayout, LabResultRow } from "@/features/lab/types";
 import { api } from "@/shared/lib/api";
+import { calculateAge } from "@/shared/lib/helpers";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, ChevronDown, FileClock, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileClock, Loader2, Plus, Send, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -40,7 +41,7 @@ function initialRowsFor(item: LabOrderItem): LabResultRow[] {
         id: r.id,
         code: tpl?.code ?? r.code ?? "",
         indicator: tpl?.indicator ?? r.indicator,
-        result: r.result && r.result !== "-" ? r.result : "",
+        result: r.result && r.result !== "-" ? r.result : (tpl?.result ?? ""),
         norm: tpl?.norm ?? r.norm ?? "",
         unit: tpl?.unit ?? r.unit ?? "",
         sortOrder: r.sortOrder,
@@ -48,12 +49,13 @@ function initialRowsFor(item: LabOrderItem): LabResultRow[] {
     });
   }
 
-  // Hali hech narsa saqlanmagan — boshlang'ich holatda to'liq shablon ko'rsatiladi.
+  // Hali hech narsa saqlanmagan — boshlang'ich holatda to'liq shablon ko'rsatiladi
+  // (shablonda standart "Natija" qiymati bo'lsa, shu bilan oldindan to'ldiriladi).
   if (template.length) {
     return template.map((tpl, index) => ({
       code: tpl.code ?? "",
       indicator: tpl.indicator,
-      result: "",
+      result: tpl.result ?? "",
       norm: tpl.norm ?? "",
       unit: tpl.unit ?? "",
       sortOrder: index,
@@ -67,27 +69,37 @@ function rowsComplete(rows: LabResultRow[]): boolean {
   return rows.length > 0 && rows.every((r) => r.indicator.trim() && r.result?.trim());
 }
 
-// Natija jadvali muharriri. Xizmatda oldindan belgilangan shablon (defaultRows)
-// bo'lsa — ustunlar (kod/ko'rsatkich/me'yor/birlik) o'zgarmas bo'ladi, laborant
-// faqat "Natija" ustunini to'ldiradi. Shablon bo'lmagan xizmatlar uchun esa
-// (`allowRowManagement`) barcha ustunlar erkin tahrirlanadi va yangi qator
-// qo'shish ham mumkin — ozod (ad hoc) tahlil jadvali. Qator o'chirish esa
-// har doim (shablon bo'lsa ham) ochiq — laborant kerak bo'lmagan ko'rsatkich
-// qatorini shu itemdan olib tashlashi mumkin bo'lishi kerak.
-function ResultTableEditor({
+// Bitta buyurtmadagi barcha xizmatlarning natija qatorlari BITTA umumiy
+// <table> ichida ko'rsatiladi (avval har bir xizmat alohida ochilib-yopiladigan
+// akkordion va alohida jadval edi — laborant har safar oldingisini yopib,
+// keyingisini ochishi kerak edi). Har bir xizmat endi shu umumiy jadval
+// ichida o'zining sarlavha qatori (xizmat nomi + holati) va ustun nomlari
+// qatori bilan boshlanadi, shundan keyin natija qatorlari keladi — barchasi
+// bir vaqtning o'zida ko'rinadi, faqat sahifani pastga aylantirish kifoya.
+function ResultGroupRows({
+  item,
   rows,
   layout,
   onChange,
   allowRowManagement,
   onAddRow,
   onRemoveRow,
+  order,
+  onDeleteFile,
+  isDeletingFile,
+  isFirst,
 }: {
+  item: LabOrderItem;
   rows: LabResultRow[];
   layout: LabResultLayout;
   onChange: (index: number, patch: Partial<LabResultRow>) => void;
   allowRowManagement: boolean;
   onAddRow?: () => void;
   onRemoveRow?: (index: number) => void;
+  order: LabOrder;
+  onDeleteFile: (fileId: string) => void;
+  isDeletingFile: boolean;
+  isFirst: boolean;
 }) {
   const t = useTranslations();
 
@@ -113,86 +125,113 @@ function ResultTableEditor({
     }
   };
 
-  return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-[760px] border-collapse text-xs">
-          <thead>
-            <tr className="bg-surface-hover">
-              {layout.columns.map((column) => (
-                <th
-                  key={column.key}
-                  style={{ width: `${column.width ?? Math.floor(100 / layout.columns.length)}%` }}
-                  className={`border-r border-border px-2.5 py-2 text-center font-semibold last:border-r-0 ${
-                    column.key === "result" ? "border-b-2 border-b-primary text-primary" : "border-b border-b-border text-text"
-                  }`}
-                >
-                  {column.label}
-                </th>
-              ))}
-              <th className="border-b border-border w-9" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.id ?? `${row.code}-${index}`} className="hover:bg-surface-hover/40">
-                {layout.columns.map((column) => {
-                  const value = String((row as any)[column.key] ?? "");
-                  const isResult = column.key === "result";
-                  // Shablonli (statik) xizmatlarda odatda faqat Natija tahrirlanadi. Ammo
-                  // Enter/"+" orqali oxiriga qo'shilgan yangi qator hali hech qanday
-                  // ko'rsatkichga bog'lanmagan (code va indicator bo'sh) — shu holatda uni
-                  // to'liq tahrirlanadigan qilamiz, aks holda ko'rsatkich nomini kiritish
-                  // imkonsiz bo'lib, qator hech qachon to'ldirilmagan holda qolib ketardi.
-                  const isBlankManualRow = !row.code && !row.indicator;
-                  const editable = isResult || allowRowManagement || isBlankManualRow;
-                  return (
-                    <td key={column.key} className="border-b border-r border-border p-0 last:border-r-0">
-                      {editable ? (
-                        <input
-                          ref={isResult ? (el) => { resultRefs.current[index] = el; } : undefined}
-                          value={value}
-                          onChange={(e) => onChange(index, { [column.key]: e.target.value })}
-                          onKeyDown={isResult ? (e) => handleResultKeyDown(index, e) : undefined}
-                          className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs outline-none focus:bg-primary-50/40 ${
-                            isResult ? "font-semibold text-primary" : "text-text"
-                          }`}
-                          placeholder={isResult ? "Natijani kiriting" : ""}
-                        />
-                      ) : (
-                        <div className="min-h-10 px-2.5 py-2 text-xs text-text">{value || "—"}</div>
-                      )}
-                    </td>
-                  );
-                })}
-                <td className="border-b border-border p-0 text-center">
-                  <button
-                    type="button"
-                    onClick={() => onRemoveRow?.(index)}
-                    disabled={rows.length <= 1}
-                    className="w-8 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
-                    aria-label={t("lab.removeRow")}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+  const complete = rowsComplete(rows);
+  const colCount = layout.columns.length + 1;
 
-      {onAddRow && (
-        <button
-          type="button"
-          onClick={onAddRow}
-          className="flex items-center gap-1.5 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {t("lab.addRow")}
-        </button>
-      )}
-    </div>
+  return (
+    <>
+      <tr className={isFirst ? undefined : "border-t border-t-border"}>
+        <td colSpan={colCount} className="px-3.5 py-2.5 border-b border-border">
+          <div className="flex items-center gap-2 flex-wrap">
+            {complete ? (
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+            ) : (
+              <span className="w-4 h-4 rounded-full border-2 border-border shrink-0" />
+            )}
+            <p className="text-sm font-semibold text-text">{item.service.name}</p>
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
+              {ITEM_STATUS_LABELS[item.status]}
+            </span>
+            {!item.isPaid && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-hover text-text-muted border border-border">
+                {t("lab.freeBadge")}
+              </span>
+            )}
+            <span className="text-[11px] text-text-muted ml-auto">
+              ({rows.length} {t("lab.indicator").toLowerCase()})
+            </span>
+          </div>
+        </td>
+      </tr>
+
+      <tr>
+        {layout.columns.map((column) => (
+          <th
+            key={column.key}
+            style={{ width: `${column.width ?? Math.floor(100 / layout.columns.length)}%` }}
+            className={`border-r border-border px-2.5 py-2 text-center font-semibold last:border-r-0 ${
+              column.key === "result" ? "border-b-2 border-b-primary text-primary" : "border-b border-b-border text-text"
+            }`}
+          >
+            {column.label}
+          </th>
+        ))}
+        <th className="border-b border-border w-9" />
+      </tr>
+
+      {rows.map((row, index) => (
+        <tr key={row.id ?? `${row.code}-${index}`} className="hover:bg-surface-hover/40">
+          {layout.columns.map((column) => {
+            const value = String((row as any)[column.key] ?? "");
+            const isResult = column.key === "result";
+            // Shablonli (statik) xizmatlarda odatda faqat Natija tahrirlanadi. Ammo
+            // Enter/"+" orqali oxiriga qo'shilgan yangi qator hali hech qanday
+            // ko'rsatkichga bog'lanmagan (code va indicator bo'sh) — shu holatda uni
+            // to'liq tahrirlanadigan qilamiz, aks holda ko'rsatkich nomini kiritish
+            // imkonsiz bo'lib, qator hech qachon to'ldirilmagan holda qolib ketardi.
+            const isBlankManualRow = !row.code && !row.indicator;
+            const editable = isResult || allowRowManagement || isBlankManualRow;
+            return (
+              <td key={column.key} className="border-b border-r border-border p-0 last:border-r-0">
+                {editable ? (
+                  <input
+                    ref={isResult ? (el) => { resultRefs.current[index] = el; } : undefined}
+                    value={value}
+                    onChange={(e) => onChange(index, { [column.key]: e.target.value })}
+                    onKeyDown={isResult ? (e) => handleResultKeyDown(index, e) : undefined}
+                    className={`w-full min-h-10 bg-transparent px-2.5 py-2 text-xs outline-none focus:bg-primary-50/40 ${
+                      isResult ? "font-semibold text-primary" : "text-text"
+                    }`}
+                    placeholder={isResult ? "Natijani kiriting" : ""}
+                  />
+                ) : (
+                  <div className="min-h-10 px-2.5 py-2 text-xs text-text">{value || "—"}</div>
+                )}
+              </td>
+            );
+          })}
+          <td className="border-b border-border p-0 text-center">
+            <button
+              type="button"
+              onClick={() => onRemoveRow?.(index)}
+              disabled={rows.length <= 1}
+              className="w-8 h-10 inline-flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+              aria-label={t("lab.removeRow")}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </td>
+        </tr>
+      ))}
+
+      <tr>
+        <td colSpan={colCount} className="border-b border-border px-3.5 py-2.5">
+          {onAddRow && (
+            <button
+              type="button"
+              onClick={onAddRow}
+              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {t("lab.addRow")}
+            </button>
+          )}
+
+          <ItemFilesAndNote item={item} order={order} onDeleteFile={onDeleteFile} isDeletingFile={isDeletingFile} isEditing={false} />
+        </td>
+      </tr>
+    </>
   );
 }
 
@@ -219,7 +258,6 @@ export default function LabOrderResultsPage() {
 
   const items = useMemo(() => (order?.items ?? []).filter((i) => i.status !== "CANCELLED"), [order]);
   const [rowsByItem, setRowsByItem] = useState<Record<string, LabResultRow[]>>({});
-  const [openItemId, setOpenItemId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<"draft" | "submit" | null>(null);
 
   // Buyurtma birinchi marta yuklanganda va yangi xizmat qo'shilganda
@@ -239,11 +277,6 @@ export default function LabOrderResultsPage() {
         if (!next[item.id]) next[item.id] = initialRowsFor(item);
       }
       return next;
-    });
-    setOpenItemId((prevOpen) => {
-      if (prevOpen && items.some((i) => i.id === prevOpen)) return prevOpen;
-      const firstIncomplete = items.find((item) => !rowsComplete(rowsByItem[item.id] ?? initialRowsFor(item)));
-      return (firstIncomplete ?? items[0])?.id ?? null;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemIdsKey, order]);
@@ -310,7 +343,7 @@ export default function LabOrderResultsPage() {
     <div className="flex flex-col min-h-screen">
       <PageHeader
         title={`${t("lab.combinedResults")} — ${order.laboratory.name}`}
-        subtitle={`${order.patient.first_name} ${order.patient.last_name} · ${order.patient.phone_number}`}
+        subtitle={`${order.patient.first_name} ${order.patient.last_name}${order.patient.birth_date ? ` · ${t("lab.ageYears", { age: calculateAge(order.patient.birth_date) })}` : ""}${order.patient.phone_number ? ` · ${order.patient.phone_number}` : ""}`}
         breadcrumbs={[
           { label: t("lab.title"), href: "/lab" },
           { label: `${order.patient.first_name} ${order.patient.last_name}` },
@@ -339,63 +372,30 @@ export default function LabOrderResultsPage() {
         )}
 
         <div className="space-y-3">
-          {items.map((item) => {
-            const rows = rowsByItem[item.id] ?? [];
-            const complete = rowsComplete(rows);
-            const isOpenNow = openItemId === item.id;
-            const allowRowManagement = !item.service.defaultRows?.length;
-
-            return (
-              <div key={item.id} className="border border-border rounded-xl overflow-hidden bg-surface">
-                <button
-                  type="button"
-                  onClick={() => setOpenItemId(isOpenNow ? null : item.id)}
-                  className="w-full flex items-center gap-2 flex-wrap p-3.5 text-left hover:bg-surface-hover/50 transition-colors"
-                >
-                  {complete ? (
-                    <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                  ) : (
-                    <span className="w-4 h-4 rounded-full border-2 border-border shrink-0" />
-                  )}
-                  <p className="text-sm font-semibold text-text">{item.service.name}</p>
-                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${ITEM_STATUS_PILL[item.status]}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${ITEM_STATUS_DOT[item.status]}`} />
-                    {ITEM_STATUS_LABELS[item.status]}
-                  </span>
-                  {!item.isPaid && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-hover text-text-muted border border-border">
-                      {t("lab.freeBadge")}
-                    </span>
-                  )}
-                  <span className="text-[11px] text-text-muted">
-                    ({rows.length} {t("lab.indicator").toLowerCase()})
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-text-muted ml-auto transition-transform shrink-0 ${isOpenNow ? "rotate-180" : ""}`} />
-                </button>
-
-                {isOpenNow && (
-                  <div className="p-3.5 pt-2 border-t border-border">
-                    <ResultTableEditor
-                      rows={rows}
-                      layout={getLayout(item)}
-                      onChange={(index, patch) => updateRow(item.id, index, patch)}
-                      allowRowManagement={allowRowManagement}
-                      onAddRow={() => addRow(item.id)}
-                      onRemoveRow={(index) => removeRow(item.id, index)}
-                    />
-
-                    <ItemFilesAndNote
+          <div className="rounded-xl border border-border overflow-hidden bg-surface">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] border-collapse text-xs">
+                <tbody>
+                  {items.map((item, index) => (
+                    <ResultGroupRows
+                      key={item.id}
                       item={item}
+                      rows={rowsByItem[item.id] ?? []}
+                      layout={getLayout(item)}
+                      onChange={(rowIndex, patch) => updateRow(item.id, rowIndex, patch)}
+                      allowRowManagement={!item.service.defaultRows?.length}
+                      onAddRow={() => addRow(item.id)}
+                      onRemoveRow={(rowIndex) => removeRow(item.id, rowIndex)}
                       order={order}
                       onDeleteFile={(fileId) => itemActions.deleteFile.mutate({ itemId: item.id, fileId })}
                       isDeletingFile={itemActions.deleteFile.isPending}
-                      isEditing={false}
+                      isFirst={index === 0}
                     />
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <AddServicePanel order={order} laboratory={laboratory} />

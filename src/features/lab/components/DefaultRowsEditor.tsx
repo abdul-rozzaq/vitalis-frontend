@@ -1,4 +1,4 @@
-import { Check, ListChecks, LockKeyhole, Plus, Rows3, Trash2 } from "lucide-react";
+import { Check, ListChecks, Plus, Rows3, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BIOCHEMISTRY_RESULT_LAYOUT, CBC_RESULT_LAYOUT, LabDefaultRow, LabResultLayout } from "../types";
 
@@ -26,7 +26,7 @@ export function DefaultRowsEditor({ rows, onChange, layout, onLayoutChange }: De
     onChange(rows.map((r, i) => (i === index ? { ...r, ...patch } : r)));
   };
 
-  const addRow = () => onChange([...rows, { code: "", indicator: "", norm: "", unit: "" }]);
+  const addRow = () => onChange([...rows, { code: "", indicator: "", result: "", norm: "", unit: "" }]);
   const removeRow = (index: number) => onChange(rows.filter((_, i) => i !== index));
 
   return (
@@ -76,7 +76,6 @@ export function DefaultRowsEditor({ rows, onChange, layout, onLayoutChange }: De
                       className="border-b border-border px-3 py-2.5 text-left font-semibold text-text-muted text-[10px] uppercase tracking-wide"
                     >
                       <span className="flex items-center gap-1.5 normal-case text-xs">
-                        {column.key === "result" && <LockKeyhole className="w-3 h-3 text-text-muted/70" />}
                         {column.label || column.key}
                       </span>
                     </th>
@@ -95,18 +94,12 @@ export function DefaultRowsEditor({ rows, onChange, layout, onLayoutChange }: De
                       const isResult = column.key === "result";
                       return (
                         <td key={column.key} className="border-b border-border p-1">
-                          {isResult ? (
-                            <div className="w-full rounded-md border border-dashed border-border bg-surface-secondary/60 px-2.5 py-1.5 text-[11px] text-text-muted italic">
-                              {t("laboratories.autoFilledByLaborant")}
-                            </div>
-                          ) : (
-                            <input
-                              value={value}
-                              onChange={(e) => updateRow(index, { [column.key]: e.target.value })}
-                              placeholder={column.label || column.key}
-                              className="w-full bg-transparent border border-transparent rounded-md px-2.5 py-1.5 text-xs text-text hover:border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all"
-                            />
-                          )}
+                          <input
+                            value={value}
+                            onChange={(e) => updateRow(index, { [column.key]: e.target.value })}
+                            placeholder={isResult ? t("laboratories.defaultResultPlaceholder") : column.label || column.key}
+                            className="w-full bg-transparent border border-transparent rounded-md px-2.5 py-1.5 text-xs text-text hover:border-border focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-surface transition-all"
+                          />
                         </td>
                       );
                     })}

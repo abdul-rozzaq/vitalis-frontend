@@ -478,17 +478,16 @@ export default function PatientDetailPage() {
       </Sheet>
 
       {/* Add Case Step */}
-      <Sheet isOpen={addStepCaseId !== null} onClose={() => setAddStepCaseId(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
-        <AddCaseStepForm
-          caseId={addStepCaseId ?? ""}
-          availableStepTypes={["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
-          onClose={() => setAddStepCaseId(null)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
-            setAddStepCaseId(null);
-          }}
-        />
-      </Sheet>
+      <AddCaseStepForm
+        isOpen={addStepCaseId !== null}
+        caseId={addStepCaseId ?? ""}
+        availableStepTypes={["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
+        onClose={() => setAddStepCaseId(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
+          setAddStepCaseId(null);
+        }}
+      />
     </div>
   );
 }

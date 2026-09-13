@@ -20,6 +20,7 @@ export default function WardCheckInPage() {
 
   const [patientId, setPatientId] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [checkIn, setCheckIn] = useState("");
@@ -52,6 +53,11 @@ export default function WardCheckInPage() {
     queryFn: () => api.get("/rooms").then((r) => r.data),
   });
 
+  const { data: departments = [] } = useQuery<any[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
+  });
+
   const rooms = allRooms.filter((r: any) => r.roomType === "WARD");
 
   const selectedRoom = rooms.find((r: any) => r.id === roomId) as any | undefined;
@@ -82,11 +88,17 @@ export default function WardCheckInPage() {
     disabled: r.isFull,
   }));
 
+  const departmentOptions = departments.map((d: any) => ({
+    label: d.name,
+    value: d.id,
+  }));
+
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
       api.post("/wards/check-in", {
         patientId,
         roomId,
+        departmentId: departmentId || undefined,
         doctorId: doctorId || undefined,
         cardNumber: cardNumber ? Number(cardNumber) : undefined,
         checkIn: checkIn || undefined,
@@ -112,9 +124,19 @@ export default function WardCheckInPage() {
     setRoomId(val);
     setCompanionsCount(0);
     const room = rooms.find((r: any) => r.id === val);
+    // Bemor rasman biriktirilgan bo'lim — standart holatda xonaning bo'limi,
+    // ammo xona to'lib qolgan bo'limga yotqizish uchun keyin qo'lda o'zgartirish mumkin
+    setDepartmentId(room?.department?.id ?? "");
     setPatientPricePerDay(room?.department?.patientDailyPrice?.toString() ?? "");
     setCompanionPricePerDay(room?.department?.companionDailyPrice?.toString() ?? "");
     setFreeDays("");
+  };
+
+  const handleDepartmentChange = (val: string) => {
+    setDepartmentId(val);
+    const dept = departments.find((d: any) => d.id === val);
+    setPatientPricePerDay(dept?.patientDailyPrice?.toString() ?? "");
+    setCompanionPricePerDay(dept?.companionDailyPrice?.toString() ?? "");
   };
 
   const parsedCheckIn = checkIn ? new Date(checkIn) : new Date();
@@ -187,6 +209,22 @@ export default function WardCheckInPage() {
                   {rooms.length === 0 && (
                     <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>
                   )}
+                </div>
+
+                {/* Bo'lim */}
+                <div>
+                  <label className="text-sm font-medium text-text mb-1 block">
+                    {t("wards.department")} *
+                  </label>
+                  <Combobox
+                    options={departmentOptions}
+                    value={departmentId}
+                    onChange={(val) => handleDepartmentChange(val as string)}
+                    placeholder={t("forms.select")}
+                    searchPlaceholder={t("common.search")}
+                    disabled={isPending || !roomId}
+                  />
+                  <p className="text-xs text-secondary mt-1">{t("wards.departmentHint")}</p>
                 </div>
 
                 {/* Shifokor */}

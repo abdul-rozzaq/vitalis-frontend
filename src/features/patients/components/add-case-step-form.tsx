@@ -1,6 +1,11 @@
 "use client";
 
 import { Combobox } from "@/components/ui/combobox";
+import { Dialog } from "@/components/ui/dialog";
+import { Sheet } from "@/components/ui/sheet";
+import { LabStepFields } from "@/features/lab/components/LabStepFields";
+import { useLabStepState } from "@/features/lab/hooks/useLabStepState";
+import type { Laboratory } from "@/features/lab/types";
 import type { AssignmentSource, CaseStepType } from "@/features/patients/types";
 import { toAssignmentOptions } from "@/features/patients/utils";
 import { api } from "@/shared/lib/api";
@@ -13,18 +18,13 @@ type AvailableStepType = Exclude<CaseStepType, "CHECKIN">;
 const ALL_STEP_TYPES: AvailableStepType[] = ["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"];
 
 interface AddCaseStepFormProps {
+  isOpen: boolean;
   caseId: string;
   availableStepTypes?: AvailableStepType[];
   defaultStepType?: AvailableStepType;
   appointmentId?: string;
   onClose: () => void;
   onSuccess?: () => void;
-}
-
-interface Laboratory {
-  id: string;
-  name: string;
-  services: { id: string; name: string; price?: number | null }[];
 }
 
 interface Diagnostics {
@@ -34,6 +34,7 @@ interface Diagnostics {
 }
 
 export function AddCaseStepForm({
+  isOpen,
   caseId,
   availableStepTypes = ALL_STEP_TYPES,
   defaultStepType,
@@ -48,16 +49,6 @@ export function AddCaseStepForm({
   const [stepDateTime, setStepDateTime] = useState(() => new Date().toISOString().slice(0, 16));
   const [stepAmount, setStepAmount] = useState("");
   const [stepNote, setStepNote] = useState("");
-
-  // LAB state — bir nechta laboratoriyaga bir vaqtda yuborish mumkin
-  const [labDepartmentIds, setLabDepartmentIds] = useState<string[]>([]);
-  const [serviceIdsByLab, setServiceIdsByLab] = useState<Record<string, string[]>>({});
-  // Invois qachon yaratilsin: "now" — hozir (narxni shu yerda belgilash mumkin),
-  // "defer" — labarant natijani ko'rib chiqqach o'zi narxni belgilab yaratadi.
-  const [labInvoiceTiming, setLabInvoiceTiming] = useState<"now" | "defer">("now");
-  // null = foydalanuvchi hali summani qo'lda tahrirlamagan — bu holatda
-  // tanlangan xizmatlar narxlari yig'indisi avtomatik ko'rsatiladi.
-  const [labAmountOverride, setLabAmountOverride] = useState<string | null>(null);
 
   // DIAGNOSTIC state
   const [diagnosticsId, setDiagnosticsId] = useState("");
@@ -89,13 +80,14 @@ export function AddCaseStepForm({
     }
   }, [stepAssignmentId, stepType, assignmentsData]);
 
-  // LAB — laboratorylar
+  // LAB — laboratorylar (bir nechtasiga bir vaqtda yuborish mumkin)
   const { data: labDepts = [] } = useQuery<Laboratory[]>({
     queryKey: ["laboratories"],
     queryFn: () => api.get("/laboratories").then((res) => res.data),
     enabled: stepType === "LAB",
     refetchOnWindowFocus: false,
   });
+  const labStep = useLabStepState(labDepts);
 
   // DIAGNOSTIC — diagnostika markazlari
   const { data: diagnosticCenters = [] } = useQuery<Diagnostics[]>({
@@ -120,19 +112,6 @@ export function AddCaseStepForm({
     refetchOnWindowFocus: false,
   });
 
-  // LAB — tanlangan barcha xizmatlar narxlari yig'indisi (barcha laboratoriyalar bo'yicha)
-  const labNominalTotal = useMemo(() => {
-    return labDepartmentIds.reduce((sum, labId) => {
-      const dept = labDepts.find((d) => d.id === labId);
-      const selectedIds = serviceIdsByLab[labId] ?? [];
-      const deptSum = (dept?.services ?? [])
-        .filter((s) => selectedIds.includes(s.id))
-        .reduce((s, svc) => s + (svc.price ?? 0), 0);
-      return sum + deptSum;
-    }, 0);
-  }, [labDepartmentIds, serviceIdsByLab, labDepts]);
-  const labAmount = labAmountOverride ?? (labNominalTotal ? String(labNominalTotal) : "");
-
   // Auto-fill price for PROCEDURE
   useEffect(() => {
     if (stepType === "PROCEDURE" && procedureId) {
@@ -147,10 +126,7 @@ export function AddCaseStepForm({
     setStepDateTime(new Date().toISOString().slice(0, 16));
     setStepAmount("");
     setStepNote("");
-    setLabDepartmentIds([]);
-    setServiceIdsByLab({});
-    setLabInvoiceTiming("now");
-    setLabAmountOverride(null);
+    labStep.reset();
     setDiagnosticsId("");
     setSelectedDiagnosticServiceIds([]);
     setProcedureDepartmentId("");
@@ -177,12 +153,10 @@ export function AddCaseStepForm({
     if (stepType === "LAB") {
       // Bir nechta laboratoriyadan tanlangan xizmatlarni birlashtiramiz.
       // Backend ularni laboratoriyasi bo'yicha guruhlab, har biriga alohida buyurtma yaratadi.
-      const allServiceIds = labDepartmentIds.flatMap((labId) => serviceIdsByLab[labId] ?? []);
-      payload.serviceIds = allServiceIds;
-      payload.deferLabInvoice = labInvoiceTiming === "defer";
-      if (labInvoiceTiming === "now" && labAmount.trim() !== "") {
-        payload.labTotalPrice = Number(labAmount);
-      }
+      const { serviceIds, deferLabInvoice, labTotalPrice } = labStep.buildPayload();
+      payload.serviceIds = serviceIds;
+      payload.deferLabInvoice = deferLabInvoice;
+      if (labTotalPrice !== undefined) payload.labTotalPrice = labTotalPrice;
     } else if (stepType === "DIAGNOSTIC") {
       payload.diagnosticsId = diagnosticsId;
       payload.diagnosticServiceIds = selectedDiagnosticServiceIds;
@@ -202,8 +176,7 @@ export function AddCaseStepForm({
   const isDisabled =
     !stepType ||
     isSubmitting ||
-    (stepType === "LAB" &&
-      (labDepartmentIds.length === 0 || labDepartmentIds.some((labId) => (serviceIdsByLab[labId] ?? []).length === 0))) ||
+    (stepType === "LAB" && !labStep.isValid) ||
     (stepType === "DIAGNOSTIC" && (!diagnosticsId || selectedDiagnosticServiceIds.length === 0)) ||
     (stepType === "PROCEDURE" && (!procedureDepartmentId || !procedureId));
 
@@ -211,8 +184,9 @@ export function AddCaseStepForm({
     "w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm";
 
   const selectedDiagnosticsCenter = diagnosticCenters.find((d) => d.id === diagnosticsId);
+  const isLab = stepType === "LAB";
 
-  return (
+  const formBody = (
     <div className="space-y-4">
       {/* Step type selector */}
       <div className="space-y-1.5">
@@ -222,10 +196,7 @@ export function AddCaseStepForm({
           onChange={(e) => {
             setStepType(e.target.value as AvailableStepType);
             setStepAssignmentId("");
-            setLabDepartmentIds([]);
-            setServiceIdsByLab({});
-            setLabInvoiceTiming("now");
-            setLabAmountOverride(null);
+            labStep.reset();
             setDiagnosticsId("");
             setSelectedDiagnosticServiceIds([]);
           }}
@@ -278,116 +249,7 @@ export function AddCaseStepForm({
       )}
 
       {/* LAB — bir nechta laboratoriya bo'limiga bir vaqtda yuborish mumkin */}
-      {stepType === "LAB" && (
-        <>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-text">{t("lab.labDepartments")}</label>
-            <Combobox
-              multiple
-              options={labDepts.map((d) => ({ value: d.id, label: d.name }))}
-              value={labDepartmentIds}
-              onChange={(next) => {
-                setLabDepartmentIds(next);
-                // olib tashlangan laboratoriyalarning xizmat tanlovlarini ham tozalaymiz
-                setServiceIdsByLab((prev) => {
-                  const updated: Record<string, string[]> = {};
-                  for (const labId of next) updated[labId] = prev[labId] ?? [];
-                  return updated;
-                });
-              }}
-              placeholder={t("lab.labDepartments")}
-            />
-          </div>
-
-          {labDepartmentIds.map((labId) => {
-            const dept = labDepts.find((d) => d.id === labId);
-            if (!dept) return null;
-            const selectedForLab = serviceIdsByLab[labId] ?? [];
-            return (
-              <div key={labId} className="space-y-1.5 border border-border rounded-md p-3 bg-surface/50">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-text">{dept.name}</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLabDepartmentIds((prev) => prev.filter((id) => id !== labId));
-                      setServiceIdsByLab((prev) => {
-                        const rest = { ...prev };
-                        delete rest[labId];
-                        return rest;
-                      });
-                    }}
-                    className="text-xs text-danger-500 hover:underline cursor-pointer"
-                  >
-                    {t("lab.removeLab")}
-                  </button>
-                </div>
-                <Combobox
-                  multiple
-                  options={dept.services.map((svc) => ({
-                    value: svc.id,
-                    label: svc.name,
-                    sublabel: svc.price != null ? `${svc.price.toLocaleString()} UZS` : undefined,
-                  }))}
-                  value={selectedForLab}
-                  onChange={(ids) => setServiceIdsByLab((prev) => ({ ...prev, [labId]: ids }))}
-                  placeholder={t("lab.services")}
-                />
-                {selectedForLab.length > 0 && (
-                  <p className="text-xs text-primary">
-                    {selectedForLab.length} {t("lab.servicesSelected")}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-
-          {labDepartmentIds.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-text">{t("cases.labInvoiceTimingLabel")}</p>
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLabInvoiceTiming("now")}
-                  className={`text-left rounded-lg border px-3 py-2 transition-colors ${
-                    labInvoiceTiming === "now" ? "border-primary bg-primary-50/40" : "border-border hover:bg-surface-hover"
-                  }`}
-                >
-                  <p className="text-xs font-semibold text-text">{t("cases.labInvoiceNowOption")}</p>
-                  <p className="text-[11px] text-text-muted mt-0.5">{t("cases.labInvoiceNowHint")}</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLabInvoiceTiming("defer")}
-                  className={`text-left rounded-lg border px-3 py-2 transition-colors ${
-                    labInvoiceTiming === "defer" ? "border-primary bg-primary-50/40" : "border-border hover:bg-surface-hover"
-                  }`}
-                >
-                  <p className="text-xs font-semibold text-text">{t("cases.labInvoiceDeferOption")}</p>
-                  <p className="text-[11px] text-text-muted mt-0.5">{t("cases.labInvoiceDeferHint")}</p>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {labInvoiceTiming === "now" && labDepartmentIds.length > 0 && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-text">{t("lab.totalAmount")}</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={0}
-                  value={labAmount}
-                  onChange={(e) => setLabAmountOverride(e.target.value)}
-                  className={`${inputCls} pr-14`}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">so&apos;m</span>
-              </div>
-              <p className="text-[11px] text-text-muted">{t("lab.totalAmountHint", { nominal: labNominalTotal.toLocaleString() })}</p>
-            </div>
-          )}
-        </>
-      )}
+      {stepType === "LAB" && <LabStepFields labDepts={labDepts} state={labStep} />}
 
       {/* DIAGNOSTIC */}
       {stepType === "DIAGNOSTIC" && (
@@ -558,5 +420,28 @@ export function AddCaseStepForm({
         </button>
       </div>
     </div>
+  );
+
+  // LAB — bir nechta bo'lim/xizmat tanlanadigan, keng ma'lumot talab qiladigan
+  // qadam bo'lgani uchun torroq slide-over o'rniga markazdagi kattaroq
+  // modalda ochiladi — shu tanlovlar bir qarashda ko'rinishi uchun.
+  if (isLab) {
+    return (
+      <Dialog
+        isOpen={isOpen}
+        onClose={onClose}
+        title={t("cases.addStep")}
+        description={t("cases.addStepDesc")}
+        className="max-w-6xl w-[95vw] max-h-[92vh]"
+      >
+        {formBody}
+      </Dialog>
+    );
+  }
+
+  return (
+    <Sheet isOpen={isOpen} onClose={onClose} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
+      {formBody}
+    </Sheet>
   );
 }

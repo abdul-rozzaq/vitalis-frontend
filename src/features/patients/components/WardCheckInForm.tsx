@@ -21,6 +21,7 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
   const t = useTranslations();
   const queryClient = useQueryClient();
   const [roomId, setRoomId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
   const [checkIn, setCheckIn] = useState("");
@@ -43,6 +44,12 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
   const { data: doctors = [] } = useQuery<any[]>({
     queryKey: ["ward-doctors"],
     queryFn: () => api.get("/wards/doctors").then((r) => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: departments = [] } = useQuery<any[]>({
+    queryKey: ["departments"],
+    queryFn: () => api.get("/departments").then((r) => r.data),
     refetchOnWindowFocus: false,
   });
 
@@ -70,13 +77,28 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
     value: d.id,
   }));
 
+  const departmentOptions = departments.map((d: any) => ({
+    label: d.name,
+    value: d.id,
+  }));
+
   const handleRoomChange = (value: string) => {
     setRoomId(value);
     setCompanionsCount(0);
     const room = rooms.find((r: any) => r.id === value);
+    // Bemor rasman biriktirilgan bo'lim — standart holatda xonaning bo'limi,
+    // ammo xona to'lib qolgan bo'limga yotqizish uchun keyin qo'lda o'zgartirish mumkin
+    setDepartmentId(room?.department?.id ?? "");
     setPatientPricePerDay(room?.department?.patientDailyPrice?.toString() ?? "");
     setCompanionPricePerDay(room?.department?.companionDailyPrice?.toString() ?? "");
     setFreeDays("");
+  };
+
+  const handleDepartmentChange = (value: string) => {
+    setDepartmentId(value);
+    const dept = departments.find((d: any) => d.id === value);
+    setPatientPricePerDay(dept?.patientDailyPrice?.toString() ?? "");
+    setCompanionPricePerDay(dept?.companionDailyPrice?.toString() ?? "");
   };
 
   const parsedCheckIn = checkIn ? new Date(checkIn) : new Date();
@@ -100,6 +122,7 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
       api.post("/wards/check-in", {
         patientId,
         roomId,
+        departmentId: departmentId || undefined,
         doctorId: doctorId || undefined,
         cardNumber: cardNumber ? Number(cardNumber) : undefined,
         checkIn: checkIn || undefined,
@@ -130,6 +153,12 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
             <label className="text-sm font-medium text-text mb-1 block">{t("wards.colRoom")} *</label>
             <Combobox options={roomOptions} value={roomId} onChange={(v) => handleRoomChange(v as string)} placeholder={t("forms.select")} searchPlaceholder={t("common.search")} disabled={isPending || rooms.length === 0} />
             {rooms.length === 0 && <p className="text-xs text-secondary mt-1">{t("wards.noWards")}</p>}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-text mb-1 block">{t("wards.department")} *</label>
+            <Combobox options={departmentOptions} value={departmentId} onChange={(v) => handleDepartmentChange(v as string)} placeholder={t("forms.select")} searchPlaceholder={t("common.search")} disabled={isPending || !roomId} />
+            <p className="text-xs text-secondary mt-1">{t("wards.departmentHint")}</p>
           </div>
 
           <div>

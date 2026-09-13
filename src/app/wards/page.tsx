@@ -26,6 +26,7 @@ interface Ward {
   cardNumber: number | null;
   doctor: { id: string; first_name: string; last_name: string } | null;
   patient: { id: string; first_name: string; last_name: string };
+  department?: { id: string; name: string } | null;
   room: {
     id: string;
     name: string;
@@ -96,6 +97,17 @@ export default function WardsPage() {
 
   const wardRooms = roomsAll.filter((r) => r.roomType === "WARD");
 
+  // Filtr dropdown'i uchun bo'limlar ro'yxati — xona bo'limlari BILAN BIRGA
+  // bemorga rasman biriktirilgan (ward.department) bo'limlarni ham o'z ichiga
+  // oladi. Aks holda, xonasi boshqa bo'limda bo'lgan (mismatch) bemorning
+  // haqiqiy bo'limi dropdown'da umuman ko'rinmay, uni filtrlab bo'lmas edi.
+  const departmentOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    for (const r of wardRooms) if (r.department) map.set(r.department.id, r.department);
+    for (const w of wardsRaw) if (w.department) map.set(w.department.id, w.department);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [wardRooms, wardsRaw]);
+
   const { data: wardDetail, isLoading: isDetailLoading } = useQuery<Ward>({
     queryKey: ["ward", detailId],
     queryFn: () => api.get(`/wards/${detailId}`).then((r) => r.data),
@@ -130,7 +142,7 @@ export default function WardsPage() {
     return wardsRaw.filter((w) => {
       if (filters.status && w.status !== filters.status) return false;
       if (filters.roomId && w.room.id !== filters.roomId) return false;
-      if (filters.departmentId && w.room.department?.id !== filters.departmentId) return false;
+      if (filters.departmentId && (w.department?.id ?? w.room.department?.id) !== filters.departmentId) return false;
       if (filters.dateFrom && new Date(w.checkIn) < new Date(filters.dateFrom)) return false;
       if (filters.dateTo) {
         const end = new Date(filters.dateTo);
@@ -140,7 +152,7 @@ export default function WardsPage() {
       if (filters.search) {
         const q = filters.search.toLowerCase();
         const name = `${w.patient.first_name} ${w.patient.last_name}`.toLowerCase();
-        const deptName = w.room.department?.name?.toLowerCase() ?? "";
+        const deptName = (w.department?.name ?? w.room.department?.name)?.toLowerCase() ?? "";
         if (!name.includes(q) && !w.room.name.toLowerCase().includes(q) && !deptName.includes(q)) return false;
       }
       return true;
@@ -188,6 +200,29 @@ export default function WardsPage() {
             <span className="text-sm text-secondary">{row.original.room.name}</span>
           </div>
         ),
+      },
+      {
+        id: "department",
+        header: t("wards.department"),
+        cell: ({ row }) => {
+          const w = row.original;
+          const dept = w.department ?? w.room.department;
+          const mismatch = w.department && w.room.department && w.department.id !== w.room.department.id;
+          if (!dept) return <span className="text-secondary text-sm">—</span>;
+          return (
+            <div className="leading-tight" title={mismatch ? `${t("wards.colRoom")}: ${w.room.department?.name}` : undefined}>
+              <span className={`text-sm ${mismatch ? "text-amber-600 font-medium" : "text-secondary"}`}>
+                {dept.name}
+                {mismatch && " ⚠️"}
+              </span>
+              {mismatch && (
+                <div className="text-xs text-secondary">
+                  {t("wards.colRoom")}: {w.room.department?.name}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "checkIn",
@@ -356,7 +391,7 @@ export default function WardsPage() {
                 <option value="">
                   {t("forms.department")}: {t("common.all") ?? "All"}
                 </option>
-                {Array.from(new Map(wardRooms.filter((r) => r.department).map((r) => [r.department!.id, r.department!])).values()).map((d) => (
+                {departmentOptions.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
@@ -452,6 +487,14 @@ export default function WardsPage() {
                 <span className="text-text font-medium">{wardDetail.room.name}</span>
               </div>
               {wardDetail.room.department && <p className="text-xs text-secondary mt-0.5">{wardDetail.room.department.name}</p>}
+            </div>
+
+            <div className="bg-surface-hover rounded-xl p-4 space-y-1">
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t("wards.department")}</p>
+              <p className="text-text font-medium">{(wardDetail.department ?? wardDetail.room.department)?.name ?? "—"}</p>
+              {wardDetail.department && wardDetail.room.department && wardDetail.department.id !== wardDetail.room.department.id && (
+                <p className="text-xs text-amber-600">{t("wards.departmentHint")}</p>
+              )}
             </div>
 
             {wardDetail.companionsCount > 0 && (

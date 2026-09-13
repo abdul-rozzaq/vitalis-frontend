@@ -419,17 +419,16 @@ export default function AppointmentDetailPage() {
         />
       </Sheet>
 
-      <Sheet isOpen={sheetMode === "addStep"} onClose={() => setSheetMode(null)} title={t("cases.addStep")} description={t("cases.addStepDesc")}>
-        <AddCaseStepForm
-          key={stepType}
-          caseId={appointment.caseStep?.caseId ?? ""}
-          availableStepTypes={["LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
-          defaultStepType={(stepType as "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE") || undefined}
-          onClose={() => setSheetMode(null)}
-          onSuccess={() => invalidateAppointmentData(appointment?.patientId)}
-          appointmentId={appointment.id}
-        />
-      </Sheet>
+      <AddCaseStepForm
+        key={stepType}
+        isOpen={sheetMode === "addStep"}
+        caseId={appointment.caseStep?.caseId ?? ""}
+        availableStepTypes={["LAB", "PROCEDURE", "REFERRAL", "DISCHARGE"]}
+        defaultStepType={(stepType as "LAB" | "PROCEDURE" | "REFERRAL" | "DISCHARGE") || undefined}
+        onClose={() => setSheetMode(null)}
+        onSuccess={() => invalidateAppointmentData(appointment?.patientId)}
+        appointmentId={appointment.id}
+      />
 
       <FileUploadModal isOpen={isFileModalOpen} onClose={() => setIsFileModalOpen(false)} onConfirm={handleFileUploadConfirm} isPending={isUploadingFile} />
     </div>
