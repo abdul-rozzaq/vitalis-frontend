@@ -8,24 +8,6 @@ export interface JournalRecord {
   invoice: Invoice;
 }
 
-interface PaginatedInvoices {
-  data: Invoice[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-/**
- * Bemorning "jurnal"lari (MASTER billing rejimidagi case'lari + ularning
- * Master Invoice'i) — hozirgi faol jurnal, tarixiy (yopilgan) jurnallar, va
- * agar faol jurnal bo'lmasa jurnal boshlash mumkin bo'lgan (ACTIVE,
- * PER_SERVICE) case nomzodi.
- *
- * Ikkita mavjud endpoint ustida quriladi (patients/:id/cases va
- * patients/:id/invoices?sourceType=CASE) — backendda alohida "journal"
- * endpointi yo'q, buning hojati yo'q: Master Invoice o'zi allaqachon
- * to'liq ma'lumotni saqlaydi.
- */
 export function useJournalData(patientId: string) {
   const casesQuery = useQuery<PatientCase[]>({
     queryKey: ["patient-cases", patientId],
@@ -33,17 +15,17 @@ export function useJournalData(patientId: string) {
     refetchOnWindowFocus: false,
   });
 
-  const invoicesQuery = useQuery<PaginatedInvoices>({
+  const invoicesQuery = useQuery<Invoice[]>({
     queryKey: ["patient-case-invoices", patientId],
     queryFn: () =>
       api
-        .get(`/patients/${patientId}/invoices`, { params: { sourceType: "CASE", limit: 50 } })
+        .get(`/patients/${patientId}/cases/journals`)
         .then((res) => res.data),
     refetchOnWindowFocus: false,
   });
 
   const cases = casesQuery.data ?? [];
-  const invoices = invoicesQuery.data?.data ?? [];
+  const invoices = invoicesQuery.data ?? [];
 
   const journals: JournalRecord[] = cases
     .filter((c) => c.billingMode === "MASTER")
@@ -65,6 +47,8 @@ export function useJournalData(patientId: string) {
 
   return {
     isLoading: casesQuery.isLoading || invoicesQuery.isLoading,
+    isError: casesQuery.isError || invoicesQuery.isError,
+    refetch: () => { casesQuery.refetch(); invoicesQuery.refetch(); },
     cases,
     journals,
     active,

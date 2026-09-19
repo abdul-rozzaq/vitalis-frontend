@@ -19,6 +19,8 @@ export interface InvoiceItem {
   totalPrice: string;
   sourceType: string;
   createdAt: string;
+  billedAmount?: string;
+  remainingAmount?: string;
 }
 export interface InvoicePayment {
   id: string;
@@ -35,6 +37,12 @@ export interface InvoicePayment {
 }
 
 export interface Invoice {
+  isJournal?: boolean;
+  journalId?: string | null;
+  billedAmount?: string;
+  unbilledAmount?: string;
+  unpaidAmount?: string;
+  issuedInvoices?: Invoice[];
   id: string;
   patientId: string;
   status: InvoiceStatus;

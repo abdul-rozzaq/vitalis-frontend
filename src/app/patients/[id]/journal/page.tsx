@@ -2,7 +2,8 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
-import { InvoicePayModal } from "@/features/balance/components/InvoicePayModal";
+import { CreateJournalInvoiceModal } from "@/features/journal/components/CreateJournalInvoiceModal";
+import { JournalRecord } from "@/features/journal/hooks/useJournalData";
 import { JournalCaseSection } from "@/features/journal/components/JournalCaseSection";
 import { useJournalData } from "@/features/journal/hooks/useJournalData";
 import { AddCaseStepForm } from "@/features/patients/components/add-case-step-form";
@@ -23,7 +24,7 @@ export default function PatientJournalPage() {
   const queryClient = useQueryClient();
 
   const [addStepCaseId, setAddStepCaseId] = useState<string | null>(null);
-  const [payTarget, setPayTarget] = useState<{ invoiceId: string; total: number; paid: number } | null>(null);
+  const [invoiceTarget, setInvoiceTarget] = useState<JournalRecord | null>(null);
 
   const isNurse = typeof user?.role === "string" && user.role.toUpperCase() === "HAMSHIRA";
   const addStepAvailableTypes = isNurse
@@ -36,11 +37,14 @@ export default function PatientJournalPage() {
     refetchOnWindowFocus: false,
   });
 
-  const { isLoading, active, history, activeCaseCandidate } = useJournalData(id);
+  const { isLoading, isError, refetch, active, journals, history, activeCaseCandidate } = useJournalData(id);
 
   const invalidateJournal = () => {
     queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
     queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", id] });
+    queryClient.invalidateQueries({ queryKey: ["patient-invoices", id] });
+    queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    queryClient.invalidateQueries({ queryKey: ["journals"] });
   };
 
   const { mutate: startJournal, isPending: isStarting } = useMutation({
@@ -50,14 +54,6 @@ export default function PatientJournalPage() {
 
   const { mutateAsync: closeCase } = useMutation({
     mutationFn: (caseId: string) => api.patch(`/cases/${caseId}/close`, { status: "COMPLETED" }),
-    onSuccess: invalidateJournal,
-  });
-
-  // Jurnal itemlari to'planib boradi, lekin invois DRAFT holida qoladi —
-  // xodim "kirib shuncha to'lanadi" deb ochiq (ISSUED) holatga qo'lda
-  // o'tkazgandan keyingina u haqiqiy, to'lash mumkin bo'lgan hisobga aylanadi.
-  const { mutate: issueInvoice, isPending: isIssuingInvoice } = useMutation({
-    mutationFn: (invoiceId: string) => api.patch(`/invoices/${invoiceId}`, { status: "ISSUED" }),
     onSuccess: invalidateJournal,
   });
 
@@ -76,8 +72,13 @@ export default function PatientJournalPage() {
       />
 
       <PageContent>
-        <div className="max-w-3xl mx-auto w-full space-y-4">
-          {isLoading ? (
+        <div className="max-w-6xl mx-auto w-full space-y-6">
+          {isError ? (
+            <div className="rounded-xl border border-danger/30 bg-surface p-8 text-center space-y-3">
+              <p className="text-danger">{t("journal.loadError")}</p>
+              <button onClick={refetch} className="text-accent hover:underline">{t("journal.retry")}</button>
+            </div>
+          ) : isLoading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
                 <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse h-20" />
@@ -114,27 +115,18 @@ export default function PatientJournalPage() {
                 </div>
               )}
 
-              {active && (
+              {journals.filter(record => record.case.status === "ACTIVE").map(record => (
                 <JournalCaseSection
-                  record={active}
+                  key={record.case.id}
+                  record={record}
                   defaultOpen
-                  onAddEntry={() => setAddStepCaseId(active.case.id)}
-                  onPay={() =>
-                    setPayTarget({
-                      invoiceId: active.invoice.id,
-                      total: Number(active.invoice.totalAmount),
-                      paid: Number(active.invoice.paidCash) + Number(active.invoice.paidBonus),
-                    })
-                  }
+                  onAddEntry={() => setAddStepCaseId(record.case.id)}
                   onDischarge={() => {
-                    if (confirm(t("journal.dischargeConfirm"))) {
-                      closeCase(active.case.id);
-                    }
+                    if (confirm(t("journal.dischargeConfirm"))) closeCase(record.case.id);
                   }}
-                  onIssueInvoice={() => issueInvoice(active.invoice.id)}
-                  isIssuingInvoice={isIssuingInvoice}
+                  onIssueInvoice={() => setInvoiceTarget(record)}
                 />
-              )}
+              ))}
 
               {history.length > 0 && (
                 <div className="pt-2">
@@ -146,13 +138,7 @@ export default function PatientJournalPage() {
                       <JournalCaseSection
                         key={record.case.id}
                         record={record}
-                        onPay={() =>
-                          setPayTarget({
-                            invoiceId: record.invoice.id,
-                            total: Number(record.invoice.totalAmount),
-                            paid: Number(record.invoice.paidCash) + Number(record.invoice.paidBonus),
-                          })
-                        }
+                        onIssueInvoice={() => setInvoiceTarget(record)}
                       />
                     ))}
                   </div>
@@ -176,18 +162,11 @@ export default function PatientJournalPage() {
         />
       )}
 
-      {payTarget && (
-        <InvoicePayModal
-          invoiceId={payTarget.invoiceId}
-          patientId={id}
-          invoiceTotalAmount={payTarget.total}
-          paidAmount={payTarget.paid}
-          remainingAmount={payTarget.total - payTarget.paid}
-          onSuccess={() => {
-            invalidateJournal();
-            queryClient.invalidateQueries({ queryKey: ["patient-balance", id] });
-          }}
-          onClose={() => setPayTarget(null)}
+      {invoiceTarget && (
+        <CreateJournalInvoiceModal
+          record={invoiceTarget}
+          onSuccess={invalidateJournal}
+          onClose={() => setInvoiceTarget(null)}
         />
       )}
     </div>

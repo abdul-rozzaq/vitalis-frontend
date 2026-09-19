@@ -19,7 +19,7 @@ interface JournalRow {
   openedAt: string;
   closedAt: string | null;
   patient: { id: string; first_name: string; last_name: string; phone_number: string | null };
-  invoice: { id: string; status: string; totalAmount: string; paidCash: string; paidBonus: string } | null;
+  invoice: { id: string; status: string; totalAmount: string; paidCash: string; paidBonus: string; billedAmount: string; unbilledAmount: string } | null;
 }
 
 type StatusFilter = "ACTIVE" | "COMPLETED" | "ALL";
@@ -75,6 +75,18 @@ export default function JournalsPage() {
         cell: ({ getValue }) => <span className="text-sm font-mono text-text">{formatCurrency(getValue<number>())} UZS</span>,
       },
       {
+        id: "billed",
+        header: t("journal.billed"),
+        accessorFn: row => Number(row.invoice?.billedAmount ?? 0),
+        cell: ({ getValue }) => <span className="text-sm tabular-nums text-accent">{formatCurrency(getValue<number>())} UZS</span>,
+      },
+      {
+        id: "unbilled",
+        header: t("journal.unbilled"),
+        accessorFn: row => Number(row.invoice?.unbilledAmount ?? 0),
+        cell: ({ getValue }) => <span className="text-sm tabular-nums text-warning">{formatCurrency(getValue<number>())} UZS</span>,
+      },
+      {
         id: "paid",
         header: t("journals.colPaid"),
         accessorFn: (row) => Number(row.invoice?.paidCash ?? 0) + Number(row.invoice?.paidBonus ?? 0),
@@ -112,6 +124,14 @@ export default function JournalsPage() {
       <PageHeader title={t("nav.journals")} subtitle={t("journals.subtitle")} />
       <PageContent>
         <div className="space-y-4">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+            {[
+              { label: t("nav.journals"), value: String(journals.length), money: false },
+              { label: t("journal.totalServices"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.totalAmount ?? 0), 0)), money: true },
+              { label: t("journal.billed"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.billedAmount ?? 0), 0)), money: true },
+              { label: t("journal.unbilled"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.unbilledAmount ?? 0), 0)), money: true },
+            ].map(metric => <div key={metric.label} className="rounded-xl border border-border bg-surface p-5"><p className="text-xs text-text-muted mb-2">{metric.label}</p><p className="text-xl font-semibold text-text tabular-nums">{isLoading ? "…" : metric.value}</p>{metric.money && <p className="text-[10px] text-text-muted mt-1">UZS</p>}</div>)}
+          </div>
           <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-1 w-fit">
             {(["ACTIVE", "COMPLETED", "ALL"] as StatusFilter[]).map((f) => (
               <button

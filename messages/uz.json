@@ -368,7 +368,7 @@
   },
   "journal": {
     "title": "Bemor jurnali",
-    "subtitle": "Bemorning barcha xizmatlari va to'lovlari bitta joyda",
+    "subtitle": "Xizmatlar, hisoblar va invoisga chiqarilmagan summalar",
     "cardTitleOpen": "Bemor jurnali ochiq",
     "cardTitleClosed": "Bemor jurnali",
     "cardNotStarted": "Hali boshlanmagan — xizmatlar alohida-alohida hisoblanadi",
@@ -386,7 +386,61 @@
     "pay": "To'lash",
     "issueInvoice": "Invois yaratish",
     "print": "Chop etish",
-    "dischargeConfirm": "Bemorni chiqarishni tasdiqlaysizmi? Hamyonda yetarli mablag' bo'lsa qoldiq avtomatik yopiladi."
+    "dischargeConfirm": "Bemorni chiqarishni tasdiqlaysizmi? To'lovlar yaratilgan invoislar orqali alohida amalga oshiriladi.",
+    "loadError": "Jurnalni yuklab bo'lmadi",
+    "retry": "Qayta urinish",
+    "printError": "Jurnalni yuklab olishda xatolik yuz berdi",
+    "totalServices": "Jami xizmatlar",
+    "billed": "Invoisga chiqarilgan",
+    "unbilled": "Invoisga chiqarilmagan",
+    "searchServices": "Xizmatni qidirish…",
+    "groupLabel": "Bo'lim",
+    "allGroups": "Barcha bo'limlar",
+    "service": "Xizmat",
+    "date": "Sana",
+    "fullyBilled": "Invoisga chiqarilgan",
+    "noMatches": "Mos xizmat topilmadi",
+    "services": "Xizmatlar",
+    "invoices": "Yaratilgan invoislar",
+    "paymentHint": "To'lovlar Invoislar sahifasida amalga oshiriladi.",
+    "openInvoices": "Invoislarga o'tish",
+    "noInvoices": "Hali invois yaratilmagan",
+    "created": "{count} ta invois yaratildi",
+    "previewCount": "{count} ta invois · jami",
+    "cancel": "Bekor qilish",
+    "creating": "Yaratilmoqda…",
+    "createHint": "Jurnaldagi xizmatlardan to'lov uchun alohida invois yarating.",
+    "amountLabel": "Invois summasi",
+    "availableAmount": "Ajratish mumkin",
+    "clearSelection": "Tanlovni tozalash",
+    "selectAll": "Barchasini tanlash",
+    "createError": "Invois yaratilmadi. Jurnal yangilangan bo'lishi mumkin — oynani qayta oching yoki qayta urinib ko'ring.",
+    "modes": {
+      "GROUPS": "Bo'limlar bo'yicha",
+      "AMOUNT": "Summa bo'yicha",
+      "ITEMS": "Tanlangan xizmatlar"
+    },
+    "modeHints": {
+      "GROUPS": "Har bir tanlangan bo'lim uchun alohida invois yaratiladi.",
+      "AMOUNT": "Summa eng oldingi xizmatlardan boshlab ajratiladi. Avval chiqarilgan summalar qayta hisoblanmaydi.",
+      "ITEMS": "Tanlangan xizmatlarning hali invoisga chiqarilmagan qismi bitta invoisga birlashtiriladi."
+    },
+    "groups": {
+      "APPOINTMENT": "Konsultatsiya",
+      "LAB_SERVICE": "Laboratoriya",
+      "WARD_DAILY": "Palata",
+      "MANUAL": "Boshqa xizmatlar",
+      "OPERATION": "Operatsiya",
+      "DIAGNOSTIC_SERVICE": "Diagnostika",
+      "PROCEDURE_SERVICE": "Protsedura"
+    },
+    "invoiceStatuses": {
+      "DRAFT": "Qoralama",
+      "ISSUED": "Chiqarilgan",
+      "PARTIALLY_PAID": "Qisman to'langan",
+      "PAID": "To'langan",
+      "CANCELLED": "Bekor qilingan"
+    }
   },
   "journals": {
     "subtitle": "Hozir ochiq (yoki yopilgan) jurnali bor barcha bemorlar",
