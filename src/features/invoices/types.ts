@@ -18,6 +18,9 @@ export interface InvoiceItem {
   unitPrice: string;
   totalPrice: string;
   sourceType: string;
+  createdAt: string;
+  billedAmount?: string;
+  remainingAmount?: string;
 }
 export interface InvoicePayment {
   id: string;
@@ -34,6 +37,12 @@ export interface InvoicePayment {
 }
 
 export interface Invoice {
+  isJournal?: boolean;
+  journalId?: string | null;
+  billedAmount?: string;
+  unbilledAmount?: string;
+  unpaidAmount?: string;
+  issuedInvoices?: Invoice[];
   id: string;
   patientId: string;
   status: InvoiceStatus;
@@ -56,4 +65,5 @@ export const SOURCE_LABELS: Record<string, string> = {
   APPOINTMENT: "Qabul",
   LAB_ORDER: "Laboratoriya",
   MANUAL: "Qo'lda",
+  CASE: "Umumiy hisob",
 };

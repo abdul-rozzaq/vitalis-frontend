@@ -4,8 +4,9 @@ import { PatientCase } from "@/features/patients/types";
 import { CASE_STATUS_BORDER, CASE_STATUS_COLOR } from "@/features/patients/utils";
 import { CaseStepRow } from "./CaseStepRow";
 import { formatDateLong as formatDate } from "@/shared/lib/formatters";
-import { CheckCircle2, Plus, XCircle } from "lucide-react";
+import { BookOpen, CheckCircle2, Plus, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 interface CaseCardProps {
   patientCase: PatientCase;
@@ -22,6 +23,15 @@ export function CaseCard({ patientCase, onAddStep, onCloseCase }: CaseCardProps)
         <div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold border ${CASE_STATUS_COLOR[patientCase.status]}`}>{t(`cases.status.${patientCase.status}`)}</span>
+            {patientCase.billingMode === "MASTER" && (
+              <Link
+                href={`/patients/${patientCase.patientId}/journal`}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-accent/15 text-accent border-accent/20 hover:bg-accent/25 transition-colors"
+              >
+                <BookOpen className="w-3 h-3" />
+                {t("cases.masterBadge")}
+              </Link>
+            )}
             {patientCase.chiefComplaint && <p className="text-sm text-text font-medium">{patientCase.chiefComplaint}</p>}
           </div>
           {patientCase.closedAt && (

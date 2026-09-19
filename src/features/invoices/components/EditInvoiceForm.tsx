@@ -137,7 +137,7 @@ export function EditInvoiceForm({ invoice, patients, onSubmit, onCancel, isLoadi
             onChange={(e) => setSourceType(e.target.value)}
             className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           >
-            {Object.entries(SOURCE_LABELS).map(([val, label]) => (
+            {Object.entries(SOURCE_LABELS).filter(([value]) => value !== "CASE").map(([val, label]) => (
               <option key={val} value={val}>{label}</option>
             ))}
           </select>

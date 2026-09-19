@@ -79,7 +79,12 @@ export default function InvoicesPage() {
 
   const { mutateAsync: cancelInvoice, isPending: isCancelling } = useMutation({
     mutationFn: (id: string) => api.patch(`/invoices/${id}`, { status: "CANCELLED" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-case-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["journals"] });
+    },
   });
 
   const { mutateAsync: createInvoice, isPending: isCreating } = useMutation({
@@ -251,7 +256,7 @@ export default function InvoicesPage() {
           const inv = row.original;
           const canPay = inv.status === "ISSUED" || inv.status === "PARTIALLY_PAID";
           const canCancel = inv.status === "DRAFT" || inv.status === "ISSUED";
-          const canEdit = inv.status !== "PAID" && inv.status !== "CANCELLED";
+          const canEdit = !inv.journalId && inv.status !== "PAID" && inv.status !== "CANCELLED";
           const isExpanded = expandedId === inv.id;
           return (
             <div className="flex justify-end items-center gap-1">
@@ -390,6 +395,8 @@ export default function InvoicesPage() {
             queryClient.invalidateQueries({ queryKey: ["invoices"] });
             queryClient.invalidateQueries({ queryKey: ["patient-invoices", payTarget.patientId] });
             queryClient.invalidateQueries({ queryKey: ["patient-balance", payTarget.patientId] });
+            queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", payTarget.patientId] });
+            queryClient.invalidateQueries({ queryKey: ["journals"] });
           }}
           onClose={() => setPayTarget(null)}
         />

@@ -48,6 +48,7 @@ const SOURCE_LABELS: Record<string, string> = {
   APPOINTMENT: "Qabul",
   LAB_ORDER: "Laboratoriya",
   MANUAL: "Qo'lda",
+  CASE: "Umumiy hisob",
 };
 
 function StatusBadge({ status }: { status: InvoiceStatus }) {
@@ -83,7 +84,12 @@ export function PatientInvoiceList({ patientId }: Props) {
 
   const { mutateAsync: cancelInvoice, isPending: isCancelling } = useMutation({
     mutationFn: (id: string) => api.patch(`/invoices/${id}`, { status: "CANCELLED" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-invoices", patientId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-invoices", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["journals"] });
+    },
   });
 
   const invoices = data?.data ?? [];
@@ -205,6 +211,9 @@ export function PatientInvoiceList({ patientId }: Props) {
           remainingAmount={Number(payTarget.totalAmount) - Number(payTarget.paidCash) - Number(payTarget.paidBonus)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["patient-invoices", patientId] });
+            queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", patientId] });
+            queryClient.invalidateQueries({ queryKey: ["invoices"] });
+            queryClient.invalidateQueries({ queryKey: ["journals"] });
             queryClient.invalidateQueries({ queryKey: ["patient-balance", patientId] });
           }}
           onClose={() => setPayTarget(null)}
