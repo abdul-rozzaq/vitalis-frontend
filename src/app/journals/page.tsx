@@ -75,18 +75,6 @@ export default function JournalsPage() {
         cell: ({ getValue }) => <span className="text-sm font-mono text-text">{formatCurrency(getValue<number>())} UZS</span>,
       },
       {
-        id: "billed",
-        header: t("journal.billed"),
-        accessorFn: row => Number(row.invoice?.billedAmount ?? 0),
-        cell: ({ getValue }) => <span className="text-sm tabular-nums text-accent">{formatCurrency(getValue<number>())} UZS</span>,
-      },
-      {
-        id: "unbilled",
-        header: t("journal.unbilled"),
-        accessorFn: row => Number(row.invoice?.unbilledAmount ?? 0),
-        cell: ({ getValue }) => <span className="text-sm tabular-nums text-warning">{formatCurrency(getValue<number>())} UZS</span>,
-      },
-      {
         id: "paid",
         header: t("journals.colPaid"),
         accessorFn: (row) => Number(row.invoice?.paidCash ?? 0) + Number(row.invoice?.paidBonus ?? 0),
@@ -128,8 +116,8 @@ export default function JournalsPage() {
             {[
               { label: t("nav.journals"), value: String(journals.length), money: false },
               { label: t("journal.totalServices"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.totalAmount ?? 0), 0)), money: true },
-              { label: t("journal.billed"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.billedAmount ?? 0), 0)), money: true },
-              { label: t("journal.unbilled"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.unbilledAmount ?? 0), 0)), money: true },
+              { label: t("journal.paid"), value: formatCurrency(journals.reduce((sum, row) => sum + Number(row.invoice?.paidCash ?? 0) + Number(row.invoice?.paidBonus ?? 0), 0)), money: true },
+              { label: t("journal.unpaid"), value: formatCurrency(journals.reduce((sum, row) => sum + Math.max(0, Number(row.invoice?.totalAmount ?? 0) - Number(row.invoice?.paidCash ?? 0) - Number(row.invoice?.paidBonus ?? 0)), 0)), money: true },
             ].map(metric => <div key={metric.label} className="rounded-xl border border-border bg-surface p-5"><p className="text-xs text-text-muted mb-2">{metric.label}</p><p className="text-xl font-semibold text-text tabular-nums">{isLoading ? "…" : metric.value}</p>{metric.money && <p className="text-[10px] text-text-muted mt-1">UZS</p>}</div>)}
           </div>
           <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-1 w-fit">

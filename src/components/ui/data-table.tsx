@@ -10,9 +10,13 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   expandedRowId?: string | null;
   renderExpanded?: (row: TData) => React.ReactNode;
+  onRowClick?: (row: TData) => void;
+  isRowClickable?: (row: TData) => boolean;
+  compact?: boolean;
+  columnWidths?: Record<string, string>;
 }
 
-export function DataTable<TData extends { id?: string }, TValue>({ columns, data, expandedRowId, renderExpanded }: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends { id?: string }, TValue>({ columns, data, expandedRowId, renderExpanded, onRowClick, isRowClickable, compact = false, columnWidths }: DataTableProps<TData, TValue>) {
   const t = useTranslations();
 
   const table = useReactTable({
@@ -37,7 +41,7 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
     <div className="w-full">
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className={`w-full text-sm text-left ${columnWidths ? "table-fixed min-w-[1180px]" : ""}`}>
             <thead className="bg-surface-secondary border-b border-border text-text-muted text-[11.5px] font-bold uppercase tracking-wider">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -46,7 +50,8 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
                     return (
                       <th
                         key={header.id}
-                        className={`px-4 py-3 whitespace-nowrap ${
+                        style={columnWidths ? { width: columnWidths[header.column.id] } : undefined}
+                        className={`${compact ? "px-2.5" : "px-4"} py-3 whitespace-nowrap ${
                           isActions ? "sticky right-0 z-10 bg-surface-secondary shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]" : ""
                         }`}
                       >
@@ -59,15 +64,23 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
             </thead>
             <tbody className="divide-y divide-border-light text-text">
               {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <React.Fragment key={row.id}>
-                    <tr key={row.id} className="group hover:bg-surface-hover transition-colors">
+                table.getRowModel().rows.map((row) => {
+                  const clickable = Boolean(onRowClick && (!isRowClickable || isRowClickable(row.original)));
+                  return <React.Fragment key={row.id}>
+                    <tr
+                      key={row.id}
+                      className={`group hover:bg-surface-hover transition-colors ${clickable ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-primary" : ""}`}
+                      role={clickable ? "link" : undefined}
+                      tabIndex={clickable ? 0 : undefined}
+                      onClick={() => { if (clickable) onRowClick?.(row.original); }}
+                      onKeyDown={(event) => { if (clickable && event.key === "Enter" && event.target === event.currentTarget) onRowClick?.(row.original); }}
+                    >
                       {row.getVisibleCells().map((cell) => {
                         const isActions = cell.column.id === "actions";
                         return (
                           <td
                             key={cell.id}
-                            className={`px-4 py-3 whitespace-nowrap ${
+                            className={`${compact ? "px-2.5" : "px-4"} py-3 whitespace-nowrap ${columnWidths && !isActions ? "overflow-hidden" : ""} ${
                               isActions
                                 ? "sticky right-0 z-10 bg-surface group-hover:bg-surface-hover shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.1)] transition-colors"
                                 : ""
@@ -85,8 +98,8 @@ export function DataTable<TData extends { id?: string }, TValue>({ columns, data
                         </td>
                       </tr>
                     )}
-                  </React.Fragment>
-                ))
+                  </React.Fragment>;
+                })
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="h-24 text-center text-text-muted">
