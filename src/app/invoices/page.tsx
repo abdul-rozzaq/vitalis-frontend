@@ -22,14 +22,17 @@ import { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Clock, Download, FileText, Loader2, Pencil, Plus, SlidersHorizontal, Wallet, X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-const INITIAL_FILTERS: Filters = { status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", operationTypeId: "", operationDoctorId: "", amountMin: "", amountMax: "" };
+const INITIAL_FILTERS: Filters = { invoiceKind: "", status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", operationTypeId: "", operationDoctorId: "", amountMin: "", amountMax: "" };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function InvoicesPage() {
   const t = useTranslations();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [filterOpen, setFilterOpen] = useState(false);
@@ -43,6 +46,7 @@ export default function InvoicesPage() {
     queryKey: [
       "invoices",
       filters.status,
+      filters.invoiceKind,
       filters.dateFrom,
       filters.dateTo,
       filters.sourceType.join(","),
@@ -56,6 +60,7 @@ export default function InvoicesPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.status) params.set("status", filters.status);
+      if (filters.invoiceKind) params.set("invoiceKind", filters.invoiceKind);
       if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
       if (filters.dateTo) params.set("dateTo", filters.dateTo);
       if (filters.sourceType.length > 0) params.set("sourceType", filters.sourceType.join(","));
@@ -107,7 +112,7 @@ export default function InvoicesPage() {
     return invoicesRaw ?? [];
   }, [invoicesRaw]);
 
-  const totalRevenue = invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.totalAmount), 0);
+  const totalRevenue = invoices.filter((i) => i.status !== "CANCELLED").reduce((s, i) => s + Number(i.paidCash) + Number(i.paidBonus), 0);
   const pendingCount = invoices.filter((i) => i.status === "ISSUED" || i.status === "PARTIALLY_PAID").length;
   const paidCount = invoices.filter((i) => i.status === "PAID").length;
 
@@ -125,6 +130,7 @@ export default function InvoicesPage() {
     const headers = [
       "#",
       t("invoices.table.patient"),
+      t("invoices.table.invoiceKind"),
       t("invoices.table.source"),
       t("invoices.table.description"),
       t("invoices.table.paid"),
@@ -135,7 +141,7 @@ export default function InvoicesPage() {
     const rows = invoices.map((inv, idx) => {
       const patientName = inv.patient ? `${inv.patient.first_name} ${inv.patient.last_name}` : "—";
       const source = t.has(`invoices.source.${inv.sourceType}`) ? t(`invoices.source.${inv.sourceType}`) : inv.sourceType;
-      const desc = inv.items?.length ? inv.items.map((i) => i.description).filter(Boolean).join(", ") : inv.note || "—";
+      const desc = inv.invoiceKind === "JOURNAL" ? inv.departmentName || "—" : inv.items?.length ? inv.items.map((i) => i.description).filter(Boolean).join(", ") : inv.note || "—";
       const paid = Number(inv.paidCash) + Number(inv.paidBonus);
       const total = Number(inv.totalAmount);
       const status = INVOICE_STATUS_CONFIG[inv.status]?.label ?? inv.status;
@@ -147,7 +153,7 @@ export default function InvoicesPage() {
         minute: "2-digit",
       });
 
-      return [idx + 1, patientName, source, desc, `${paid} / ${total}`, status, date];
+      return [idx + 1, patientName, t(`invoices.invoiceKind.${inv.invoiceKind === "JOURNAL" ? "JOURNAL" : "SINGLE"}`), source, desc, `${paid} / ${total}`, status, date];
     });
 
     exportToExcel("invoices", headers, rows, t("nav.invoices"));
@@ -170,7 +176,7 @@ export default function InvoicesPage() {
           const p = row.original.patient;
           const name = p ? `${p.first_name} ${p.last_name}` : "—";
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
                 {name
                   .split(" ")
@@ -179,10 +185,17 @@ export default function InvoicesPage() {
                   .toUpperCase()
                   .slice(0, 2)}
               </div>
-              <span className="font-medium text-text text-sm">{name}</span>
+              <div className="min-w-0 max-w-[170px]">
+                <span className="font-medium text-text text-sm truncate block" title={name}>{name}</span>
+              </div>
             </div>
           );
         },
+      },
+      {
+        id: "invoiceKind",
+        header: t("invoices.table.invoiceKind"),
+        cell: ({ row }) => <span className="text-secondary text-xs whitespace-nowrap">{t(`invoices.invoiceKind.${row.original.invoiceKind === "JOURNAL" ? "JOURNAL" : "SINGLE"}`)}</span>,
       },
       {
         accessorKey: "sourceType",
@@ -197,7 +210,7 @@ export default function InvoicesPage() {
         header: t("invoices.table.description"),
         cell: ({ row }) => {
           const inv = row.original;
-          const desc = inv.items?.length
+          const desc = inv.invoiceKind === "JOURNAL" ? inv.departmentName : inv.items?.length
             ? inv.items.map((i) => i.description).filter(Boolean).join(", ")
             : inv.note;
           return (
@@ -254,20 +267,25 @@ export default function InvoicesPage() {
         header: () => <div className="text-right">{t("invoices.table.actions")}</div>,
         cell: ({ row }) => {
           const inv = row.original;
+          if (inv.invoiceKind === "JOURNAL") return (
+            <Link href={`/patients/${inv.patientId}/journal`} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-primary border border-primary/30 hover:bg-primary-50">
+              <FileText className="w-3.5 h-3.5" />{t("invoices.actions.viewJournal")}
+            </Link>
+          );
           const canPay = inv.status === "ISSUED" || inv.status === "PARTIALLY_PAID";
           const canCancel = inv.status === "DRAFT" || inv.status === "ISSUED";
           const canEdit = !inv.journalId && inv.status !== "PAID" && inv.status !== "CANCELLED";
           const isExpanded = expandedId === inv.id;
           return (
             <div className="flex justify-end items-center gap-1">
-              <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-hover transition-colors cursor-pointer text-xs" title={t("invoices.actions.showItems")}>
+              <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="p-1.5 rounded-lg text-text-muted hover:bg-surface-hover transition-colors cursor-pointer text-xs" title={t("invoices.actions.showItems")} aria-label={t("invoices.actions.showItems")}>
                 <FileText className="w-3.5 h-3.5" />
               </button>
               <Can roles={["ADMIN", "KASSIR"]}>
                 {canPay && (
                   <button
                     onClick={() => setPayTarget(inv)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success-50 text-success border border-success/20 hover:bg-success/10 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium bg-success-50 text-success border border-success/20 hover:bg-success/10 transition-colors cursor-pointer"
                   >
                     <Wallet className="w-3 h-3" />
                     {t("invoices.actions.pay")}
@@ -278,9 +296,11 @@ export default function InvoicesPage() {
                 {canEdit && (
                   <button
                     onClick={() => setEditTarget(inv)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary-50 transition-colors cursor-pointer"
+                    title={t("invoices.actions.edit")}
+                    aria-label={t("invoices.actions.edit")}
                   >
-                    <Pencil className="w-3 h-3" /> {t("invoices.actions.edit")}
+                    <Pencil className="w-3.5 h-3.5" /> {t("invoices.actions.edit")}
                   </button>
                 )}
                 {canCancel && (
@@ -289,9 +309,11 @@ export default function InvoicesPage() {
                       if (confirm(t("invoices.actions.cancelConfirm"))) cancelInvoice(inv.id);
                     }}
                     disabled={isCancelling}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-danger hover:bg-danger-50 transition-colors cursor-pointer disabled:opacity-40"
+                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-danger hover:bg-danger-50 transition-colors cursor-pointer disabled:opacity-40"
+                    title={t("invoices.actions.cancel")}
+                    aria-label={t("invoices.actions.cancel")}
                   >
-                    <X className="w-3 h-3" /> {t("invoices.actions.cancel")}
+                    <X className="w-3.5 h-3.5" /> {t("invoices.actions.cancel")}
                   </button>
                 )}
               </Can>
@@ -369,8 +391,12 @@ export default function InvoicesPage() {
         ) : (
           <div className="space-y-0">
             <DataTable
+              compact
+              columnWidths={{ id: "3%", patient: "13%", invoiceKind: "8%", sourceType: "8%", sourceAsTotal: "9%", paid: "14%", status: "10%", createdAt: "11%", actions: "24%" }}
               columns={columns}
               data={invoices}
+              onRowClick={(invoice) => router.push(`/patients/${invoice.patientId}/journal`)}
+              isRowClickable={(invoice) => invoice.invoiceKind === "JOURNAL"}
               expandedRowId={expandedId}
               renderExpanded={(row) => (
                 <div className="px-4 py-3 bg-surface-hover border-t border-border">

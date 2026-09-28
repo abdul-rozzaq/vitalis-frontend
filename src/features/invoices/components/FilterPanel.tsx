@@ -19,6 +19,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { api } from "@/shared/lib/api";
 
 export interface Filters {
+  invoiceKind: string;
   status: string;
   patientSearch: string;
   dateFrom: string;
@@ -287,6 +288,19 @@ export function FilterPanel({
 
       {/* General filters */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-text-muted">{t("fields.invoiceKind")}</label>
+          <Combobox
+            value={filters.invoiceKind}
+            onChange={(value) => onChange("invoiceKind", value)}
+            options={(["", "SINGLE", "JOURNAL"] as const).map((value) => ({
+              value,
+              label: t(`invoiceKind.${value || "ALL"}`),
+            }))}
+            placeholder={t("invoiceKind.ALL")}
+            className="w-full"
+          />
+        </div>
         {/* Status */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-text-muted">

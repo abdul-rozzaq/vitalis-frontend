@@ -2,7 +2,10 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
-import { CreateJournalInvoiceModal } from "@/features/journal/components/CreateJournalInvoiceModal";
+import { AddJournalServiceModal } from "@/features/journal/components/AddJournalServiceModal";
+import { PayJournalSelectionModal } from "@/features/journal/components/PayJournalSelectionModal";
+import { InvoiceItem } from "@/features/invoices/types";
+import { journalItemDue, paymentGroupIds } from "@/features/journal/utils/payment-selection";
 import { JournalRecord } from "@/features/journal/hooks/useJournalData";
 import { JournalCaseSection } from "@/features/journal/components/JournalCaseSection";
 import { useJournalData } from "@/features/journal/hooks/useJournalData";
@@ -16,6 +19,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function PatientJournalPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +28,8 @@ export default function PatientJournalPage() {
   const queryClient = useQueryClient();
 
   const [addStepCaseId, setAddStepCaseId] = useState<string | null>(null);
-  const [invoiceTarget, setInvoiceTarget] = useState<JournalRecord | null>(null);
+  const [addServiceCaseId, setAddServiceCaseId] = useState<string | null>(null);
+  const [paymentTarget, setPaymentTarget] = useState<{ record: JournalRecord; itemIds: string[] } | null>(null);
 
   const isNurse = typeof user?.role === "string" && user.role.toUpperCase() === "HAMSHIRA";
   const addStepAvailableTypes = isNurse
@@ -56,6 +61,18 @@ export default function PatientJournalPage() {
     mutationFn: (caseId: string) => api.patch(`/cases/${caseId}/close`, { status: "COMPLETED" }),
     onSuccess: invalidateJournal,
   });
+
+  const { mutate: cancelService } = useMutation({
+    mutationFn: ({ caseId, itemId }: { caseId: string; itemId: string }) => api.delete(`/cases/${caseId}/journal/services/${itemId}`),
+    onSuccess: invalidateJournal,
+    onError: () => toast.error(t("journal.cancelServiceError")),
+  });
+
+  const payItem = (record: JournalRecord, item: InvoiceItem) => {
+    if (journalItemDue(item) > 0.001) setPaymentTarget({ record, itemIds: paymentGroupIds(record.invoice, item.id) });
+  };
+
+  const payAll = (record: JournalRecord) => setPaymentTarget({ record, itemIds: record.invoice.items.filter(item => journalItemDue(item) > 0.001).map(item => item.id) });
 
   const fullName = patient ? `${patient.first_name} ${patient.last_name}` : "";
 
@@ -121,10 +138,16 @@ export default function PatientJournalPage() {
                   record={record}
                   defaultOpen
                   onAddEntry={() => setAddStepCaseId(record.case.id)}
+                  onAddService={() => setAddServiceCaseId(record.case.id)}
                   onDischarge={() => {
                     if (confirm(t("journal.dischargeConfirm"))) closeCase(record.case.id);
                   }}
-                  onIssueInvoice={() => setInvoiceTarget(record)}
+                  onPayJournal={() => payAll(record)}
+                  onPayItem={(item) => payItem(record, item)}
+                  onPaySelected={(itemIds) => setPaymentTarget({ record, itemIds })}
+                  onCancelItem={(item) => {
+                    if (confirm(t("journal.cancelServiceConfirm"))) cancelService({ caseId: record.case.id, itemId: item.id });
+                  }}
                 />
               ))}
 
@@ -138,7 +161,9 @@ export default function PatientJournalPage() {
                       <JournalCaseSection
                         key={record.case.id}
                         record={record}
-                        onIssueInvoice={() => setInvoiceTarget(record)}
+                        onPayJournal={() => payAll(record)}
+                        onPayItem={(item) => payItem(record, item)}
+                        onPaySelected={(itemIds) => setPaymentTarget({ record, itemIds })}
                       />
                     ))}
                   </div>
@@ -162,11 +187,20 @@ export default function PatientJournalPage() {
         />
       )}
 
-      {invoiceTarget && (
-        <CreateJournalInvoiceModal
-          record={invoiceTarget}
+      {addServiceCaseId && (
+        <AddJournalServiceModal
+          caseId={addServiceCaseId}
+          onClose={() => setAddServiceCaseId(null)}
           onSuccess={invalidateJournal}
-          onClose={() => setInvoiceTarget(null)}
+        />
+      )}
+
+      {paymentTarget && (
+        <PayJournalSelectionModal
+          record={paymentTarget.record}
+          itemIds={paymentTarget.itemIds}
+          onSuccess={invalidateJournal}
+          onClose={() => setPaymentTarget(null)}
         />
       )}
     </div>

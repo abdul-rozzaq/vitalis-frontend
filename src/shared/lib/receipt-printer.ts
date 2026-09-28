@@ -78,6 +78,7 @@ function buildReceiptHtml(data: ReceiptData): string {
   const total = Number(payment.totalAmount);
   const cash = Number(payment.cashAmount);
   const bonus = Number(payment.bonusAmount);
+  const cashLabel = data.paymentMethod || payment.paymentMethod ? method : "Naqd";
 
   const itemRows = items.length
     ? items
@@ -208,7 +209,7 @@ function buildReceiptHtml(data: ReceiptData): string {
   <div class="divider"></div>
 
   <section class="amounts">
-    ${cash > 0 ? `<div class="row"><span class="label">Naqd</span><span class="value">${money(cash)} UZS</span></div>` : ""}
+    ${cash > 0 ? `<div class="row"><span class="label">${escapeHtml(cashLabel)}</span><span class="value">${money(cash)} UZS</span></div>` : ""}
     ${bonus > 0 ? `<div class="row"><span class="label">Bonus</span><span class="value">${money(bonus)} UZS</span></div>` : ""}
   </section>
 
@@ -227,18 +228,6 @@ function buildReceiptHtml(data: ReceiptData): string {
   <div class="tear-spacer"></div>
 </body>
 </html>`;
-}
-
-function buildBrowserReceiptHtml(data: ReceiptData): string {
-  return buildReceiptHtml(data).replace(
-    "</body>",
-    `<script>
-    window.onload = function () {
-      window.print();
-      setTimeout(function () { window.close(); }, 700);
-    };
-  </script></body>`
-  );
 }
 
 function printWithBrowser(data: ReceiptData): void {
@@ -267,7 +256,7 @@ function printWithBrowser(data: ReceiptData): void {
     cleanup();
   };
 
-  iframe.srcdoc = buildBrowserReceiptHtml(data);
+  iframe.srcdoc = buildReceiptHtml(data);
 }
 
 // ---- QZ Tray integratsiyasi ----

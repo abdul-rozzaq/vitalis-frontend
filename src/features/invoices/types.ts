@@ -21,6 +21,10 @@ export interface InvoiceItem {
   createdAt: string;
   billedAmount?: string;
   remainingAmount?: string;
+  isPaid?: boolean;
+  paidAmount?: string;
+  journalItemId?: string | null;
+  canCancel?: boolean;
 }
 export interface InvoicePayment {
   id: string;
@@ -37,6 +41,8 @@ export interface InvoicePayment {
 }
 
 export interface Invoice {
+  invoiceKind?: "SINGLE" | "JOURNAL";
+  departmentName?: string | null;
   isJournal?: boolean;
   journalId?: string | null;
   billedAmount?: string;
