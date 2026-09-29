@@ -1,5 +1,11 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
+import Link from "next/link";
+import { useJournalData } from "@/features/journal/hooks/useJournalData";
+import { PayJournalSelectionModal } from "@/features/journal/components/PayJournalSelectionModal";
+import { paymentGroupIds } from "@/features/journal/utils/payment-selection";
 import { Modal } from "@/components/design-system/Modal";
 import { Can } from "@/components/ui/can";
 import { INVOICE_STATUS_CONFIG } from "@/features/invoices/style-colors";
@@ -23,6 +29,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 interface Props {
+  caseId?: string;
   operationId: string;
   patientId: string;
   operationTotalPrice: number;
@@ -75,13 +82,12 @@ function CreateInvoiceModal({
           <label className="text-sm font-medium text-text">Invois summasi (UZS)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">UZS</span>
-            <input
-              type="number"
+            <MoneyInput
               min="0.01"
               step="0.01"
               value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
+              onValueChange={(rawValue) => {
+                setAmount(rawValue);
                 setError("");
               }}
               className="w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -176,7 +182,7 @@ function InvoiceCard({ invoice, index }: { invoice: Invoice; index: number }) {
         <div className="flex items-start gap-1.5 px-2.5 py-2 rounded-md bg-surface text-[11px] text-text-muted">
           <Info className="w-3 h-3 shrink-0 mt-0.5" />
           <span>
-            Qolgan <span className="font-medium text-text">{fmt(remaining)} so&apos;m</span> — to&apos;lov kassirdan &quot;Invoislar&quot; bo&apos;limida qabul qilinadi.
+            Qolgan <span className="font-medium text-text">{fmt(remaining)} so&apos;m</span> — to&apos;lov kassirdan &quot;Invoislar&quot; bo&apos;limida to‘liq yoki qisman qabul qilinadi.
           </span>
         </div>
       )}
@@ -222,7 +228,7 @@ function InvoiceCard({ invoice, index }: { invoice: Invoice; index: number }) {
   );
 }
 
-export function OperationPaymentCard({ operationId, patientId, operationTotalPrice }: Props) {
+function StandaloneOperationPaymentCard({ operationId, patientId, operationTotalPrice }: Props) {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -295,7 +301,7 @@ export function OperationPaymentCard({ operationId, patientId, operationTotalPri
 
         {invoices.length === 0 && (
           <p className="text-sm text-text-muted mb-3">
-            Bu operatsiya uchun hali invois yaratilmagan. To&apos;lov qabul qilish uchun avval invois yarating — bemor operatsiyadan oldin, keyin yoki qisman-qisman (bir necha invois orqali) to&apos;lashi mumkin.
+            Bu operatsiya uchun hali invois yaratilmagan. To&apos;lov qabul qilish uchun avval invois yarating — bemor operatsiyadan oldin, keyin yoki qisman-qisman (bitta invoisga bir necha to‘lov orqali ham) to&apos;lashi mumkin.
           </p>
         )}
 
@@ -330,4 +336,45 @@ export function OperationPaymentCard({ operationId, patientId, operationTotalPri
       )}
     </>
   );
+}
+
+
+export function OperationPaymentCard(props: Props) {
+  return props.caseId ? <JournalOperationPaymentCard {...props} /> : <StandaloneOperationPaymentCard {...props} />;
+}
+
+function JournalOperationPaymentCard(props: Props) {
+  const { cases, journals, isLoading, isError, refetch } = useJournalData(props.patientId);
+  const [payOpen, setPayOpen] = useState(false);
+  const queryClient = useQueryClient();
+  if (isLoading) return <div className="p-5"><Loader2 className="w-4 h-4 animate-spin" /></div>;
+  if (isError) return <div className="p-5 text-sm">To‘lov ma’lumotlarini yuklab bo‘lmadi. <button onClick={refetch} className="text-primary">Qayta urinish</button></div>;
+  const patientCase = cases.find(item => item.id === props.caseId);
+  if (patientCase && patientCase.billingMode !== "MASTER") return <StandaloneOperationPaymentCard {...props} />;
+  const record = journals.find(item => item.case.id === props.caseId);
+  const items = record?.invoice.items.filter(item => item.detailHref === `/operations/${props.operationId}`) ?? [];
+  const total = items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+  const paid = items.reduce((sum, item) => sum + Number(item.paidAmount ?? 0), 0);
+  const remaining = Math.max(0, total - paid);
+  const itemIds = record ? [...new Set(items.flatMap(item => paymentGroupIds(record.invoice, item.id)))] : [];
+  return <>
+    <div className="bg-surface border border-border rounded-xl p-5 space-y-3">
+      <SectionLabel>Operatsiya to‘lovlari</SectionLabel>
+      {items.length > 0 && <div className="space-y-2 text-sm">
+        <div className="flex justify-between"><span>Jami</span><span>{fmt(total)} so‘m</span></div>
+        <div className="flex justify-between text-success"><span>To‘langan</span><span>{fmt(paid)} so‘m</span></div>
+        <div className="flex justify-between font-semibold"><span>Qoldiq</span><span>{fmt(remaining)} so‘m</span></div>
+        <p className={remaining > 0.001 ? "text-warning" : "text-success"}>{remaining <= 0.001 ? "To‘liq to‘langan" : paid > 0 ? "Qisman to‘langan" : "To‘lanmagan"}</p>
+      </div>}
+      <p className="text-xs text-text-muted">To‘lovlar bemorning jurnali bilan bog‘langan. Summani bo‘lib to‘lash mumkin. Laboratoriya tahlillari jurnalda alohida ko‘rsatiladi.</p>
+      {remaining > 0.001 && record && <Can roles={["ADMIN", "KASSIR"]}><button onClick={() => setPayOpen(true)} className="w-full rounded-lg bg-primary text-white px-4 py-2 text-sm">To‘lov qabul qilish</button></Can>}
+      <Link href={`/patients/${props.patientId}/journal`} className="block text-sm text-primary">Jurnal va to‘lovlar tarixini ko‘rish</Link>
+    </div>
+    {payOpen && record && <PayJournalSelectionModal record={record} itemIds={itemIds} onClose={() => setPayOpen(false)} onSuccess={() => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["operation-invoices", props.operationId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-balance", props.patientId] });
+    }} />}
+  </>;
 }

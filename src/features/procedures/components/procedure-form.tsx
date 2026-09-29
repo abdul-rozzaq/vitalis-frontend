@@ -1,5 +1,6 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { Procedure } from "../types";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 
@@ -13,6 +14,7 @@ export function ProcedureForm({ initialData, onSubmit, onCancel }: ProcedureForm
   const t = useTranslations();
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -56,11 +58,13 @@ export function ProcedureForm({ initialData, onSubmit, onCancel }: ProcedureForm
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium text-text">Narxi (UZS)</label>
-        <input
-          {...register("price")}
-          type="number"
-          className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-        />
+        <Controller name="price" control={control} render={({ field }) => (
+          <MoneyInput
+            name={field.name} ref={field.ref} onBlur={field.onBlur}
+            value={field.value ?? ""} onValueChange={field.onChange}
+            className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+          />
+        )} />
       </div>
 
       <div className="flex items-center gap-3 pt-4">

@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Activity, Bed, FileEdit, FlaskConical, Scissors, SlidersHorizontal, Stethoscope, User, X } from "lucide-react";
 import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
@@ -141,20 +143,18 @@ export function PaymentFilterPanel({ filters, onChange, onReset, activeCount }: 
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-text-muted">{t("fields.amountMin")}</label>
-          <input
-            type="number"
+          <MoneyInput
             value={filters.amountMin}
-            onChange={(e) => onChange("amountMin", e.target.value)}
+            onValueChange={(rawValue) => onChange("amountMin", rawValue)}
             placeholder="0"
             className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-text-muted">{t("fields.amountMax")}</label>
-          <input
-            type="number"
+          <MoneyInput
             value={filters.amountMax}
-            onChange={(e) => onChange("amountMax", e.target.value)}
+            onValueChange={(rawValue) => onChange("amountMax", rawValue)}
             placeholder="9999999"
             className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />

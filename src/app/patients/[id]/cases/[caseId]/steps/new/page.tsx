@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { type DiagnosticsCenter, type DiagnosticService } from "@/features/diagnostics/types";
 import { type Laboratory } from "@/features/lab/types";
 import { type AssignmentSource, type CaseStepType } from "@/features/patients/types";
@@ -255,7 +257,7 @@ export default function AddCaseStepPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-                  <input type="number" min="0" value={stepAmount} onChange={(e) => setStepAmount(e.target.value)} placeholder="0" className={inputCls} />
+                  <MoneyInput min="0" value={stepAmount} onValueChange={(rawValue) => setStepAmount(rawValue)} placeholder="0" className={inputCls} />
                 </div>
               </div>
             </>
@@ -348,7 +350,7 @@ export default function AddCaseStepPage() {
           {(stepType === "PROCEDURE" || stepType === "OPERATION") && (
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-              <input type="number" min="0" value={stepAmount} onChange={(e) => setStepAmount(e.target.value)} placeholder="0" className={inputCls} />
+              <MoneyInput min="0" value={stepAmount} onValueChange={(rawValue) => setStepAmount(rawValue)} placeholder="0" className={inputCls} />
             </div>
           )}
 
@@ -406,4 +408,4 @@ export default function AddCaseStepPage() {
       </motion.div>
     </div>
   );
-} 
+}

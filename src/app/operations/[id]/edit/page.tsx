@@ -1,4 +1,7 @@
 "use client";
+
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
@@ -20,7 +23,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -135,6 +138,7 @@ const fieldCls =
 export default function EditOperationPage() {
   const t = useTranslations();
   const router = useRouter();
+  const preparingToStart = useSearchParams().get("prepare") === "1";
   const params = useParams();
   const operationId = params?.id as string;
   const queryClient = useQueryClient();
@@ -190,7 +194,7 @@ export default function EditOperationPage() {
       setRoomId(operation.room?.id ?? "");
       setDepartmentId(operation.department?.id ?? "");
       setContractNumber(operation.contractNumber ?? "");
-      setScheduledAt(operation.scheduledAt ? new Date(operation.scheduledAt).toISOString().slice(0, 16) : "");
+      setScheduledAt(operation.scheduledAt ? new Date(new Date(operation.scheduledAt).getTime() - new Date(operation.scheduledAt).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
       setNote(operation.note ?? "");
       setSurgeons(
         operation.surgeons.map((s) => ({
@@ -262,8 +266,9 @@ export default function EditOperationPage() {
     mutationFn: (dto: any) => api.patch(`/operations/${operationId}`, dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["operations"] });
-      toast.success("Operatsiya muvaffaqiyatli yangilandi");
-      router.push("/operations");
+      queryClient.invalidateQueries({ queryKey: ["operation", operationId] });
+      toast.success(preparingToStart ? "Ma’lumotlar saqlandi. Endi operatsiyani boshlashingiz mumkin" : "Operatsiya muvaffaqiyatli yangilandi");
+      router.push(preparingToStart ? `/operations/${operationId}?prepared=1` : "/operations");
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Operatsiyani yangilashda xatolik yuz berdi");
@@ -359,6 +364,11 @@ export default function EditOperationPage() {
   // ── Validate + Submit ─────────────────────────────────────────────────────────
   const validate = () => {
     const e: Record<string, string> = {};
+    if (preparingToStart) {
+      if (!roomId) e.roomId = "Xonani tanlang";
+      if (!scheduledAt) e.scheduledAt = "Sana va vaqtni kiriting";
+      if (!contractNumber.trim()) e.contractNumber = "Shartnoma raqamini kiriting";
+    }
     if (!operationTypeId) e.operationTypeId = "Operatsiya turi tanlanmadi";
     if (!departmentId) e.departmentId = "Bo'lim tanlanmadi";
     if (surgeons.length === 0) e.surgeons = "Kamida 1 ta jarroh qo'shilishi kerak";
@@ -374,9 +384,9 @@ export default function EditOperationPage() {
       operationTypeId,
       roomId: roomId || undefined,
       departmentId,
-      scheduledAt: new Date(scheduledAt).toISOString(),
+      scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
       note: note || undefined,
-      contractNumber: contractNumber || undefined,
+      contractNumber: contractNumber.trim() || undefined,
       surgeons,
       items: items.filter((i) => i.operationTypeItemId || i.name),
     });
@@ -429,6 +439,10 @@ export default function EditOperationPage() {
       />
 
       <PageContent>
+        {preparingToStart && <div role="status" className="max-w-6xl mx-auto mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-text">
+          <p className="font-semibold">Operatsiyani boshlashdan oldin ma’lumotlarni to‘ldiring</p>
+          <p className="mt-1">Operatsiya turi, bo‘lim, xona, sana-vaqt, bosh jarroh va shartnoma raqamini kiriting. Ixtiyoriy ma’lumotlarni bo‘sh qoldirish mumkin. Saqlagandan keyin operatsiya sahifasida “Boshlash”ni bosing.</p>
+        </div>}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
 
           {/* ══ CHAP USTUN ═══════════════════════════════════════════════════════ */}
@@ -506,14 +520,16 @@ export default function EditOperationPage() {
                   <ErrorMsg msg={errors.scheduledAt} />
                 </div>
                 <div>
-                  <FieldLabel>Xona</FieldLabel>
+                  <FieldLabel required={preparingToStart}>Xona</FieldLabel>
                   <Combobox
                     options={roomOptions}
                     value={roomId}
                     onChange={setRoomId}
                     placeholder={t("operationForm.room")}
                     searchPlaceholder="Xona nomi..."
+                    error={!!errors.roomId}
                   />
+                  <ErrorMsg msg={errors.roomId} />
                 </div>
               </div>
 
@@ -531,13 +547,15 @@ export default function EditOperationPage() {
                   <ErrorMsg msg={errors.departmentId} />
                 </div>
                 <div>
-                  <FieldLabel>Shartnoma raqami</FieldLabel>
+                  <FieldLabel required={preparingToStart}>Shartnoma raqami</FieldLabel>
                   <input
                     value={contractNumber}
                     onChange={(e) => setContractNumber(e.target.value)}
+                    maxLength={64}
                     placeholder="masalan: 1"
                     className={fieldCls}
                   />
+                  <ErrorMsg msg={errors.contractNumber} />
                 </div>
               </div>
             </div>
@@ -683,11 +701,10 @@ export default function EditOperationPage() {
                     </div>
                     <div>
                       <FieldLabel>Narx (so'm)</FieldLabel>
-                      <input
-                        type="number"
+                      <MoneyInput
                         min={0}
                         value={newItemPrice}
-                        onChange={(e) => setNewItemPrice(Number(e.target.value))}
+                        onValueChange={(rawValue) => setNewItemPrice(Number(rawValue))}
                         onKeyDown={(e) => e.key === "Enter" && handleAddNewItem()}
                         placeholder="0"
                         className={fieldCls}
@@ -769,11 +786,10 @@ export default function EditOperationPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <FieldLabel>Narx (so'm)</FieldLabel>
-                          <input
-                            type="number"
+                          <MoneyInput
                             min={0}
                             value={item.unitPrice}
-                            onChange={(e) => updateItem(idx, "unitPrice", Number(e.target.value))}
+                            onValueChange={(rawValue) => updateItem(idx, "unitPrice", Number(rawValue))}
                             className={fieldCls}
                           />
                         </div>

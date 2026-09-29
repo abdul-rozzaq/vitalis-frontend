@@ -1,4 +1,6 @@
 "use client";
+
+import { MoneyInput } from "@/components/ui/money-input";
 import { useTranslations } from "next-intl";
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
@@ -126,19 +128,10 @@ function PriceInput({
   className?: string;
   placeholder?: string;
 }) {
-  const displayValue = value === 0 ? "" : fmt(value);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/[^\d]/g, "");
-    onChange(raw === "" ? 0 : Number(raw));
-  };
-
   return (
-    <input
-      type="text"
-      inputMode="numeric"
-      value={displayValue}
-      onChange={handleChange}
+    <MoneyInput
+      value={value === 0 ? "" : value}
+      onValueChange={(rawValue) => onChange(Number(rawValue) || 0)}
       placeholder={placeholder}
       className={className}
     />

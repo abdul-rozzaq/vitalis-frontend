@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Combobox } from "@/components/ui/combobox";
 import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
@@ -424,11 +426,10 @@ export default function WardCheckInPage() {
                     <label className="text-sm font-medium text-text mb-1 block">
                       {t("wards.patientPricePerDay")}
                     </label>
-                    <input
-                      type="number"
+                    <MoneyInput
                       min="0"
                       value={patientPricePerDay}
-                      onChange={(e) => setPatientPricePerDay(e.target.value)}
+                      onValueChange={(rawValue) => setPatientPricePerDay(rawValue)}
                       className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
                     />
                   </div>
@@ -436,11 +437,10 @@ export default function WardCheckInPage() {
                     <label className="text-sm font-medium text-text mb-1 block">
                       {t("wards.companionPricePerDay")}
                     </label>
-                    <input
-                      type="number"
+                    <MoneyInput
                       min="0"
                       value={companionPricePerDay}
-                      onChange={(e) => setCompanionPricePerDay(e.target.value)}
+                      onValueChange={(rawValue) => setCompanionPricePerDay(rawValue)}
                       className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
                     />
                   </div>
@@ -531,11 +531,10 @@ export default function WardCheckInPage() {
                     <label className="text-sm font-medium text-text mb-1 block">
                       {t("wards.prepaymentAmount")}
                     </label>
-                    <input
-                      type="number"
+                    <MoneyInput
                       min="0"
                       value={prepaymentAmount}
-                      onChange={(e) => setPrepaymentAmount(e.target.value)}
+                      onValueChange={(rawValue) => setPrepaymentAmount(rawValue)}
                       placeholder="0"
                       className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />

@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Modal } from "@/components/design-system/Modal";
 import { Invoice, PaymentMethod, PAYMENT_METHOD_LABELS } from "@/features/invoices/types";
 import { printReceipt } from "@/shared/lib/receipt-printer";
@@ -217,13 +219,12 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
               <label className="text-sm font-medium text-text">Naqd miqdori (UZS)</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">UZS</span>
-                <input
-                  type="number"
+                <MoneyInput
                   min="0"
                   step="0.01"
                   value={cashAmount}
-                  onChange={(e) => {
-                    setCashAmount(e.target.value);
+                  onValueChange={(rawValue) => {
+                    setCashAmount(rawValue);
                     setError("");
                   }}
                   className="w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -236,13 +237,12 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
               <label className="text-sm font-medium text-text">Bonus miqdori (UZS)</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">UZS</span>
-                <input
-                  type="number"
+                <MoneyInput
                   min="0"
                   step="0.01"
                   value={bonusAmount}
-                  onChange={(e) => {
-                    setBonusAmount(e.target.value);
+                  onValueChange={(rawValue) => {
+                    setBonusAmount(rawValue);
                     setError("");
                   }}
                   className="w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -287,13 +287,12 @@ export function InvoicePayModal({ invoiceId, patientId, remainingAmount, invoice
               <label className="text-sm font-medium text-text">Miqdor (UZS)</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">UZS</span>
-                <input
-                  type="number"
+                <MoneyInput
                   min="0.01"
                   step="0.01"
                   value={directAmount}
-                  onChange={(e) => {
-                    setDirectAmount(e.target.value);
+                  onValueChange={(rawValue) => {
+                    setDirectAmount(rawValue);
                     setError("");
                   }}
                   className="w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"

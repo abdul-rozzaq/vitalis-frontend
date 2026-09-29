@@ -1,10 +1,12 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { FormError } from "@/components/ui/form-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlignLeft, BedDouble, Building2, DollarSign, GitBranch, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { Department } from "../types";
 
@@ -49,6 +51,7 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<DepartmentFormInput, any, DepartmentFormValues>({
@@ -101,14 +104,16 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
           <DollarSign className="w-4 h-4 text-primary-500" />
           {t("forms.price")}
         </label>
-        <input
-          {...register("price")}
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="0.00"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
+        <Controller name="price" control={control} render={({ field }) => (
+          <MoneyInput
+            name={field.name} ref={field.ref} onBlur={field.onBlur}
+            value={field.value ?? ""} onValueChange={field.onChange}
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+          />
+        )} />
         <FormError message={errors.price?.message} />
       </div>
 
@@ -117,14 +122,16 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
           <BedDouble className="w-4 h-4 text-primary-500" />
           {t("forms.patientDailyPrice")}
         </label>
-        <input
-          {...register("patientDailyPrice")}
-          type="number"
-          min="0"
-          step="1"
-          placeholder="0"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
+        <Controller name="patientDailyPrice" control={control} render={({ field }) => (
+          <MoneyInput
+            name={field.name} ref={field.ref} onBlur={field.onBlur}
+            value={field.value ?? ""} onValueChange={field.onChange}
+            min="0"
+            step="1"
+            placeholder="0"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+          />
+        )} />
         <FormError message={errors.patientDailyPrice?.message} />
       </div>
 
@@ -133,14 +140,16 @@ export function DepartmentForm({ initialData, departments = [], currentId, hideP
           <Users className="w-4 h-4 text-primary-500" />
           {t("forms.companionDailyPrice")}
         </label>
-        <input
-          {...register("companionDailyPrice")}
-          type="number"
-          min="0"
-          step="1"
-          placeholder="0"
-          className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
-        />
+        <Controller name="companionDailyPrice" control={control} render={({ field }) => (
+          <MoneyInput
+            name={field.name} ref={field.ref} onBlur={field.onBlur}
+            value={field.value ?? ""} onValueChange={field.onChange}
+            min="0"
+            step="1"
+            placeholder="0"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
+          />
+        )} />
         <FormError message={errors.companionDailyPrice?.message} />
       </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Modal } from "@/components/design-system/Modal";
 import { Combobox } from "@/components/ui/combobox";
 import { formatAmount } from "@/shared/lib/formatters";
@@ -131,11 +133,10 @@ export function AddServicePanel({ order, laboratory }: AddServicePanelProps) {
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-text">{t("lab.totalAmount")}</label>
                   <div className="relative">
-                    <input
-                      type="number"
+                    <MoneyInput
                       min={0}
                       value={amount}
-                      onChange={(e) => setAmountOverride(e.target.value)}
+                      onValueChange={(rawValue) => setAmountOverride(rawValue)}
                       className="w-full rounded-lg border border-border bg-transparent px-3 py-2 pr-14 text-sm text-text outline-none focus:border-primary"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">so&apos;m</span>

@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -393,15 +395,12 @@ export function FilterPanel({
             {t("fields.amountMin")}
           </label>
 
-          <input
-            type="number"
+          <MoneyInput
             value={filters.amountMin ?? ""}
-            onChange={(event) =>
-              onChange(
+            onValueChange={(rawValue) => onChange(
                 "amountMin",
-                event.target.value,
-              )
-            }
+                rawValue,
+              )}
             placeholder="0"
             className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
@@ -413,15 +412,12 @@ export function FilterPanel({
             {t("fields.amountMax")}
           </label>
 
-          <input
-            type="number"
+          <MoneyInput
             value={filters.amountMax ?? ""}
-            onChange={(event) =>
-              onChange(
+            onValueChange={(rawValue) => onChange(
                 "amountMax",
-                event.target.value,
-              )
-            }
+                rawValue,
+              )}
             placeholder="9999999"
             className="w-full bg-surface-hover border border-border rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />

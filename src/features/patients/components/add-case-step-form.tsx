@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Combobox } from "@/components/ui/combobox";
 import { Dialog } from "@/components/ui/dialog";
 import { Sheet } from "@/components/ui/sheet";
@@ -236,11 +238,10 @@ export function AddCaseStepForm({
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-            <input
-              type="number"
+            <MoneyInput
               min="0"
               value={stepAmount}
-              onChange={(e) => setStepAmount(e.target.value)}
+              onValueChange={(rawValue) => setStepAmount(rawValue)}
               placeholder="0"
               className={inputCls}
             />
@@ -352,11 +353,10 @@ export function AddCaseStepForm({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text">{t("forms.amount")}</label>
-            <input
-              type="number"
+            <MoneyInput
               min="0"
               value={stepAmount}
-              onChange={(e) => setStepAmount(e.target.value)}
+              onValueChange={(rawValue) => setStepAmount(rawValue)}
               placeholder="0"
               className={inputCls}
             />

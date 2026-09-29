@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -259,11 +261,10 @@ export function WardPaymentPanel({ wardId, isOccupied }: Props) {
             <label className="text-xs font-medium text-secondary mb-1 block">
               Miqdor (so'm)
             </label>
-            <input
-              type="number"
+            <MoneyInput
               min={1}
               value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
+              onValueChange={(rawValue) => setDepositAmount(rawValue)}
               placeholder="0"
               className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
             />
