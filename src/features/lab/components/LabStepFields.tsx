@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Combobox } from "@/components/ui/combobox";
 import { useTranslations } from "next-intl";
 import { Check, X } from "lucide-react";
@@ -169,11 +171,10 @@ export function LabStepFields({ labDepts, state }: LabStepFieldsProps) {
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-text">{t("lab.totalAmount")}</label>
           <div className="relative">
-            <input
-              type="number"
+            <MoneyInput
               min={0}
               value={labAmount}
-              onChange={(e) => setLabAmountOverride(e.target.value)}
+              onValueChange={(rawValue) => setLabAmountOverride(rawValue)}
               className={`${inputCls} pr-14`}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">so&apos;m</span>

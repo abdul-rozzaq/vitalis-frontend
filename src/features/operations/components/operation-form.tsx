@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
@@ -559,11 +561,10 @@ export function OperationForm({
                 </div>
                 <div className="col-span-3">
                   {idx === 0 && <label className={labelClass}>{t("operationForm.price")}</label>}
-                  <input
-                    type="number"
+                  <MoneyInput
                     min={0}
                     value={item.unitPrice}
-                    onChange={(e) => updateItem(idx, "unitPrice", Number(e.target.value))}
+                    onValueChange={(rawValue) => updateItem(idx, "unitPrice", Number(rawValue))}
                     className={fieldClass}
                   />
                 </div>

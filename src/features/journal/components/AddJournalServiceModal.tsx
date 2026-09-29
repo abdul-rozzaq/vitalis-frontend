@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Dialog } from "@/components/ui/dialog";
 import { api } from "@/shared/lib/api";
 import { useMutation } from "@tanstack/react-query";
@@ -35,7 +37,7 @@ export function AddJournalServiceModal({ caseId, onClose, onSuccess }: Props) {
         </label>
         <label className="block space-y-1 text-sm text-text">
           <span>{t("servicePrice")}</span>
-          <input type="number" min="0.01" step="0.01" required value={price} onChange={(event) => setPrice(event.target.value)} className="w-full rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary" />
+          <MoneyInput min="0.01" step="0.01" required value={price} onValueChange={(rawValue) => setPrice(rawValue)} className="w-full rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary" />
         </label>
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm text-text">{t("cancel")}</button>

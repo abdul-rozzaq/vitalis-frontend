@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { api } from "@/shared/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -296,11 +298,10 @@ export function OperationTypeForm({
               <div>
                 <label className={labelClass}>{t("operationTypes.form.basePrice")}</label>
                 <div className="relative">
-                  <input
-                    type="number"
+                  <MoneyInput
                     min={0}
                     value={basePrice}
-                    onChange={(e) => setBasePrice(e.target.value)}
+                    onValueChange={(rawValue) => setBasePrice(rawValue)}
                     placeholder="0"
                     className={`${fieldClass} pr-14`}
                   />
@@ -409,11 +410,10 @@ export function OperationTypeForm({
                           />
                         </div>
                         <div className="col-span-4">
-                          <input
-                            type="number"
+                          <MoneyInput
                             min={0}
                             value={item.price}
-                            onChange={(e) => updateItem(idx, "price", e.target.value)}
+                            onValueChange={(rawValue) => updateItem(idx, "price", rawValue)}
                             className="w-full bg-transparent text-sm text-white focus:outline-none text-right"
                           />
                         </div>

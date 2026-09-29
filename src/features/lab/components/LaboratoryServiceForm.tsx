@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { FlaskConical, ListChecks, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -74,11 +76,10 @@ export function LaboratoryServiceForm({ initialData, onSubmit, onCancel, isPendi
               <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
             <div className="relative">
-              <input
-                type="number"
+              <MoneyInput
                 min="0"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onValueChange={(rawValue) => setPrice(rawValue)}
                 className="w-full bg-surface border border-border rounded-md pl-3 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted pointer-events-none">

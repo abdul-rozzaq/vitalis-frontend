@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Combobox } from "@/components/ui/combobox";
 import { PaymentMethod } from "@/features/invoices/types";
 import { api } from "@/shared/lib/api";
@@ -252,8 +254,8 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
       <div className="rounded-lg border border-border bg-surface p-4 space-y-4">
         <p className="text-xs font-semibold text-text uppercase tracking-wide">{t("wards.dailyPrices")}</p>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="text-sm font-medium text-text mb-1 block">{t("wards.patientPricePerDay")}</label><input type="number" min="0" value={patientPricePerDay} onChange={(e) => setPatientPricePerDay(e.target.value)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" /></div>
-          <div><label className="text-sm font-medium text-text mb-1 block">{t("wards.companionPricePerDay")}</label><input type="number" min="0" value={companionPricePerDay} onChange={(e) => setCompanionPricePerDay(e.target.value)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" /></div>
+          <div><label className="text-sm font-medium text-text mb-1 block">{t("wards.patientPricePerDay")}</label><MoneyInput min="0" value={patientPricePerDay} onValueChange={(rawValue) => setPatientPricePerDay(rawValue)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" /></div>
+          <div><label className="text-sm font-medium text-text mb-1 block">{t("wards.companionPricePerDay")}</label><MoneyInput min="0" value={companionPricePerDay} onValueChange={(rawValue) => setCompanionPricePerDay(rawValue)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" /></div>
         </div>
       </div>
 
@@ -266,7 +268,7 @@ export function WardCheckInForm({ patientId, onSuccess, onCancel }: WardCheckInF
 
       <div className="rounded-lg border border-primary-200 bg-primary-50 dark:bg-primary-950/20 p-4 space-y-3">
         <p className="text-xs font-semibold text-primary-700 uppercase tracking-wide flex items-center gap-1.5"><Banknote className="w-4 h-4" />{t("wards.prepayment")} <span className="font-normal">({t("common.optional")})</span></p>
-        <input type="number" min="0" value={prepaymentAmount} onChange={(e) => setPrepaymentAmount(e.target.value)} placeholder="0" className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" />
+        <MoneyInput min="0" value={prepaymentAmount} onValueChange={(rawValue) => setPrepaymentAmount(rawValue)} placeholder="0" className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm" />
         <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)} className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm">{PAYMENT_METHODS.map((m) => <option key={m} value={m}>{t(`paymentMethods.${m}`)}</option>)}</select>
       </div>
 

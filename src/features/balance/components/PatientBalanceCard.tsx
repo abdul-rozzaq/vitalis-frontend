@@ -1,4 +1,7 @@
 "use client";
+
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { useTranslations } from "next-intl";
 
 import { useState } from "react";
@@ -271,7 +274,7 @@ function AmountField({ label, value, onChange, accent = "primary" }: { label: st
       <label className="text-sm font-medium text-text">{label}</label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">UZS</span>
-        <input type="number" min="0.01" step="0.01" placeholder="0.00" value={value} onChange={(e) => onChange(e.target.value)}
+        <MoneyInput min="0.01" step="0.01" placeholder="0.00" value={value} onValueChange={(rawValue) => onChange(rawValue)}
           className={`w-full bg-surface border border-border rounded-md pl-12 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-${accent}/20 focus:border-${accent} transition-all`} />
       </div>
     </div>

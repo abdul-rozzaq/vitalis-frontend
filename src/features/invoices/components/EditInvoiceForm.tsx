@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { Invoice, SOURCE_LABELS } from "@/features/invoices/types";
 import { Patient } from "@/features/patients/types";
 import { formatCurrency as fmt } from "@/shared/lib/formatters";
@@ -179,13 +180,12 @@ export function EditInvoiceForm({ invoice, patients, onSubmit, onCancel, isLoadi
               onChange={(e) => updateItem(i, "quantity", e.target.value)}
               className="bg-surface border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-center"
             />
-            <input
-              type="number"
+            <MoneyInput
               min="0"
               step="0.01"
               placeholder="Narx"
               value={item.unitPrice}
-              onChange={(e) => updateItem(i, "unitPrice", e.target.value)}
+              onValueChange={(rawValue) => updateItem(i, "unitPrice", rawValue)}
               className="bg-surface border border-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
             <button

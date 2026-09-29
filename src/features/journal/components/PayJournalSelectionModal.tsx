@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Modal } from "@/components/design-system/Modal";
 import { Invoice, PaymentMethod } from "@/features/invoices/types";
 import { api } from "@/shared/lib/api";
@@ -60,7 +62,7 @@ export function PayJournalSelectionModal({ record, itemIds, onClose, onSuccess }
         <div className="flex justify-between gap-3 text-success"><span>{t("paid")}</span><span className="tabular-nums">{formatCurrency(paid)} UZS</span></div>
         <div className="flex justify-between gap-3 border-t border-border pt-2 font-semibold text-text"><span>{t("remaining")}</span><span className="tabular-nums">{formatCurrency(remaining)} UZS</span></div>
       </div>
-      <div><label htmlFor="journal-pay-amount" className="mb-1.5 block text-sm font-medium text-text">{t("amountLabel")}</label><div className="relative"><input id="journal-pay-amount" value={amount} onChange={e => setAmount(e.target.value.replace(",", "."))} inputMode="decimal" className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-14 text-text outline-none focus:border-accent" /><span className="absolute right-3 top-2.5 text-sm text-text-muted">UZS</span></div><p className="mt-1 text-xs text-text-muted">{t("partialPaymentHint")}</p></div>
+      <div><label htmlFor="journal-pay-amount" className="mb-1.5 block text-sm font-medium text-text">{t("amountLabel")}</label><div className="relative"><MoneyInput id="journal-pay-amount" value={amount} onValueChange={(rawValue) => setAmount(rawValue.replace(",", "."))} inputMode="decimal" className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-14 text-text outline-none focus:border-accent" /><span className="absolute right-3 top-2.5 text-sm text-text-muted">UZS</span></div><p className="mt-1 text-xs text-text-muted">{t("partialPaymentHint")}</p></div>
       <div><label htmlFor="journal-pay-method" className="mb-1.5 block text-sm font-medium text-text">{t("paymentMethod")}</label><select id="journal-pay-method" value={method} onChange={e => setMethod(e.target.value as PaymentMethod)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-text">{(["CASH", "CARD", "TRANSFER", "OTHER"] as const).map(value => <option key={value} value={value}>{tAll(`paymentMethods.${value}`)}</option>)}</select></div>
       <label className="flex items-center gap-2 text-sm text-text"><input type="checkbox" checked={printAfterPay} onChange={e => setPrintAfterPay(e.target.checked)} className="h-4 w-4 accent-accent" />{t("printReceipt")}</label>
       {!valid && <p className="text-xs text-danger">{t("amountValidation", { amount: formatCurrency(remaining) })}</p>}

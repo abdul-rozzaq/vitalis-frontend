@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Can } from "@/components/ui/can";
 import { DataTable } from "@/components/ui/data-table";
 import { Sheet } from "@/components/ui/sheet";
@@ -465,11 +467,10 @@ export default function DiagnosticsCentersPage() {
               {t("diagnostics.servicePrice")}
               <span className="ml-1 text-text-muted font-normal text-xs">{t("forms.optional")}</span>
             </label>
-            <input
-              type="number"
+            <MoneyInput
               min="0"
               value={svcPrice}
-              onChange={(e) => setSvcPrice(e.target.value)}
+              onValueChange={(rawValue) => setSvcPrice(rawValue)}
               className="w-full bg-surface border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all shadow-sm"
             />
           </div>

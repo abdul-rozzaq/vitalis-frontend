@@ -18,7 +18,7 @@ import {
   Trash2,
   XCircle
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -75,13 +75,14 @@ interface Operation {
   completedAt?: string;
   totalPrice: string;
   note?: string;
+  contractNumber?: string;
   patient: { id: string; first_name: string; last_name: string };
   operationType?: { id: string; name: string } | null;
   room?: { id: string; name: string };
   department?: { id: string; name: string };
   surgeons: OperationSurgeon[];
   items: OperationItem[];
-  caseStep?: { id: string; labOrders?: LabOrder[] } | null;
+  caseStep?: { id: string; caseId: string; labOrders?: LabOrder[] } | null;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -266,6 +267,7 @@ function StatusBadge({
 export default function OperationDetailsPage() {
   const t = useTranslations();
   const router = useRouter();
+  const preparationReviewed = useSearchParams().get("prepared") === "1";
   const params = useParams();
   const operationId = params?.id as string;
   const queryClient = useQueryClient();
@@ -311,10 +313,11 @@ export default function OperationDetailsPage() {
     queryClient.invalidateQueries({ queryKey: ["operation", operationId] });
   };
 
+
   const startMutation = useMutation({
     mutationFn: () => api.patch(`/operations/${operationId}/start`),
     onSuccess: () => { invalidate(); toast.success("Operatsiya boshlandi"); },
-    onError: () => toast.error("Amalni bajarishda xatolik yuz berdi"),
+    onError: (error: any) => { invalidate(); toast.error(error?.response?.data?.message || "Amalni bajarishda xatolik yuz berdi"); },
   });
 
   const completeMutation = useMutation({
@@ -571,7 +574,7 @@ export default function OperationDetailsPage() {
           <div className="space-y-4">
 
             {/* Payment */}
-            <OperationPaymentCard operationId={op.id} patientId={op.patientId} operationTotalPrice={Number(op.totalPrice)} />
+            <OperationPaymentCard caseId={op.caseStep?.caseId} operationId={op.id} patientId={op.patientId} operationTotalPrice={Number(op.totalPrice)} />
 
             {/* Time info */}
             <div className="bg-surface border border-border rounded-xl p-5">
@@ -628,7 +631,15 @@ export default function OperationDetailsPage() {
 
                 {op.status === "SCHEDULED" && (
                   <ActionButton
-                    onClick={() => startMutation.mutate()}
+                    onClick={() => {
+                      const missingRequired = !op.operationType || !op.department || !op.room || !op.scheduledAt || !op.contractNumber?.trim() || !op.surgeons.some(s => s.role === "LEAD");
+                      const missingOptional = !op.note?.trim() || !op.items.length || !op.caseStep || !op.caseStep.labOrders?.some(order => order.items.length > 0) || !op.surgeons.some(s => s.role === "ASSISTANT");
+                      if (missingRequired || (!preparationReviewed && missingOptional)) {
+                        router.push(`/operations/${op.id}/edit?prepare=1`);
+                        return;
+                      }
+                      startMutation.mutate();
+                    }}
                     icon={<Play className="w-4 h-4" />}
                     label={t("operations.actionStart")}
                     variant="primary"

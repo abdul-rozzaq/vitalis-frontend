@@ -1,5 +1,7 @@
 "use client";
 
+import { MoneyInput } from "@/components/ui/money-input";
+
 import { Combobox } from "@/components/ui/combobox";
 import { api } from "@/shared/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -285,11 +287,10 @@ export function WardEditModal({ ward, onClose }: Props) {
                 <label className="text-sm font-medium text-text mb-1 block">
                   {t("wards.patientPricePerDay")}
                 </label>
-                <input
-                  type="number"
+                <MoneyInput
                   min="0"
                   value={patientPricePerDay}
-                  onChange={(e) => setPatientPricePerDay(e.target.value)}
+                  onValueChange={(rawValue) => setPatientPricePerDay(rawValue)}
                   className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>
@@ -297,11 +298,10 @@ export function WardEditModal({ ward, onClose }: Props) {
                 <label className="text-sm font-medium text-text mb-1 block">
                   {t("wards.companionPricePerDay")}
                 </label>
-                <input
-                  type="number"
+                <MoneyInput
                   min="0"
                   value={companionPricePerDay}
-                  onChange={(e) => setCompanionPricePerDay(e.target.value)}
+                  onValueChange={(rawValue) => setCompanionPricePerDay(rawValue)}
                   className="w-full bg-surface border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
               </div>
