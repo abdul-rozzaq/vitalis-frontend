@@ -12,6 +12,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 };
 
 export interface InvoiceItem {
+  detailHref?: string | null;
   id: string;
   description: string;
   quantity: number;

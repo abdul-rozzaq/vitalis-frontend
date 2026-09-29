@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { Dialog } from "@/components/ui/dialog";
 import { Invoice, InvoiceItem } from "@/features/invoices/types";
 import { Can } from "@/components/ui/can";
 import { formatCurrency, formatDateTime } from "@/shared/lib/formatters";
@@ -12,6 +14,7 @@ import { journalItemDue, journalSelectionDue, paymentGroupIds } from "../utils/p
 export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelected, onCancelItem }: { invoice: Invoice; onAddService?: () => void; onPayItem?: (item: InvoiceItem) => void; onPaySelected?: (itemIds: string[]) => void; onCancelItem?: (item: InvoiceItem) => void }) {
   const t = useTranslations("journal");
   const items = invoice.items;
+  const [detailItem, setDetailItem] = useState<InvoiceItem | null>(null);
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -29,6 +32,14 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
   };
   return (
     <div className="space-y-4">
+      {detailItem && <Dialog isOpen onClose={() => setDetailItem(null)} title={detailItem.description}>
+        <dl className="space-y-3 text-sm text-text">
+          <div className="flex justify-between gap-4"><dt>{t("groupLabel")}</dt><dd>{t(`groups.${detailItem.sourceType}`)}</dd></div>
+          <div className="flex justify-between gap-4"><dt>{t("date")}</dt><dd>{formatDateTime(detailItem.createdAt)}</dd></div>
+          <div className="flex justify-between gap-4"><dt>{t("total")}</dt><dd>{formatCurrency(detailItem.totalPrice)} UZS</dd></div>
+          <div className="flex justify-between gap-4"><dt>{t("remaining")}</dt><dd>{formatCurrency(journalItemDue(detailItem))} UZS</dd></div>
+        </dl>
+      </Dialog>}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
         <div className="relative sm:max-w-xs w-full">
           <Search className="absolute left-3 top-3 w-4 h-4 text-text-muted" />
@@ -64,7 +75,7 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
             {visible.map(item => (
               <tr key={item.id} className="hover:bg-surface-hover/60 transition-colors">
                 {onPaySelected && <td className="px-4 py-3"><Can roles={["ADMIN", "KASSIR"]}><input type="checkbox" aria-label={`${item.description} — ${t("selectService")}`} checked={selectedIds.includes(item.id)} disabled={journalItemDue(item) <= 0.001} onChange={() => toggleItem(item.id)} className="h-4 w-4 accent-accent disabled:opacity-40" /></Can></td>}
-                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.description}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
+                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.detailHref ? <Link href={item.detailHref} className="hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</Link> : <button type="button" onClick={() => setDetailItem(item)} className="text-left cursor-pointer hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</button>}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
                 <td className="px-4 py-3 text-xs text-text-muted whitespace-nowrap">{formatDateTime(item.createdAt)}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(item.totalPrice)}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(journalItemDue(item))}</td>
