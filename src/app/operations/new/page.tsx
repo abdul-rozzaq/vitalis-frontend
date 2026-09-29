@@ -64,7 +64,12 @@ interface OperationType {
 interface Room { id: string; name: string; roomType: string }
 interface Department { id: string; name: string }
 interface Employee { id: string; first_name: string; last_name: string; role: string }
-interface Case { id: string; status: string; chiefComplaint?: string | null }
+interface Case {
+  id: string;
+  status: string;
+  chiefComplaint?: string | null;
+  billingMode: "MASTER" | "PER_SERVICE";
+}
 interface Laboratory { id: string; name: string; services: { id: string; name: string; price?: number | null }[] }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -277,6 +282,10 @@ export default function NewOperationPage() {
     mutationFn: (dto: any) => api.post("/operations", dto),
     onSuccess: () => {
       toast.success("Operatsiya muvaffaqiyatli rejalashtirildi");
+      queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["patient-cases", patientId] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
       router.push("/operations");
     },
     onError: (err: any) => {
@@ -377,7 +386,7 @@ export default function NewOperationPage() {
     .filter((c) => c.status === "ACTIVE")
     .map((c) => ({
       value: c.id,
-      label: c.chiefComplaint || `Murojaat #${c.id.slice(0, 5).toUpperCase()}`,
+      label: `${c.billingMode === "MASTER" ? "Jurnal" : "Alohida hisob"} — ${c.chiefComplaint || `Murojaat #${c.id.slice(0, 5).toUpperCase()}`}`,
     }));
 
   // ── Grouped doctor options ────────────────────────────────────────────────────
