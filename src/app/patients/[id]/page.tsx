@@ -73,9 +73,21 @@ export default function PatientDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-cases", id] }),
   });
 
+  const { mutate: convertToMaster, isPending: isConvertingToMaster, variables: convertingCaseId } = useMutation({
+    mutationFn: (caseId: string) => api.post(`/cases/${caseId}/convert-to-master`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-cases", id] });
+      queryClient.invalidateQueries({ queryKey: ["patient-case-invoices", id] });
+      queryClient.invalidateQueries({ queryKey: ["patient-invoices", id] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["journals"] });
+    },
+  });
+
   // Hamshira faqat protsedura (ukol) qo'sha oladi — boshqa qadam turlarini
   // backend ham rad etadi (qarang: CasesService.addStep).
   const isNurse = typeof user?.role === "string" && user.role.toUpperCase() === "HAMSHIRA";
+  const canConvertToMaster = ["ADMIN", "KASSIR", "DOCTOR"].includes(typeof user?.role === "string" ? user.role.toUpperCase() : "");
   const addStepAvailableTypes = isNurse
     ? (["PROCEDURE"] as const)
     : (["CONSULTATION", "LAB", "DIAGNOSTIC", "PROCEDURE", "REFERRAL", "DISCHARGE"] as const);
@@ -422,6 +434,10 @@ export default function PatientDetailPage() {
                         <CaseCard
                           patientCase={patientCase}
                           onAddStep={() => setAddStepCaseId(patientCase.id)}
+                          onConvertToMaster={canConvertToMaster ? () => {
+                            if (confirm(t("cases.convertToMasterConfirm"))) convertToMaster(patientCase.id);
+                          } : undefined}
+                          isConvertingToMaster={isConvertingToMaster && convertingCaseId === patientCase.id}
                           onCloseCase={(status) => {
                             const msg = status === "COMPLETED" ? "Kasusni yakunlashni tasdiqlaysizmi?" : "Kasusni bekor qilishni tasdiqlaysizmi?";
                             if (confirm(msg)) closeCase({ caseId: patientCase.id, status });
