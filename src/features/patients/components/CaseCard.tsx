@@ -11,10 +11,12 @@ import Link from "next/link";
 interface CaseCardProps {
   patientCase: PatientCase;
   onAddStep?: () => void;
+  onConvertToMaster?: () => void;
+  isConvertingToMaster?: boolean;
   onCloseCase?: (status: "COMPLETED" | "CANCELLED") => void;
 }
 
-export function CaseCard({ patientCase, onAddStep, onCloseCase }: CaseCardProps) {
+export function CaseCard({ patientCase, onAddStep, onConvertToMaster, isConvertingToMaster, onCloseCase }: CaseCardProps) {
   const t = useTranslations();
 
   return (
@@ -42,6 +44,16 @@ export function CaseCard({ patientCase, onAddStep, onCloseCase }: CaseCardProps)
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <p className="text-xs text-text-muted">{formatDate(patientCase.openedAt)}</p>
+          {patientCase.status === "ACTIVE" && patientCase.billingMode === "PER_SERVICE" && onConvertToMaster && (
+            <button
+              onClick={onConvertToMaster}
+              disabled={isConvertingToMaster}
+              className="inline-flex items-center gap-1 text-xs font-medium text-accent bg-accent/10 hover:bg-accent/20 disabled:opacity-60 px-2 py-1 rounded-md transition-colors cursor-pointer"
+            >
+              <BookOpen className="w-3 h-3" />
+              {isConvertingToMaster ? "..." : t("cases.convertToMaster")}
+            </button>
+          )}
           {patientCase.status === "ACTIVE" && onAddStep && (
             <button onClick={onAddStep} className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-50 hover:bg-primary-100 px-2 py-1 rounded-md transition-colors cursor-pointer">
               <Plus className="w-3 h-3" />
