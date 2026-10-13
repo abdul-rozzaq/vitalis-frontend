@@ -178,7 +178,8 @@ function EmployeeDrilldown({ user, from, to, onBack }: { user: HrSummaryRow["use
 function RecordRow({ record }: { record: AttendanceRecord }) {
   const [editing, setEditing] = useState(false);
   const status = statusLabel[record.status] ?? { label: record.status, color: "bg-surface-secondary text-text-muted border-border" };
-  const incomplete = record.status === "MISSING_CHECKIN" || record.status === "MISSING_CHECKOUT";
+  const incomplete =
+    record.status === "MISSING_CHECKIN" || record.status === "MISSING_CHECKOUT" || record.status === "ABSENT";
 
   return (
     <>
@@ -218,9 +219,13 @@ function RecordRow({ record }: { record: AttendanceRecord }) {
 }
 
 function ManualAdjustForm({ record, onDone }: { record: AttendanceRecord; onDone: () => void }) {
-  const missingCheckout = record.status === "MISSING_CHECKOUT";
+  // ABSENT da ikkalasi ham yo'q — ikkala maydon ham ko'rsatiladi.
+  const needsCheckIn = record.status === "MISSING_CHECKIN" || record.status === "ABSENT";
+  const needsCheckOut = record.status === "MISSING_CHECKOUT" || record.status === "ABSENT";
+
   const adjust = useAdjustRecord();
-  const [value, setValue] = useState(() => format(new Date(missingCheckout ? record.shift.endAt : record.shift.startAt), "yyyy-MM-dd'T'HH:mm"));
+  const [checkInValue, setCheckInValue] = useState(() => format(new Date(record.shift.startAt), "yyyy-MM-dd'T'HH:mm"));
+  const [checkOutValue, setCheckOutValue] = useState(() => format(new Date(record.shift.endAt), "yyyy-MM-dd'T'HH:mm"));
   const [reason, setReason] = useState("");
 
   const submit = () => {
@@ -228,14 +233,12 @@ function ManualAdjustForm({ record, onDone }: { record: AttendanceRecord; onDone
       toast.error("Sabab kiritilishi shart");
       return;
     }
+    const payload: { checkInAt?: string; checkOutAt?: string; reason: string } = { reason: reason.trim() };
+    if (needsCheckIn) payload.checkInAt = new Date(checkInValue).toISOString();
+    if (needsCheckOut) payload.checkOutAt = new Date(checkOutValue).toISOString();
+
     adjust.mutate(
-      {
-        recordId: record.id,
-        payload: {
-          [missingCheckout ? "checkOutAt" : "checkInAt"]: new Date(value).toISOString(),
-          reason: reason.trim(),
-        },
-      },
+      { recordId: record.id, payload },
       {
         onSuccess: () => {
           toast.success("Tuzatildi — audit iziga yozildi");
@@ -248,10 +251,28 @@ function ManualAdjustForm({ record, onDone }: { record: AttendanceRecord; onDone
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="flex flex-col gap-1">
-        <span className="text-[11px] text-text-muted">{missingCheckout ? "Chiqish vaqti" : "Kirish vaqti"}</span>
-        <input type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface" />
-      </label>
+      {needsCheckIn && (
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] text-text-muted">Kirish vaqti</span>
+          <input
+            type="datetime-local"
+            value={checkInValue}
+            onChange={(e) => setCheckInValue(e.target.value)}
+            className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface"
+          />
+        </label>
+      )}
+      {needsCheckOut && (
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] text-text-muted">Chiqish vaqti</span>
+          <input
+            type="datetime-local"
+            value={checkOutValue}
+            onChange={(e) => setCheckOutValue(e.target.value)}
+            className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface"
+          />
+        </label>
+      )}
       <label className="flex flex-col gap-1 flex-1 min-w-[200px]">
         <span className="text-[11px] text-text-muted">Sabab (majburiy)</span>
         <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Qurilma ishlamadi / xodim unutdi" className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full" />
