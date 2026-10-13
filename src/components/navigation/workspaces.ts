@@ -138,6 +138,11 @@ export const WORKSPACES: Workspace[] = [
         roles: ["ADMIN", "DIREKTOR"],
       },
       {
+        labelKey: "nav.hr",
+        href: "/hr",
+        roles: ["ADMIN", "DIREKTOR", "HISOBCHI"],
+      },
+      {
         labelKey: "nav.employees",
         href: "/employees",
         roles: ["ADMIN", "DIREKTOR"],

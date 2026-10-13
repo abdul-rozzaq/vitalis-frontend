@@ -57,6 +57,15 @@ export function useAttendanceRecord(id: string) {
   });
 }
 
+/** HR nazorat sahifasi — davr bo'yicha xodim bo'yicha jamlangan davomat. */
+export function useHrSummary(from: string, to: string) {
+  return useQuery({
+    queryKey: [...attendanceKeys.all, "hr-summary", from, to],
+    queryFn: () => attendanceApi.getHrSummary(from, to),
+    enabled: !!from && !!to,
+  });
+}
+
 export function useMyAttendance() {
   return useQuery({
     queryKey: attendanceKeys.my(),

@@ -47,7 +47,8 @@
     "new-patient": "Новый пациент",
     "new-employee": "Новый сотрудник",
     "attendance": "Посещаемость",
-    "attendance-live": "Кто на смене"
+    "attendance-live": "Кто на смене",
+    "hr": "HR контроль"
   },
   "common": {
     "filter": "Фильтр",
