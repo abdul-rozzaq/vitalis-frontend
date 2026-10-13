@@ -2,11 +2,7 @@
 
 import { PageContent, PageHeader } from "@/components/layouts/PageLayout";
 import { Can } from "@/components/ui/can";
-import {
-  useAdjustRecord,
-  useAttendanceRecords,
-  useHrSummary,
-} from "@/features/attendance/hooks/use-attendance";
+import { useAdjustRecord, useAttendanceRecords, useHrSummary } from "@/features/attendance/hooks/use-attendance";
 import { AttendanceRecord, HrSummaryRow } from "@/features/attendance/lib/attendance-api";
 import { format } from "date-fns";
 import { uz } from "date-fns/locale";
@@ -62,12 +58,7 @@ export default function HrControlPage() {
 
       <PageContent>
         {selected ? (
-          <EmployeeDrilldown
-            user={selected}
-            from={from}
-            to={to}
-            onBack={() => setSelected(null)}
-          />
+          <EmployeeDrilldown user={selected} from={from} to={to} onBack={() => setSelected(null)} />
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
@@ -94,11 +85,7 @@ export default function HrControlPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {summary.map((row) => (
-                  <tr
-                    key={row.user.id}
-                    onClick={() => setSelected(row.user)}
-                    className="hover:bg-surface-hover transition-colors cursor-pointer"
-                  >
+                  <tr key={row.user.id} onClick={() => setSelected(row.user)} className="hover:bg-surface-hover transition-colors cursor-pointer">
                     <td className="px-4 py-3">
                       <div className="font-medium text-text">
                         {row.user.last_name} {row.user.first_name}
@@ -106,42 +93,12 @@ export default function HrControlPage() {
                       <div className="text-xs text-secondary">{row.user.role}</div>
                     </td>
                     <td className="px-4 py-3 text-center">{row.shiftsAttended}</td>
-                    <td className="px-4 py-3 text-center">
-                      {row.shiftsMissed > 0 ? (
-                        <span className="text-danger-600 font-medium">{row.shiftsMissed}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
+                    <td className="px-4 py-3 text-center">{row.shiftsMissed > 0 ? <span className="text-danger-600 font-medium">{row.shiftsMissed}</span> : "—"}</td>
                     <td className="px-4 py-3 text-center font-medium">{fmtHours(row.workedMinutes)}</td>
-                    <td className="px-4 py-3 text-center">
-                      {row.lateMinutes > 0 ? (
-                        <span className="text-warning-700">{fmtHours(row.lateMinutes)}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {row.earlyLeaveMinutes > 0 ? (
-                        <span className="text-warning-700">{fmtHours(row.earlyLeaveMinutes)}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {row.overtimeMinutes > 0 ? (
-                        <span className="text-primary-600 font-medium">{fmtHours(row.overtimeMinutes)}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {row.incompleteCount > 0 ? (
-                        <span className="text-danger-600 font-medium">{row.incompleteCount}</span>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
+                    <td className="px-4 py-3 text-center">{row.lateMinutes > 0 ? <span className="text-warning-700">{fmtHours(row.lateMinutes)}</span> : "—"}</td>
+                    <td className="px-4 py-3 text-center">{row.earlyLeaveMinutes > 0 ? <span className="text-warning-700">{fmtHours(row.earlyLeaveMinutes)}</span> : "—"}</td>
+                    <td className="px-4 py-3 text-center">{row.overtimeMinutes > 0 ? <span className="text-primary-600 font-medium">{fmtHours(row.overtimeMinutes)}</span> : "—"}</td>
+                    <td className="px-4 py-3 text-center">{row.incompleteCount > 0 ? <span className="text-danger-600 font-medium">{row.incompleteCount}</span> : "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -169,30 +126,13 @@ function fmtTime(iso: string | null) {
   return iso ? format(new Date(iso), "HH:mm") : "-";
 }
 
-function EmployeeDrilldown({
-  user,
-  from,
-  to,
-  onBack,
-}: {
-  user: HrSummaryRow["user"];
-  from: string;
-  to: string;
-  onBack: () => void;
-}) {
+function EmployeeDrilldown({ user, from, to, onBack }: { user: HrSummaryRow["user"]; from: string; to: string; onBack: () => void }) {
   const { data: records = [], isLoading } = useAttendanceRecords({ userId: user.id, from, to });
-  const sorted = useMemo(
-    () => [...records].sort((a, b) => new Date(b.shift.startAt).getTime() - new Date(a.shift.startAt).getTime()),
-    [records],
-  );
+  const sorted = useMemo(() => [...records].sort((a, b) => new Date(b.shift.startAt).getTime() - new Date(a.shift.startAt).getTime()), [records]);
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors"
-      >
+      <button type="button" onClick={onBack} className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Jamlangan ro&apos;yxatga qaytish
       </button>
@@ -258,11 +198,7 @@ function RecordRow({ record }: { record: AttendanceRecord }) {
         <td className="px-4 py-3">
           <Can roles={["ADMIN"]}>
             {incomplete && (
-              <button
-                type="button"
-                onClick={() => setEditing((v) => !v)}
-                className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-              >
+              <button type="button" onClick={() => setEditing((v) => !v)} className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
                 <Wrench className="w-3.5 h-3.5" />
                 Tuzatish
               </button>
@@ -284,9 +220,7 @@ function RecordRow({ record }: { record: AttendanceRecord }) {
 function ManualAdjustForm({ record, onDone }: { record: AttendanceRecord; onDone: () => void }) {
   const missingCheckout = record.status === "MISSING_CHECKOUT";
   const adjust = useAdjustRecord();
-  const [value, setValue] = useState(() =>
-    format(new Date(missingCheckout ? record.shift.endAt : record.shift.startAt), "yyyy-MM-dd'T'HH:mm"),
-  );
+  const [value, setValue] = useState(() => format(new Date(missingCheckout ? record.shift.endAt : record.shift.startAt), "yyyy-MM-dd'T'HH:mm"));
   const [reason, setReason] = useState("");
 
   const submit = () => {
@@ -316,37 +250,17 @@ function ManualAdjustForm({ record, onDone }: { record: AttendanceRecord; onDone
     <div className="flex flex-wrap items-end gap-3">
       <label className="flex flex-col gap-1">
         <span className="text-[11px] text-text-muted">{missingCheckout ? "Chiqish vaqti" : "Kirish vaqti"}</span>
-        <input
-          type="datetime-local"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface"
-        />
+        <input type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface" />
       </label>
       <label className="flex flex-col gap-1 flex-1 min-w-[200px]">
         <span className="text-[11px] text-text-muted">Sabab (majburiy)</span>
-        <input
-          type="text"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Qurilma ishlamadi / xodim unutdi"
-          className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full"
-        />
+        <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Qurilma ishlamadi / xodim unutdi" className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full" />
       </label>
-      <button
-        type="button"
-        onClick={submit}
-        disabled={adjust.isPending}
-        className="bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5"
-      >
+      <button type="button" onClick={submit} disabled={adjust.isPending} className="bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-1.5">
         {adjust.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
         Saqlash
       </button>
-      <button
-        type="button"
-        onClick={onDone}
-        className="text-sm text-text-muted hover:text-text px-2 py-1.5"
-      >
+      <button type="button" onClick={onDone} className="text-sm text-text-muted hover:text-text px-2 py-1.5">
         Bekor qilish
       </button>
     </div>

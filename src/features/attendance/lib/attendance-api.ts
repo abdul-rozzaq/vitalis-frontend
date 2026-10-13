@@ -1,13 +1,6 @@
 import { api } from "@/shared/lib/api";
 
-export type AttendanceRecordStatus =
-  | "PRESENT"
-  | "LATE"
-  | "EARLY_LEAVE"
-  | "LATE_AND_EARLY_LEAVE"
-  | "ABSENT"
-  | "MISSING_CHECKOUT"
-  | "MISSING_CHECKIN";
+export type AttendanceRecordStatus = "PRESENT" | "LATE" | "EARLY_LEAVE" | "LATE_AND_EARLY_LEAVE" | "ABSENT" | "MISSING_CHECKOUT" | "MISSING_CHECKIN";
 export type AttendanceEventStatus = "PENDING" | "MATCHED" | "UNKNOWN_EMPLOYEE" | "NO_SHIFT";
 
 export interface AttendanceEvent {
