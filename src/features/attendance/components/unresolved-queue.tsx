@@ -1,17 +1,21 @@
 "use client";
 
+import { api } from "@/shared/lib/api";
 import { fmtShiftRange } from "@/shared/lib/shifts-api";
+import { useQuery } from "@tanstack/react-query";
 import { format, isSameDay } from "date-fns";
 import {
   AlertTriangle,
   CalendarClock,
   CheckCircle2,
   Loader2,
+  Search,
   ScanFace,
   UserPlus,
   Wrench,
+  X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import {
   useAdjustRecord,
@@ -26,6 +30,85 @@ import {
   UnknownEmployeeGroup,
   UnresolvedRecord,
 } from "../lib/attendance-api";
+
+/** Terminal ID bog'lashda tanlanadigan to'liq xodimlar ro'yxati (filtr yo'q). */
+function useAllStaff() {
+  return useQuery<StaffRef[]>({
+    queryKey: ["staff-all"],
+    queryFn: () => api.get("/users").then((r) => r.data.data ?? r.data),
+  });
+}
+
+/** Qidiruv bilan xodim tanlash — oddiy `<select>` o'rniga, ro'yxat katta bo'lganda. */
+const StaffSearchPicker: React.FC<{
+  staff: StaffRef[];
+  value: string;
+  onChange: (userId: string) => void;
+}> = ({ staff, value, onChange }) => {
+  const [query, setQuery] = useState("");
+  const selected = staff.find((s) => s.id === value) ?? null;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return staff;
+    return staff.filter((s) => `${s.first_name} ${s.last_name}`.toLowerCase().includes(q));
+  }, [staff, query]);
+
+  if (selected) {
+    return (
+      <div className="flex items-center justify-between gap-2 border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface">
+        <span className="truncate">
+          {selected.first_name} {selected.last_name} — {selected.role}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            onChange("");
+            setQuery("");
+          }}
+          className="text-text-muted hover:text-danger shrink-0"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Xodim qidirish…"
+          className="w-full border border-border rounded-md pl-8 pr-2.5 py-1.5 text-sm bg-surface"
+        />
+      </div>
+      {query && (
+        <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto border border-border rounded-md bg-surface shadow-lg divide-y divide-border">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-text-muted text-center py-2">Topilmadi</p>
+          ) : (
+            filtered.slice(0, 20).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  onChange(s.id);
+                  setQuery("");
+                }}
+                className="w-full text-left px-2.5 py-1.5 text-sm hover:bg-surface-hover truncate"
+              >
+                {s.first_name} {s.last_name} — {s.role}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /** Bir necha skanning vaqt oralig'i — `05.08 09:12 → 11:40` yoki bitta vaqt. */
 function fmtRange(firstAt: string, lastAt: string, count: number): string {
@@ -143,18 +226,7 @@ const UnknownEmployeeCard: React.FC<{
       tone="danger"
       onPictureClick={onPictureClick}
     >
-      <select
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full"
-      >
-        <option value="">Xodimni tanlang…</option>
-        {staff.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.first_name} {s.last_name} — {s.role}
-          </option>
-        ))}
-      </select>
+      <StaffSearchPicker staff={staff} value={userId} onChange={setUserId} />
       <button
         type="button"
         onClick={submit}
@@ -165,11 +237,6 @@ const UnknownEmployeeCard: React.FC<{
         Bog&apos;lash
         {group.count > 1 && <span className="opacity-80">({group.count} skan)</span>}
       </button>
-      {staff.length === 0 && (
-        <p className="text-[11px] text-text-muted italic">
-          Face ID bog&apos;lanmagan xodim qolmadi — bu ID begona bo&apos;lishi mumkin.
-        </p>
-      )}
     </ExceptionCard>
   );
 };
@@ -355,6 +422,7 @@ const Section: React.FC<{ title: string; count: number; children: React.ReactNod
 
 export const UnresolvedQueue: React.FC = () => {
   const { data, isLoading } = useUnresolved();
+  const { data: allStaff = [] } = useAllStaff();
   const [selectedPicture, setSelectedPicture] = useState<string | null>(null);
 
   if (isLoading) {
@@ -402,7 +470,7 @@ export const UnresolvedQueue: React.FC = () => {
               <UnknownEmployeeCard
                 key={group.key}
                 group={group}
-                staff={data.unlinkedStaff}
+                staff={allStaff}
                 onPictureClick={setSelectedPicture}
               />
             ))}
