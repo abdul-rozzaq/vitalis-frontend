@@ -39,6 +39,7 @@ export function useAttendanceRecords(query?: AttendanceRecordsQuery) {
   return useQuery({
     queryKey: attendanceKeys.records(query),
     queryFn: () => attendanceApi.getRecords(query),
+    refetchInterval: LIVE_POLL_MS,
   });
 }
 
@@ -46,6 +47,7 @@ export function useAttendanceEvents(query?: AttendanceEventsQuery) {
   return useQuery({
     queryKey: attendanceKeys.events(query),
     queryFn: () => attendanceApi.getEvents(query),
+    refetchInterval: LIVE_POLL_MS,
   });
 }
 
