@@ -11,6 +11,18 @@ import { useState } from "react";
 import { ITEM_SOURCE_COLOR } from "../utils";
 import { journalItemDue, journalSelectionDue, paymentGroupIds } from "../utils/payment-selection";
 
+const LAB_BUNDLE_PREFIX = "Laboratoriya tahlillari: ";
+
+function labBundleServices(item: InvoiceItem) {
+  if (item.sourceType !== "LAB_SERVICE" || !item.description.startsWith(LAB_BUNDLE_PREFIX)) return [];
+  return item.description.slice(LAB_BUNDLE_PREFIX.length).split(", ").filter(Boolean);
+}
+
+function itemDisplayName(item: InvoiceItem) {
+  const services = labBundleServices(item);
+  return services.length ? `Laboratoriya tahlillari (${services.length} ta)` : item.description;
+}
+
 export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelected, onCancelItem }: { invoice: Invoice; onAddService?: () => void; onPayItem?: (item: InvoiceItem) => void; onPaySelected?: (itemIds: string[]) => void; onCancelItem?: (item: InvoiceItem) => void }) {
   const t = useTranslations("journal");
   const items = invoice.items;
@@ -32,13 +44,19 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
   };
   return (
     <div className="space-y-4">
-      {detailItem && <Dialog isOpen onClose={() => setDetailItem(null)} title={detailItem.description}>
+      {detailItem && <Dialog isOpen onClose={() => setDetailItem(null)} title={itemDisplayName(detailItem)}>
         <dl className="space-y-3 text-sm text-text">
           <div className="flex justify-between gap-4"><dt>{t("groupLabel")}</dt><dd>{t(`groups.${detailItem.sourceType}`)}</dd></div>
           <div className="flex justify-between gap-4"><dt>{t("date")}</dt><dd>{formatDateTime(detailItem.createdAt)}</dd></div>
           <div className="flex justify-between gap-4"><dt>{t("total")}</dt><dd>{formatCurrency(detailItem.totalPrice)} UZS</dd></div>
           <div className="flex justify-between gap-4"><dt>{t("remaining")}</dt><dd>{formatCurrency(journalItemDue(detailItem))} UZS</dd></div>
         </dl>
+        {labBundleServices(detailItem).length > 0 && <div className="mt-5 border-t border-border pt-4">
+          <p className="mb-2 text-sm font-medium text-text">Tarkibidagi tahlillar</p>
+          <ul className="max-h-64 space-y-1.5 overflow-y-auto rounded-lg bg-background p-3 text-sm text-text">
+            {labBundleServices(detailItem).map((service, index) => <li key={`${service}-${index}`} className="flex gap-2"><span className="text-text-muted">{index + 1}.</span><span>{service}</span></li>)}
+          </ul>
+        </div>}
       </Dialog>}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
         <div className="relative sm:max-w-xs w-full">
@@ -75,7 +93,7 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
             {visible.map(item => (
               <tr key={item.id} className="hover:bg-surface-hover/60 transition-colors">
                 {onPaySelected && <td className="px-4 py-3"><Can roles={["ADMIN", "KASSIR"]}><input type="checkbox" aria-label={`${item.description} — ${t("selectService")}`} checked={selectedIds.includes(item.id)} disabled={journalItemDue(item) <= 0.001} onChange={() => toggleItem(item.id)} className="h-4 w-4 accent-accent disabled:opacity-40" /></Can></td>}
-                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.detailHref ? <Link href={item.detailHref} className="hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</Link> : <button type="button" onClick={() => setDetailItem(item)} className="text-left cursor-pointer hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</button>}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
+                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.sourceType === "LAB_SERVICE" || !item.detailHref ? <button type="button" onClick={() => setDetailItem(item)} className="max-w-md truncate text-left cursor-pointer hover:text-accent hover:underline focus-visible:outline-accent">{itemDisplayName(item)}</button> : <Link href={item.detailHref} className="hover:text-accent hover:underline focus-visible:outline-accent">{itemDisplayName(item)}</Link>}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
                 <td className="px-4 py-3 text-xs text-text-muted whitespace-nowrap">{formatDateTime(item.createdAt)}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(item.totalPrice)}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(journalItemDue(item))}</td>
