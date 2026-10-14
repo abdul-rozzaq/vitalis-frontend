@@ -1,13 +1,6 @@
 import { api } from "@/shared/lib/api";
 
-export type AttendanceRecordStatus =
-  | "PRESENT"
-  | "LATE"
-  | "EARLY_LEAVE"
-  | "LATE_AND_EARLY_LEAVE"
-  | "ABSENT"
-  | "MISSING_CHECKOUT"
-  | "MISSING_CHECKIN";
+export type AttendanceRecordStatus = "PRESENT" | "LATE" | "EARLY_LEAVE" | "LATE_AND_EARLY_LEAVE" | "ABSENT" | "MISSING_CHECKOUT" | "MISSING_CHECKIN";
 export type AttendanceEventStatus = "PENDING" | "MATCHED" | "UNKNOWN_EMPLOYEE" | "NO_SHIFT";
 
 export interface AttendanceEvent {
@@ -148,6 +141,26 @@ export interface UnresolvedResponse {
   };
 }
 
+/** `/attendance/hr-summary` — davr bo'yicha xodim bo'yicha jamlangan davomat. */
+export interface HrSummaryRow {
+  user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+    employeeNo: string | null;
+  };
+  shiftsScheduled: number;
+  shiftsAttended: number;
+  shiftsMissed: number;
+  incompleteCount: number;
+  workedMinutes: number;
+  lateMinutes: number;
+  earlyLeaveMinutes: number;
+  absentMinutes: number;
+  overtimeMinutes: number;
+}
+
 export interface AdjustPayload {
   checkInAt?: string | null;
   checkOutAt?: string | null;
@@ -215,6 +228,11 @@ export const attendanceApi = {
 
   getMyRecords: async (): Promise<AttendanceRecord[]> => {
     const res = await api.get<AttendanceRecord[]>("/attendance/my");
+    return res.data;
+  },
+
+  getHrSummary: async (from: string, to: string): Promise<HrSummaryRow[]> => {
+    const res = await api.get<HrSummaryRow[]>("/attendance/hr-summary", { params: { from, to } });
     return res.data;
   },
 };

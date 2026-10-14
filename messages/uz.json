@@ -47,7 +47,8 @@
     "new-patient": "Yangi bemor",
     "new-employee": "Yangi xodim",
     "attendance": "Davomat",
-    "attendance-live": "Kim ishda"
+    "attendance-live": "Kim ishda",
+    "hr": "HR nazorati"
   },
   "common": {
     "filter": "Filtr",

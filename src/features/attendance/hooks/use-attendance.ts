@@ -1,12 +1,7 @@
 import { Shift, shiftsApi } from "@/shared/lib/shifts-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import {
-  AdjustPayload,
-  attendanceApi,
-  AttendanceEventsQuery,
-  AttendanceRecordsQuery,
-} from "../lib/attendance-api";
+import { AdjustPayload, attendanceApi, AttendanceEventsQuery, AttendanceRecordsQuery } from "../lib/attendance-api";
 
 /** "Kim ishda" ekrani shu davriylikda yangilanadi. */
 const LIVE_POLL_MS = 30_000;
@@ -57,6 +52,15 @@ export function useAttendanceRecord(id: string) {
   });
 }
 
+/** HR nazorat sahifasi — davr bo'yicha xodim bo'yicha jamlangan davomat. */
+export function useHrSummary(from: string, to: string) {
+  return useQuery({
+    queryKey: [...attendanceKeys.all, "hr-summary", from, to],
+    queryFn: () => attendanceApi.getHrSummary(from, to),
+    enabled: !!from && !!to,
+  });
+}
+
 export function useMyAttendance() {
   return useQuery({
     queryKey: attendanceKeys.my(),
@@ -88,30 +92,22 @@ function useUnresolvedMutation<TVars>(fn: (vars: TVars) => Promise<unknown>) {
 }
 
 export function useLinkEmployee() {
-  return useUnresolvedMutation(({ eventId, userId }: { eventId: string; userId: string }) =>
-    attendanceApi.linkEmployee(eventId, userId),
-  );
+  return useUnresolvedMutation(({ eventId, userId }: { eventId: string; userId: string }) => attendanceApi.linkEmployee(eventId, userId));
 }
 
 export function useAssignEventToShift() {
-  return useUnresolvedMutation(({ eventId, shiftId }: { eventId: string; shiftId: string }) =>
-    attendanceApi.assignShift(eventId, shiftId),
-  );
+  return useUnresolvedMutation(({ eventId, shiftId }: { eventId: string; shiftId: string }) => attendanceApi.assignShift(eventId, shiftId));
 }
 
 export function useAdjustRecord() {
-  return useUnresolvedMutation(
-    ({ recordId, payload }: { recordId: string; payload: AdjustPayload }) =>
-      attendanceApi.adjustRecord(recordId, payload),
-  );
+  return useUnresolvedMutation(({ recordId, payload }: { recordId: string; payload: AdjustPayload }) => attendanceApi.adjustRecord(recordId, payload));
 }
 
 export function useUpdateAttendanceNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, note }: { id: string; note: string }) =>
-      attendanceApi.patchRecord(id, note),
+    mutationFn: ({ id, note }: { id: string; note: string }) => attendanceApi.patchRecord(id, note),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: attendanceKeys.records() });
       queryClient.invalidateQueries({ queryKey: attendanceKeys.record(variables.id) });

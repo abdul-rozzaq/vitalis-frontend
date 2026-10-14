@@ -138,6 +138,11 @@ export const WORKSPACES: Workspace[] = [
         roles: ["ADMIN", "DIREKTOR"],
       },
       {
+        labelKey: "nav.hr",
+        href: "/hr",
+        roles: ["ADMIN", "DIREKTOR", "HISOBCHI"],
+      },
+      {
         labelKey: "nav.employees",
         href: "/employees",
         roles: ["ADMIN", "DIREKTOR"],
@@ -217,10 +222,7 @@ export function isItemActive(pathname: string, item: Pick<NavItem, "href" | "exa
  * `/attendance/live` sahifasida `/attendance` ham, `/attendance/live` ham
  * faol bo'lib qolardi. Bu yerda qo'shni elementlar taqqoslanadi.
  */
-export function activeItemHref(
-  pathname: string,
-  items: Pick<NavItem, "href" | "exact">[],
-): string | null {
+export function activeItemHref(pathname: string, items: Pick<NavItem, "href" | "exact">[]): string | null {
   const matches = items.filter((item) => isItemActive(pathname, item));
   if (!matches.length) return null;
   return matches.reduce((best, item) => (item.href.length > best.href.length ? item : best)).href;

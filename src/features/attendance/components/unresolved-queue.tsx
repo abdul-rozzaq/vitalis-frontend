@@ -1,31 +1,89 @@
 "use client";
 
+import { api } from "@/shared/lib/api";
 import { fmtShiftRange } from "@/shared/lib/shifts-api";
+import { useQuery } from "@tanstack/react-query";
 import { format, isSameDay } from "date-fns";
-import {
-  AlertTriangle,
-  CalendarClock,
-  CheckCircle2,
-  Loader2,
-  ScanFace,
-  UserPlus,
-  Wrench,
-} from "lucide-react";
-import React, { useState } from "react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Loader2, Search, ScanFace, UserPlus, Wrench, X } from "lucide-react";
+import React, { useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import {
-  useAdjustRecord,
-  useAssignEventToShift,
-  useLinkEmployee,
-  useUnresolved,
-} from "../hooks/use-attendance";
+import { useAdjustRecord, useAssignEventToShift, useLinkEmployee, useUnresolved } from "../hooks/use-attendance";
 import { ImagePreviewModal } from "./image-preview-modal";
-import {
-  NoShiftGroup,
-  StaffRef,
-  UnknownEmployeeGroup,
-  UnresolvedRecord,
-} from "../lib/attendance-api";
+import { NoShiftGroup, StaffRef, UnknownEmployeeGroup, UnresolvedRecord } from "../lib/attendance-api";
+
+/** Terminal ID bog'lashda tanlanadigan to'liq xodimlar ro'yxati (filtr yo'q). */
+function useAllStaff() {
+  return useQuery<StaffRef[]>({
+    queryKey: ["staff-all"],
+    queryFn: () => api.get("/users").then((r) => r.data.data ?? r.data),
+  });
+}
+
+/** Qidiruv bilan xodim tanlash — oddiy `<select>` o'rniga, ro'yxat katta bo'lganda. */
+const StaffSearchPicker: React.FC<{
+  staff: StaffRef[];
+  value: string;
+  onChange: (userId: string) => void;
+}> = ({ staff, value, onChange }) => {
+  const [query, setQuery] = useState("");
+  const selected = staff.find((s) => s.id === value) ?? null;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return staff;
+    return staff.filter((s) => `${s.first_name} ${s.last_name}`.toLowerCase().includes(q));
+  }, [staff, query]);
+
+  if (selected) {
+    return (
+      <div className="flex items-center justify-between gap-2 border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface">
+        <span className="truncate">
+          {selected.first_name} {selected.last_name} — {selected.role}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            onChange("");
+            setQuery("");
+          }}
+          className="text-text-muted hover:text-danger shrink-0"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Xodim qidirish…" className="w-full border border-border rounded-md pl-8 pr-2.5 py-1.5 text-sm bg-surface" />
+      </div>
+      {query && (
+        <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto border border-border rounded-md bg-surface shadow-lg divide-y divide-border">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-text-muted text-center py-2">Topilmadi</p>
+          ) : (
+            filtered.slice(0, 20).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  onChange(s.id);
+                  setQuery("");
+                }}
+                className="w-full text-left px-2.5 py-1.5 text-sm hover:bg-surface-hover truncate"
+              >
+                {s.first_name} {s.last_name} — {s.role}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /** Bir necha skanning vaqt oralig'i — `05.08 09:12 → 11:40` yoki bitta vaqt. */
 function fmtRange(firstAt: string, lastAt: string, count: number): string {
@@ -58,42 +116,25 @@ const ExceptionCard: React.FC<{
         <img
           src={picture}
           alt=""
-          className={`w-12 h-12 rounded-lg object-cover border border-border shrink-0 ${
-            onPictureClick ? "cursor-pointer hover:opacity-90 hover:scale-105 transition-all" : ""
-          }`}
-          title={
-            onPictureClick
-              ? "Terminaldagi yuz rasmi — kattalashtirish uchun bosing"
-              : "Terminaldagi yuz rasmi"
-          }
+          className={`w-12 h-12 rounded-lg object-cover border border-border shrink-0 ${onPictureClick ? "cursor-pointer hover:opacity-90 hover:scale-105 transition-all" : ""}`}
+          title={onPictureClick ? "Terminaldagi yuz rasmi — kattalashtirish uchun bosing" : "Terminaldagi yuz rasmi"}
           onClick={() => picture && onPictureClick?.(picture)}
         />
       ) : (
-        <div
-          className={`w-12 h-12 rounded-lg shrink-0 flex items-center justify-center ${
-            tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning"
-          }`}
-        >
-          {icon}
-        </div>
+        <div className={`w-12 h-12 rounded-lg shrink-0 flex items-center justify-center ${tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning"}`}>{icon}</div>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-semibold text-text truncate">{title}</span>
           {!!count && count > 1 && (
-            <span
-              className="shrink-0 text-[11px] font-semibold px-1.5 py-px rounded-full bg-surface-secondary text-text-secondary tabular-nums"
-              title={`${count} ta skan bitta muammoga birlashtirildi`}
-            >
+            <span className="shrink-0 text-[11px] font-semibold px-1.5 py-px rounded-full bg-surface-secondary text-text-secondary tabular-nums" title={`${count} ta skan bitta muammoga birlashtirildi`}>
               ×{count}
             </span>
           )}
         </div>
         <p className="text-[11px] text-text-muted tabular-nums mt-0.5">{time}</p>
-        <p className={`text-xs mt-1 ${tone === "danger" ? "text-danger" : "text-warning"}`}>
-          {problem}
-        </p>
+        <p className={`text-xs mt-1 ${tone === "danger" ? "text-danger" : "text-warning"}`}>{problem}</p>
       </div>
     </div>
 
@@ -118,11 +159,7 @@ const UnknownEmployeeCard: React.FC<{
       {
         onSuccess: (res: unknown) => {
           const r = res as { reprocessed?: number };
-          toast.success(
-            r.reprocessed
-              ? `Bog'landi — ${r.reprocessed} ta skan qayta ishlandi`
-              : "Terminal ID xodimga bog'landi",
-          );
+          toast.success(r.reprocessed ? `Bog'landi — ${r.reprocessed} ta skan qayta ishlandi` : "Terminal ID xodimga bog'landi");
         },
         onError: (err: unknown) => {
           const e = err as { response?: { data?: { message?: string } } };
@@ -143,18 +180,7 @@ const UnknownEmployeeCard: React.FC<{
       tone="danger"
       onPictureClick={onPictureClick}
     >
-      <select
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-        className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full"
-      >
-        <option value="">Xodimni tanlang…</option>
-        {staff.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.first_name} {s.last_name} — {s.role}
-          </option>
-        ))}
-      </select>
+      <StaffSearchPicker staff={staff} value={userId} onChange={setUserId} />
       <button
         type="button"
         onClick={submit}
@@ -165,11 +191,6 @@ const UnknownEmployeeCard: React.FC<{
         Bog&apos;lash
         {group.count > 1 && <span className="opacity-80">({group.count} skan)</span>}
       </button>
-      {staff.length === 0 && (
-        <p className="text-[11px] text-text-muted italic">
-          Face ID bog&apos;lanmagan xodim qolmadi — bu ID begona bo&apos;lishi mumkin.
-        </p>
-      )}
     </ExceptionCard>
   );
 };
@@ -190,9 +211,7 @@ const NoShiftCard: React.FC<{
       {
         onSuccess: (res: unknown) => {
           const r = res as { matched?: number };
-          toast.success(
-            r.matched ? `Biriktirildi — ${r.matched} ta skan hisobga olindi` : "Biriktirildi",
-          );
+          toast.success(r.matched ? `Biriktirildi — ${r.matched} ta skan hisobga olindi` : "Biriktirildi");
         },
         onError: () => toast.error("Xatolik yuz berdi"),
       },
@@ -204,11 +223,7 @@ const NoShiftCard: React.FC<{
       picture={group.picturePath}
       icon={<CalendarClock className="w-5 h-5" />}
       time={fmtRange(group.firstAt, group.lastAt, group.count)}
-      title={
-        group.user
-          ? `${group.user.first_name} ${group.user.last_name}`
-          : `ID ${group.employeeNoStr}`
-      }
+      title={group.user ? `${group.user.first_name} ${group.user.last_name}` : `ID ${group.employeeNoStr}`}
       count={group.count}
       problem="Bu vaqtda smenasi yo'q"
       tone="warning"
@@ -229,18 +244,12 @@ const NoShiftCard: React.FC<{
             disabled={assign.isPending}
             className="bg-primary text-white px-3 py-1.5 rounded-md text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
-            {assign.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <CalendarClock className="w-4 h-4" />
-            )}
+            {assign.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
             Shu smenaga biriktirish
           </button>
         </>
       ) : (
-        <p className="text-sm text-text-muted italic">
-          Yaqin atrofda mos smena topilmadi — smenani qo&apos;lda yaratish kerak.
-        </p>
+        <p className="text-sm text-text-muted italic">Yaqin atrofda mos smena topilmadi — smenani qo&apos;lda yaratish kerak.</p>
       )}
     </ExceptionCard>
   );
@@ -253,12 +262,7 @@ const IncompleteRecordCard: React.FC<{ record: UnresolvedRecord }> = ({ record }
   const adjust = useAdjustRecord();
 
   /** `datetime-local` uchun boshlang'ich qiymat — smena chegarasi. */
-  const [value, setValue] = useState(() =>
-    format(
-      new Date(missingCheckout ? record.shift.endAt : record.shift.startAt),
-      "yyyy-MM-dd'T'HH:mm",
-    ),
-  );
+  const [value, setValue] = useState(() => format(new Date(missingCheckout ? record.shift.endAt : record.shift.startAt), "yyyy-MM-dd'T'HH:mm"));
   const [reason, setReason] = useState("");
 
   const submit = () => {
@@ -285,36 +289,18 @@ const IncompleteRecordCard: React.FC<{ record: UnresolvedRecord }> = ({ record }
     <ExceptionCard
       picture={null}
       icon={<Wrench className="w-5 h-5" />}
-      time={`${format(new Date(record.shift.startAt), "dd.MM")} · ${fmtShiftRange(
-        record.shift.startAt,
-        record.shift.endAt,
-      )}`}
+      time={`${format(new Date(record.shift.startAt), "dd.MM")} · ${fmtShiftRange(record.shift.startAt, record.shift.endAt)}`}
       title={`${record.user.first_name} ${record.user.last_name}`}
-      problem={`${missingCheckout ? "Chiqish" : "Kirish"} skani yo'q · ${
-        record.shift.note || "Smena"
-      }`}
+      problem={`${missingCheckout ? "Chiqish" : "Kirish"} skani yo'q · ${record.shift.note || "Smena"}`}
       tone="warning"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-[11px] text-text-muted">
-          {missingCheckout ? "Chiqish vaqti" : "Kirish vaqti"}
-        </span>
-        <input
-          type="datetime-local"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full"
-        />
+        <span className="text-[11px] text-text-muted">{missingCheckout ? "Chiqish vaqti" : "Kirish vaqti"}</span>
+        <input type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full" />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-[11px] text-text-muted">Sabab (majburiy)</span>
-        <input
-          type="text"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Qurilma ishlamadi / xodim unutdi"
-          className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full"
-        />
+        <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Qurilma ishlamadi / xodim unutdi" className="border border-border rounded-md px-2.5 py-1.5 text-sm bg-surface w-full" />
       </label>
       <button
         type="button"
@@ -325,9 +311,7 @@ const IncompleteRecordCard: React.FC<{ record: UnresolvedRecord }> = ({ record }
         {adjust.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
         Tuzatish
       </button>
-      <p className="text-[11px] text-text-muted">
-        Xom skan o&apos;zgarmaydi — tuzatish kim, qachon va nima sababdan qilgani bilan saqlanadi.
-      </p>
+      <p className="text-[11px] text-text-muted">Xom skan o&apos;zgarmaydi — tuzatish kim, qachon va nima sababdan qilgani bilan saqlanadi.</p>
     </ExceptionCard>
   );
 };
@@ -335,26 +319,21 @@ const IncompleteRecordCard: React.FC<{ record: UnresolvedRecord }> = ({ record }
 // ─── Navbat ──────────────────────────────────────────────────────────────────
 
 /** Bo'lim sarlavhasi — bo'sh bo'lsa umuman render qilinmaydi. */
-const Section: React.FC<{ title: string; count: number; children: React.ReactNode }> = ({
-  title,
-  count,
-  children,
-}) => {
+const Section: React.FC<{ title: string; count: number; children: React.ReactNode }> = ({ title, count, children }) => {
   if (!count) return null;
   return (
     <section>
       <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
         {title} <span className="tabular-nums font-normal">({count})</span>
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 items-start">
-        {children}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 items-start">{children}</div>
     </section>
   );
 };
 
 export const UnresolvedQueue: React.FC = () => {
   const { data, isLoading } = useUnresolved();
+  const { data: allStaff = [] } = useAllStaff();
   const [selectedPicture, setSelectedPicture] = useState<string | null>(null);
 
   if (isLoading) {
@@ -375,9 +354,7 @@ export const UnresolvedQueue: React.FC = () => {
         <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-warning-50 border border-warning">
           <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-warning">
-              {data.totals.unlinkedStaff} xodimda Face ID bog&apos;lanmagan
-            </p>
+            <p className="text-sm font-medium text-warning">{data.totals.unlinkedStaff} xodimda Face ID bog&apos;lanmagan</p>
             <p className="text-xs text-text-secondary mt-0.5">
               {data.unlinkedStaff
                 .slice(0, 6)
@@ -399,22 +376,13 @@ export const UnresolvedQueue: React.FC = () => {
         <>
           <Section title="Bog'lanmagan terminal ID" count={data.totals.unknownEmployees}>
             {data.unknownEmployees.map((group) => (
-              <UnknownEmployeeCard
-                key={group.key}
-                group={group}
-                staff={data.unlinkedStaff}
-                onPictureClick={setSelectedPicture}
-              />
+              <UnknownEmployeeCard key={group.key} group={group} staff={allStaff} onPictureClick={setSelectedPicture} />
             ))}
           </Section>
 
           <Section title="Smenasi topilmagan skanlar" count={data.totals.noShift}>
             {data.noShift.map((group) => (
-              <NoShiftCard
-                key={group.key}
-                group={group}
-                onPictureClick={setSelectedPicture}
-              />
+              <NoShiftCard key={group.key} group={group} onPictureClick={setSelectedPicture} />
             ))}
           </Section>
 
@@ -426,10 +394,7 @@ export const UnresolvedQueue: React.FC = () => {
         </>
       )}
 
-      <ImagePreviewModal
-        src={selectedPicture}
-        onClose={() => setSelectedPicture(null)}
-      />
+      <ImagePreviewModal src={selectedPicture} onClose={() => setSelectedPicture(null)} />
     </div>
   );
 };
