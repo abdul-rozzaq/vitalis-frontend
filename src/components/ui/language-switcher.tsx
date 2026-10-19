@@ -8,6 +8,7 @@ import { useTransition } from "react";
 const LOCALES = [
   { code: "uz", label: "UZ", flag: "🇺🇿" },
   { code: "ru", label: "RU", flag: "🇷🇺" },
+  { code: "tr", label: "TR", flag: "🇹🇷" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -30,9 +31,7 @@ export function LanguageSwitcher() {
           onClick={() => handleChange(code)}
           disabled={isPending}
           className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 ${
-            locale === code
-              ? "bg-surface text-text shadow-sm"
-              : "text-text-muted hover:text-text hover:bg-surface/60"
+            locale === code ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text hover:bg-surface/60"
           }`}
         >
           <span>{flag}</span>

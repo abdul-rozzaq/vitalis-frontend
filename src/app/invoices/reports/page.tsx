@@ -16,13 +16,22 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 
-type PeriodPreset = "today" | "week" | "month" | "lastMonth" | "custom";
+type PeriodPreset = "today" | "week" | "month" | "lastMonth" | "quarter" | "lastQuarter" | "year" | "custom";
 
 interface RevenueTotals {
   cash: number;
   bonus: number;
   total: number;
   paymentsCount: number;
+}
+
+interface RevenueByDayRow {
+  date: string;
+  cash: number;
+  bonus: number;
+  total: number;
+  count: number;
+  byMethod: Record<string, number>;
 }
 
 interface RevenueReport {
@@ -33,6 +42,7 @@ interface RevenueReport {
   byPaymentMethod: RevenueByMethodRow[];
   byStaff: RevenueByStaffRow[];
   byDepartment: RevenueByDepartmentRow[];
+  byDay: RevenueByDayRow[];
 }
 
 function pctChange(curr: number, prev: number): number | null {
@@ -138,17 +148,16 @@ export default function RevenueReportsPage() {
 
   // Filtr tanlangan bo'lsa, hamma joy (KPI, chartlar, jadval) shu bo'yicha qayta hisoblanadi —
   // shunda raqamlar har doim bir-biriga mos keladi.
-  const bySource = useMemo(
-    () => (selectedSources.length === 0 ? bySourceAll : bySourceAll.filter((r) => selectedSources.includes(r.sourceType))),
-    [bySourceAll, selectedSources],
-  );
+  const bySource = useMemo(() => (selectedSources.length === 0 ? bySourceAll : bySourceAll.filter((r) => selectedSources.includes(r.sourceType))), [bySourceAll, selectedSources]);
 
   const totals = useMemo(() => {
     if (selectedSources.length === 0) return data?.totals ?? { cash: 0, bonus: 0, total: 0, paymentsCount: 0 };
-    return bySource.reduce(
-      (acc, r) => ({ cash: acc.cash + r.cash, bonus: acc.bonus + r.bonus, total: acc.total + r.total, paymentsCount: acc.paymentsCount + r.count }),
-      { cash: 0, bonus: 0, total: 0, paymentsCount: 0 },
-    );
+    return bySource.reduce((acc, r) => ({ cash: acc.cash + r.cash, bonus: acc.bonus + r.bonus, total: acc.total + r.total, paymentsCount: acc.paymentsCount + r.count }), {
+      cash: 0,
+      bonus: 0,
+      total: 0,
+      paymentsCount: 0,
+    });
   }, [bySource, selectedSources, data?.totals]);
 
   // Oldingi davr uchun xuddi shu bo'lim filtri bilan hisoblangan jami — solishtirish adolatli bo'lishi uchun.
@@ -157,10 +166,7 @@ export default function RevenueReportsPage() {
     if (selectedSources.length === 0) return compareData.totals;
     return compareData.bySource
       .filter((r) => selectedSources.includes(r.sourceType))
-      .reduce(
-        (acc, r) => ({ cash: acc.cash + r.cash, bonus: acc.bonus + r.bonus, total: acc.total + r.total, paymentsCount: acc.paymentsCount + r.count }),
-        { cash: 0, bonus: 0, total: 0, paymentsCount: 0 },
-      );
+      .reduce((acc, r) => ({ cash: acc.cash + r.cash, bonus: acc.bonus + r.bonus, total: acc.total + r.total, paymentsCount: acc.paymentsCount + r.count }), { cash: 0, bonus: 0, total: 0, paymentsCount: 0 });
   }, [compareData, selectedSources]);
 
   const maxTotal = Math.max(1, ...bySource.map((s) => s.total));
@@ -170,15 +176,22 @@ export default function RevenueReportsPage() {
     { key: "week", label: t("invoices.reports.period.week") },
     { key: "month", label: t("invoices.reports.period.month") },
     { key: "lastMonth", label: t("invoices.reports.period.lastMonth") },
+    { key: "quarter", label: t("invoices.reports.period.quarter") },
+    { key: "lastQuarter", label: t("invoices.reports.period.lastQuarter") },
+    { key: "year", label: t("invoices.reports.period.year") },
     { key: "custom", label: t("invoices.reports.period.custom") },
   ];
 
   const sourceLabel = (value: string) => (t.has(`invoices.source.${value}`) ? t(`invoices.source.${value}`) : value);
+  const methodLabel = (m: string) => (m === "BONUS" ? t("invoices.reports.summary.bonus") : t(`paymentMethods.${m}`));
+
+  // Hisobot davrida ko'rinadigan to'lov turlari — kunlik jadvalda faqat
+  // real ustunlarni ko'rsatish uchun (masalan, hech qachon TRANSFER bo'lmasa, ustun chiqmaydi).
+  const dayMethodColumns = useMemo(() => ["CASH", "CARD", "TRANSFER", "OTHER", "BONUS"].filter((m) => (data?.byPaymentMethod ?? []).some((r) => r.method === m)), [data?.byPaymentMethod]);
 
   const handleExport = () => {
     if (!data) return;
     const periodLabel = `${new Date(data.from).toLocaleDateString("uz-UZ")} — ${new Date(data.to).toLocaleDateString("uz-UZ")}`;
-    const methodLabel = (m: string) => (m === "BONUS" ? t("invoices.reports.summary.bonus") : t(`paymentMethods.${m}`));
 
     const rows: (string | number)[][] = [
       [t("invoices.reports.title")],
@@ -204,6 +217,10 @@ export default function RevenueReportsPage() {
       [t("invoices.reports.byDepartmentTitle")],
       [t("invoices.reports.table.department"), t("invoices.reports.table.count"), t("invoices.reports.table.total")],
       ...(data.byDepartment ?? []).map((r) => [r.departmentName, r.count, fmt(r.total)]),
+      [],
+      [t("invoices.reports.byDayTitle")],
+      [t("invoices.reports.table.date"), ...dayMethodColumns.map(methodLabel), t("invoices.reports.table.count"), t("invoices.reports.table.total")],
+      ...(data.byDay ?? []).map((r) => [r.date, ...dayMethodColumns.map((m) => fmt(r.byMethod[m] ?? 0)), r.count, fmt(r.total)]),
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
@@ -231,9 +248,7 @@ export default function RevenueReportsPage() {
                 type="button"
                 onClick={() => setPreset(key)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-                  preset === key
-                    ? "bg-primary text-white border-primary shadow-sm"
-                    : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
+                  preset === key ? "bg-primary text-white border-primary shadow-sm" : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
                 }`}
               >
                 {label}
@@ -277,9 +292,7 @@ export default function RevenueReportsPage() {
             type="button"
             onClick={() => setSelectedSources([])}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors cursor-pointer ${
-              selectedSources.length === 0
-                ? "bg-text text-background border-text"
-                : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
+              selectedSources.length === 0 ? "bg-text text-background border-text" : "bg-surface-hover border-border text-text-muted hover:text-text hover:border-text-muted"
             }`}
           >
             {t("invoices.reports.filterAll")}
@@ -317,10 +330,7 @@ export default function RevenueReportsPage() {
                 { label: t("invoices.reports.summary.bonus"), value: `${fmt(totals.bonus)} UZS`, curr: totals.bonus, prev: prevTotals?.bonus, icon: Coins, color: "bg-warning-50 text-warning" },
                 { label: t("invoices.reports.summary.count"), value: String(totals.paymentsCount), curr: totals.paymentsCount, prev: prevTotals?.paymentsCount, icon: CalendarDays, color: "bg-info-50 text-info" },
               ].map(({ label, value, curr, prev, icon: Icon, color }) => (
-                <div
-                  key={label}
-                  className="bg-surface border border-border rounded-xl px-4 py-3.5 flex items-center gap-3 transition-shadow hover:shadow-sm"
-                >
+                <div key={label} className="bg-surface border border-border rounded-xl px-4 py-3.5 flex items-center gap-3 transition-shadow hover:shadow-sm">
                   <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center shrink-0`}>
                     <Icon className="w-4.5 h-4.5" />
                   </div>
@@ -392,10 +402,7 @@ export default function RevenueReportsPage() {
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <div className="flex-1 h-1.5 bg-surface-hover rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full rounded-full transition-all"
-                                      style={{ width: `${Math.round((row.total / maxTotal) * 100)}%`, backgroundColor: "var(--color-primary)" }}
-                                    />
+                                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((row.total / maxTotal) * 100)}%`, backgroundColor: "var(--color-primary)" }} />
                                   </div>
                                   <span className="text-xs text-text-muted w-9 text-right">{pct}%</span>
                                 </div>
@@ -417,6 +424,47 @@ export default function RevenueReportsPage() {
 
             <div className="mt-4">
               <RevenueDepartmentTable rows={data?.byDepartment ?? []} />
+            </div>
+
+            {/* Kunlik taqsimot — soliq/hisobchi uchun: bank/kassa bilan kun-kun solishtirish */}
+            <div className="mt-4 bg-surface border border-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h2 className="text-sm font-semibold text-text">{t("invoices.reports.byDayTitle")}</h2>
+              </div>
+              {(data?.byDay ?? []).length === 0 ? (
+                <div className="text-center py-10 text-sm text-text-muted">{t("invoices.reports.empty")}</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-xs text-text-muted border-b border-border">
+                        <th className="text-left font-medium px-4 py-2">{t("invoices.reports.table.date")}</th>
+                        {dayMethodColumns.map((m) => (
+                          <th key={m} className="text-right font-medium px-4 py-2">
+                            {methodLabel(m)}
+                          </th>
+                        ))}
+                        <th className="text-right font-medium px-4 py-2">{t("invoices.reports.table.count")}</th>
+                        <th className="text-right font-medium px-4 py-2">{t("invoices.reports.table.total")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data?.byDay ?? []).map((row) => (
+                        <tr key={row.date} className="border-b border-border last:border-0">
+                          <td className="px-4 py-3 font-medium text-text whitespace-nowrap">{new Date(row.date).toLocaleDateString("uz-UZ")}</td>
+                          {dayMethodColumns.map((m) => (
+                            <td key={m} className="px-4 py-3 text-right text-text-muted">
+                              {fmt(row.byMethod[m] ?? 0)} UZS
+                            </td>
+                          ))}
+                          <td className="px-4 py-3 text-right text-text-muted">{row.count}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-success-600">{fmt(row.total)} UZS</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Bitta bo'lim tanlansa — o'sha bo'lim ichidagi xizmatlar bo'yicha taqsimot */}

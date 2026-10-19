@@ -1543,6 +1543,9 @@
         "week": "Bu hafta",
         "month": "Bu oy",
         "lastMonth": "O'tgan oy",
+        "quarter": "Bu chorak",
+        "lastQuarter": "O'tgan chorak",
+        "year": "Bu yil",
         "custom": "Maxsus oraliq"
       },
       "summary": {
@@ -1557,6 +1560,7 @@
       "byMethodTitle": "To'lov turi bo'yicha taqsimot",
       "byStaffTitle": "Xodim bo'yicha taqsimot",
       "byDepartmentTitle": "Bo'lim bo'yicha daromad",
+      "byDayTitle": "Kunlik taqsimot (soliq/hisobchi uchun)",
       "byDepartmentNote": "Har bir to'lov qaysi bo'limga tegishli xizmat (yotqizish, qabul, operatsiya, protsedura) uchun qilinganiga qarab shu bo'lim daromadiga yoziladi. Laboratoriya va diagnostika bo'lim emas, alohida bo'linma bo'lgani uchun \"Boshqa\"ga tushadi.",
       "filterBySource": "Bo'limlar",
       "filterAll": "Barchasi",
@@ -1575,7 +1579,8 @@
         "staff": "Xodim",
         "department": "Bo'lim",
         "method": "To'lov turi",
-        "amount": "Summa"
+        "amount": "Summa",
+        "date": "Sana"
       },
       "empty": "Tanlangan davrda to'lov topilmadi"
     }
