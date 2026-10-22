@@ -1,8 +1,6 @@
 "use client";
 
 import { AttendanceRecord, AttendanceRecordStatus } from "../lib/attendance-api";
-import { format } from "date-fns";
-import { uz } from "date-fns/locale";
 
 interface AttendanceTableProps {
   records: AttendanceRecord[];
@@ -27,12 +25,22 @@ const statusConfig: Record<AttendanceRecordStatus, { label: string; color: strin
 
 function formatTime(isoStr: string | null) {
   if (!isoStr) return "-";
-  return format(new Date(isoStr), "HH:mm");
+  return new Intl.DateTimeFormat("uz-UZ", {
+    timeZone: "Asia/Tashkent",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(isoStr));
 }
 
 function formatDate(isoStr: string | null) {
   if (!isoStr) return "-";
-  return format(new Date(isoStr), "dd MMM, yyyy", { locale: uz });
+  return new Intl.DateTimeFormat("uz-UZ", {
+    timeZone: "Asia/Tashkent",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(isoStr));
 }
 
 export function AttendanceTable({ records, onRowClick }: AttendanceTableProps) {

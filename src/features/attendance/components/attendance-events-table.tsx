@@ -1,12 +1,21 @@
 "use client";
 
 import { AttendanceEvent, AttendanceEventStatus } from "../lib/attendance-api";
-import { format } from "date-fns";
-import { uz } from "date-fns/locale";
 import { ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
 import { useState, Fragment } from "react";
 import Image from "next/image";
 import { ImagePreviewModal } from "./image-preview-modal";
+
+const attendanceDateTimeFormatter = new Intl.DateTimeFormat("uz-UZ", {
+  timeZone: "Asia/Tashkent",
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
 
 interface AttendanceEventsTableProps {
   events: AttendanceEvent[];
@@ -63,7 +72,7 @@ export function AttendanceEventsTable({ events }: AttendanceEventsTableProps) {
                   onClick={() => toggleExpand(event.id)}
                 >
                 <td className="px-4 py-3 font-medium text-text">
-                  {format(new Date(event.eventAt), "dd MMM yyyy, HH:mm:ss", { locale: uz })}
+                  {attendanceDateTimeFormatter.format(new Date(event.eventAt))}
                 </td>
                 <td className="px-4 py-3">
                   {event.rawStatus === "checkIn" ? (
