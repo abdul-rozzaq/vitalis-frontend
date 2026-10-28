@@ -37,7 +37,10 @@ export default function PatientDetailPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = (searchParams.get("tab") as "timeline" | "balance") ?? "timeline";
+  // Shifokorga balans/to'lov tabi ko'rsatilmaydi (umumiy summalar yashirin).
+  const isDoctor = typeof user?.role === "string" && user.role.toUpperCase() === "DOCTOR";
+  const requestedTab = (searchParams.get("tab") as "timeline" | "balance") ?? "timeline";
+  const activeTab = isDoctor ? "timeline" : requestedTab;
   const setActiveTab = (tab: "timeline" | "balance") => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
@@ -390,14 +393,14 @@ export default function PatientDetailPage() {
                   <ClipboardList className="w-3.5 h-3.5" />
                   {t("patients.activityTimeline")}
                 </button>
-                <button
+                {!isDoctor && <button
                   onClick={() => setActiveTab("balance")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeTab === "balance" ? "bg-background text-text shadow-sm" : "text-secondary hover:text-text"
                     }`}
                 >
                   <Wallet className="w-3.5 h-3.5" />
                   {t("patients.balance")}
-                </button>
+                </button>}
               </div>
               {activeTab === "timeline" && (
                 <Can roles={["ADMIN", "KASSIR", "DOCTOR"]}>
