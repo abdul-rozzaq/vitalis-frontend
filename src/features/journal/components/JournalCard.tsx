@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/design-system/Card";
+import { useRole } from "@/shared/hooks/use-permissions";
 import { formatCurrency } from "@/shared/lib/formatters";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,6 +17,7 @@ interface JournalCardProps {
 export function JournalCard({ patientId }: JournalCardProps) {
   const t = useTranslations();
   const { isLoading, active, history } = useJournalData(patientId);
+  const hideMoney = useRole().role === "DOCTOR";
 
   if (isLoading) return null;
   if (!active && history.length === 0) return null;
@@ -35,8 +37,8 @@ export function JournalCard({ patientId }: JournalCardProps) {
     );
   }
 
-  const total = Number(active.invoice.totalAmount);
-  const paid = Number(active.invoice.paidCash) + Number(active.invoice.paidBonus);
+  const total = Number(active.invoice.totalAmount ?? 0);
+  const paid = Number(active.invoice.paidCash ?? 0) + Number(active.invoice.paidBonus ?? 0);
 
   return (
     <Link href={`/patients/${patientId}/journal`}>
@@ -49,7 +51,7 @@ export function JournalCard({ patientId }: JournalCardProps) {
             <div className="min-w-0">
               <p className="text-sm font-medium text-text">{t("journal.cardTitleOpen")}</p>
               <p className="text-xs text-text-muted truncate">
-                {t("journal.entryCount", { count: active.invoice.items.length })} · {formatCurrency(paid)} / {formatCurrency(total)} UZS
+                {t("journal.entryCount", { count: active.invoice.items.length })}{!hideMoney && <> · {formatCurrency(paid)} / {formatCurrency(total)} UZS</>}
               </p>
             </div>
           </div>

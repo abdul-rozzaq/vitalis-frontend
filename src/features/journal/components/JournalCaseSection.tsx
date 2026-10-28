@@ -1,6 +1,7 @@
 "use client";
 
 import { Can } from "@/components/ui/can";
+import { useRole } from "@/shared/hooks/use-permissions";
 import { InvoiceItem } from "@/features/invoices/types";
 import { CASE_STATUS_COLOR } from "@/features/patients/utils";
 import { api } from "@/shared/lib/api";
@@ -29,6 +30,9 @@ export function JournalCaseSection({ record, defaultOpen = false, onAddEntry, on
   const t = useTranslations();
   const [open, setOpen] = useState(defaultOpen);
   const [isPrinting, setIsPrinting] = useState(false);
+  // Shifokor jurnalni ko'radi, lekin umumiy to'lov summalarini ko'rmaydi.
+  const { role } = useRole();
+  const hideMoney = role === "DOCTOR";
   const { case: patientCase, invoice } = record;
   const handlePrint = async () => {
     setIsPrinting(true);
@@ -62,7 +66,7 @@ export function JournalCaseSection({ record, defaultOpen = false, onAddEntry, on
       </button>
       {open && (
         <div className="px-5 pb-5 sm:px-6 sm:pb-6 space-y-5">
-          <JournalSummary invoice={invoice} />
+          {!hideMoney && <JournalSummary invoice={invoice} />}
           <div className="flex flex-wrap items-center gap-2">
             {patientCase.status !== "CANCELLED" && onPayJournal && <Can roles={["ADMIN", "KASSIR"]}><button onClick={onPayJournal} disabled={Number(invoice.totalAmount) <= Number(invoice.paidCash) + Number(invoice.paidBonus)} className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed"><Wallet className="w-4 h-4" />{t("journal.payAll")}</button></Can>}
             {patientCase.status === "ACTIVE" && onAddEntry && (
@@ -70,7 +74,7 @@ export function JournalCaseSection({ record, defaultOpen = false, onAddEntry, on
                 <button onClick={onAddEntry} className="inline-flex items-center gap-2 border border-border rounded-lg px-3 py-2.5 text-sm text-text hover:bg-surface-hover"><Plus className="w-4 h-4" />{t("cases.addStep")}</button>
               </Can>
             )}
-            <button onClick={handlePrint} disabled={isPrinting || !invoice.items.length} className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-text-muted hover:bg-surface-hover disabled:opacity-40"><Printer className="w-4 h-4" />{isPrinting ? "…" : t("journal.print")}</button>
+            {!hideMoney && <button onClick={handlePrint} disabled={isPrinting || !invoice.items.length} className="inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-text-muted hover:bg-surface-hover disabled:opacity-40"><Printer className="w-4 h-4" />{isPrinting ? "…" : t("journal.print")}</button>}
             {patientCase.status === "ACTIVE" && onDischarge && <Can roles={["ADMIN", "DOCTOR"]}><button onClick={onDischarge} className="sm:ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-danger hover:bg-danger-50"><LogOut className="w-4 h-4" />{t("cases.discharge")}</button></Can>}
           </div>
           <div className="border-b border-border pb-3 text-sm font-medium text-accent">

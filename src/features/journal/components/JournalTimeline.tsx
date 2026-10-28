@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Dialog } from "@/components/ui/dialog";
 import { Invoice, InvoiceItem } from "@/features/invoices/types";
 import { Can } from "@/components/ui/can";
+import { useRole } from "@/shared/hooks/use-permissions";
 import { formatCurrency, formatDateTime } from "@/shared/lib/formatters";
 import { BookOpen, Plus, Search, Wallet, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -11,9 +12,22 @@ import { useState } from "react";
 import { ITEM_SOURCE_COLOR } from "../utils";
 import { journalItemDue, journalSelectionDue, paymentGroupIds } from "../utils/payment-selection";
 
+const LAB_BUNDLE_PREFIX = "Laboratoriya tahlillari: ";
+
+function labBundleServices(item: InvoiceItem) {
+  if (item.sourceType !== "LAB_SERVICE" || !item.description.startsWith(LAB_BUNDLE_PREFIX)) return [];
+  return item.description.slice(LAB_BUNDLE_PREFIX.length).split(", ").filter(Boolean);
+}
+
+function itemDisplayName(item: InvoiceItem) {
+  const services = labBundleServices(item);
+  return services.length ? `Laboratoriya tahlillari (${services.length} ta)` : item.description;
+}
+
 export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelected, onCancelItem }: { invoice: Invoice; onAddService?: () => void; onPayItem?: (item: InvoiceItem) => void; onPaySelected?: (itemIds: string[]) => void; onCancelItem?: (item: InvoiceItem) => void }) {
   const t = useTranslations("journal");
   const items = invoice.items;
+  const hideMoney = useRole().role === "DOCTOR";
   const [detailItem, setDetailItem] = useState<InvoiceItem | null>(null);
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("ALL");
@@ -32,13 +46,19 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
   };
   return (
     <div className="space-y-4">
-      {detailItem && <Dialog isOpen onClose={() => setDetailItem(null)} title={detailItem.description}>
+      {detailItem && <Dialog isOpen onClose={() => setDetailItem(null)} title={itemDisplayName(detailItem)}>
         <dl className="space-y-3 text-sm text-text">
           <div className="flex justify-between gap-4"><dt>{t("groupLabel")}</dt><dd>{t(`groups.${detailItem.sourceType}`)}</dd></div>
           <div className="flex justify-between gap-4"><dt>{t("date")}</dt><dd>{formatDateTime(detailItem.createdAt)}</dd></div>
           <div className="flex justify-between gap-4"><dt>{t("total")}</dt><dd>{formatCurrency(detailItem.totalPrice)} UZS</dd></div>
-          <div className="flex justify-between gap-4"><dt>{t("remaining")}</dt><dd>{formatCurrency(journalItemDue(detailItem))} UZS</dd></div>
+          {!hideMoney && <div className="flex justify-between gap-4"><dt>{t("remaining")}</dt><dd>{formatCurrency(journalItemDue(detailItem))} UZS</dd></div>}
         </dl>
+        {labBundleServices(detailItem).length > 0 && <div className="mt-5 border-t border-border pt-4">
+          <p className="mb-2 text-sm font-medium text-text">Tarkibidagi tahlillar</p>
+          <ul className="max-h-64 space-y-1.5 overflow-y-auto rounded-lg bg-background p-3 text-sm text-text">
+            {labBundleServices(detailItem).map((service, index) => <li key={`${service}-${index}`} className="flex gap-2"><span className="text-text-muted">{index + 1}.</span><span>{service}</span></li>)}
+          </ul>
+        </div>}
       </Dialog>}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
         <div className="relative sm:max-w-xs w-full">
@@ -69,20 +89,20 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-sm text-left">
           <thead className="bg-background text-xs text-text-muted">
-            <tr>{onPaySelected && <th className="px-4 py-3 w-8"><span className="sr-only">{t("selectAll")}</span></th>}<th className="px-4 py-3 font-medium">{t("service")}</th><th className="px-4 py-3 font-medium whitespace-nowrap">{t("date")}</th><th className="px-4 py-3 text-right font-medium">{t("total")}</th><th className="px-4 py-3 text-right font-medium">{t("remaining")}</th><th className="px-4 py-3 text-right font-medium">{t("actions")}</th></tr>
+            <tr>{onPaySelected && <th className="px-4 py-3 w-8"><span className="sr-only">{t("selectAll")}</span></th>}<th className="px-4 py-3 font-medium">{t("service")}</th><th className="px-4 py-3 font-medium whitespace-nowrap">{t("date")}</th><th className="px-4 py-3 text-right font-medium">{t("total")}</th>{!hideMoney && <th className="px-4 py-3 text-right font-medium">{t("remaining")}</th>}<th className="px-4 py-3 text-right font-medium">{t("actions")}</th></tr>
           </thead>
           <tbody className="divide-y divide-border">
             {visible.map(item => (
               <tr key={item.id} className="hover:bg-surface-hover/60 transition-colors">
                 {onPaySelected && <td className="px-4 py-3"><Can roles={["ADMIN", "KASSIR"]}><input type="checkbox" aria-label={`${item.description} — ${t("selectService")}`} checked={selectedIds.includes(item.id)} disabled={journalItemDue(item) <= 0.001} onChange={() => toggleItem(item.id)} className="h-4 w-4 accent-accent disabled:opacity-40" /></Can></td>}
-                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.detailHref ? <Link href={item.detailHref} className="hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</Link> : <button type="button" onClick={() => setDetailItem(item)} className="text-left cursor-pointer hover:text-accent hover:underline focus-visible:outline-accent">{item.description}</button>}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
+                <td className="px-4 py-3 min-w-52"><p className="text-text font-medium mb-1.5">{item.sourceType === "LAB_SERVICE" || !item.detailHref ? <button type="button" onClick={() => setDetailItem(item)} className="max-w-md truncate text-left cursor-pointer hover:text-accent hover:underline focus-visible:outline-accent">{itemDisplayName(item)}</button> : <Link href={item.detailHref} className="hover:text-accent hover:underline focus-visible:outline-accent">{itemDisplayName(item)}</Link>}{item.quantity > 1 && <span className="text-text-muted font-normal"> × {item.quantity}</span>}</p><span className={`text-[10px] rounded-md px-1.5 py-0.5 ${ITEM_SOURCE_COLOR[item.sourceType]}`}>{t(`groups.${item.sourceType}`)}</span></td>
                 <td className="px-4 py-3 text-xs text-text-muted whitespace-nowrap">{formatDateTime(item.createdAt)}</td>
                 <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(item.totalPrice)}</td>
-                <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(journalItemDue(item))}</td>
+                {!hideMoney && <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap text-text">{formatCurrency(journalItemDue(item))}</td>}
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-2">
-                    {item.isPaid ? <span className="text-xs text-success">{t("paid")}</span> : <>
-                      <span className="text-xs text-warning">{Number(item.paidAmount ?? 0) > 0 ? t("partiallyPaid") : t("unpaid")}</span>
+                    {!hideMoney && (item.isPaid ? <span className="text-xs text-success">{t("paid")}</span> : <span className="text-xs text-warning">{Number(item.paidAmount ?? 0) > 0 ? t("partiallyPaid") : t("unpaid")}</span>)}
+                    {(hideMoney || !item.isPaid) && <>
                       {onPayItem && Number(item.totalPrice) > 0 && <Can roles={["ADMIN", "KASSIR"]}><button onClick={() => onPayItem(item)} className="inline-flex items-center gap-1 rounded-lg bg-success-50 px-3 py-2 text-xs font-medium text-success hover:bg-success/10"><Wallet className="h-3.5 w-3.5" />{t("pay")}</button></Can>}
                       {onCancelItem && item.canCancel && <Can roles={["ADMIN", "DOCTOR"]}><button onClick={() => onCancelItem(item)} className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs text-danger hover:bg-danger-50"><X className="h-3.5 w-3.5" />{t("cancel")}</button></Can>}
                     </>}
@@ -90,7 +110,7 @@ export function JournalTimeline({ invoice, onAddService, onPayItem, onPaySelecte
                 </td>
               </tr>
             ))}
-            {visible.length === 0 && <tr><td colSpan={onPaySelected ? 6 : 5} className="p-10 text-center text-text-muted"><BookOpen className="w-6 h-6 mx-auto mb-3" />{items.length ? t("noMatches") : t("emptyTimeline")}</td></tr>}
+            {visible.length === 0 && <tr><td colSpan={(onPaySelected ? 6 : 5) - (hideMoney ? 1 : 0)} className="p-10 text-center text-text-muted"><BookOpen className="w-6 h-6 mx-auto mb-3" />{items.length ? t("noMatches") : t("emptyTimeline")}</td></tr>}
           </tbody>
         </table>
       </div>
