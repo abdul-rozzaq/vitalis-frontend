@@ -26,6 +26,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+function sourceLabel(invoice: Invoice, t: ReturnType<typeof useTranslations>) {
+  if (invoice.appointmentDoctorName) return invoice.appointmentDoctorName;
+  const key = `invoices.source.${invoice.sourceType}`;
+  return t.has(key) ? t(key) : invoice.sourceType;
+}
+
 const INITIAL_FILTERS: Filters = { invoiceKind: "", status: "", patientSearch: "", dateFrom: "", dateTo: "", sourceType: [], doctorId: "", operationTypeId: "", operationDoctorId: "", amountMin: "", amountMax: "" };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -140,7 +146,7 @@ export default function InvoicesPage() {
 
     const rows = invoices.map((inv, idx) => {
       const patientName = inv.patient ? `${inv.patient.first_name} ${inv.patient.last_name}` : "—";
-      const source = t.has(`invoices.source.${inv.sourceType}`) ? t(`invoices.source.${inv.sourceType}`) : inv.sourceType;
+      const source = sourceLabel(inv, t);
       const desc = inv.invoiceKind === "JOURNAL" ? inv.departmentName || "—" : inv.items?.length ? inv.items.map((i) => i.description).filter(Boolean).join(", ") : inv.note || "—";
       const paid = Number(inv.paidCash) + Number(inv.paidBonus);
       const total = Number(inv.totalAmount);
@@ -201,8 +207,8 @@ export default function InvoicesPage() {
         accessorKey: "sourceType",
         header: t("invoices.table.source"),
         cell: (info) => {
-          const value = info.getValue() as string;
-          return <span className="text-secondary text-sm">{t.has(`invoices.source.${value}`) ? t(`invoices.source.${value}`) : value}</span>;
+          const label = sourceLabel(info.row.original, t);
+          return <span className="text-secondary text-sm" title={label}>{label}</span>;
         },
       },
       {
