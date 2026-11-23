@@ -43,6 +43,7 @@ export interface InvoicePayment {
 
 export interface Invoice {
   invoiceKind?: "SINGLE" | "JOURNAL";
+  appointmentDoctorName?: string | null;
   departmentName?: string | null;
   isJournal?: boolean;
   journalId?: string | null;
