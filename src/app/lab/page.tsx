@@ -52,11 +52,12 @@ export default function LabPage() {
 
   const visible = useMemo(() => {
     const q = search.toLowerCase().trim();
+    const phoneQuery = /^[+\d\s().-]+$/.test(q) ? q.replace(/\D/g, "") : "";
     const list = orders.filter((o) => {
       const matchSearch =
         !q ||
         `${o.patient.first_name} ${o.patient.last_name}`.toLowerCase().includes(q) ||
-        o.patient.phone_number.replace(/\D/g, "").includes(q.replace(/\D/g, "")) ||
+        (phoneQuery.length > 0 && o.patient.phone_number.replace(/\D/g, "").includes(phoneQuery)) ||
         o.items.some((i) => i.service.name.toLowerCase().includes(q));
       const matchStatus = statusFilter === "all" || deriveOrderStatus(o) === statusFilter;
       return matchSearch && matchStatus;
